@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IronTrack // Analytics & Sync</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
+
+    <div class="max-w-md mx-auto p-4 sm:p-6 space-y-6">
+        <!-- Header -->
+        <header class="flex justify-between items-center pt-4">
+            <div>
+                <h1 class="text-3xl font-black tracking-tight text-emerald-400">IRONTRACK</h1>
+                <p id="user-greeting" class="text-xs text-slate-400 uppercase tracking-widest">Analytics Dashboard</p>
+            </div>
+            <button id="auth-btn" class="text-xs font-bold bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-xl text-slate-300 hover:text-rose-400 transition cursor-pointer">
+                Loading...
+            </button>
+        </header>
+
+        <!-- Gateway Access (Logged Out View) -->
+        <section id="login-view" class="bg-slate-800 p-8 rounded-2xl border border-slate-700 shadow-xl text-center my-12 space-y-6">
+            <div class="text-5xl">⚡️</div>
+            <div>
+                <h2 class="text-xl font-bold mb-1">Unlock Cloud Analytics</h2>
+                <p class="text-sm text-slate-400">Sync profile metrics, capture 1RMs, and map your relative strength levels.</p>
+            </div>
+            <button id="google-login-btn" class="w-full flex items-center justify-center gap-3 bg-white text-slate-900 font-bold py-3 px-4 rounded-xl hover:bg-slate-100 transition cursor-pointer active:scale-[0.98]">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5" alt="Google logo">
+                Sign in with Google
+            </button>
+        </section>
+
+        <!-- Main Workspace (Logged In View) -->
+        <main id="app-view" class="hidden space-y-6">
+            
+            <!-- SECTION 1: USER PROFILE METRICS -->
+            <section class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-xl">
+                <h2 class="text-sm font-black text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                    👤 Biometric Profile
+                </h2>
+                <form id="profile-form" class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Assigned Sex</label>
+                        <select id="profile-gender" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-emerald-400 transition cursor-pointer">
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Bodyweight (kg)</label>
+                        <input type="number" id="profile-weight" placeholder="75" min="30" step="any" required
+                            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-emerald-400 transition">
+                    </div>
+                    <button type="submit" id="save-profile-btn" class="col-span-2 bg-slate-700 hover:bg-emerald-500 hover:text-slate-950 text-xs font-bold py-2 rounded-xl transition cursor-pointer">
+                        Update Profile Biometrics
+                    </button>
+                </form>
+            </section>
+
+            <!-- SECTION 2: THE COEFFICIENT SCOREBOARD -->
+            <section class="grid grid-cols-2 gap-4">
+                <div class="bg-gradient-to-br from-slate-800 to-slate-900 p-4 rounded-2xl border border-slate-700 shadow-md text-center">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">DOTS Score</p>
+                    <div id="dots-display" class="text-3xl font-black text-emerald-400">0.0</div>
+                    <p id="dots-tier" class="text-[10px] text-slate-500 uppercase mt-1 font-semibold">-</p>
+                </div>
+                <div class="bg-gradient-to-br from-slate-800 to-slate-900 p-4 rounded-2xl border border-slate-700 shadow-md text-center">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Sinclair Score</p>
+                    <div id="sinclair-display" class="text-3xl font-black text-emerald-400">0.0</div>
+                    <p id="sinclair-tier" class="text-[10px] text-slate-500 uppercase mt-1 font-semibold">-</p>
+                </div>
+            </section>
+
+            <!-- SECTION 3: AUTOMATIC 1RM REGISTRY -->
+            <section class="bg-slate-800/40 border border-slate-800 p-4 rounded-2xl">
+                <h3 class="text-xs font-black text-slate-500 uppercase tracking-wider mb-3">Database Extracted 1-Rep Maxes</h3>
+                <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                    <div class="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80">
+                        <span class="block text-slate-400 font-medium mb-0.5">Squat</span>
+                        <strong id="1rm-squat" class="text-slate-200 text-sm">0 kg</strong>
+                    </div>
+                    <div class="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80">
+                        <span class="block text-slate-400 font-medium mb-0.5">Bench</span>
+                        <strong id="1rm-bench" class="text-slate-200 text-sm">0 kg</strong>
+                    </div>
+                    <div class="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80">
+                        <span class="block text-slate-400 font-medium mb-0.5">Deadlift</span>
+                        <strong id="1rm-deadlift" class="text-slate-200 text-sm">0 kg</strong>
+                    </div>
+                    <div class="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80 col-span-1">
+                        <span class="block text-slate-400 font-medium mb-0.5">Snatch</span>
+                        <strong id="1rm-snatch" class="text-slate-200 text-sm">0 kg</strong>
+                    </div>
+                    <div class="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80 col-span-2">
+                        <span class="block text-slate-400 font-medium mb-0.5">Clean & Jerk</span>
+                        <strong id="1rm-clean" class="text-slate-200 text-sm">0 kg</strong>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 4: WORKOUT LOGGER INTERFACE -->
+            <section class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-xl">
+                <h2 class="text-lg font-bold mb-4 text-slate-200">Log an Exercise</h2>
+                <form id="workout-form" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Exercise Name</label>
+                        <select id="exercise" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-emerald-400 transition cursor-pointer">
+                            <option value="Squat">Back Squat</option>
+                            <option value="Bench Press">Bench Press</option>
+                            <option value="Deadlift">Deadlift</option>
+                            <option value="Snatch">Snatch</option>
+                            <option value="Clean & Jerk">Clean & Jerk</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Sets</label>
+                            <input type="number" id="sets" placeholder="3" min="1" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-center text-slate-100 focus:outline-none focus:border-emerald-400 transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Reps</label>
+                            <input type="number" id="reps" placeholder="10" min="1" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-center text-slate-100 focus:outline-none focus:border-emerald-400 transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Weight (kg)</label>
+                            <input type="number" id="weight" placeholder="60" min="0" step="any" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-center text-slate-100 focus:outline-none focus:border-emerald-400 transition">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3 rounded-xl transition cursor-pointer active:scale-[0.98]">
+                        Record Set
+                    </button>
+                </form>
+            </section>
+
+            <!-- SECTION 5: HISTORICAL FEED -->
+            <section>
+                <h2 class="text-lg font-bold text-slate-200 mb-4">Training Log</h2>
+                <div id="workout-list" class="space-y-3"></div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Application Script Engineering -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, where, onSnapshot, deleteDoc, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        // ⚠️ PASTE YOUR COPIED FIREBASE CONFIG BLOCK HERE
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
+        // UI Selectors
+        const loginView = document.getElementById('login-view');
+        const appView = document.getElementById('app-view');
+        const authBtn = document.getElementById('auth-btn');
+        const googleLoginBtn = document.getElementById('google-login-btn');
+        const greeting = document.getElementById('user-greeting');
+        const profileForm = document.getElementById('profile-form');
+        const workoutForm = document.getElementById('workout-form');
+        const workoutList = document.getElementById('workout-list');
+
+        let currentUser = null;
+        let unsubscribeLogs = null;
+        let userBiometrics = { gender: 'male', bodyweight: 75 };
+        let activeRecords = { Squat: 0, "Bench Press": 0, Deadlift: 0, Snatch: 0, "Clean & Jerk": 0 };
+
+        // Authentication State Listener
+        onAuthStateChanged(auth, async (user) => {
+            currentUser = user;
+            if (user) {
+                loginView.classList.add('hidden');
+                appView.classList.remove('hidden');
+                authBtn.innerText = "Sign Out";
+                greeting.innerText = `Athlete: ${user.displayName.split(' ')[0]}`;
+                
+                // Fetch existing biometric settings or default them
+                await pullProfileMetrics(user.uid);
+                listenToDataStream(user.uid);
+            } else {
+                loginView.classList.remove('hidden');
+                appView.classList.add('hidden');
+                authBtn.innerText = "Locked";
+                if (unsubscribeLogs) unsubscribeLogs();
+            }
+        });
+
+        googleLoginBtn.addEventListener('click', () => signInWithPopup(auth, provider));
+        authBtn.addEventListener('click', () => { if (currentUser && confirm("Sign out?")) signOut(auth); });
+
+        // Profile Management Sync
+        async function pullProfileMetrics(uid) {
+            const docRef = doc(db, "profiles", uid);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                userBiometrics = docSnap.data();
+                document.getElementById('profile-gender').value = userBiometrics.gender;
+                document.getElementById('profile-weight').value = userBiometrics.bodyweight;
+            }
+        }
+
+        profileForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUser) return;
+            
+            userBiometrics = {
+                gender: document.getElementById('profile-gender').value,
+                bodyweight: parseFloat(document.getElementById('profile-weight').value)
+            };
+
+            await setDoc(doc(db, "profiles", currentUser.uid), userBiometrics);
+            processAnalytics();
+            alert("Biometrics updated successfully!");
+        });
+
+        // Realtime Data Mining
+        function listenToDataStream(uid) {
+            const q = query(collection(db, "workouts"), where("userId", "==", uid));
+            unsubscribeLogs = onSnapshot(q, (snapshot) => {
+                let workouts = [];
+                // Reset peaks before computation sweep
+                activeRecords = { Squat: 0, "Bench Press": 0, Deadlift: 0, Snatch: 0, "Clean & Jerk": 0 };
+
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    workouts.push({ id: doc.id, ...data });
+
+                    // Epley 1RM Estimation Formula: w * (1 + r / 30)
+                    const weight = parseFloat(data.weight);
+                    const reps = parseInt(data.reps);
+                    const calculated1RM = reps === 1 ? weight : weight * (1 + reps / 30);
+
+                    if (activeRecords[data.exercise] !== undefined) {
+                        if (calculated1RM > activeRecords[data.exercise]) {
+                            activeRecords[data.exercise] = calculated1RM;
+                        }
+                    }
+                });
+
+                workouts.sort((a, b) => b.timestamp - a.timestamp);
+                update1RMRegistryUI();
+                processAnalytics();
+                renderLogs(workouts);
+            });
+        }
+
+        function update1RMRegistryUI() {
+            document.getElementById('1rm-squat').innerText = `${Math.round(activeRecords['Squat'])} kg`;
+            document.getElementById('1rm-bench').innerText = `${Math.round(activeRecords['Bench Press'])} kg`;
+            document.getElementById('1rm-deadlift').innerText = `${Math.round(activeRecords['Deadlift'])} kg`;
+            document.getElementById('1rm-snatch').innerText = `${Math.round(activeRecords['Snatch'])} kg`;
+            document.getElementById('1rm-clean').innerText = `${Math.round(activeRecords['Clean & Jerk'])} kg`;
+        }
+
+        // Mathematical Engine Implementations
+        function processAnalytics() {
+            const bw = userBiometrics.bodyweight;
+            const gender = userBiometrics.gender;
+
+            // 1. DOTS Calculation Array
+            const plTotal = activeRecords['Squat'] + activeRecords['Bench Press'] + activeRecords['Deadlift'];
+            let dots = 0;
+            if (plTotal > 0 && bw > 0) {
+                const c = gender === 'male' 
+                    ? [47.46178854, 8.472061379, -0.07369410346, 0.0002586110512, -0.0000003634089054, 0.000000001790898013]
+                    : [-125.4255398, 13.71219419, -0.03307250631, 0.00004809990691, -0.00000003622531999, 0.000000000105123006];
+                
+                const denominator = c[0] + (c[1] * bw) + (c[2] * Math.pow(bw, 2)) + (c[3] * Math.pow(bw, 3)) + (c[4] * Math.pow(bw, 4)) + (c[5] * Math.pow(bw, 5));
+                dots = (plTotal * 500) / denominator;
+            }
+            document.getElementById('dots-display').innerText = dots > 0 ? dots.toFixed(1) : "0.0";
+            document.getElementById('dots-tier').innerText = getRankingTier(dots, 'dots', gender);
+
+            // 2. Sinclair Calculation Array (2025-2028 Olympic Cycle)
+            const olyTotal = activeRecords['Snatch'] + activeRecords['Clean & Jerk'];
+            let sinclair = 0;
+            if (olyTotal > 0 && bw > 0) {
+                const A = gender === 'male' ? 0.722762521 : 0.787004341;
+                const b = gender === 'male' ? 193.609 : 153.757;
+                if (bw >= b) {
+                    sinclair = olyTotal;
+                } else {
+                    const coeff = Math.pow(10, A * Math.pow(Math.log10(bw / b), 2));
+                    sinclair = olyTotal * coeff;
+                }
+            }
+            document.getElementById('sinclair-display').innerText = sinclair > 0 ? sinclair.toFixed(1) : "0.0";
+            document.getElementById('sinclair-tier').innerText = getRankingTier(sinclair, 'sinclair', gender);
+        }
+
+        function getRankingTier(score, system, gender) {
+            if (score <= 0) return "-";
+            if (system === 'dots') {
+                const cutoff = gender === 'male' ? [300, 400, 500] : [250, 325, 425];
+                if (score < cutoff[0]) return "Beginner";
+                if (score < cutoff[1]) return "Intermediate";
+                if (score < cutoff[2]) return "Advanced";
+                return "Elite";
+            } else {
+                if (score < 250) return "Beginner";
+                if (score < 320) return "Intermediate";
+                if (score < 400) return "Advanced";
+                if (score < 450) return "Elite";
+                return "World Class";
+            }
+        }
+
+        // Render Existing Logs
+        function renderLogs(workouts) {
+            workoutList.innerHTML = '';
+            if (workouts.length === 0) {
+                workoutList.innerHTML = `<div class="text-center py-6 text-slate-500 border border-dashed border-slate-800 rounded-xl">No logs found.</div>`;
+                return;
+            }
+            workouts.forEach((w) => {
+                const card = document.createElement('div');
+                card.className = "bg-slate-800/60 border border-slate-800 p-4 rounded-xl flex justify-between items-center shadow-sm";
+                card.innerHTML = `
+                    <div>
+                        <h3 class="font-bold text-slate-100">${w.exercise}</h3>
+                        <p class="text-sm text-slate-400"><span class="text-emerald-400">${w.sets}</span> sets × <span class="text-emerald-400">${w.reps}</span> reps @ <span class="text-emerald-400">${w.weight}</span> kg</p>
+                    </div>
+                    <button data-id="${w.id}" class="delete-btn text-slate-500 hover:text-rose-400 p-2 text-lg cursor-pointer">&times;</button>
+                `;
+                workoutList.appendChild(card);
+            });
+
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    if (confirm("Delete this log entry?")) {
+                        await deleteDoc(doc(db, "workouts", e.target.getAttribute('data-id')));
+                    }
+                });
+            });
+        }
+
+        // Add Log Submission
+        workoutForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            const log = {
+                userId: currentUser.uid,
+                exercise: document.getElementById('exercise').value,
+                sets: parseInt(document.getElementById('sets').value),
+                reps: parseInt(document.getElementById('reps').value),
+                weight: parseFloat(document.getElementById('weight').value),
+                timestamp: Date.now()
+            };
+
+            await addDoc(collection(db, "workouts"), log);
+            workoutForm.reset();
+        });
+    </script>
+</body>
+</html>
