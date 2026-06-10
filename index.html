@@ -155,313 +155,73 @@
         </main>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, where, onSnapshot, deleteDoc, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+<div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl mt-6 max-w-md mx-auto">
+  <div class="flex justify-between items-center mb-4">
+    <h2 class="text-emerald-500 font-black tracking-wider text-lg uppercase">⚡ Neural Network: Friends</h2>
+    <span class="text-xs bg-slate-900 border border-slate-700 px-2 py-1 rounded text-slate-400">v3.0 Social</span>
+  </div>
 
-        // Integrated Unique Firebase App Configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyAJNl8NIZB9UGnqUOXPjWcRgFOiroEbPUY",
-            authDomain: "irontrack-f4b19.firebaseapp.com",
-            projectId: "irontrack-f4b19",
-            storageBucket: "irontrack-f4b19.firebasestorage.app",
-            messagingSenderId: "576459465985",
-            appId: "1:576459465985:web:c5e387990eabf0c840a700"
-        };
+  <div class="bg-black p-3 rounded border border-slate-700 mb-4 flex justify-between items-center">
+    <div>
+      <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Your Cyber-Tag</p>
+      <p id="myCyberTag" class="text-xs text-slate-300 font-mono tracking-tight select-all">Loading UID...</p>
+    </div>
+    <button onclick="copyCyberTag()" class="text-xs bg-slate-800 hover:bg-emerald-500 hover:text-black border border-slate-600 text-emerald-400 font-bold py-1 px-3 rounded transition-all duration-200">
+      Copy
+    </button>
+  </div>
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+  <div class="space-y-2 mb-6">
+    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Link Ally via Cyber-Tag</label>
+    <div class="flex gap-2">
+      <input type="text" id="friendUidInput" placeholder="Paste friend's Cyber-Tag here..." 
+             class="flex-1 bg-black text-slate-200 border border-slate-700 rounded px-3 py-2 text-sm font-mono focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all">
+      <button onclick="handleAddFriend()" class="bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase text-xs px-4 py-2 rounded shadow-lg active:scale-[0.98] transition-all">
+        Link
+      </button>
+    </div>
+    <p id="socialFeedback" class="text-[11px] text-slate-500 font-medium h-4"></p>
+  </div>
 
-        // UI Selectors
-        const loginView = document.getElementById('login-view');
-        const appView = document.getElementById('app-view');
-        const authBtn = document.getElementById('auth-btn');
-        const emailInput = document.getElementById('auth-email');
-        const passwordInput = document.getElementById('auth-password');
-        const loginBtn = document.getElementById('email-login-btn');
-        const signupBtn = document.getElementById('email-signup-btn');
-        const greeting = document.getElementById('user-greeting');
-        const profileForm = document.getElementById('profile-form');
-        const workoutForm = document.getElementById('workout-form');
-        const workoutList = document.getElementById('workout-list');
+  <div>
+    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Active Allies</h3>
+    <div id="friendsListContainer" class="space-y-2 max-h-48 overflow-y-auto pr-1 text-slate-400 text-sm">
+      <p class="text-xs text-slate-500 italic">No allies linked yet. Share your Cyber-Tag!</p>
+    </div>
+  </div>
+</div>
 
-        let currentUser = null;
-        let unsubscribeLogs = null;
-        let userBiometrics = { gender: 'male', bodyweight: 75 };
-        let activeRecords = { Squat: 0, "Bench Press": 0, Deadlift: 0, Snatch: 0, "Clean & Jerk": 0 };
+<div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl mt-6 max-w-2xl mx-auto">
+  <div class="sm:flex sm:justify-between sm:items-center border-b border-slate-700 pb-4 mb-4">
+    <div>
+      <h2 class="text-emerald-500 font-black tracking-wider text-xl uppercase">🦾 IronTrack Leaderboard</h2>
+      <p class="text-xs text-slate-400">Pound-for-pound DOTS standings live[cite: 7].</p>
+    </div>
+    <div class="flex mt-3 sm:mt-0 bg-black p-1 rounded-lg border border-slate-800">
+      <button id="btnGlobalBoard" onclick="switchLeaderboardScope('global')" class="bg-emerald-500 text-black text-xs font-black uppercase px-3 py-1.5 rounded-md transition-all">
+        Global
+      </button>
+      <button id="btnFriendsBoard" onclick="switchLeaderboardScope('friends')" class="text-slate-400 hover:text-emerald-400 text-xs font-black uppercase px-3 py-1.5 rounded-md transition-all">
+        Inner Circle
+      </button>
+    </div>
+  </div>
 
-        // Authentication State Listener
-        onAuthStateChanged(auth, async (user) => {
-            currentUser = user;
-            if (user) {
-                loginView.classList.add('hidden');
-                appView.classList.remove('hidden');
-                authBtn.innerText = "Sign Out";
-                
-                const handle = user.email.split('@')[0];
-                greeting.innerText = `Athlete: ${handle}`;
-                
-                await pullProfileMetrics(user.uid);
-                listenToDataStream(user.uid);
-            } else {
-                loginView.classList.remove('hidden');
-                appView.classList.add('hidden');
-                authBtn.innerText = "Locked";
-                if (unsubscribeLogs) unsubscribeLogs();
-            }
-        });
+  <div class="overflow-x-auto">
+    <table class="w-full text-left text-sm text-slate-300">
+      <thead>
+        <tr class="text-slate-500 text-xs border-b border-slate-700 uppercase font-bold">
+          <th class="py-2">Rank</th>
+          <th class="py-2">Lifter</th>
+          <th class="py-2 text-right">DOTS Score</th>
+        </tr>
+      </thead>
+      <tbody id="leaderboardRows">
+        </tbody>
+    </table>
+  </div>
+</div>
 
-        // Email Core Auth Handlers
-        loginBtn.addEventListener('click', async () => {
-            const email = emailInput.value.trim();
-            const password = passwordInput.value;
-            if (!email || !password) return alert("Please fill out all credential spaces.");
-
-            try {
-                await signInWithEmailAndPassword(auth, email, password);
-                emailInput.value = "";
-                passwordInput.value = "";
-            } catch (error) {
-                alert(`Authentication Rejected: ${error.message}`);
-            }
-        });
-
-        signupBtn.addEventListener('click', async () => {
-            const email = emailInput.value.trim();
-            const password = passwordInput.value;
-            if (!email || !password) return alert("Please assign an email and password.");
-            if (password.length < 6) return alert("Password security requires at least 6 characters.");
-
-            try {
-                await createUserWithEmailAndPassword(auth, email, password);
-                emailInput.value = "";
-                passwordInput.value = "";
-                alert("Account mapped successfully!");
-            } catch (error) {
-                alert(`Registration Failed: ${error.message}`);
-            }
-        });
-
-        authBtn.addEventListener('click', () => { if (currentUser && confirm("Sign out?")) signOut(auth); });
-
-        // Profile Management Sync
-        async function pullProfileMetrics(uid) {
-            const docRef = doc(db, "profiles", uid);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                userBiometrics = docSnap.data();
-                document.getElementById('profile-gender').value = userBiometrics.gender;
-                document.getElementById('profile-weight').value = userBiometrics.bodyweight;
-            }
-        }
-
-        profileForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if (!currentUser) return;
-            
-            userBiometrics = {
-                gender: document.getElementById('profile-gender').value,
-                bodyweight: parseFloat(document.getElementById('profile-weight').value)
-            };
-
-            await setDoc(doc(db, "profiles", currentUser.uid), userBiometrics);
-            processAnalytics();
-            alert("Biometrics updated successfully!");
-        });
-
-        // Realtime Data Mining
-        function listenToDataStream(uid) {
-            const q = query(collection(db, "workouts"), where("userId", "==", uid));
-            unsubscribeLogs = onSnapshot(q, (snapshot) => {
-                let workouts = [];
-                activeRecords = { Squat: 0, "Bench Press": 0, Deadlift: 0, Snatch: 0, "Clean & Jerk": 0 };
-
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    workouts.push({ id: doc.id, ...data });
-
-                    // Epley 1RM Estimation Formula
-                    const weight = parseFloat(data.weight);
-                    const reps = parseInt(data.reps);
-                    const calculated1RM = calculate1RM(weight, reps)
-
-                    if (activeRecords[data.exercise] !== undefined) {
-                        if (calculated1RM > activeRecords[data.exercise]) {
-                            activeRecords[data.exercise] = calculated1RM;
-                        }
-                    }
-                });
-
-                workouts.sort((a, b) => b.timestamp - a.timestamp);
-                update1RMRegistryUI();
-                processAnalytics();
-                renderLogs(workouts);
-            });
-        }
-
-        /**
-         * Calculates the estimated 1-Rep Max (1RM) using the Epley Formula.
-         * * @param {number} weight - The weight lifted during the set.
-         * @param {number} reps - The number of repetitions completed.
-         * @returns {number} The calculated 1RM, rounded to 1 decimal place.
-         */
-        function calculate1RM(weight, reps) {
-            // If reps is 1, the weight lifted is already the actual 1RM
-            if (reps === 1) {
-                return weight;
-            }
-            
-            // Epley Formula: 1RM = Weight * (1 + Reps / 30)
-            const estimated1RM = weight * (1 + (reps / 30));
-            const rounded = Math.round(estimated1RM * 2) / 2;
-            // Round to 1 decimal place for UI consistency in the console/leaderboard
-            return rounded
-        }
-
-        function update1RMRegistryUI() {
-            document.getElementById('1rm-squat').innerText = `${(Math.round(activeRecords['Squat']*2)/2).toFixed(1)} kg`;
-            document.getElementById('1rm-bench').innerText = `${(Math.round(activeRecords['Bench Press']*2)/2).toFixed(1)} kg`;
-            document.getElementById('1rm-deadlift').innerText = `${(Math.round(activeRecords['Deadlift']*2)/2).toFixed(1)} kg`;
-            document.getElementById('1rm-snatch').innerText = `${(Math.round(activeRecords['Snatch']*2)/2).toFixed(1)} kg`;
-            document.getElementById('1rm-clean').innerText = `${(Math.round(activeRecords['Clean & Jerk']*2)/2).toFixed(1)} kg`;
-        }
-
-        // Mathematical Engine Implementations
-        function processAnalytics() {
-            const bw = userBiometrics.bodyweight;
-            const gender = userBiometrics.gender;
-
-            // 1. DOTS Calculation Array
-            const plTotal = activeRecords['Squat'] + activeRecords['Bench Press'] + activeRecords['Deadlift'];
-            let dots = 0;
-            if (plTotal > 0 && bw > 0) {
-                const c = gender === 'male' 
-                    ? [47.46178854, 8.472061379, -0.07369410346, 0.0002586110512, -0.0000003634089054, 0.000000001790898013]
-                    : [-125.4255398, 13.71219419, -0.03307250631, 0.00004809990691, -0.00000003622531999, 0.000000000105123006];
-                
-                const denominator = c[0] + (c[1] * bw) + (c[2] * Math.pow(bw, 2)) + (c[3] * Math.pow(bw, 3)) + (c[4] * Math.pow(bw, 4)) + (c[5] * Math.pow(bw, 5));
-                dots = (plTotal * 500) / denominator;
-            }
-            document.getElementById('dots-display').innerText = dots > 0 ? dots.toFixed(1) : "0.0";
-            document.getElementById('dots-tier').innerText = getRankingTier(dots, 'dots', gender);
-
-            // 2. Sinclair Calculation Array (2025-2028 Olympic Cycle)
-            const olyTotal = activeRecords['Snatch'] + activeRecords['Clean & Jerk'];
-            let sinclair = 0;
-            if (olyTotal > 0 && bw > 0) {
-                const A = gender === 'male' ? 0.722762521 : 0.787004341;
-                const b = gender === 'male' ? 193.609 : 153.757;
-                if (bw >= b) {
-                    sinclair = olyTotal;
-                } else {
-                    const coeff = Math.pow(10, A * Math.pow(Math.log10(bw / b), 2));
-                    sinclair = olyTotal * coeff;
-                }
-            }
-            document.getElementById('sinclair-display').innerText = sinclair > 0 ? sinclair.toFixed(1) : "0.0";
-            document.getElementById('sinclair-tier').innerText = getRankingTier(sinclair, 'sinclair', gender);
-        }
-
-        function getRankingTier(score, system, gender) {
-            if (score <= 0) return "-";
-            if (system === 'dots') {
-                const cutoff = gender === 'male' ? [300, 400, 500] : [250, 325, 425];
-                if (score < cutoff[0]) return "Beginner";
-                if (score < cutoff[1]) return "Intermediate";
-                if (score < cutoff[2]) return "Advanced";
-                return "Elite";
-            } else {
-                if (score < 250) return "Beginner";
-                if (score < 320) return "Intermediate";
-                if (score < 400) return "Advanced";
-                if (score < 450) return "Elite";
-                return "World Class";
-            }
-        }
-
-        // Render Existing Logs
-        function renderLogs(workouts) {
-            const logContainer = document.getElementById('workout-list');
-            if (!logContainer) return;
-
-            // 1. First, establish the true historical maximums for all exercises
-            const allTimeMaxes = {};
-            workouts.forEach(w => {
-                const weight = parseFloat(w.weight);
-                if (!allTimeMaxes[w.exercise] || weight > allTimeMaxes[w.exercise]) {
-                    allTimeMaxes[w.exercise] = weight;
-                }
-            });
-
-            // 2. Render logic
-            logContainer.innerHTML = workouts.map(workout => {
-                const weight = parseFloat(workout.weight);
-                const reps = parseInt(workout.reps) || 1;
-                
-                // PB Logic: Only true if this specific log weight is > any previous weight 
-                // recorded BEFORE this timestamp.
-                const previousLifts = workouts.filter(w => 
-                    w.exercise === workout.exercise && 
-                    w.timestamp < workout.timestamp
-                );
-                const prevMax = Math.max(0, ...previousLifts.map(w => parseFloat(w.weight)));
-                const isPB = weight > prevMax;
-
-                // 1RM Calculation
-                const oneRM = calculate1RM(weight, reps);
-                
-                // 1RM Badge: Is this the highest 1RM ever achieved for this move?
-                const isMax1RM = oneRM >= Math.max(...workouts
-                    .filter(w => w.exercise === workout.exercise)
-                    .map(w => calculate1RM(w.weight, w.reps))//Math.round(parseFloat(w.weight) / (1.0278 - (0.0278 * (parseInt(w.reps) || 1)))))
-                );
-
-                return `
-                    <div class="bg-slate-800 border-l-4 ${isMax1RM ? 'border-emerald-500' : isPB ? 'border-purple-400' : 'border-amber-400'} p-4 rounded-lg mb-3 flex justify-between items-center shadow-lg">
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <h4 class="text-emerald-400 font-bold uppercase tracking-wider text-sm">${workout.exercise}</h4>
-                                ${isPB ? '<span class="bg-purple-400 text-black text-[9px] px-1.5 rounded font-black">PB</span>' : ''}
-                                ${isMax1RM ? '<span class="bg-green-500 text-white text-[9px] px-1.5 rounded font-black">1RM</span>' : ''}
-                            </div>
-                            <p class="text-slate-400 text-xs font-mono mt-0.5">
-                                ${new Date(workout.timestamp).toLocaleDateString()}
-                            </p>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-white font-mono text-base font-semibold">
-                                ${workout.sets || 1} x ${workout.reps || 1} 
-                                <span class="text-slate-500 text-xs">@</span> 
-                                ${(workout.weight).toFixed(1)}kg
-                            </span>
-                            <p class="text-slate-400 text-xs font-mono mt-0.5">
-                                Est. 1RM: ${(oneRM).toFixed(1)}kg
-                            </p>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // Add Log Submission
-        workoutForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if (!currentUser) return;
-
-            const log = {
-                userId: currentUser.uid,
-                exercise: document.getElementById('exercise').value,
-                sets: parseInt(document.getElementById('sets').value),
-                reps: parseInt(document.getElementById('reps').value),
-                weight: parseFloat(document.getElementById('weight').value),
-                timestamp: Date.now()
-            };
-
-            await addDoc(collection(db, "workouts"), log);
-            workoutForm.reset();
-        });
-    </script>
+    <script type="module" src="app.js" defer></script>
 </body>
 </html>

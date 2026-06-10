@@ -1,0 +1,66 @@
+<div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl mt-6 max-w-md mx-auto">
+  <div class="flex justify-between items-center mb-4">
+    <h2 class="text-emerald-500 font-black tracking-wider text-lg uppercase">⚡ Neural Network: Friends</h2>
+    <span class="text-xs bg-slate-900 border border-slate-700 px-2 py-1 rounded text-slate-400">v3.0 Social</span>
+  </div>
+
+  <div class="bg-black p-3 rounded border border-slate-700 mb-4 flex justify-between items-center">
+    <div>
+      <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Your Cyber-Tag</p>
+      <p id="myCyberTag" class="text-xs text-slate-300 font-mono tracking-tight select-all">Loading UID...</p>
+    </div>
+    <button onclick="copyCyberTag()" class="text-xs bg-slate-800 hover:bg-emerald-500 hover:text-black border border-slate-600 text-emerald-400 font-bold py-1 px-3 rounded transition-all duration-200">
+      Copy
+    </button>
+  </div>
+
+  <div class="space-y-2 mb-6">
+    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Link Ally via Cyber-Tag</label>
+    <div class="flex gap-2">
+      <input type="text" id="friendUidInput" placeholder="Paste friend's Cyber-Tag here..." 
+             class="flex-1 bg-black text-slate-200 border border-slate-700 rounded px-3 py-2 text-sm font-mono focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all">
+      <button onclick="handleAddFriend()" class="bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase text-xs px-4 py-2 rounded shadow-lg active:scale-[0.98] transition-all">
+        Link
+      </button>
+    </div>
+    <p id="socialFeedback" class="text-[11px] text-slate-500 font-medium h-4"></p>
+  </div>
+
+  <div>
+    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Active Allies</h3>
+    <div id="friendsListContainer" class="space-y-2 max-h-48 overflow-y-auto pr-1 text-slate-400 text-sm">
+      <p class="text-xs text-slate-500 italic">No allies linked yet. Share your Cyber-Tag!</p>
+    </div>
+  </div>
+</div>
+
+<div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl mt-6 max-w-2xl mx-auto">
+  <div class="sm:flex sm:justify-between sm:items-center border-b border-slate-700 pb-4 mb-4">
+    <div>
+      <h2 class="text-emerald-500 font-black tracking-wider text-xl uppercase">🦾 IronTrack Leaderboard</h2>
+      <p class="text-xs text-slate-400">Pound-for-pound DOTS standings live[cite: 7].</p>
+    </div>
+    <div class="flex mt-3 sm:mt-0 bg-black p-1 rounded-lg border border-slate-800">
+      <button id="btnGlobalBoard" onclick="switchLeaderboardScope('global')" class="bg-emerald-500 text-black text-xs font-black uppercase px-3 py-1.5 rounded-md transition-all">
+        Global
+      </button>
+      <button id="btnFriendsBoard" onclick="switchLeaderboardScope('friends')" class="text-slate-400 hover:text-emerald-400 text-xs font-black uppercase px-3 py-1.5 rounded-md transition-all">
+        Inner Circle
+      </button>
+    </div>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-left text-sm text-slate-300">
+      <thead>
+        <tr class="text-slate-500 text-xs border-b border-slate-700 uppercase font-bold">
+          <th class="py-2">Rank</th>
+          <th class="py-2">Lifter</th>
+          <th class="py-2 text-right">DOTS Score</th>
+        </tr>
+      </thead>
+      <tbody id="leaderboardRows">
+        </tbody>
+    </table>
+  </div>
+</div>
