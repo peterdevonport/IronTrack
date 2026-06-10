@@ -96,12 +96,17 @@ authBtn.addEventListener('click', () => { if (currentUser && confirm("Sign out?"
 
 // Profile Management Sync
 async function pullProfileMetrics(uid) {
-    const docRef = doc(db, "profiles", uid);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-        userBiometrics = docSnap.data();
-        document.getElementById('profile-gender').value = userBiometrics.gender;
-        document.getElementById('profile-weight').value = userBiometrics.bodyweight;
+    try {
+        const docRef = doc(db, "profiles", uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            userBiometrics = docSnap.data();
+            document.getElementById('profile-gender').value = userBiometrics.gender;
+            document.getElementById('profile-weight').value = userBiometrics.bodyweight;
+        }
+    } catch (err) {
+        console.error('Failed to load profile metrics', err.code, err.message);
+        showFeedback('Unable to load profile metrics. Check Firestore rules for profiles.', 'red');
     }
 }
 
@@ -114,9 +119,14 @@ profileForm.addEventListener('submit', async (e) => {
         bodyweight: parseFloat(document.getElementById('profile-weight').value)
     };
 
-    await setDoc(doc(db, "profiles", currentUser.uid), userBiometrics);
-    processAnalytics();
-    alert("Biometrics updated successfully!");
+    try {
+        await setDoc(doc(db, "profiles", currentUser.uid), userBiometrics, { merge: true });
+        processAnalytics();
+        alert("Biometrics updated successfully!");
+    } catch (err) {
+        console.error('Failed to save biometrics', err.code, err.message);
+        alert(`Unable to update profile: ${err.message}`);
+    }
 });
 
 // Realtime Data Mining
@@ -146,6 +156,12 @@ function listenToDataStream(uid) {
         update1RMRegistryUI();
         await processAnalytics();
         renderLogs(workouts);
+    }, (error) => {
+        console.error('Workout stream error', error.code, error.message);
+        if (error.code === 'permission-denied') {
+            const el = document.getElementById('workout-list');
+            if (el) el.innerHTML = `<div class="bg-slate-800 border border-slate-700 rounded-xl p-4 text-red-400 text-xs text-center">Workouts blocked by Firestore rules.</div>`;
+        }
     });
 }
 
@@ -219,6 +235,11 @@ function renderLogs(workouts) {
     const logContainer = document.getElementById('workout-list');
     if (!logContainer) return;
 
+    if (!workouts.length) {
+        logContainer.innerHTML = `<div class="bg-slate-800 border border-slate-700 rounded-xl p-4 text-slate-500 text-sm text-center">No workout logs yet. Add a set to start tracking your training history.</div>`;
+        return;
+    }
+
     // 1. First, establish the true historical maximums for all exercises
     const allTimeMaxes = {};
     workouts.forEach(w => {
@@ -281,7 +302,7 @@ function renderLogs(workouts) {
 // Add Log Submission
 workoutForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (!currentUser) return;
+    if (!currentUser) return alert('Please sign in before logging a workout.');
 
     const log = {
         userId: currentUser.uid,
@@ -292,8 +313,17 @@ workoutForm.addEventListener('submit', async (e) => {
         timestamp: Date.now()
     };
 
-    await addDoc(collection(db, "workouts"), log);
-    workoutForm.reset();
+    try {
+        await addDoc(collection(db, "workouts"), log);
+        workoutForm.reset();
+        showFeedback('Workout saved. Keep crushing it!', 'emerald');
+    } catch (err) {
+        console.error('Workout submission failed', err.code, err.message);
+        if (err.code === 'permission-denied') {
+            showFeedback('Save blocked by Firestore rules: update workouts permissions.', 'red');
+        }
+        alert(`Failed to save workout: ${err.message}`);
+    }
 });
 
 // leaderboard
@@ -303,8 +333,17 @@ let currentScope = 'global'; // 'global' or 'friends'
 let userFriendsList = [];    // Array of friend UIDs
 let leaderboardUnsubscribe = null;
 
-function getUserDocRef(uid) {
-  return doc(db, "users", uid);
+function getProfileDocRef(uid) {
+  return doc(db, "profiles", uid);
+}
+
+function getDisplayName(profile, fallbackUid) {
+  return profile?.displayName || profile?.uid || fallbackUid || 'Unknown';
+}
+
+function formatDotsScore(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
 }
 
 /**
@@ -316,20 +355,23 @@ async function initSocialProfile(user, dotsScore = 0) {
     tagEl.innerText = user.uid;
   }
 
-  const userRef = getUserDocRef(user.uid);
+  const profileRef = getProfileDocRef(user.uid);
 
-  await setDoc(userRef, {
+  await setDoc(profileRef, {
     uid: user.uid,
     displayName: user.displayName || user.email?.split('@')[0] || 'Anonymous Cyber-Lifter',
     dotsScore: parseFloat(dotsScore) || 0,
     lastActive: serverTimestamp()
   }, { merge: true });
 
-  onSnapshot(userRef, (snapshot) => {
+  onSnapshot(profileRef, (snapshot) => {
     const data = snapshot.data();
     userFriendsList = Array.isArray(data?.friends) ? data.friends : [];
     renderActiveFriendsList();
     syncLeaderboardFeed();
+  }, (error) => {
+    console.error('Profile snapshot failed', error.code, error.message);
+    showFeedback('Profile access denied: check Firestore rules for profiles.', 'red');
   });
 }
 
@@ -346,10 +388,7 @@ function copyCyberTag() {
  * Handle Add Friend Form Action
  */
 async function getProfileDocument(uid) {
-  let profileDoc = await getDoc(getUserDocRef(uid));
-  if (profileDoc.exists()) return profileDoc;
-  profileDoc = await getDoc(doc(db, "profiles", uid));
-  return profileDoc;
+  return await getDoc(getProfileDocRef(uid));
 }
 
 async function handleAddFriend() {
@@ -368,7 +407,7 @@ async function handleAddFriend() {
       return showFeedback("Cyber-Tag not found in database.", 'red');
     }
 
-    await setDoc(getUserDocRef(currentUser.uid), {
+    await setDoc(getProfileDocRef(currentUser.uid), {
       friends: arrayUnion(targetUid)
     }, { merge: true });
 
@@ -377,7 +416,7 @@ async function handleAddFriend() {
   } catch (err) {
     console.error('Friend add failed', err.code, err.message);
     if (err.code === 'permission-denied') {
-      showFeedback('Permission denied: check Firestore rules for users and profiles.', 'red');
+      showFeedback('Permission denied: check Firestore rules for profiles.', 'red');
     } else {
       showFeedback(`Error linking network node: ${err.message}`, 'red');
     }
@@ -397,13 +436,25 @@ async function renderActiveFriendsList() {
   try {
     let html = '';
     for (let fUid of userFriendsList) {
-      const fDoc = await getProfileDocument(fUid);
-      if (fDoc.exists()) {
+      let fDoc;
+      try {
+        fDoc = await getProfileDocument(fUid);
+      } catch (err) {
+        console.error('Friend profile fetch failed', fUid, err.code, err.message);
+        html += `
+          <div class="flex justify-between items-center bg-slate-900/50 p-2 border border-slate-800 rounded">
+            <span class="font-medium text-slate-300 truncate max-w-[120px]">Locked Ally</span>
+            <span class="text-xs font-mono text-yellow-400">Permission denied</span>
+          </div>`;
+        continue;
+      }
+
+      if (fDoc && fDoc.exists()) {
         const data = fDoc.data();
         html += `
           <div class="flex justify-between items-center bg-slate-900/50 p-2 border border-slate-800 rounded">
-            <span class="font-medium text-slate-300 truncate max-w-[120px]">${data.displayName || fUid}</span>
-            <span class="text-xs font-mono text-emerald-400 font-bold">${(data.dotsScore || 0).toFixed(2)} pts</span>
+            <span class="font-medium text-slate-300 truncate max-w-[120px]">${getDisplayName(data, fUid)}</span>
+            <span class="text-xs font-mono text-emerald-400 font-bold">${formatDotsScore(data.dotsScore).toFixed(2)} pts</span>
           </div>`;
       } else {
         html += `
@@ -420,7 +471,8 @@ async function renderActiveFriendsList() {
       container.innerHTML = html;
     }
   } catch (error) {
-    container.innerHTML = `<p class="text-xs text-red-400">Failed to render active grid context.</p>`;
+    console.error('Active friends render failed', error.code, error.message);
+    container.innerHTML = `<p class="text-xs text-red-400">Failed to render active grid context. Check Firestore rules for profiles.</p>`;
   }
 }
 
@@ -452,7 +504,7 @@ function syncLeaderboardFeed() {
     leaderboardUnsubscribe = null;
   }
 
-  const leaderboardQuery = query(collection(db, "users"), orderBy("dotsScore", "desc"), limit(50));
+  const leaderboardQuery = query(collection(db, "profiles"), orderBy("dotsScore", "desc"), limit(50));
   leaderboardUnsubscribe = onSnapshot(leaderboardQuery, (snapshot) => {
     const rowsContainer = document.getElementById('leaderboardRows');
     let html = '';
@@ -471,19 +523,22 @@ function syncLeaderboardFeed() {
         <tr class="border-b border-slate-800/60 ${isMe ? 'bg-emerald-500/10 font-bold' : ''}">
           <td class="py-3 font-mono text-slate-500">#${rankCounter++}</td>
           <td class="py-3 flex items-center gap-2">
-            <span class="${isMe ? 'text-emerald-400' : 'text-slate-200'}">${profile.displayName}</span>
+            <span class="${isMe ? 'text-emerald-400' : 'text-slate-200'}">${getDisplayName(profile, profile.uid)}</span>
             ${isFriend ? '<span class="text-[9px] bg-slate-700/60 text-slate-400 px-1.5 py-0.5 rounded uppercase font-extrabold tracking-wider">Ally</span>' : ''}
           </td>
-          <td class="py-3 text-right font-mono font-bold text-emerald-400">${(profile.dotsScore || 0).toFixed(2)}</td>
+          <td class="py-3 text-right font-mono font-bold text-emerald-400">${formatDotsScore(profile.dotsScore).toFixed(2)}</td>
         </tr>`;
     });
 
     rowsContainer.innerHTML = html || `<tr><td colspan="3" class="py-4 text-center text-xs text-slate-500 italic">No network entries visible in this grid scope.</td></tr>`;
+  }, (error) => {
+    console.error('Leaderboard snapshot failed', error.code, error.message);
+    showFeedback('Leaderboard access denied: update Firestore rules for profiles.', 'red');
   });
 }
 
 async function updateUserLeaderboardProfile(uid, dotsScore) {
-  await setDoc(getUserDocRef(uid), {
+  await setDoc(getProfileDocRef(uid), {
     dotsScore: parseFloat(dotsScore) || 0,
     lastActive: serverTimestamp()
   }, { merge: true });
