@@ -15,6 +15,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+window.__irontrackAppLoaded = true;
+window.__irontrackAuthState = 'pending';
+window.__irontrackWorkoutCount = 0;
 
 // UI Selectors
 const loginView = document.getElementById('login-view');
@@ -28,11 +31,19 @@ const greeting = document.getElementById('user-greeting');
 const profileForm = document.getElementById('profile-form');
 const workoutForm = document.getElementById('workout-form');
 const workoutList = document.getElementById('workout-list');
+const paginationControls = document.getElementById('pagination-controls');
+const prevPageBtn = document.getElementById('prev-page-btn');
+const nextPageBtn = document.getElementById('next-page-btn');
+const currentPageDisplay = document.getElementById('current-page');
+const totalPagesDisplay = document.getElementById('total-pages');
 
 let currentUser = null;
 let unsubscribeLogs = null;
 let userBiometrics = { gender: 'male', bodyweight: 75 };
 let activeRecords = { "Back Squat": 0, "Bench Press": 0, Deadlift: 0, Snatch: 0, "Clean & Jerk": 0 };
+let currentPage = 1;
+const entriesPerPage = 10;
+let paginatedWorkouts = [];
 
 // Authentication State Listener
 onAuthStateChanged(auth, async (user) => {
@@ -41,6 +52,7 @@ onAuthStateChanged(auth, async (user) => {
         loginView.classList.add('hidden');
         appView.classList.remove('hidden');
         authBtn.innerText = "Sign Out";
+        window.__irontrackAuthState = 'signed-in';
         
         const handle = user.email.split('@')[0];
         greeting.innerText = `Athlete: ${handle}`;
@@ -50,13 +62,17 @@ onAuthStateChanged(auth, async (user) => {
             cyberTagEl.innerText = user.uid;
         }
 
+        currentPage = 1;
         await pullProfileMetrics(user.uid);
         await initSocialProfile(user);
         listenToDataStream(user.uid);
     } else {
+        currentPage = 1;
+        paginatedWorkouts = [];
         loginView.classList.remove('hidden');
         appView.classList.add('hidden');
         authBtn.innerText = "Locked";
+        window.__irontrackAuthState = 'signed-out';
         if (unsubscribeLogs) unsubscribeLogs();
     }
 });
@@ -131,14 +147,18 @@ profileForm.addEventListener('submit', async (e) => {
 
 // Realtime Data Mining
 function listenToDataStream(uid) {
-    const q = query(collection(db, "workouts"), where("userId", "==", uid));
+    const q = query(
+        collection(db, "workouts"),
+        where("userId", "==", uid)
+    );
     unsubscribeLogs = onSnapshot(q, async (snapshot) => {
         let workouts = [];
         activeRecords = { "Back Squat": 0, "Bench Press": 0, Deadlift: 0, Snatch: 0, "Clean & Jerk": 0 };
 
         snapshot.forEach((doc) => {
             const data = doc.data();
-            workouts.push({ id: doc.id, ...data });
+            const timestamp = data.timestamp?.toMillis ? data.timestamp.toMillis() : data.timestamp;
+            workouts.push({ id: doc.id, ...data, timestamp });
 
             // Epley 1RM Estimation Formula
             const weight = parseFloat(data.weight);
@@ -153,6 +173,7 @@ function listenToDataStream(uid) {
         });
 
         workouts.sort((a, b) => b.timestamp - a.timestamp);
+        window.__irontrackWorkoutCount = workouts.length;
         update1RMRegistryUI();
         await processAnalytics();
         renderLogs(workouts);
@@ -171,6 +192,35 @@ function update1RMRegistryUI() {
     document.getElementById('1rm-deadlift').innerText = `${Math.round(activeRecords['Deadlift'])} kg`;
     document.getElementById('1rm-snatch').innerText = `${Math.round(activeRecords['Snatch'])} kg`;
     document.getElementById('1rm-clean').innerText = `${Math.round(activeRecords['Clean & Jerk'])} kg`;
+}
+
+function updatePaginationControls(totalPages) {
+    if (!paginationControls || !currentPageDisplay || !totalPagesDisplay || !prevPageBtn || !nextPageBtn) return;
+
+    const isVisible = totalPages > 1;
+    paginationControls.classList.toggle('hidden', !isVisible);
+    currentPageDisplay.innerText = currentPage;
+    totalPagesDisplay.innerText = totalPages;
+
+    prevPageBtn.disabled = currentPage <= 1;
+    nextPageBtn.disabled = currentPage >= totalPages;
+}
+
+function changePage(direction) {
+    const totalPages = Math.max(1, Math.ceil(paginatedWorkouts.length / entriesPerPage));
+    if (direction === 'prev' && currentPage > 1) {
+        currentPage -= 1;
+    } else if (direction === 'next' && currentPage < totalPages) {
+        currentPage += 1;
+    }
+    renderLogs(paginatedWorkouts);
+}
+
+if (prevPageBtn) {
+    prevPageBtn.addEventListener('click', () => changePage('prev'));
+}
+if (nextPageBtn) {
+    nextPageBtn.addEventListener('click', () => changePage('next'));
 }
 
 // Mathematical Engine Implementations
@@ -237,8 +287,23 @@ function renderLogs(workouts) {
 
     if (!workouts.length) {
         logContainer.innerHTML = `<div class="bg-slate-800 border border-slate-700 rounded-xl p-4 text-slate-500 text-sm text-center">No workout logs yet. Add a set to start tracking your training history.</div>`;
+        if (paginationControls) paginationControls.classList.add('hidden');
         return;
     }
+
+    paginatedWorkouts = workouts;
+    const totalPages = Math.max(1, Math.ceil(workouts.length / entriesPerPage));
+    currentPage = Math.min(currentPage, totalPages);
+    let startIndex = (currentPage - 1) * entriesPerPage;
+    let pageItems = workouts.slice(startIndex, startIndex + entriesPerPage);
+
+    if (!pageItems.length && workouts.length) {
+        currentPage = 1;
+        startIndex = 0;
+        pageItems = workouts.slice(0, entriesPerPage);
+    }
+
+    updatePaginationControls(totalPages);
 
     // 1. First, establish the true historical maximums for all exercises
     const allTimeMaxes = {};
@@ -250,7 +315,7 @@ function renderLogs(workouts) {
     });
 
     // 2. Render logic
-    logContainer.innerHTML = workouts.map(workout => {
+    logContainer.innerHTML = pageItems.map(workout => {
         const weight = parseFloat(workout.weight);
         const reps = parseInt(workout.reps) || 1;
         
