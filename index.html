@@ -314,8 +314,25 @@
           </form>
         </section>
 
-        <section class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-xl">
+        <section
+          class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-xl"
+        >
           <h2 class="text-lg font-bold text-slate-200 mb-4">Training Log</h2>
+          <div class="mb-3">
+            <label class="text-xs text-slate-400 uppercase font-bold mr-2">Filter</label>
+            <select id="workout-filter" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-emerald-400">
+              <option value="All">All Exercises</option>
+              <option value="Back Squat">Back Squat</option>
+              <option value="Bench Press">Bench Press</option>
+              <option value="Deadlift">Deadlift</option>
+              <option value="Snatch">Snatch</option>
+              <option value="Clean & Jerk">Clean & Jerk</option>
+            </select>
+          </div>
+          <div class="flex items-center gap-2 mb-4">
+            <button id="chip-pb" type="button" class="bg-slate-900 border border-slate-700 text-slate-400 text-xs px-3 py-2 rounded-full">PB</button>
+            <button id="chip-1rm" type="button" class="bg-slate-900 border border-slate-700 text-slate-400 text-xs px-3 py-2 rounded-full">1RM</button>
+          </div>
           <div id="workout-list" class="space-y-3"></div>
           <div
             id="pagination-controls"

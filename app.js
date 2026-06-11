@@ -36,6 +36,7 @@ const prevPageBtn = document.getElementById('prev-page-btn');
 const nextPageBtn = document.getElementById('next-page-btn');
 const currentPageDisplay = document.getElementById('current-page');
 const totalPagesDisplay = document.getElementById('total-pages');
+const workoutFilter = document.getElementById('workout-filter');
 const entriesPerPage = 5;
 
 let currentUser = null;
@@ -45,6 +46,9 @@ let activeRecords = { "Back Squat": 0, "Bench Press": 0, Deadlift: 0, Snatch: 0,
 let currentPage = 1;
 
 let paginatedWorkouts = [];
+let lastWorkouts = [];
+let chipPB = false;
+let chip1RM = false;
 
 // Authentication State Listener
 onAuthStateChanged(auth, async (user) => {
@@ -175,6 +179,14 @@ function listenToDataStream(uid) {
 
         workouts.sort((a, b) => b.timestamp - a.timestamp);
         window.__irontrackWorkoutCount = workouts.length;
+        lastWorkouts = workouts;
+        // dynamically populate filter options from live exercise names
+        try {
+          const uniqueExercises = Array.from(new Set(workouts.map(w => w.exercise)));
+          populateWorkoutFilter(uniqueExercises);
+        } catch (e) {
+          // ignore if populate not available
+        }
         update1RMRegistryUI();
         await processAnalytics();
         renderLogs(workouts);
@@ -214,7 +226,7 @@ function changePage(direction) {
     } else if (direction === 'next' && currentPage < totalPages) {
         currentPage += 1;
     }
-    renderLogs(paginatedWorkouts);
+    renderLogs(lastWorkouts);
 }
 
 if (prevPageBtn) {
@@ -222,6 +234,103 @@ if (prevPageBtn) {
 }
 if (nextPageBtn) {
     nextPageBtn.addEventListener('click', () => changePage('next'));
+}
+if (workoutFilter) {
+  workoutFilter.addEventListener('change', () => {
+    currentPage = 1;
+    renderLogs(lastWorkouts);
+  });
+}
+
+// Wire PB / 1RM chips (toggle buttons) - use dataset.active as single source of truth
+const chipPBEl = document.getElementById('chip-pb');
+const chip1RMEl = document.getElementById('chip-1rm');
+if (chipPBEl) {
+  chipPBEl.dataset.active = 'false';
+  chipPBEl.addEventListener('click', () => {
+    const active = chipPBEl.dataset.active !== 'true';
+    chipPBEl.dataset.active = active ? 'true' : 'false';
+    if (active) {
+      chipPBEl.classList.remove('bg-slate-900');
+      chipPBEl.classList.add('bg-violet-500', 'text-slate-950');
+      chipPBEl.classList.remove('text-slate-400');
+    } else {
+      chipPBEl.classList.add('bg-slate-900');
+      chipPBEl.classList.remove('bg-violet-500', 'text-slate-950');
+      chipPBEl.classList.add('text-slate-400');
+    }
+    currentPage = 1;
+    renderLogs(lastWorkouts);
+  });
+}
+if (chip1RMEl) {
+  chip1RMEl.dataset.active = 'false';
+  chip1RMEl.addEventListener('click', () => {
+    const active = chip1RMEl.dataset.active !== 'true';
+    chip1RMEl.dataset.active = active ? 'true' : 'false';
+    if (active) {
+      chip1RMEl.classList.remove('bg-slate-900');
+      chip1RMEl.classList.add('bg-emerald-500', 'text-slate-950');
+      chip1RMEl.classList.remove('text-slate-400');
+    } else {
+      chip1RMEl.classList.add('bg-slate-900');
+      chip1RMEl.classList.remove('bg-emerald-500', 'text-slate-950');
+      chip1RMEl.classList.add('text-slate-400');
+    }
+    currentPage = 1;
+    renderLogs(lastWorkouts);
+  });
+}
+
+// Fallback: use event delegation in case elements were not present when script ran
+document.addEventListener('click', (e) => {
+  const pbBtn = e.target.closest && e.target.closest('#chip-pb');
+  const oneBtn = e.target.closest && e.target.closest('#chip-1rm');
+  if (pbBtn) {
+    chipPB = !chipPB;
+    currentPage = 1;
+    const el = document.getElementById('chip-pb');
+    if (el) {
+      el.dataset.active = chipPB ? 'true' : 'false';
+      if (chipPB) {
+        el.classList.remove('bg-slate-900'); el.classList.add('bg-violet-500','text-slate-950'); el.classList.remove('text-slate-400');
+      } else {
+        el.classList.add('bg-slate-900'); el.classList.remove('bg-violet-500','text-slate-950'); el.classList.add('text-slate-400');
+      }
+    }
+    renderLogs(lastWorkouts);
+  }
+  if (oneBtn) {
+    chip1RM = !chip1RM;
+    currentPage = 1;
+    const el = document.getElementById('chip-1rm');
+    if (el) {
+      el.dataset.active = chip1RM ? 'true' : 'false';
+      if (chip1RM) {
+        el.classList.remove('bg-slate-900'); el.classList.add('bg-emerald-500','text-slate-950'); el.classList.remove('text-slate-400');
+      } else {
+        el.classList.add('bg-slate-900'); el.classList.remove('bg-emerald-500','text-slate-950'); el.classList.add('text-slate-400');
+      }
+    }
+    renderLogs(lastWorkouts);
+  }
+});
+
+function populateWorkoutFilter(exercises) {
+  if (!workoutFilter) return;
+  const prev = workoutFilter.value || 'All';
+  const unique = Array.from(new Set(exercises)).filter(Boolean).sort();
+  let html = `<option value="All">All Exercises</option>`;
+  unique.forEach(ex => {
+    html += `<option value="${ex}">${ex}</option>`;
+  });
+  workoutFilter.innerHTML = html;
+  // restore previous selection if still valid
+  if (prev && Array.from(workoutFilter.options).some(o => o.value === prev)) {
+    workoutFilter.value = prev;
+  } else {
+    workoutFilter.value = 'All';
+  }
 }
 
 // Mathematical Engine Implementations
@@ -292,16 +401,43 @@ function renderLogs(workouts) {
         return;
     }
 
+    // keep the full set for analytics/state, but apply a display filter
     paginatedWorkouts = workouts;
-    const totalPages = Math.max(1, Math.ceil(workouts.length / entriesPerPage));
+    const selected = workoutFilter ? workoutFilter.value : 'All';
+
+    // Precompute PB / 1RM flags for chip filtering and rendering
+    workouts.forEach(workout => {
+        const weight = parseFloat(workout.weight);
+        const reps = parseInt(workout.reps) || 1;
+        const previousLifts = workouts.filter(w => w.exercise === workout.exercise && w.timestamp < workout.timestamp);
+        const prevMax = Math.max(0, ...previousLifts.map(w => parseFloat(w.weight)));
+        workout._isPB = weight > prevMax;
+        const oneRM = Math.round(weight / (1.0278 - (0.0278 * reps)));
+        const maxOneRMForExercise = Math.max(...workouts.filter(w => w.exercise === workout.exercise).map(w => Math.round(parseFloat(w.weight) / (1.0278 - (0.0278 * (parseInt(w.reps) || 1))))));
+        workout._isMax1RM = oneRM >= maxOneRMForExercise;
+    });
+
+    let displayList = (selected === 'All') ? workouts : workouts.filter(w => w.exercise === selected);
+
+    // Apply PB / 1RM chip filters if enabled (read state from DOM dataset)
+    const chipPBActive = document.getElementById('chip-pb')?.dataset?.active === 'true';
+    const chip1RMActive = document.getElementById('chip-1rm')?.dataset?.active === 'true';
+    if (chipPBActive || chip1RMActive) {
+      displayList = displayList.filter(w => (chipPBActive && w._isPB) || (chip1RMActive && w._isMax1RM));
+    }
+
+    // Expose render debug info for testing
+    try { window.__lastRenderInfo = { chipPBActive, chip1RMActive, displayListLength: displayList.length, totalWorkouts: workouts.length }; } catch (e) {}
+
+    const totalPages = Math.max(1, Math.ceil(displayList.length / entriesPerPage));
     currentPage = Math.min(currentPage, totalPages);
     let startIndex = (currentPage - 1) * entriesPerPage;
-    let pageItems = workouts.slice(startIndex, startIndex + entriesPerPage);
+    let pageItems = displayList.slice(startIndex, startIndex + entriesPerPage);
 
-    if (!pageItems.length && workouts.length) {
-        currentPage = 1;
-        startIndex = 0;
-        pageItems = workouts.slice(0, entriesPerPage);
+    if (!pageItems.length && displayList.length) {
+      currentPage = 1;
+      startIndex = 0;
+      pageItems = displayList.slice(0, entriesPerPage);
     }
 
     updatePaginationControls(totalPages);
@@ -319,26 +455,10 @@ function renderLogs(workouts) {
     logContainer.innerHTML = pageItems.map(workout => {
         const weight = parseFloat(workout.weight);
         const reps = parseInt(workout.reps) || 1;
-        
-        // PB Logic: Only true if this specific log weight is > any previous weight 
-        // recorded BEFORE this timestamp.
-        const previousLifts = workouts.filter(w => 
-            w.exercise === workout.exercise && 
-            w.timestamp < workout.timestamp
-        );
-        const prevMax = Math.max(0, ...previousLifts.map(w => parseFloat(w.weight)));
-        const isPB = weight > prevMax;
-
-        // 1RM Calculation
-        const oneRM = Math.round(weight / (1.0278 - (0.0278 * reps)));
-        
-        // 1RM Badge: Is this the highest 1RM ever achieved for this move?
-        const isMax1RM = oneRM >= Math.max(...workouts
-            .filter(w => w.exercise === workout.exercise)
-            .map(w => Math.round(parseFloat(w.weight) / (1.0278 - (0.0278 * (parseInt(w.reps) || 1)))))
-        );
+        const isPB = !!workout._isPB;
+        const isMax1RM = !!workout._isMax1RM;
         const is1RMOnly = isMax1RM && !isPB;
-
+        const oneRM = Math.round(weight / (1.0278 - (0.0278 * reps)));
         const borderClass = isPB ? 'border-l-violet-500' : is1RMOnly ? 'border-l-emerald-500' : 'border-slate-800';
         return `
             <div class="bg-slate-950 border border-slate-800 border-l-4 ${borderClass} p-4 rounded-2xl mb-3 flex justify-between items-center shadow-2xl shadow-slate-950/60">
