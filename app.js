@@ -36,13 +36,14 @@ const prevPageBtn = document.getElementById('prev-page-btn');
 const nextPageBtn = document.getElementById('next-page-btn');
 const currentPageDisplay = document.getElementById('current-page');
 const totalPagesDisplay = document.getElementById('total-pages');
+const entriesPerPage = 5;
 
 let currentUser = null;
 let unsubscribeLogs = null;
 let userBiometrics = { gender: 'male', bodyweight: 75 };
 let activeRecords = { "Back Squat": 0, "Bench Press": 0, Deadlift: 0, Snatch: 0, "Clean & Jerk": 0 };
 let currentPage = 1;
-const entriesPerPage = 10;
+
 let paginatedWorkouts = [];
 
 // Authentication State Listener
@@ -336,14 +337,16 @@ function renderLogs(workouts) {
             .filter(w => w.exercise === workout.exercise)
             .map(w => Math.round(parseFloat(w.weight) / (1.0278 - (0.0278 * (parseInt(w.reps) || 1)))))
         );
+        const is1RMOnly = isMax1RM && !isPB;
 
+        const borderClass = isPB ? 'border-l-violet-500' : is1RMOnly ? 'border-l-emerald-500' : 'border-slate-800';
         return `
-            <div class="bg-slate-800 border-l-4 ${isPB ? 'border-yellow-400' : 'border-emerald-500'} p-4 rounded-lg mb-3 flex justify-between items-center shadow-lg">
+            <div class="bg-slate-950 border border-slate-800 border-l-4 ${borderClass} p-4 rounded-2xl mb-3 flex justify-between items-center shadow-2xl shadow-slate-950/60">
                 <div>
                     <div class="flex items-center gap-2">
-                        <h4 class="text-emerald-400 font-bold uppercase tracking-wider text-sm">${workout.exercise}</h4>
-                        ${isPB ? '<span class="bg-yellow-400 text-black text-[9px] px-1.5 rounded font-black">PB</span>' : ''}
-                        ${isMax1RM ? '<span class="bg-rose-500 text-white text-[9px] px-1.5 rounded font-black">1RM</span>' : ''}
+                        <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm">${workout.exercise}</h4>
+                        ${isPB ? '<span class="bg-violet-500 text-slate-950 text-[9px] px-1.5 rounded font-black">PB</span>' : ''}
+                        ${isMax1RM ? '<span class="bg-emerald-500 text-slate-950 text-[9px] px-1.5 rounded font-extrabold" style="color:#000">1RM</span>' : ''}
                     </div>
                     <p class="text-slate-400 text-xs font-mono mt-0.5">
                         ${new Date(workout.timestamp).toLocaleDateString()}

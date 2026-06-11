@@ -314,17 +314,29 @@
           </form>
         </section>
 
-        <section>
+        <section class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-xl">
           <h2 class="text-lg font-bold text-slate-200 mb-4">Training Log</h2>
           <div id="workout-list" class="space-y-3"></div>
-          <div id="pagination-controls" class="hidden mt-4 flex items-center justify-between gap-3">
-            <button id="prev-page-btn" class="w-full bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold py-3 rounded-xl transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed" type="button">
+          <div
+            id="pagination-controls"
+            class="hidden mt-4 flex items-center justify-between gap-3"
+          >
+            <button
+              id="prev-page-btn"
+              class="w-full bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold py-3 rounded-xl transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              type="button"
+            >
               Previous
             </button>
             <p class="text-xs text-slate-400 text-center min-w-[120px]">
-              Page <span id="current-page">1</span> of <span id="total-pages">1</span>
+              Page <span id="current-page">1</span> of
+              <span id="total-pages">1</span>
             </p>
-            <button id="next-page-btn" class="w-full bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold py-3 rounded-xl transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed" type="button">
+            <button
+              id="next-page-btn"
+              class="w-full bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold py-3 rounded-xl transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              type="button"
+            >
               Next
             </button>
           </div>
