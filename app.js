@@ -204,11 +204,44 @@ function listenToDataStream(uid) {
 }
 
 function update1RMRegistryUI() {
-    document.getElementById('1rm-squat').innerText = `${Math.round(activeRecords['Back Squat'] || 0)} kg`;
-    document.getElementById('1rm-bench').innerText = `${Math.round(activeRecords['Bench Press'])} kg`;
-    document.getElementById('1rm-deadlift').innerText = `${Math.round(activeRecords['Deadlift'])} kg`;
-    document.getElementById('1rm-snatch').innerText = `${Math.round(activeRecords['Snatch'])} kg`;
-    document.getElementById('1rm-clean').innerText = `${Math.round(activeRecords['Clean & Jerk'])} kg`;
+    const tableBody = document.getElementById('registry-table-body');
+    if (!tableBody) return;
+
+    // 1. Find all unique exercises currently logged by the user
+    const uniqueExercises = Array.from(new Set(lastWorkouts.map(w => w.exercise))).filter(Boolean).sort();
+
+    if (uniqueExercises.length === 0) {
+        tableBody.innerHTML = `<p class="col-span-3 text-xs text-slate-500 italic py-2 text-center">No logs recorded yet.</p>`;
+        return;
+    }
+
+    // 2. Generate grid tracking elements dynamically for each logged lift
+    let html = '';
+    
+    uniqueExercises.forEach(exercise => {
+        // Filter historical entries just for this specific exercise
+        const exerciseHistory = lastWorkouts.filter(w => w.exercise === exercise);
+
+        // Calculate Absolute PB: The heaviest actual weight successfully logged
+        const absolutePB = Math.max(0, ...exerciseHistory.map(w => parseFloat(w.weight || 0)));
+
+        // Calculate Highest Estimated 1RM across all historical entries for this lift
+        const maxEstimated1RM = Math.max(0, ...exerciseHistory.map(w => {
+            const weight = parseFloat(w.weight || 0);
+            const reps = parseInt(w.reps || 1);
+            // Using Epley 1RM Formula matching your real-time data stream logic
+            return reps === 1 ? weight : weight * (1 + reps / 30);
+        }));
+
+        // Append the 3 grid components that represent one full layout row
+        html += `
+            <span class="text-slate-400 font-medium truncate">${exercise}</span>
+            <span class="text-slate-200 font-mono text-right">${Math.round(maxEstimated1RM)} kg</span>
+            <span class="text-slate-200 font-mono text-right">${Math.round(absolutePB)} kg</span>
+        `;
+    });
+
+    tableBody.innerHTML = html;
 }
 
 function updatePaginationControls(totalPages) {

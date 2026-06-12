@@ -137,37 +137,15 @@
       </section>
 
       <section class="surface-card">
-        <h2 class="section-heading">
-          Your 1-Rep Max
-        </h2>
-        <p class="text-description mb-2">
-          Your 1RM lifts across different exercises.
-        </p>
+        <h2 class="section-heading text-emerald-400">Your Records</h2>
+        <p class="text-description mb-4">Your maximum lifts tracked across logged exercises.</p>
 
-        <div class="grid grid-cols-3 gap-2 text-center text-xs">
-          <div class="surface-inner-well">
-            <span class="block text-slate-400 font-medium mb-0.5">Back Squat</span>
-            <strong id="1rm-squat" class="text-slate-200 text-sm">0 kg</strong>
-          </div>
-          <div class="surface-inner-well">
-            <span class="block text-slate-400 font-medium mb-0.5">Bench Press</span>
-            <strong id="1rm-bench" class="text-slate-200 text-sm">0 kg</strong>
-          </div>
-
-          <div class="surface-inner-well">
-
-            <span class="block text-slate-400 font-medium mb-0.5">Deadlift</span>
-            <strong id="1rm-deadlift" class="text-slate-200 text-sm">0 kg</strong>
-          </div>
-          <div class="surface-inner-well">
-
-            <span class="block text-slate-400 font-medium mb-0.5">Snatch</span>
-            <strong id="1rm-snatch" class="text-slate-200 text-sm">0 kg</strong>
-          </div>
-          <div class="surface-inner-well">
-            <span class="block text-slate-400 font-medium mb-0.5">Clean & Jerk</span>
-            <strong id="1rm-clean" class="text-slate-200 text-sm">0 kg</strong>
-          </div>
+        <div class="grid grid-cols-3 gap-y-3 gap-x-4 text-sm mt-4">
+          <span class="text-slate-500 font-bold uppercase text-[10px]">Lift</span>
+          <span class="text-emerald-400 font-bold uppercase text-[10px] text-right">Est. 1RM</span>
+          <span class="text-purple-400 font-bold uppercase text-[10px] text-right">Personal Best</span>
+        
+          <div id="registry-table-body" class="col-span-3 grid grid-cols-3 gap-y-3 gap-x-4"></div>
         </div>
       </section>
 
@@ -227,11 +205,6 @@
             <select id="workout-filter"
               class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-emerald-400 w-full">
               <option value="All">All Exercises</option>
-              <option value="Back Squat">Back Squat</option>
-              <option value="Bench Press">Bench Press</option>
-              <option value="Deadlift">Deadlift</option>
-              <option value="Snatch">Snatch</option>
-              <option value="Clean & Jerk">Clean & Jerk</option>
             </select>
           </div>
 
