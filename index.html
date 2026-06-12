@@ -365,7 +365,10 @@
           </label>
 
           <div class="flex gap-2">
-            <input id="myCyberTag" type="text" readonly class="flex-1 bg-black text-slate-200 border border-slate-700 rounded px-3 py-2 text-sm font-mono focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all" />        
+            <input id="myCyberTag" 
+            type="text" readonly 
+class="flex-1 bg-black text-slate-200 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all w-full min-w-0"            value = "connecting to network..."/>
+
             <button id="btnCopyCyberTag" onclick="copyCyberTag()" class="btn-core is-secondary btn-size-side">
               Copy
             </button>
@@ -387,6 +390,11 @@
               Add
             </button>
           </div>
+          
+          <p
+            id="socialAddFriendFeedback"
+            class="text-[11px] text-slate-500 font-medium h-4"
+          ></p>
         </div>
 
         <div>

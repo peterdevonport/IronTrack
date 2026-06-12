@@ -278,33 +278,7 @@ if (chip1RMEl) {
   });
 }
 
-// Fallback Document Event Delegation Sync
-document.addEventListener('click', (e) => {
-  const pbBtn = e.target.closest && e.target.closest('#chip-pb'); //
-  const oneBtn = e.target.closest && e.target.closest('#chip-1rm'); //
-  
-  if (pbBtn) {
-    chipPB = !chipPB; //
-    currentPage = 1; //
-    const el = document.getElementById('chip-pb'); //
-    if (el) {
-      el.dataset.active = chipPB ? 'true' : 'false'; //
-      el.classList.toggle('is-active', chipPB);
-    }
-    renderLogs(lastWorkouts); //
-  }
-  
-  if (oneBtn) {
-    chip1RM = !chip1RM; //
-    currentPage = 1; //
-    const el = document.getElementById('chip-1rm'); //
-    if (el) {
-      el.dataset.active = chip1RM ? 'true' : 'false'; //
-      el.classList.toggle('is-active', chip1RM);
-    }
-    renderLogs(lastWorkouts); //
-  }
-});
+
 
 function populateWorkoutFilter(exercises) {
   if (!workoutFilter) return;
@@ -532,6 +506,8 @@ async function initSocialProfile(user, dotsScore = 0) {
   if (tagEl) {
     tagEl.value = user.uid;
   }
+
+
 
   const profileRef = getProfileDocRef(user.uid);
 
