@@ -199,3 +199,41 @@ body {
   font-weight: 700;
   width: auto;               /* Keeps it tight to the text content */
 }
+
+/* --- Form Inputs & Dropdowns --- */
+.dropdown-core {
+  background-color: var(--slate-950);
+  border: 1px solid var(--slate-700);
+  border-radius: 0.75rem; /* rounded-xl */
+  padding: 0.5rem 0.75rem; /* py-2 px-3 */
+  color: var(--slate-100);
+  font-size: 0.875rem; /* text-sm */
+  width: 100%;
+  transition: all 0.2s ease-in-out;
+}
+
+.dropdown-core:focus {
+  outline: none;
+  border-color: var(--emerald-400);
+}
+
+.input-core {
+  background-color: var(--slate-950);
+  border: 1px solid var(--slate-700);
+  border-radius: 0.75rem; /* rounded-xl to match dropdown-core */
+  padding: 0.5rem 0.75rem; /* py-2 px-3 */
+  color: var(--slate-100);
+  font-size: 0.875rem; /* text-sm */
+  width: 100%;
+  transition: all 0.2s ease-in-out; /* Match global transition engine timing */
+}
+
+.input-core:focus {
+  outline: none;
+  border-color: var(--emerald-400);
+}
+
+/* Optional placeholder style to match your dark UI theme */
+.input-core::placeholder {
+  color: var(--slate-500);
+}

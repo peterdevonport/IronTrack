@@ -40,12 +40,12 @@
         <div>
           <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Email Address</label>
           <input type="email" id="auth-email" placeholder="athlete@irontrack.com" required
-            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 focus:outline-none focus:border-emerald-400 transition" />
+            class="input-core" />
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Password</label>
           <input type="password" id="auth-password" placeholder="••••••••" required
-            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 focus:outline-none focus:border-emerald-400 transition" />
+            class="input-core" />
         </div>
       </div>
 
@@ -71,7 +71,7 @@
           <div>
             <label class="form-label">Assigned Sex</label>
             <select id="profile-gender"
-              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-emerald-400 transition cursor-pointer">
+              class="dropdown-core">
               <option value="male">Male</option>
               <option value="female">Female</option>
             </select>
@@ -79,7 +79,7 @@
           <div>
             <label class="form-label">Bodyweight (kg)</label>
             <input type="number" id="profile-weight" placeholder="75" min="30" step="any" required
-              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-emerald-400 transition" />
+              class="input-core" />
           </div>
           <button type="submit" id="save-profile-btn" class="btn-core is-secondary btn-size-input col-span-2">
             Update Profile Biometrics
@@ -158,7 +158,8 @@
           <div>
             <label class="form-label">Exercise Name</label>
             <select id="exercise"
-              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-emerald-400 transition cursor-pointer">
+              class="dropdown-core">
+
               <option value="Back Squat">Back Squat</option>
               <option value="Bench Press">Bench Press</option>
               <option value="Deadlift">Deadlift</option>
@@ -170,17 +171,17 @@
           <div class="grid grid-cols-3 gap-3">
             <div>
               <label class="form-label">Sets</label>
-              <input type="number" id="sets" value="1" min="1" required
+              <input class=input-core type="number" id="sets" value="1" min="1" required
                 class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-center text-slate-100 focus:outline-none focus:border-emerald-400 transition" />
             </div>
             <div>
               <label class="form-label">Reps</label>
-              <input type="number" id="reps" value="1" min="1" required
+              <input class=input-core type="number" id="reps" value="1" min="1" required
                 class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-center text-slate-100 focus:outline-none focus:border-emerald-400 transition" />
             </div>
             <div>
               <label class="form-label">Weight (kg)</label>
-              <input type="number" id="weight" placeholder="60" min="0" step="any" required
+              <input class=input-core type="number" id="weight" placeholder="60" min="0" step="any" required
                 class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-center text-slate-100 focus:outline-none focus:border-emerald-400 transition" />
             </div>
           </div>
@@ -203,7 +204,7 @@
           <div id="filter-container" class="flex-1 min-w-[150px]">
             <label class="form-label">Filter</label>
             <select id="workout-filter"
-              class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-emerald-400 w-full">
+              class="dropdown-core">
               <option value="All">All Exercises</option>
             </select>
           </div>
@@ -247,7 +248,7 @@
 
           <div class="flex gap-2">
             <input id="myCyberTag" type="text" readonly
-              class="flex-1 bg-black text-slate-200 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all w-full min-w-0"
+              class="input-core"
               value="connecting to network..." />
 
             <button id="btnCopyCyberTag" onclick="copyCyberTag()" class="btn-core is-secondary btn-size-side">
@@ -263,7 +264,7 @@
 
             <div class="flex gap-2">
               <input type="text" id="friendUidInput" placeholder="Paste friend's Cyber-Tag here..."
-                class="flex-1 bg-black text-slate-200 border border-slate-700 rounded px-3 py-2 text-sm font-mono focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all" />
+                class="input-core" />
               <button id="btnAddFriend" class="btn-core is-primary btn-size-side" onclick="handleAddFriend()">
                 Add
               </button>
@@ -319,6 +320,8 @@
             <tbody id="leaderboardRows"></tbody>
           </table>
         </div>
+
+      </section>
   </div>
 
   </div>
