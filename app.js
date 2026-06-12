@@ -302,8 +302,23 @@ async function processAnalytics() {
     const bw = userBiometrics.bodyweight;
     const gender = userBiometrics.gender;
 
-    // 1. DOTS Calculation Array
-    const plTotal = activeRecords['Back Squat'] + activeRecords['Bench Press'] + activeRecords['Deadlift'];
+    // ==========================================
+    // 1. DOTS Calculation & Lift Breakdown
+    // ==========================================
+    const squatRec = activeRecords['Back Squat'] || 0;
+    const benchRec = activeRecords['Bench Press'] || 0;
+    const deadliftRec = activeRecords['Deadlift'] || 0;
+
+    // Inject individual Powerlifting 1RMs into the DOTS side-breakdown view
+    const dotsSquatEl = document.getElementById('dots-breakdown-squat');
+    const dotsBenchEl = document.getElementById('dots-breakdown-bench');
+    const dotsDeadliftEl = document.getElementById('dots-breakdown-deadlift');
+
+    if (dotsSquatEl) dotsSquatEl.innerText = `${Math.round(squatRec)} kg`;
+    if (dotsBenchEl) dotsBenchEl.innerText = `${Math.round(benchRec)} kg`;
+    if (dotsDeadliftEl) dotsDeadliftEl.innerText = `${Math.round(deadliftRec)} kg`;
+
+    const plTotal = squatRec + benchRec + deadliftRec;
     let dots = 0;
     if (plTotal > 0 && bw > 0) {
         const c = gender === 'male' 
@@ -313,11 +328,26 @@ async function processAnalytics() {
         const denominator = c[0] + (c[1] * bw) + (c[2] * Math.pow(bw, 2)) + (c[3] * Math.pow(bw, 3)) + (c[4] * Math.pow(bw, 4)) + (c[5] * Math.pow(bw, 5));
         dots = (plTotal * 500) / denominator;
     }
-    document.getElementById('dots-display').innerText = dots > 0 ? dots.toFixed(1) : "0.0";
-    document.getElementById('dots-tier').innerText = getRankingTier(dots, 'dots', gender);
+    
+    const dotsDisplayEl = document.getElementById('dots-display');
+    const dotsTierEl = document.getElementById('dots-tier');
+    if (dotsDisplayEl) dotsDisplayEl.innerText = dots > 0 ? dots.toFixed(1) : "0.0";
+    if (dotsTierEl) dotsTierEl.innerText = getRankingTier(dots, 'dots', gender);
 
-    // 2. Sinclair Calculation Array (2025-2028 Olympic Cycle)
-    const olyTotal = activeRecords['Snatch'] + activeRecords['Clean & Jerk'];
+    // ==========================================
+    // 2. Sinclair Calculation & Lift Breakdown
+    // ==========================================
+    const snatchRec = activeRecords['Snatch'] || 0;
+    const cleanRec = activeRecords['Clean & Jerk'] || 0;
+
+    // Inject individual Olympic Weightlifting 1RMs into the Sinclair side-breakdown view
+    const sinclairSnatchEl = document.getElementById('sinclair-breakdown-snatch');
+    const sinclairCleanEl = document.getElementById('sinclair-breakdown-clean');
+
+    if (sinclairSnatchEl) sinclairSnatchEl.innerText = `${Math.round(snatchRec)} kg`;
+    if (sinclairCleanEl) sinclairCleanEl.innerText = `${Math.round(cleanRec)} kg`;
+
+    const olyTotal = snatchRec + cleanRec;
     let sinclair = 0;
     if (olyTotal > 0 && bw > 0) {
         const A = gender === 'male' ? 0.722762521 : 0.787004341;
@@ -329,14 +359,19 @@ async function processAnalytics() {
             sinclair = olyTotal * coeff;
         }
     }
-    document.getElementById('sinclair-display').innerText = sinclair > 0 ? sinclair.toFixed(1) : "0.0";
-    document.getElementById('sinclair-tier').innerText = getRankingTier(sinclair, 'sinclair', gender);
+    
+    const sinclairDisplayEl = document.getElementById('sinclair-display');
+    const sinclairTierEl = document.getElementById('sinclair-tier');
+    if (sinclairDisplayEl) sinclairDisplayEl.innerText = sinclair > 0 ? sinclair.toFixed(1) : "0.0";
+    if (sinclairTierEl) sinclairTierEl.innerText = getRankingTier(sinclair, 'sinclair', gender);
 
+    // ==========================================
+    // 3. Social Sync Integration
+    // ==========================================
     if (currentUser) {
         await updateUserLeaderboardProfile(currentUser.uid, dots);
     }
 }
-
 function getRankingTier(score, system, gender) {
     if (score <= 0) return "-";
     if (system === 'dots') {
@@ -549,16 +584,27 @@ async function handleAddFriend() {
   const input = document.getElementById('friendUidInput');
   const targetUid = input.value.trim();
   const currentUser = auth.currentUser;
+  const feedbackTarget = 'socialAddFriendFeedback'; // Target ID
 
   if (!targetUid) return;
-  if (!currentUser) return showFeedback('Authenticate to link friends.', 'red');
-  if (targetUid === currentUser.uid) return showFeedback("Can't link your own tag.", 'red');
-  if (userFriendsList.includes(targetUid)) return showFeedback("Friend already linked.", 'yellow');
+  
+  // Show a loading status immediately
+  showFeedback('Connecting to network node...', 'slate', feedbackTarget);
+
+  if (!currentUser) {
+    return showFeedback('Authenticate to link friends.', 'red', feedbackTarget);
+  }
+  if (targetUid === currentUser.uid) {
+    return showFeedback("Can't link your own tag.", 'red', feedbackTarget);
+  }
+  if (userFriendsList.includes(targetUid)) {
+    return showFeedback("Friend already linked.", 'yellow', feedbackTarget);
+  }
 
   try {
     const targetDoc = await getProfileDocument(targetUid);
     if (!targetDoc.exists()) {
-      return showFeedback("Cyber-Tag not found in database.", 'red');
+      return showFeedback("Cyber-Tag not found in database.", 'red', feedbackTarget);
     }
 
     await setDoc(getProfileDocRef(currentUser.uid), {
@@ -566,13 +612,22 @@ async function handleAddFriend() {
     }, { merge: true });
 
     input.value = '';
-    showFeedback('Friend link established successfully!', 'emerald');
+    showFeedback('Friend link established successfully!', 'emerald', feedbackTarget);
+
+    // Optional: Clear success message after 4 seconds so the UI stays tidy
+    setTimeout(() => {
+      const el = document.getElementById(feedbackTarget);
+      if (el && el.innerText === 'Friend link established successfully!') {
+        el.innerText = '';
+      }
+    }, 4000);
+
   } catch (err) {
     console.error('Friend add failed', err.code, err.message);
     if (err.code === 'permission-denied') {
-      showFeedback('Permission denied: check Firestore rules for profiles.', 'red');
+      showFeedback('Permission denied: check Firestore rules for profiles.', 'red', feedbackTarget);
     } else {
-      showFeedback(`Error linking network node: ${err.message}`, 'red');
+      showFeedback(`Error linking network node: ${err.message}`, 'red', feedbackTarget);
     }
   }
 }
@@ -701,16 +756,42 @@ async function updateUserLeaderboardProfile(uid, dotsScore) {
   }, { merge: true });
 }
 
-// Visual Alert helper
-function showFeedback(msg, color) {
-  const el = document.getElementById('socialFeedback');
+// Visual Alert helper (Updated with dynamic target and optional auto-vanish delay)
+function showFeedback(msg, color, targetId = 'socialFeedback', delay = 2000) {
+  const el = document.getElementById(targetId);
+  if (!el) return;
+
   const colorClasses = {
     emerald: 'text-emerald-400',
     red: 'text-red-400',
-    yellow: 'text-yellow-400'
+    yellow: 'text-yellow-400',
+    slate: 'text-slate-400'
   };
+
+  // 1. Set the text and colors
   el.innerText = msg;
-  el.className = `text-[11px] font-medium h-4 ${colorClasses[color] || 'text-slate-400'}`;
+  el.className = `text-xs font-medium transition-all duration-500 opacity-100 ${colorClasses[color] || 'text-slate-400'}`;
+
+  // 2. If a delay (in ms) is passed, clear the text after that delay
+  if (delay) {
+    // Optional: Clear any existing timeout attached to this element to prevent overlapping animations
+    if (el.dataset.timeoutId) {
+      clearTimeout(parseInt(el.dataset.timeoutId));
+    }
+
+    const timeoutId = setTimeout(() => {
+      // Smoothly fade out using CSS opacity before clearing text
+      el.classList.replace('opacity-100', 'opacity-0');
+      
+      // Wait for the 500ms transition animation to finish, then clear the text completely
+      setTimeout(() => {
+        el.innerText = '&nbsp;';
+      }, 500);
+    }, delay);
+
+    // Save the timeout ID on the element's dataset so we can track it
+    el.dataset.timeoutId = timeoutId.toString();
+  }
 }
 
 window.copyCyberTag = copyCyberTag;
