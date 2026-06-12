@@ -50,6 +50,13 @@ let lastWorkouts = [];
 let chipPB = false;
 let chip1RM = false;
 
+// Global state variables for social & leaderboards
+let currentScope = 'global'; // 'global' or 'friends'
+let currentFormula = 'dots';  // 'dots' or 'sinclair' (NEW)
+let userFriendsList = [];    // Array of friend UIDs
+let leaderboardUnsubscribe = null; //
+
+
 // Authentication State Listener
 onAuthStateChanged(auth, async (user) => {
     currentUser = user;
@@ -402,7 +409,7 @@ async function processAnalytics() {
     // 3. Social Sync Integration
     // ==========================================
     if (currentUser) {
-        await updateUserLeaderboardProfile(currentUser.uid, dots);
+        await updateUserLeaderboardProfile(currentUser.uid, dots, sinclair);
     }
 }
 function getRankingTier(score, system, gender) {
@@ -548,10 +555,7 @@ workoutForm.addEventListener('submit', async (e) => {
 
 // leaderboard
 
-// Global state variables
-let currentScope = 'global'; // 'global' or 'friends'
-let userFriendsList = [];    // Array of friend UIDs
-let leaderboardUnsubscribe = null;
+
 
 function getProfileDocRef(uid) {
   return doc(db, "profiles", uid);
@@ -740,7 +744,7 @@ function switchLeaderboardScope(scope) {
 }
 
 /**
- * Fetch and Render Leaderboard Standings depending on Filter Scope
+ * Fetch and Render Leaderboard Standings depending on Filter Scope and Formula System
  */
 function syncLeaderboardFeed() {
   const currentUser = auth.currentUser;
@@ -749,7 +753,12 @@ function syncLeaderboardFeed() {
     leaderboardUnsubscribe = null;
   }
 
-  const leaderboardQuery = query(collection(db, "profiles"), orderBy("dotsScore", "desc"), limit(50));
+  // Determine target field database sorting path dynamically
+  const sortField = currentFormula === 'dots' ? "dotsScore" : "sinclairScore";
+
+  // Firestore query sorts seamlessly by whichever formula is active
+  const leaderboardQuery = query(collection(db, "profiles"), orderBy(sortField, "desc"), limit(50));
+  
   leaderboardUnsubscribe = onSnapshot(leaderboardQuery, (snapshot) => {
     const rowsContainer = document.getElementById('leaderboardRows');
     let html = '';
@@ -761,8 +770,12 @@ function syncLeaderboardFeed() {
       const isFriend = userFriendsList.includes(profile.uid);
 
       if (currentScope === 'friends' && !isMe && !isFriend) {
-        return;
+        return; // Filter out profiles that aren't the user or a linked friend
       }
+
+      // Read score value dynamically from the corresponding system property
+      const rawScore = currentFormula === 'dots' ? profile.dotsScore : (profile.sinclairScore || 0);
+      const displayScore = formatDotsScore(rawScore);
 
       html += `
         <tr class="border-b border-slate-800/60 ${isMe ? 'bg-emerald-500/10 font-bold' : ''}">
@@ -771,7 +784,7 @@ function syncLeaderboardFeed() {
             <span class="${isMe ? 'text-emerald-400' : 'text-slate-200'}">${getDisplayName(profile, profile.uid)}</span>
             ${isFriend ? '<span class="text-[9px] bg-slate-700/60 text-slate-400 px-1.5 py-0.5 rounded uppercase font-extrabold tracking-wider">Friend</span>' : ''}
           </td>
-          <td class="py-3 text-right font-mono font-bold text-emerald-400">${formatDotsScore(profile.dotsScore).toFixed(2)}</td>
+          <td class="py-3 text-right font-mono font-bold text-emerald-400">${displayScore.toFixed(2)}</td>
         </tr>`;
     });
 
@@ -782,12 +795,42 @@ function syncLeaderboardFeed() {
   });
 }
 
-async function updateUserLeaderboardProfile(uid, dotsScore) {
+/**
+ * Manage DOTS vs Sinclair Leaderboard Metric System Toggles
+ */
+function switchLeaderboardFormula(formula) {
+  currentFormula = formula;
+  
+  const btnDots = document.getElementById('btnFormulaDots');
+  const btnSinclair = document.getElementById('btnFormulaSinclair');
+  const tableHeaderScore = document.getElementById('tableHeaderScore');
+  const descEl = document.getElementById('leaderboard-desc');
+
+  // 1. Swap visual layout pill configurations 
+  if (formula === 'dots') {
+    if (btnDots) btnDots.className = "btn-core is-primary btn-size-row";
+    if (btnSinclair) btnSinclair.className = "btn-core is-ghost btn-size-row";
+    if (tableHeaderScore) tableHeaderScore.innerText = "DOTS";
+    if (descEl) descEl.innerText = "Pound-for-pound DOTS standings live.";
+  } else {
+    if (btnSinclair) btnSinclair.className = "btn-core is-primary btn-size-row";
+    if (btnDots) btnDots.className = "btn-core is-ghost btn-size-row";
+    if (tableHeaderScore) tableHeaderScore.innerText = "Sinclair";
+    if (descEl) descEl.innerText = "Pound-for-pound Olympic Sinclair scores live.";
+  }
+
+  // 2. Trigger active real-time view sync updates
+  syncLeaderboardFeed();
+}
+
+async function updateUserLeaderboardProfile(uid, dotsScore, sinclairScore) {
   await setDoc(getProfileDocRef(uid), {
     dotsScore: parseFloat(dotsScore) || 0,
+    sinclairScore: parseFloat(sinclairScore) || 0, // Added field mapping
     lastActive: serverTimestamp()
   }, { merge: true });
 }
+
 
 // Visual Alert helper (Updated with dynamic target and optional auto-vanish delay)
 function showFeedback(msg, color, targetId = 'socialFeedback', delay = 2000) {
@@ -830,3 +873,4 @@ function showFeedback(msg, color, targetId = 'socialFeedback', delay = 2000) {
 window.copyCyberTag = copyCyberTag;
 window.handleAddFriend = handleAddFriend;
 window.switchLeaderboardScope = switchLeaderboardScope;
+window.switchLeaderboardFormula = switchLeaderboardFormula;
