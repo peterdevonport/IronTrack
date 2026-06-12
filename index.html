@@ -1,15 +1,20 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>IronTrack // Analytics & Sync</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-  </head>
-  <body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IronTrack // Analytics & Sync</title>
+  
+  <link rel="stylesheet" href="style.css" />
+  
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4" defer></script>
+</head>
+
+  <body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
     <div class="max-w-md mx-auto p-4 sm:p-6 space-y-6">
       <header class="flex justify-between items-center pt-4">
-        <div>
+        <div id="header">
           <h1 class="text-3xl font-black tracking-tight text-emerald-400">
             IRONTRACK
           </h1>
@@ -22,16 +27,13 @@
         </div>
         <button
           id="auth-btn"
-          class="text-xs font-bold bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-xl text-slate-300 hover:text-rose-400 transition cursor-pointer"
+          class="btn-core is-secondary btn-size-header-util cursor-pointer"
         >
           Loading...
         </button>
       </header>
 
-      <section
-        id="login-view"
-        class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl text-center my-12 space-y-4"
-      >
+      <section id="login-view" class="surface-card text-center my-12 space-y-4">
         <div class="text-5xl">⚡️</div>
         <div>
           <h2 class="text-xl font-bold mb-1">Unlock Cloud Analytics</h2>
@@ -40,7 +42,7 @@
           </p>
         </div>
 
-        <div class="space-y-3 text-left">
+        <div id="auth-form"class="space-y-3 text-left">
           <div>
             <label
               class="block text-xs font-semibold text-slate-400 uppercase mb-1"
@@ -70,34 +72,27 @@
         </div>
 
         <div class="grid grid-cols-2 gap-3 pt-2">
-          <button
-            id="email-login-btn"
-            class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3 px-4 rounded-xl transition cursor-pointer active:scale-[0.98]"
-          >
+          <button id="email-login-btn" class="btn-core is-primary btn-size-input">
             Sign In
           </button>
-          <button
-            id="email-signup-btn"
-            class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold py-3 px-4 rounded-xl transition cursor-pointer active:scale-[0.98]"
-          >
+          <button id="email-signup-btn" class="btn-core is-secondary btn-size-input">
             Register
           </button>
         </div>
       </section>
 
       <main id="app-view" class="hidden space-y-6">
-        <section
-          class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-xl"
-        >
-          <h2
-            class="text-sm font-black text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2"
-          >
-            👤 Biometric Profile
+        <section class="surface-card">
+          <h2 class="section-heading flex items-center gap-2">
+            Biometric Profile
           </h2>
+          <p class="text-description mb-4">
+              Your physical attributes for accurate scoring.
+          </p>
           <form id="profile-form" class="grid grid-cols-2 gap-4">
             <div>
               <label
-                class="block text-xs font-semibold text-slate-400 uppercase mb-1"
+                class="form-label"
                 >Assigned Sex</label
               >
               <select
@@ -110,7 +105,7 @@
             </div>
             <div>
               <label
-                class="block text-xs font-semibold text-slate-400 uppercase mb-1"
+                class="form-label"
                 >Bodyweight (kg)</label
               >
               <input
@@ -126,7 +121,7 @@
             <button
               type="submit"
               id="save-profile-btn"
-              class="col-span-2 bg-slate-700 hover:bg-emerald-500 hover:text-slate-950 text-xs font-bold py-2 rounded-xl transition cursor-pointer"
+              class="btn-core is-secondary btn-size-input col-span-2"
             >
               Update Profile Biometrics
             </button>
@@ -134,58 +129,59 @@
         </section>
 
         <section class="grid grid-cols-2 gap-4">
-          <div
-            class="bg-gradient-to-br from-slate-800 to-slate-900 p-4 rounded-2xl border border-slate-700 shadow-md text-center"
-          >
-            <p
-              class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1"
-            >
+          <div class="surface-card">
+            <p class="section-heading">
               DOTS Score
             </p>
-            <div id="dots-display" class="text-3xl font-black text-emerald-400">
+            <div id="dots-display" class="text-3xl font-black text-slate-200">
               0.0
             </div>
             <p
               id="dots-tier"
-              class="text-[10px] text-slate-500 uppercase mt-1 font-semibold"
+              class="text-[10px] text-emerald-400 uppercase mt-1 font-semibold"
             >
               -
             </p>
+            <p class="text-description">
+              Your pound-for-pound Powerlifting score.
+            </p>
           </div>
-          <div
-            class="bg-gradient-to-br from-slate-800 to-slate-900 p-4 rounded-2xl border border-slate-700 shadow-md text-center"
-          >
+          <div class="surface-card">
             <p
-              class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1"
+              class="section-heading"
             >
               Sinclair Score
             </p>
+
             <div
               id="sinclair-display"
-              class="text-3xl font-black text-emerald-400"
+              class="text-3xl font-black text-slate-200"
             >
               0.0
             </div>
             <p
               id="sinclair-tier"
-              class="text-[10px] text-slate-500 uppercase mt-1 font-semibold"
+              class="text-[10px] text-emerald-400 uppercase mt-1 font-semibold"
             >
               -
+            </p>
+            <p class="text-description">
+              Your pound-for-pound Olympic weightlifting score.
             </p>
           </div>
         </section>
 
-        <section
-          class="bg-slate-800/40 border border-slate-800 p-4 rounded-2xl"
-        >
-          <h3
-            class="text-xs font-black text-slate-500 uppercase tracking-wider mb-3"
-          >
-            Database Extracted 1-Rep Maxes
-          </h3>
+        <section class="surface-card">
+          <h2 class="section-heading">
+            Database Extracted 1-Rep Max
+          </h2>
+          <p class="text-description">
+              Your 1RM lifts across different exercises.
+          </p>
+
           <div class="grid grid-cols-3 gap-2 text-center text-xs">
             <div
-              class="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80"
+              class="surface-inner-well"
             >
               <span class="block text-slate-400 font-medium mb-0.5"
                 >Back Squat</span
@@ -194,9 +190,7 @@
                 >0 kg</strong
               >
             </div>
-            <div
-              class="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80"
-            >
+            <div class="surface-inner-well">
               <span class="block text-slate-400 font-medium mb-0.5"
                 >Bench Press</span
               >
@@ -204,9 +198,8 @@
                 >0 kg</strong
               >
             </div>
-            <div
-              class="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80"
-            >
+            <div class="surface-inner-well">
+
               <span class="block text-slate-400 font-medium mb-0.5"
                 >Deadlift</span
               >
@@ -214,9 +207,8 @@
                 >0 kg</strong
               >
             </div>
-            <div
-              class="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80 col-span-1"
-            >
+            <div class="surface-inner-well">
+
               <span class="block text-slate-400 font-medium mb-0.5"
                 >Snatch</span
               >
@@ -224,9 +216,7 @@
                 >0 kg</strong
               >
             </div>
-            <div
-              class="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80"
-            >
+            <div class="surface-inner-well">
               <span class="block text-slate-400 font-medium mb-0.5"
                 >Clean & Jerk</span
               >
@@ -237,14 +227,15 @@
           </div>
         </section>
 
-        <section
-          class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-xl"
-        >
-          <h2 class="text-lg font-bold mb-4 text-slate-200">Log an Exercise</h2>
+        <section class="surface-card">
+          <h2 class="section-heading">Log an Exercise</h2>
+          <p class="text-description">
+              Record your workout details to track progress.
+          </p>
           <form id="workout-form" class="space-y-4">
             <div>
               <label
-                class="block text-xs font-semibold text-slate-400 uppercase mb-1"
+                class="form-label"
                 >Exercise Name</label
               >
               <select
@@ -262,7 +253,7 @@
             <div class="grid grid-cols-3 gap-3">
               <div>
                 <label
-                  class="block text-xs font-semibold text-slate-400 uppercase mb-1"
+                  class="form-label"
                   >Sets</label
                 >
                 <input
@@ -276,7 +267,7 @@
               </div>
               <div>
                 <label
-                  class="block text-xs font-semibold text-slate-400 uppercase mb-1"
+                  class="form-label"
                   >Reps</label
                 >
                 <input
@@ -290,7 +281,7 @@
               </div>
               <div>
                 <label
-                  class="block text-xs font-semibold text-slate-400 uppercase mb-1"
+                  class="form-label"
                   >Weight (kg)</label
                 >
                 <input
@@ -305,130 +296,104 @@
               </div>
             </div>
 
-            <button
-              type="submit"
-              class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3 rounded-xl transition cursor-pointer active:scale-[0.98]"
-            >
-              Log Set
-            </button>
+          <button type="submit" class="btn-core is-primary btn-size-input">
+            Log Set
+          </button>
+
           </form>
         </section>
 
-        <section
-          class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-xl"
-        >
-          <h2 class="text-lg font-bold text-slate-200 mb-4">Training Log</h2>
-          <div class="mb-3">
-            <label class="text-xs text-slate-400 uppercase font-bold mr-2">Filter</label>
-            <select id="workout-filter" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-emerald-400">
-              <option value="All">All Exercises</option>
-              <option value="Back Squat">Back Squat</option>
-              <option value="Bench Press">Bench Press</option>
-              <option value="Deadlift">Deadlift</option>
-              <option value="Snatch">Snatch</option>
-              <option value="Clean & Jerk">Clean & Jerk</option>
-            </select>
-          </div>
-          <div class="flex items-center gap-2 mb-4">
-            <button id="chip-pb" type="button" class="bg-slate-900 border border-slate-700 text-slate-400 text-xs px-3 py-2 rounded-full">PB</button>
-            <button id="chip-1rm" type="button" class="bg-slate-900 border border-slate-700 text-slate-400 text-xs px-3 py-2 rounded-full">1RM</button>
-          </div>
+        <section class="surface-card">
+
+          <h2 class="section-heading">Training Log</h2>
+          <p class="text-description">
+              Track your progress over time.
+          </p>
+
+<div class="flex items-end justify-between gap-4 mb-4 flex-wrap">
+  <div id="filter-container" class="flex-1 min-w-[150px]">
+    <label class="form-label">Filter</label>
+    <select
+      id="workout-filter"
+      class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-emerald-400 w-full"
+    >
+      <option value="All">All Exercises</option>
+      <option value="Back Squat">Back Squat</option>
+      <option value="Bench Press">Bench Press</option>
+      <option value="Deadlift">Deadlift</option>
+      <option value="Snatch">Snatch</option>
+      <option value="Clean & Jerk">Clean & Jerk</option>
+    </select>
+  </div>
+
+  <div class="flex items-center gap-2 pb-[1px]">
+    <button id="chip-pb" type="button" class="btn-core is-secondary btn-size-chip">
+      PB
+    </button>
+    <button id="chip-1rm" type="button" class="btn-core is-secondary btn-size-chip">
+      1RM
+    </button>
+  </div>
+</div>
+
           <div id="workout-list" class="space-y-3"></div>
-          <div
-            id="pagination-controls"
-            class="hidden mt-4 flex items-center justify-between gap-3"
-          >
-            <button
-              id="prev-page-btn"
-              class="w-full bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold py-3 rounded-xl transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-              type="button"
-            >
+          <div id="pagination-controls" class="hidden mt-4 flex items-center justify-between gap-3">
+            <button id="prev-page-btn" class="btn-core is-secondary btn-size-input" type="button">
               Previous
             </button>
             <p class="text-xs text-slate-400 text-center min-w-[120px]">
-              Page <span id="current-page">1</span> of
-              <span id="total-pages">1</span>
+              Page <span id="current-page">1</span> of <span id="total-pages">1</span>
             </p>
-            <button
-              id="next-page-btn"
-              class="w-full bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold py-3 rounded-xl transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-              type="button"
-            >
+            <button id="next-page-btn" class="btn-core is-secondary btn-size-input" type="button">
               Next
             </button>
           </div>
         </section>
-      </main>
 
-      <div
-        class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl mt-6 w-full max-w-md mx-auto"
-      >
-        <div class="flex justify-between items-center mb-4">
-          <h2
-            class="text-emerald-500 font-black tracking-wider text-lg uppercase"
-          >
-            ⚡ Neural Network: Friends
+      <section class="surface-card">
+          <h2 class="section-heading">
+            Friends
           </h2>
-          <span
-            class="text-xs bg-slate-900 border border-slate-700 px-2 py-1 rounded text-slate-400"
-            >v3.0 Social</span
-          >
-        </div>
+          <p class="text-description">
+              Find and connect with training partner
+          </p>
 
-        <div
-          class="bg-black p-3 rounded border border-slate-700 mb-4 flex justify-between items-center"
-        >
-          <div>
-            <p
-              class="text-[10px] text-slate-500 uppercase font-bold tracking-widest"
-            >
-              Your Cyber-Tag
-            </p>
-            <p
-              id="myCyberTag"
-              class="text-xs text-slate-300 font-mono tracking-tight select-all"
-            >
-              Loading UID...
-            </p>
-          </div>
-          <button
-            onclick="copyCyberTag()"
-            class="text-xs bg-slate-800 hover:bg-emerald-500 hover:text-black border border-slate-600 text-emerald-400 font-bold py-1 px-3 rounded transition-all duration-200"
-          >
-            Copy
-          </button>
-        </div>
-
+        
         <div class="space-y-2 mb-6">
-          <label
-            class="text-xs font-bold text-slate-400 uppercase tracking-wider"
-            >Link Ally via Cyber-Tag</label
-          >
+          <label class="form-label"
+            >Your Cyber-Tag
+          </label>
+
           <div class="flex gap-2">
-            <input
-              type="text"
-              id="friendUidInput"
-              placeholder="Paste friend's Cyber-Tag here..."
-              class="flex-1 bg-black text-slate-200 border border-slate-700 rounded px-3 py-2 text-sm font-mono focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
-            />
-            <button
-              onclick="handleAddFriend()"
-              class="bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase text-xs px-4 py-2 rounded shadow-lg active:scale-[0.98] transition-all"
-            >
-              Link
+            <input id="myCyberTag" type="text" readonly class="flex-1 bg-black text-slate-200 border border-slate-700 rounded px-3 py-2 text-sm font-mono focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all" />        
+            <button id="btnCopyCyberTag" onclick="copyCyberTag()" class="btn-core is-secondary btn-size-side">
+              Copy
             </button>
           </div>
+
           <p
             id="socialFeedback"
             class="text-[11px] text-slate-500 font-medium h-4"
           ></p>
+
+        <div class="space-y-2 mb-6">
+          <label class="form-label"
+            >Add Friend
+          </label>
+
+          <div class="flex gap-2">
+            <input type="text" id="friendUidInput" placeholder="Paste friend's Cyber-Tag here..." class="flex-1 bg-black text-slate-200 border border-slate-700 rounded px-3 py-2 text-sm font-mono focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all" />
+            <button id="btnAddFriend" class="btn-core is-primary btn-size-side" onclick="handleAddFriend()">
+              Add
+            </button>
+          </div>
         </div>
 
         <div>
           <h3
             class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2"
           >
-            Active Allies
+            Your Friends
           </h3>
           <div
             id="friendsListContainer"
@@ -439,49 +404,34 @@
             </p>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div
-        class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl mt-6 w-full max-w-md mx-auto"
-      >
-        <div
-          class="sm:flex sm:justify-between sm:items-center border-b border-slate-700 pb-4 mb-4"
-        >
+
+      <section class="surface-card">
           <div>
-            <h2
-              class="text-emerald-500 font-black tracking-wider text-xl uppercase"
-            >
-              🦾 IronTrack Leaderboard
+          <h2 class="section-heading">
+            IronTrack Leaderboard
             </h2>
-            <p class="text-xs text-slate-400">
-              Pound-for-pound DOTS standings live[cite: 7].
+            <p class="text-description">
+              Pound-for-pound DOTS standings live.
             </p>
-          </div>
-          <div
-            class="flex mt-3 sm:mt-0 bg-black p-1 rounded-lg border border-slate-800"
-          >
-            <button
-              id="btnGlobalBoard"
-              onclick="switchLeaderboardScope('global')"
-              class="bg-emerald-500 text-black text-xs font-black uppercase px-3 py-1.5 rounded-md transition-all"
-            >
-              Global
-            </button>
-            <button
-              id="btnFriendsBoard"
-              onclick="switchLeaderboardScope('friends')"
-              class="text-slate-400 hover:text-emerald-400 text-xs font-black uppercase px-3 py-1.5 rounded-md transition-all"
-            >
-              Inner Circle
-            </button>
-          </div>
+          
+<div class="flex gap-2 mt-3 sm:mt-0">
+  <button id="btnGlobalBoard" onclick="switchLeaderboardScope('global')" class="btn-core is-primary btn-size-row">
+    Global
+  </button>
+  <button id="btnFriendsBoard" onclick="switchLeaderboardScope('friends')" class="btn-core is-ghost btn-size-row">
+    Inner Circle
+  </button>
+</div>
+
         </div>
 
         <div class="overflow-x-auto">
           <table class="w-full text-left text-sm text-slate-300">
             <thead>
               <tr
-                class="text-slate-500 text-xs border-b border-slate-700 uppercase font-bold"
+                class="table-leaderboard-head"
               >
                 <th class="py-2">Rank</th>
                 <th class="py-2">Lifter</th>
@@ -495,5 +445,7 @@
     </div>
 
     <script type="module" src="app.js" defer></script>
+          </main>
+
   </body>
 </html>

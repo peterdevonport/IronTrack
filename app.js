@@ -56,7 +56,9 @@ onAuthStateChanged(auth, async (user) => {
     if (user) {
         loginView.classList.add('hidden');
         appView.classList.remove('hidden');
+
         authBtn.innerText = "Sign Out";
+
         window.__irontrackAuthState = 'signed-in';
         
         const handle = user.email.split('@')[0];
@@ -64,7 +66,7 @@ onAuthStateChanged(auth, async (user) => {
         
         const cyberTagEl = document.getElementById('myCyberTag');
         if (cyberTagEl) {
-            cyberTagEl.innerText = user.uid;
+            cyberTagEl.value = user.uid;
         }
 
         currentPage = 1;
@@ -76,7 +78,9 @@ onAuthStateChanged(auth, async (user) => {
         paginatedWorkouts = [];
         loginView.classList.remove('hidden');
         appView.classList.add('hidden');
-        authBtn.innerText = "Locked";
+        
+        authBtn.innerText = "Signed Out";
+
         window.__irontrackAuthState = 'signed-out';
         if (unsubscribeLogs) unsubscribeLogs();
     }
@@ -180,7 +184,7 @@ function listenToDataStream(uid) {
         workouts.sort((a, b) => b.timestamp - a.timestamp);
         window.__irontrackWorkoutCount = workouts.length;
         lastWorkouts = workouts;
-        // dynamically populate filter options from live exercise names
+        // dynamicFriend populate filter options from live exercise names
         try {
           const uniqueExercises = Array.from(new Set(workouts.map(w => w.exercise)));
           populateWorkoutFilter(uniqueExercises);
@@ -243,76 +247,62 @@ if (workoutFilter) {
 }
 
 // Wire PB / 1RM chips (toggle buttons) - use dataset.active as single source of truth
-const chipPBEl = document.getElementById('chip-pb');
-const chip1RMEl = document.getElementById('chip-1rm');
+const chipPBEl = document.getElementById('chip-pb'); //
+const chip1RMEl = document.getElementById('chip-1rm'); //
+
 if (chipPBEl) {
-  chipPBEl.dataset.active = 'false';
+  chipPBEl.dataset.active = 'false'; //
   chipPBEl.addEventListener('click', () => {
-    const active = chipPBEl.dataset.active !== 'true';
-    chipPBEl.dataset.active = active ? 'true' : 'false';
-    if (active) {
-      chipPBEl.classList.remove('bg-slate-900');
-      chipPBEl.classList.add('bg-violet-500', 'text-slate-950');
-      chipPBEl.classList.remove('text-slate-400');
-    } else {
-      chipPBEl.classList.add('bg-slate-900');
-      chipPBEl.classList.remove('bg-violet-500', 'text-slate-950');
-      chipPBEl.classList.add('text-slate-400');
-    }
-    currentPage = 1;
-    renderLogs(lastWorkouts);
-  });
-}
-if (chip1RMEl) {
-  chip1RMEl.dataset.active = 'false';
-  chip1RMEl.addEventListener('click', () => {
-    const active = chip1RMEl.dataset.active !== 'true';
-    chip1RMEl.dataset.active = active ? 'true' : 'false';
-    if (active) {
-      chip1RMEl.classList.remove('bg-slate-900');
-      chip1RMEl.classList.add('bg-emerald-500', 'text-slate-950');
-      chip1RMEl.classList.remove('text-slate-400');
-    } else {
-      chip1RMEl.classList.add('bg-slate-900');
-      chip1RMEl.classList.remove('bg-emerald-500', 'text-slate-950');
-      chip1RMEl.classList.add('text-slate-400');
-    }
-    currentPage = 1;
-    renderLogs(lastWorkouts);
+    const active = chipPBEl.dataset.active !== 'true'; //
+    chipPBEl.dataset.active = active ? 'true' : 'false'; //
+    
+    // Toggle class state cleanly based on status
+    chipPBEl.classList.toggle('is-active', active);
+    
+    currentPage = 1; //
+    renderLogs(lastWorkouts); //
   });
 }
 
-// Fallback: use event delegation in case elements were not present when script ran
+if (chip1RMEl) {
+  chip1RMEl.dataset.active = 'false'; //
+  chip1RMEl.addEventListener('click', () => {
+    const active = chip1RMEl.dataset.active !== 'true'; //
+    chip1RMEl.dataset.active = active ? 'true' : 'false'; //
+    
+    // Toggle class state cleanly based on status
+    chip1RMEl.classList.toggle('is-active', active);
+    
+    currentPage = 1; //
+    renderLogs(lastWorkouts); //
+  });
+}
+
+// Fallback Document Event Delegation Sync
 document.addEventListener('click', (e) => {
-  const pbBtn = e.target.closest && e.target.closest('#chip-pb');
-  const oneBtn = e.target.closest && e.target.closest('#chip-1rm');
+  const pbBtn = e.target.closest && e.target.closest('#chip-pb'); //
+  const oneBtn = e.target.closest && e.target.closest('#chip-1rm'); //
+  
   if (pbBtn) {
-    chipPB = !chipPB;
-    currentPage = 1;
-    const el = document.getElementById('chip-pb');
+    chipPB = !chipPB; //
+    currentPage = 1; //
+    const el = document.getElementById('chip-pb'); //
     if (el) {
-      el.dataset.active = chipPB ? 'true' : 'false';
-      if (chipPB) {
-        el.classList.remove('bg-slate-900'); el.classList.add('bg-violet-500','text-slate-950'); el.classList.remove('text-slate-400');
-      } else {
-        el.classList.add('bg-slate-900'); el.classList.remove('bg-violet-500','text-slate-950'); el.classList.add('text-slate-400');
-      }
+      el.dataset.active = chipPB ? 'true' : 'false'; //
+      el.classList.toggle('is-active', chipPB);
     }
-    renderLogs(lastWorkouts);
+    renderLogs(lastWorkouts); //
   }
+  
   if (oneBtn) {
-    chip1RM = !chip1RM;
-    currentPage = 1;
-    const el = document.getElementById('chip-1rm');
+    chip1RM = !chip1RM; //
+    currentPage = 1; //
+    const el = document.getElementById('chip-1rm'); //
     if (el) {
-      el.dataset.active = chip1RM ? 'true' : 'false';
-      if (chip1RM) {
-        el.classList.remove('bg-slate-900'); el.classList.add('bg-emerald-500','text-slate-950'); el.classList.remove('text-slate-400');
-      } else {
-        el.classList.add('bg-slate-900'); el.classList.remove('bg-emerald-500','text-slate-950'); el.classList.add('text-slate-400');
-      }
+      el.dataset.active = chip1RM ? 'true' : 'false'; //
+      el.classList.toggle('is-active', chip1RM);
     }
-    renderLogs(lastWorkouts);
+    renderLogs(lastWorkouts); //
   }
 });
 
@@ -459,30 +449,30 @@ function renderLogs(workouts) {
         const isMax1RM = !!workout._isMax1RM;
         const is1RMOnly = isMax1RM && !isPB;
         const oneRM = Math.round(weight / (1.0278 - (0.0278 * reps)));
-        const borderClass = isPB ? 'border-l-violet-500' : is1RMOnly ? 'border-l-emerald-500' : 'border-slate-800';
+        const borderClass = isPB ? 'log-entry-pb' : is1RMOnly ? 'log-entry-1rm' : 'log-entry';
         return `
-            <div class="bg-slate-950 border border-slate-800 border-l-4 ${borderClass} p-4 rounded-2xl mb-3 flex justify-between items-center shadow-2xl shadow-slate-950/60">
-                <div>
-                    <div class="flex items-center gap-2">
-                        <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm">${workout.exercise}</h4>
-                        ${isPB ? '<span class="bg-violet-500 text-slate-950 text-[9px] px-1.5 rounded font-black">PB</span>' : ''}
-                        ${isMax1RM ? '<span class="bg-emerald-500 text-slate-950 text-[9px] px-1.5 rounded font-extrabold" style="color:#000">1RM</span>' : ''}
-                    </div>
-                    <p class="text-slate-400 text-xs font-mono mt-0.5">
-                        ${new Date(workout.timestamp).toLocaleDateString()}
-                    </p>
-                </div>
-                <div class="text-right">
-                    <span class="text-white font-mono text-base font-semibold">
-                        ${workout.sets || 1} x ${workout.reps || 1} 
-                        <span class="text-slate-500 text-xs">@</span> 
-                        ${workout.weight}kg
-                    </span>
-                    <p class="text-slate-400 text-xs font-mono mt-0.5">
-                        Est. 1RM: ${oneRM}kg
-                    </p>
-                </div>
-            </div>
+<div class="${borderClass} p-4 rounded-2xl mb-3 flex justify-between items-center shadow-2xl shadow-slate-950/60 transition-all duration-200" style="background-color: var(--slate-900);">
+    <div>
+        <div class="flex items-center gap-2">
+            <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm">${workout.exercise}</h4>
+            ${isPB ? '<span class="bg-purple-950/50 text-purple-400 border border-purple-800/60 text-[9px] px-1.5 rounded font-black">PB</span>' : ''}
+            ${isMax1RM ? '<span class="bg-emerald-950/50 text-emerald-400 border border-emerald-800/60 text-[9px] px-1.5 rounded font-extrabold">1RM</span>' : ''}
+        </div>
+        <p class="text-slate-400 text-xs font-mono mt-0.5">
+            ${new Date(workout.timestamp).toLocaleDateString()}
+        </p>
+    </div>
+    <div class="text-right">
+        <span class="text-white font-mono text-base font-semibold">
+            ${workout.sets || 1} x ${workout.reps || 1} 
+            <span class="text-slate-500 text-xs">@</span> 
+            ${workout.weight}kg
+        </span>
+        <p class="text-slate-400 text-xs font-mono mt-0.5">
+            Est. 1RM: ${oneRM}kg
+        </p>
+    </div>
+</div>
         `;
     }).join('');
 }
@@ -540,7 +530,7 @@ function formatDotsScore(value) {
 async function initSocialProfile(user, dotsScore = 0) {
   const tagEl = document.getElementById('myCyberTag');
   if (tagEl) {
-    tagEl.innerText = user.uid;
+    tagEl.value = user.uid;
   }
 
   const profileRef = getProfileDocRef(user.uid);
@@ -567,9 +557,9 @@ async function initSocialProfile(user, dotsScore = 0) {
  * Copy Cyber-Tag utility
  */
 function copyCyberTag() {
-  const tagText = document.getElementById('myCyberTag').innerText;
+  const tagText = document.getElementById('myCyberTag').value;
   navigator.clipboard.writeText(tagText);
-  showFeedback('Tag copied to neural clipboard!', 'emerald');
+  showFeedback('Cyber-Tag copied to clipboard!', 'emerald');
 }
 
 /**
@@ -587,7 +577,7 @@ async function handleAddFriend() {
   if (!targetUid) return;
   if (!currentUser) return showFeedback('Authenticate to link friends.', 'red');
   if (targetUid === currentUser.uid) return showFeedback("Can't link your own tag.", 'red');
-  if (userFriendsList.includes(targetUid)) return showFeedback("Ally already linked.", 'yellow');
+  if (userFriendsList.includes(targetUid)) return showFeedback("Friend already linked.", 'yellow');
 
   try {
     const targetDoc = await getProfileDocument(targetUid);
@@ -600,7 +590,7 @@ async function handleAddFriend() {
     }, { merge: true });
 
     input.value = '';
-    showFeedback('Ally link established successfully!', 'emerald');
+    showFeedback('Friend link established successfully!', 'emerald');
   } catch (err) {
     console.error('Friend add failed', err.code, err.message);
     if (err.code === 'permission-denied') {
@@ -631,7 +621,7 @@ async function renderActiveFriendsList() {
         console.error('Friend profile fetch failed', fUid, err.code, err.message);
         html += `
           <div class="flex justify-between items-center bg-slate-900/50 p-2 border border-slate-800 rounded">
-            <span class="font-medium text-slate-300 truncate max-w-[120px]">Locked Ally</span>
+            <span class="font-medium text-slate-300 truncate max-w-[120px]">Locked Friend</span>
             <span class="text-xs font-mono text-yellow-400">Permission denied</span>
           </div>`;
         continue;
@@ -647,7 +637,7 @@ async function renderActiveFriendsList() {
       } else {
         html += `
           <div class="flex justify-between items-center bg-slate-900/50 p-2 border border-slate-800 rounded">
-            <span class="font-medium text-slate-300 truncate max-w-[120px]">Unknown Ally</span>
+            <span class="font-medium text-slate-300 truncate max-w-[120px]">Unknown Friend</span>
             <span class="text-xs font-mono text-slate-500">${fUid}</span>
           </div>`;
       }
@@ -667,19 +657,22 @@ async function renderActiveFriendsList() {
 /**
  * Manage Global vs Friends Leaderboard UI Toggles
  */
+/**
+ * Manage Global vs Friends Leaderboard UI Toggles
+ */
 function switchLeaderboardScope(scope) {
-  currentScope = scope;
-  const btnGlobal = document.getElementById('btnGlobalBoard');
-  const btnFriends = document.getElementById('btnFriendsBoard');
+  currentScope = scope; //
+  const btnGlobal = document.getElementById('btnGlobalBoard'); //
+  const btnFriends = document.getElementById('btnFriendsBoard'); //
 
-  if (scope === 'global') {
-    btnGlobal.className = "bg-emerald-500 text-black text-xs font-black uppercase px-3 py-1.5 rounded-md transition-all";
-    btnFriends.className = "text-slate-400 hover:text-emerald-400 text-xs font-black uppercase px-3 py-1.5 rounded-md transition-all";
+  if (scope === 'global') { //
+    btnGlobal.className = "btn-core is-primary btn-size-row";
+    btnFriends.className = "btn-core is-ghost btn-size-row";
   } else {
-    btnFriends.className = "bg-emerald-500 text-black text-xs font-black uppercase px-3 py-1.5 rounded-md transition-all";
-    btnGlobal.className = "text-slate-400 hover:text-emerald-400 text-xs font-black uppercase px-3 py-1.5 rounded-md transition-all";
+    btnFriends.className = "btn-core is-primary btn-size-row";
+    btnGlobal.className = "btn-core is-ghost btn-size-row";
   }
-  syncLeaderboardFeed();
+  syncLeaderboardFeed(); //
 }
 
 /**
@@ -712,7 +705,7 @@ function syncLeaderboardFeed() {
           <td class="py-3 font-mono text-slate-500">#${rankCounter++}</td>
           <td class="py-3 flex items-center gap-2">
             <span class="${isMe ? 'text-emerald-400' : 'text-slate-200'}">${getDisplayName(profile, profile.uid)}</span>
-            ${isFriend ? '<span class="text-[9px] bg-slate-700/60 text-slate-400 px-1.5 py-0.5 rounded uppercase font-extrabold tracking-wider">Ally</span>' : ''}
+            ${isFriend ? '<span class="text-[9px] bg-slate-700/60 text-slate-400 px-1.5 py-0.5 rounded uppercase font-extrabold tracking-wider">Friend</span>' : ''}
           </td>
           <td class="py-3 text-right font-mono font-bold text-emerald-400">${formatDotsScore(profile.dotsScore).toFixed(2)}</td>
         </tr>`;
