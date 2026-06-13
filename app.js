@@ -44,6 +44,7 @@ let unsubscribeLogs = null;
 let userBiometrics = { gender: 'male', bodyweight: 75 };
 let activeRecords = { "Back Squat": 0, "Bench Press": 0, Deadlift: 0, Snatch: 0, "Clean & Jerk": 0 };
 let currentPage = 1;
+let urlParamsProcessed = false; // Add this flag
 
 let paginatedWorkouts = [];
 let lastWorkouts = [];
@@ -63,35 +64,38 @@ onAuthStateChanged(auth, async (user) => {
     if (user) {
         loginView.classList.add('hidden');
         appView.classList.remove('hidden');
-
         authBtn.innerText = "Sign Out";
-
         window.__irontrackAuthState = 'signed-in';
         
+        // ... (existing code: handle, greeting, cyberTag, pullProfileMetrics) ...
         const handle = user.email.split('@')[0];
         greeting.innerText = `Athlete: ${handle}`;
         
-        const cyberTagEl = document.getElementById('myCyberTag');
-        if (cyberTagEl) {
-            cyberTagEl.value = user.uid;
-        }
-
-        currentPage = 1;
         await pullProfileMetrics(user.uid);
         await initSocialProfile(user);
         listenToDataStream(user.uid);
-    } else {
-        currentPage = 1;
-        paginatedWorkouts = [];
-        loginView.classList.remove('hidden');
-        appView.classList.add('hidden');
-        
-        authBtn.innerText = "Signed Out";
 
-        window.__irontrackAuthState = 'signed-out';
-        if (unsubscribeLogs) unsubscribeLogs();
+        showQRCode()
+
+        // --- NEW: Process URL Params safely here ---
+        if (!urlParamsProcessed) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const friendId = urlParams.get('addFriend');
+            
+            if (friendId) {
+                await processFriendRequest(friendId);
+                // Clean the URL so it doesn't re-trigger
+                window.history.replaceState({}, document.title, "/");
+            }
+            urlParamsProcessed = true;
+        }
+
+    } else {
+        // ... (existing sign-out logic) ...
     }
 });
+
+
 
 // Email Core Auth Handlers
 loginBtn.addEventListener('click', async () => {
@@ -160,6 +164,8 @@ profileForm.addEventListener('submit', async (e) => {
         alert(`Unable to update profile: ${err.message}`);
     }
 });
+
+
 
 // Realtime Data Mining
 function listenToDataStream(uid) {
@@ -870,7 +876,86 @@ function showFeedback(msg, color, targetId = 'socialFeedback', delay = 2000) {
   }
 }
 
+function showQRCode() {
+    const container = document.getElementById('qrcode-container');
+    const qrDiv = document.getElementById('qrcode');
+
+    // Clear previous
+    qrDiv.innerHTML = "";
+    
+    // Generate QR (assuming `currentUser` is your global auth object)
+    const qrData = `${window.location.origin}/?addFriend=${currentUser.uid}`;
+    const qrConfig = {
+    type: "canvas",
+    shape: "square",
+    width: 300,
+    height: 300,
+    data: qrData,
+    margin: 0,
+    qrOptions: {
+        typeNumber: 0,
+        mode: "Byte",
+        errorCorrectionLevel: "Q"
+    },
+    imageOptions: {
+        saveAsBlob: true,
+        hideBackgroundDots: true,
+        imageSize: 0.4,
+        margin: 0
+    },
+    dotsOptions: {
+        type: "dots",
+        color: "#f8fafc",
+        roundSize: true,
+        gradient: null
+    },
+    backgroundOptions: {
+        round: 0,
+        color: "#0f172a"
+    },
+    image: "data:image/png;base64,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",
+    cornersSquareOptions: {
+        type: "extra-rounded",
+        color: "#34d399"
+    },
+    cornersDotOptions: {
+        type: "",
+        color: "#f8fafc"
+    }
+    };
+    
+    const qrCode = new QRCodeStyling(qrConfig);;
+    qrCode.append(qrDiv);
+    container.classList.remove('hidden');
+}
+
+// --- QR add friend  ---
+async function processFriendRequest(friendId) {
+    if (!currentUser || friendId === currentUser.uid) return;
+
+    // Check if already friends to prevent unnecessary updates
+    if (userFriendsList.includes(friendId)) {
+        console.log("Friend already linked.");
+        return;
+    }
+
+    try {
+        const targetDoc = await getProfileDocument(friendId);
+        if (targetDoc.exists()) {
+            await setDoc(getProfileDocRef(currentUser.uid), {
+                friends: arrayUnion(friendId)
+            }, { merge: true });
+            alert("Friend link established successfully!");
+        } else {
+            console.error("Cyber-Tag not found.");
+        }
+    } catch (err) {
+        console.error("Error linking friend:", err);
+    }
+}
+
 window.copyCyberTag = copyCyberTag;
 window.handleAddFriend = handleAddFriend;
 window.switchLeaderboardScope = switchLeaderboardScope;
 window.switchLeaderboardFormula = switchLeaderboardFormula;
+window.showQRCode = showQRCode;

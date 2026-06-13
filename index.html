@@ -231,11 +231,17 @@
         <h2 class="section-heading">
           Friends
         </h2>
-        <p class="text-description">
+        <p class="text-description mb-2">
           Find and connect with training partner
         </p>
+            <p class="form-label mb-2">Your QR Code</p>
 
-
+        <div id="social-card">
+          <div id="qrcode-container" class="flex flex-col gap-2 mb-4 hidden items-center">
+              <div id="qrcode"></div>
+          </div>
+        </div>
+        
         <div class="space-y-2 mb-6">
           <label class="form-label">Your Cyber-Tag
           </label>
@@ -264,6 +270,8 @@
 
             <p id="socialAddFriendFeedback" class="text-xs text-slate-500 font-medium h-4"></p>
           </div>
+
+
 
           <div>
             <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
@@ -337,8 +345,10 @@
 
   </div>
 
-  <script type="module" src="app.js" defer></script>
-  </main>
+<script src="https://unpkg.com/qr-code-styling@1.6.0/lib/qr-code-styling.js"></script>
+<script type="module" src="app.js" defer></script>
+
+</main>
 
 </body>
 
