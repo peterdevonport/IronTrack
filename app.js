@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, where, onSnapshot, deleteDoc, doc, getDoc, setDoc, updateDoc, arrayUnion, serverTimestamp, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, query, where, onSnapshot, deleteDoc, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, serverTimestamp, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // Integrated Unique Firebase App Configuration
 const firebaseConfig = {
@@ -675,6 +675,66 @@ async function handleAddFriend() {
   }
 }
 
+async function addFriendFromLeaderboard(friendUid) {
+  //TODO: new friends from leaderboard appear twice in your friends on initial render
+  const currentUser = auth.currentUser;
+  if (!currentUser) {
+    return showFeedback('Sign in to add friends from leaderboard.', 'red');
+  }
+  if (!friendUid || friendUid === currentUser.uid) {
+    return;
+  }
+  if (userFriendsList.includes(friendUid)) {
+    return showFeedback('Already connected with this athlete.', 'yellow');
+  }
+
+  try {
+    const targetDoc = await getProfileDocument(friendUid);
+    if (!targetDoc.exists()) {
+      return showFeedback('Unable to add athlete: Cyber-Tag missing.', 'red');
+    }
+
+    await setDoc(getProfileDocRef(currentUser.uid), {
+      friends: arrayUnion(friendUid)
+    }, { merge: true });
+
+    userFriendsList.push(friendUid);
+    renderActiveFriendsList();
+    syncLeaderboardFeed();
+    showFeedback('Friend added from leaderboard!', 'emerald');
+  } catch (err) {
+    console.error('Leaderboard friend add failed', err.code, err.message);
+    if (err.code === 'permission-denied') {
+      showFeedback('Permission denied: check Firestore rules for profiles.', 'red');
+    } else {
+      showFeedback(`Could not add friend: ${err.message}`, 'red');
+    }
+  }
+}
+
+async function removeFriend(friendUid) {
+  const currentUser = auth.currentUser;
+  if (!currentUser) return showFeedback('Sign in to remove friends.', 'red');
+  if (!friendUid) return;
+  if (!userFriendsList.includes(friendUid)) return showFeedback('Athlete not in your friend list.', 'yellow');
+
+  if (!confirm('Remove this friend from your list?')) return;
+
+  try {
+    await updateDoc(getProfileDocRef(currentUser.uid), {
+      friends: arrayRemove(friendUid)
+    });
+
+    userFriendsList = userFriendsList.filter(u => u !== friendUid);
+    renderActiveFriendsList();
+    syncLeaderboardFeed();
+    showFeedback('Friend removed.', 'slate');
+  } catch (err) {
+    console.error('Remove friend failed', err.code, err.message || err);
+    showFeedback('Unable to remove friend. Check permissions.', 'red');
+  }
+}
+
 /**
  * Render the side panel showing friends' names and current scores
  */
@@ -706,7 +766,12 @@ async function renderActiveFriendsList() {
         html += `
           <div class="flex justify-between items-center bg-slate-900/50 p-2 border border-slate-800 rounded">
             <span class="font-medium text-slate-300 truncate max-w-[120px]">${getDisplayName(data, fUid)}</span>
-            <span class="text-xs font-mono text-emerald-400 font-bold">${formatDotsScore(data.dotsScore).toFixed(2)} pts</span>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="removeFriend('${fUid}')" 
+              class="items-center justify-center rounded-full px-2 py-0.5 btn-core is-ghost text-xs ">
+              Remove
+              </button>
+            </div>
           </div>`;
       } else {
         html += `
@@ -783,18 +848,28 @@ function syncLeaderboardFeed() {
       const rawScore = currentFormula === 'dots' ? profile.dotsScore : (profile.sinclairScore || 0);
       const displayScore = formatDotsScore(rawScore);
 
+      const badgeBaseClasses = 'inline-flex items-center justify-center rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider w-20';
+      const actionCell = isMe
+        ? `<span class="${badgeBaseClasses} bg-slate-700/60 text-slate-400">You</span>`
+        : isFriend
+          ? `<span class="${badgeBaseClasses} bg-emerald-500/10 text-emerald-300">Friend</span>`
+          : `<button type="button" class="${badgeBaseClasses} border border-slate-700 bg-slate-900 text-slate-200 transition hover:bg-slate-800" 
+          onclick="addFriendFromLeaderboard('${profile.uid}')">
+          + Add
+          </button>`;
+
       html += `
         <tr class="border-b border-slate-800/60 ${isMe ? 'bg-emerald-500/10 font-bold' : ''}">
           <td class="py-3 font-mono text-slate-500">#${rankCounter++}</td>
           <td class="py-3 flex items-center gap-2">
             <span class="${isMe ? 'text-emerald-400' : 'text-slate-200'}">${getDisplayName(profile, profile.uid)}</span>
-            ${isFriend ? '<span class="text-[9px] bg-slate-700/60 text-slate-400 px-1.5 py-0.5 rounded uppercase font-extrabold tracking-wider">Friend</span>' : ''}
           </td>
           <td class="py-3 text-right font-mono font-bold text-emerald-400">${displayScore.toFixed(2)}</td>
+          <td class="py-3 text-right">${actionCell}</td>
         </tr>`;
     });
 
-    rowsContainer.innerHTML = html || `<tr><td colspan="3" class="py-4 text-center text-xs text-slate-500 italic">No network entries visible in this grid scope.</td></tr>`;
+    rowsContainer.innerHTML = html || `<tr><td colspan="4" class="py-4 text-center text-xs text-slate-500 italic">No network entries visible in this grid scope.</td></tr>`;
   }, (error) => {
     console.error('Leaderboard snapshot failed', error.code, error.message);
     showFeedback('Leaderboard access denied: update Firestore rules for profiles.', 'red');
@@ -956,6 +1031,8 @@ async function processFriendRequest(friendId) {
 
 window.copyCyberTag = copyCyberTag;
 window.handleAddFriend = handleAddFriend;
+window.addFriendFromLeaderboard = addFriendFromLeaderboard;
+window.removeFriend = removeFriend;
 window.switchLeaderboardScope = switchLeaderboardScope;
 window.switchLeaderboardFormula = switchLeaderboardFormula;
 window.showQRCode = showQRCode;
