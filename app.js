@@ -983,7 +983,9 @@ function showQRCode() {
     qrDiv.innerHTML = "";
     
     // Generate QR (assuming `currentUser` is your global auth object)
-    const qrData = `${window.location.origin}/?addFriend=${currentUser.uid}`;
+    const qrUrl = new URL(window.location.href);
+    qrUrl.search = `addFriend=${currentUser.uid}`;
+    const qrData = qrUrl.toString();
     const qrConfig = {
     type: "canvas",
     shape: "square",
