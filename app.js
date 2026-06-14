@@ -50,6 +50,7 @@ let currentUser = null;
 let unsubscribeLogs = null;
 let userBiometrics = { gender: 'male', bodyweight: 75 };
 let activeRecords = { "Back Squat": 0, "Bench Press": 0, Deadlift: 0, Snatch: 0, "Clean & Jerk": 0 };
+let pctEntriesByLift = {};
 let currentPage = 1;
 let urlParamsProcessed = false; // Add this flag
 
@@ -100,10 +101,15 @@ onAuthStateChanged(auth, async (user) => {
         greeting.innerText = "Analytics Dashboard";
         document.getElementById('workout-list').innerHTML = '';
         document.getElementById('registry-table-body').innerHTML = '';
-        const pctContainer = document.getElementById('pct-table-container');
-        if (pctContainer) pctContainer.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">Select a lift to view %1RM calculations.</p>';
-        const pctResult = document.getElementById('pct-custom-result');
-        if (pctResult) pctResult.textContent = '—';
+        pctEntriesByLift = {};
+        const pctEntriesList = document.getElementById('pct-entries-list');
+        if (pctEntriesList) pctEntriesList.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">Select a lift with data to get started.</p>';
+        const pctAddInput = document.getElementById('pct-add-input');
+        if (pctAddInput) pctAddInput.value = '';
+        const pctOneRm = document.getElementById('pct-one-rm-display');
+        if (pctOneRm) pctOneRm.textContent = '—';
+        const pctAddResult = document.getElementById('pct-add-result');
+        if (pctAddResult) pctAddResult.textContent = '—';
         document.getElementById('dots-display').innerText = '0.0';
         document.getElementById('dots-tier').innerText = '-';
         document.getElementById('sinclair-display').innerText = '0.0';
@@ -283,42 +289,82 @@ function update1RMRegistryUI() {
 
 function updatePercentageCard() {
     const select = document.getElementById('pct-lift-select');
-    const container = document.getElementById('pct-table-container');
-    const customInput = document.getElementById('pct-custom-input');
-    const customResult = document.getElementById('pct-custom-result');
-    if (!select || !container) return;
+    const entriesList = document.getElementById('pct-entries-list');
+    const oneRmDisplay = document.getElementById('pct-one-rm-display');
+    const addInput = document.getElementById('pct-add-input');
+    const addResult = document.getElementById('pct-add-result');
+    if (!select || !entriesList) return;
 
     const exercise = select.value;
     const oneRM = activeRecords[exercise] || 0;
 
-    if (oneRM <= 0) {
-        container.innerHTML = `<p class="text-xs text-slate-500 italic py-2 text-center">No 1RM data for ${escapeHtml(exercise)} yet. Log some sets first.</p>`;
-        if (customResult) customResult.textContent = '—';
+    if (oneRmDisplay) {
+        oneRmDisplay.textContent = oneRM > 0 ? `${Math.round(oneRM)} kg` : '—';
+    }
+
+    const entries = pctEntriesByLift[exercise] || [];
+
+    if (entries.length === 0 && oneRM <= 0) {
+        entriesList.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">No 1RM data for ' + escapeHtml(exercise) + ' yet. Log some sets first.</p>';
+        if (addResult) addResult.textContent = '—';
         return;
     }
 
-    let html = `<div class="grid grid-cols-2 gap-y-1.5 gap-x-4 text-sm mt-2">
-        <span class="text-slate-500 font-bold uppercase text-[10px] tracking-wider">%</span>
-        <span class="text-emerald-400 font-bold uppercase text-[10px] text-right tracking-wider">Weight</span>`;
+    if (entries.length === 0) {
+        entriesList.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">Enter a % below to add a row.</p>';
+        if (addResult) addResult.textContent = '—';
+        return;
+    }
 
-    for (let pct = 50; pct <= 100; pct += 5) {
+    let html = '';
+    entries.forEach(pct => {
         const weight = Math.round(oneRM * pct / 100);
         html += `
-        <span class="text-slate-400 text-xs ${pct === 100 ? 'font-bold text-emerald-400' : ''}">${pct}%</span>
-        <span class="text-slate-200 font-mono text-right text-xs ${pct === 100 ? 'font-bold text-emerald-400' : ''}">${weight} kg</span>`;
-    }
+        <div class="flex justify-between items-center py-1.5 px-1 rounded-lg hover:bg-slate-800/40">
+            <span class="text-slate-200 font-mono text-sm">${pct}%</span>
+            <span class="text-slate-200 font-mono text-sm text-right">${weight} kg</span>
+        </div>`;
+    });
 
-    html += `</div>`;
-    container.innerHTML = html;
+    entriesList.innerHTML = html;
 
-    if (customInput && customResult) {
-        const customPct = parseFloat(customInput.value);
-        if (!isNaN(customPct) && customPct > 0 && customPct <= 100) {
-            customResult.textContent = `${Math.round(oneRM * customPct / 100)} kg`;
+    if (addInput && addResult && oneRM > 0) {
+        const val = parseFloat(addInput.value);
+        if (!isNaN(val) && val > 0) {
+            addResult.textContent = `${Math.round(oneRM * val / 100)} kg`;
         } else {
-            customResult.textContent = '—';
+            addResult.textContent = '—';
         }
     }
+}
+
+function handlePctAdd() {
+    const select = document.getElementById('pct-lift-select');
+    const addInput = document.getElementById('pct-add-input');
+    if (!select || !addInput) return;
+
+    const exercise = select.value;
+    const val = parseFloat(addInput.value);
+    const oneRM = activeRecords[exercise] || 0;
+
+    if (isNaN(val) || val <= 0 || oneRM <= 0) return;
+
+    if (!pctEntriesByLift[exercise]) {
+        pctEntriesByLift[exercise] = [];
+    }
+    pctEntriesByLift[exercise].push(val);
+    addInput.value = '';
+    updatePercentageCard();
+}
+
+function handlePctClear() {
+    const select = document.getElementById('pct-lift-select');
+    if (!select) return;
+    const exercise = select.value;
+    pctEntriesByLift[exercise] = [];
+    const addInput = document.getElementById('pct-add-input');
+    if (addInput) addInput.value = '';
+    updatePercentageCard();
 }
 
 function escapeHtml(text) {
@@ -366,15 +412,30 @@ if (workoutFilter) {
   });
 }
 
-// Wire %1RM calculator lift selector and custom input
+// Wire %1RM calculator lift selector, add input, and clear button
 const pctLiftSelect = document.getElementById('pct-lift-select');
-const pctCustomInput = document.getElementById('pct-custom-input');
+const pctAddInput = document.getElementById('pct-add-input');
+const pctClearBtn = document.getElementById('pct-clear-btn');
 
 if (pctLiftSelect) {
     pctLiftSelect.addEventListener('change', updatePercentageCard);
 }
-if (pctCustomInput) {
-    pctCustomInput.addEventListener('input', updatePercentageCard);
+if (pctAddInput) {
+    pctAddInput.addEventListener('input', updatePercentageCard);
+    pctAddInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handlePctAdd();
+        }
+    });
+    pctAddInput.addEventListener('blur', () => {
+        if (pctAddInput.value.trim()) {
+            handlePctAdd();
+        }
+    });
+}
+if (pctClearBtn) {
+    pctClearBtn.addEventListener('click', handlePctClear);
 }
 
 // Wire PB / 1RM chips (toggle buttons) - use dataset.active as single source of truth
