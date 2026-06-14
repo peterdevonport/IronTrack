@@ -81,7 +81,7 @@ onAuthStateChanged(auth, async (user) => {
         if (pendingFriendUid && !urlParamsProcessed) {
             urlParamsProcessed = true;
             await processFriendRequest(pendingFriendUid);
-            window.history.replaceState({}, document.title, "/");
+            window.history.replaceState({}, document.title, window.location.pathname);
         }
 
     } else {
