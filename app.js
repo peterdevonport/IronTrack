@@ -317,12 +317,15 @@ function updatePercentageCard() {
     }
 
     let html = '';
-    entries.forEach(pct => {
+    entries.forEach((pct, idx) => {
         const weight = Math.round(oneRM * pct / 100);
         html += `
         <div class="flex justify-between items-center py-1.5 px-1 rounded-lg hover:bg-slate-800/40">
             <span class="text-slate-200 font-mono text-sm">${pct}%</span>
-            <span class="text-slate-200 font-mono text-sm text-right">${weight} kg</span>
+            <div class="flex items-center gap-2">
+                <span class="text-slate-200 font-mono text-sm">${weight} kg</span>
+                <button onclick="handlePctRemove(this)" data-index="${idx}" class="text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer">−</button>
+            </div>
         </div>`;
     });
 
@@ -354,6 +357,16 @@ function handlePctAdd() {
     }
     pctEntriesByLift[exercise].push(val);
     addInput.value = '';
+    updatePercentageCard();
+}
+
+function handlePctRemove(btnEl) {
+    const select = document.getElementById('pct-lift-select');
+    if (!select || !btnEl) return;
+    const exercise = select.value;
+    const idx = parseInt(btnEl.dataset.index, 10);
+    if (!pctEntriesByLift[exercise] || isNaN(idx) || idx < 0 || idx >= pctEntriesByLift[exercise].length) return;
+    pctEntriesByLift[exercise].splice(idx, 1);
     updatePercentageCard();
 }
 
@@ -1196,3 +1209,4 @@ window.removeFriend = removeFriend;
 window.switchLeaderboardScope = switchLeaderboardScope;
 window.switchLeaderboardFormula = switchLeaderboardFormula;
 window.showQRCode = showQRCode;
+window.handlePctRemove = handlePctRemove;
