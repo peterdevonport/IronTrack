@@ -48,14 +48,12 @@ let urlParamsProcessed = false; // Add this flag
 
 let paginatedWorkouts = [];
 let lastWorkouts = [];
-let chipPB = false;
-let chip1RM = false;
-
 // Global state variables for social & leaderboards
 let currentScope = 'global'; // 'global' or 'friends'
-let currentFormula = 'dots';  // 'dots' or 'sinclair' (NEW)
+let currentFormula = 'dots';  // 'dots' or 'sinclair'
 let userFriendsList = [];    // Array of friend UIDs
 let leaderboardUnsubscribe = null; //
+let leaderboardCache = [];
 
 
 // Authentication State Listener
@@ -68,11 +66,12 @@ onAuthStateChanged(auth, async (user) => {
         window.__irontrackAuthState = 'signed-in';
         
         // ... (existing code: handle, greeting, cyberTag, pullProfileMetrics) ...
-        const handle = user.email.split('@')[0];
+        const handle = (user.email || user.uid).split('@')[0];
         greeting.innerText = `Athlete: ${handle}`;
         
         await pullProfileMetrics(user.uid);
         await initSocialProfile(user);
+        syncLeaderboardFeed();
         listenToDataStream(user.uid);
 
         showQRCode()
@@ -91,7 +90,23 @@ onAuthStateChanged(auth, async (user) => {
         }
 
     } else {
-        // ... (existing sign-out logic) ...
+        if (unsubscribeLogs) { unsubscribeLogs(); unsubscribeLogs = null; }
+        if (leaderboardUnsubscribe) { leaderboardUnsubscribe(); leaderboardUnsubscribe = null; }
+        loginView.classList.remove('hidden');
+        appView.classList.add('hidden');
+        authBtn.innerText = "Sign In";
+        greeting.innerText = "Analytics Dashboard";
+        document.getElementById('workout-list').innerHTML = '';
+        document.getElementById('registry-table-body').innerHTML = '';
+        document.getElementById('dots-display').innerText = '0.0';
+        document.getElementById('dots-tier').innerText = '-';
+        document.getElementById('sinclair-display').innerText = '0.0';
+        document.getElementById('sinclair-tier').innerText = '-';
+        userFriendsList = [];
+        document.getElementById('friendsListContainer').innerHTML = '';
+        document.getElementById('leaderboardRows').innerHTML = '';
+        currentUser = null;
+        window.__irontrackAuthState = 'signed-out';
     }
 });
 
@@ -184,7 +199,7 @@ function listenToDataStream(uid) {
 
             // Epley 1RM Estimation Formula
             const weight = parseFloat(data.weight);
-            const reps = parseInt(data.reps);
+            const reps = parseInt(data.reps, 10);
             const calculated1RM = reps === 1 ? weight : weight * (1 + reps / 30);
 
             if (activeRecords[data.exercise] !== undefined) {
@@ -241,20 +256,26 @@ function update1RMRegistryUI() {
         // Calculate Highest Estimated 1RM across all historical entries for this lift
         const maxEstimated1RM = Math.max(0, ...exerciseHistory.map(w => {
             const weight = parseFloat(w.weight || 0);
-            const reps = parseInt(w.reps || 1);
+            const reps = parseInt(w.reps || 1, 10);
             // Using Epley 1RM Formula matching your real-time data stream logic
             return reps === 1 ? weight : weight * (1 + reps / 30);
         }));
 
         // Append the 3 grid components that represent one full layout row
         html += `
-            <span class="text-slate-400 font-medium truncate">${exercise}</span>
+            <span class="text-slate-400 font-medium truncate">${escapeHtml(exercise)}</span>
             <span class="text-slate-200 font-mono text-right">${Math.round(maxEstimated1RM)} kg</span>
             <span class="text-slate-200 font-mono text-right">${Math.round(absolutePB)} kg</span>
         `;
     });
 
     tableBody.innerHTML = html;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.appendChild(document.createTextNode(text));
+    return div.innerHTML;
 }
 
 function updatePaginationControls(totalPages) {
@@ -450,16 +471,26 @@ function renderLogs(workouts) {
     paginatedWorkouts = workouts;
     const selected = workoutFilter ? workoutFilter.value : 'All';
 
-    // Precompute PB / 1RM flags for chip filtering and rendering
+    // Precompute PB / 1RM flags for chip filtering and rendering (O(n))
+    const maxWeightByExercise = {};
+    const max1RMByExercise = {};
+    workouts.forEach(w => {
+        const weight = parseFloat(w.weight);
+        const reps = parseInt(w.reps, 10) || 1;
+        const oneRM = Math.round(weight * (1 + reps / 30));
+        if (!maxWeightByExercise[w.exercise] || weight > maxWeightByExercise[w.exercise]) {
+            maxWeightByExercise[w.exercise] = weight;
+        }
+        if (!max1RMByExercise[w.exercise] || oneRM > max1RMByExercise[w.exercise]) {
+            max1RMByExercise[w.exercise] = oneRM;
+        }
+    });
     workouts.forEach(workout => {
         const weight = parseFloat(workout.weight);
-        const reps = parseInt(workout.reps) || 1;
-        const previousLifts = workouts.filter(w => w.exercise === workout.exercise && w.timestamp < workout.timestamp);
-        const prevMax = Math.max(0, ...previousLifts.map(w => parseFloat(w.weight)));
-        workout._isPB = weight > prevMax;
-        const oneRM = Math.round(weight / (1.0278 - (0.0278 * reps)));
-        const maxOneRMForExercise = Math.max(...workouts.filter(w => w.exercise === workout.exercise).map(w => Math.round(parseFloat(w.weight) / (1.0278 - (0.0278 * (parseInt(w.reps) || 1))))));
-        workout._isMax1RM = oneRM >= maxOneRMForExercise;
+        const reps = parseInt(workout.reps, 10) || 1;
+        workout._isPB = weight >= maxWeightByExercise[workout.exercise] && weight > 0;
+        const oneRM = Math.round(weight * (1 + reps / 30));
+        workout._isMax1RM = oneRM >= max1RMByExercise[workout.exercise] && oneRM > 0;
     });
 
     let displayList = (selected === 'All') ? workouts : workouts.filter(w => w.exercise === selected);
@@ -487,29 +518,20 @@ function renderLogs(workouts) {
 
     updatePaginationControls(totalPages);
 
-    // 1. First, establish the true historical maximums for all exercises
-    const allTimeMaxes = {};
-    workouts.forEach(w => {
-        const weight = parseFloat(w.weight);
-        if (!allTimeMaxes[w.exercise] || weight > allTimeMaxes[w.exercise]) {
-            allTimeMaxes[w.exercise] = weight;
-        }
-    });
-
     // 2. Render logic
     logContainer.innerHTML = pageItems.map(workout => {
         const weight = parseFloat(workout.weight);
-        const reps = parseInt(workout.reps) || 1;
+        const reps = parseInt(workout.reps, 10) || 1;
         const isPB = !!workout._isPB;
         const isMax1RM = !!workout._isMax1RM;
         const is1RMOnly = isMax1RM && !isPB;
-        const oneRM = Math.round(weight / (1.0278 - (0.0278 * reps)));
+        const oneRM = Math.round(weight * (1 + reps / 30));
         const borderClass = isPB ? 'log-entry-pb' : is1RMOnly ? 'log-entry-1rm' : 'log-entry';
         return `
 <div class="${borderClass} p-4 rounded-2xl mb-3 flex justify-between items-center shadow-2xl shadow-slate-950/60 transition-all duration-200" style="background-color: var(--slate-900);">
     <div>
         <div class="flex items-center gap-2">
-            <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm">${workout.exercise}</h4>
+            <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm">${escapeHtml(workout.exercise)}</h4>
             ${isPB ? '<span class="bg-purple-950/50 text-purple-400 border border-purple-800/60 text-[9px] px-1.5 rounded font-black">PB</span>' : ''}
             ${isMax1RM ? '<span class="bg-emerald-950/50 text-emerald-400 border border-emerald-800/60 text-[9px] px-1.5 rounded font-extrabold">1RM</span>' : ''}
         </div>
@@ -540,8 +562,8 @@ workoutForm.addEventListener('submit', async (e) => {
     const log = {
         userId: currentUser.uid,
         exercise: document.getElementById('exercise').value,
-        sets: parseInt(document.getElementById('sets').value),
-        reps: parseInt(document.getElementById('reps').value),
+        sets: parseInt(document.getElementById('sets').value, 10),
+        reps: parseInt(document.getElementById('reps').value, 10),
         weight: parseFloat(document.getElementById('weight').value),
         timestamp: Date.now()
     };
@@ -600,7 +622,7 @@ async function initSocialProfile(user, dotsScore = 0) {
     const data = snapshot.data();
     userFriendsList = Array.isArray(data?.friends) ? data.friends : [];
     renderActiveFriendsList();
-    syncLeaderboardFeed();
+    renderLeaderboardView();
   }, (error) => {
     console.error('Profile snapshot failed', error.code, error.message);
     showFeedback('Profile access denied: check Firestore rules for profiles.', 'red');
@@ -676,7 +698,6 @@ async function handleAddFriend() {
 }
 
 async function addFriendFromLeaderboard(friendUid) {
-  //TODO: new friends from leaderboard appear twice in your friends on initial render
   const currentUser = auth.currentUser;
   if (!currentUser) {
     return showFeedback('Sign in to add friends from leaderboard.', 'red');
@@ -697,10 +718,6 @@ async function addFriendFromLeaderboard(friendUid) {
     await setDoc(getProfileDocRef(currentUser.uid), {
       friends: arrayUnion(friendUid)
     }, { merge: true });
-
-    userFriendsList.push(friendUid);
-    renderActiveFriendsList();
-    syncLeaderboardFeed();
     showFeedback('Friend added from leaderboard!', 'emerald');
   } catch (err) {
     console.error('Leaderboard friend add failed', err.code, err.message);
@@ -746,21 +763,26 @@ async function renderActiveFriendsList() {
   }
 
   try {
+    // Fetch all friend profiles in parallel
+    const friendResults = await Promise.allSettled(
+      userFriendsList.map(fUid => getProfileDocument(fUid))
+    );
+
     let html = '';
-    for (let fUid of userFriendsList) {
-      let fDoc;
-      try {
-        fDoc = await getProfileDocument(fUid);
-      } catch (err) {
-        console.error('Friend profile fetch failed', fUid, err.code, err.message);
+    userFriendsList.forEach((fUid, i) => {
+      const result = friendResults[i];
+
+      if (result.status === 'rejected') {
+        console.error('Friend profile fetch failed', fUid, result.reason);
         html += `
           <div class="flex justify-between items-center bg-slate-900/50 p-2 border border-slate-800 rounded">
             <span class="font-medium text-slate-300 truncate max-w-[120px]">Locked Friend</span>
             <span class="text-xs font-mono text-yellow-400">Permission denied</span>
           </div>`;
-        continue;
+        return;
       }
 
+      const fDoc = result.value;
       if (fDoc && fDoc.exists()) {
         const data = fDoc.data();
         html += `
@@ -780,7 +802,7 @@ async function renderActiveFriendsList() {
             <span class="text-xs font-mono text-slate-500">${fUid}</span>
           </div>`;
       }
-    }
+    });
 
     if (!html) {
       container.innerHTML = `<p class="text-xs text-slate-500 italic">No valid allies found for the linked Cyber-Tags.</p>`;
@@ -796,9 +818,6 @@ async function renderActiveFriendsList() {
 /**
  * Manage Global vs Friends Leaderboard UI Toggles
  */
-/**
- * Manage Global vs Friends Leaderboard UI Toggles
- */
 function switchLeaderboardScope(scope) {
   currentScope = scope; //
   const btnGlobal = document.getElementById('btnGlobalBoard'); //
@@ -811,65 +830,74 @@ function switchLeaderboardScope(scope) {
     btnFriends.className = "btn-core is-primary btn-size-row";
     btnGlobal.className = "btn-core is-ghost btn-size-row";
   }
-  syncLeaderboardFeed(); //
+  renderLeaderboardView(); //
 }
 
 /**
- * Fetch and Render Leaderboard Standings depending on Filter Scope and Formula System
+ * Re-render leaderboard table from cached data applying current scope, formula, and friends list
+ */
+function renderLeaderboardView() {
+  const rowsContainer = document.getElementById('leaderboardRows');
+  if (!rowsContainer) return;
+  const currentUser = auth.currentUser;
+
+  let html = '';
+  let rankCounter = 1;
+
+  leaderboardCache.forEach(profile => {
+    const isMe = currentUser && profile.uid === currentUser.uid;
+    const isFriend = userFriendsList.includes(profile.uid);
+
+    if (currentScope === 'friends' && !isMe && !isFriend) {
+      return;
+    }
+
+    const rawScore = currentFormula === 'dots' ? profile.dotsScore : (profile.sinclairScore || 0);
+    const displayScore = formatDotsScore(rawScore);
+
+    const badgeBaseClasses = 'inline-flex items-center justify-center rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider w-20';
+    const actionCell = isMe
+      ? `<span class="${badgeBaseClasses} bg-slate-700/60 text-slate-400">You</span>`
+      : isFriend
+        ? `<span class="${badgeBaseClasses} bg-emerald-500/10 text-emerald-300">Friend</span>`
+        : `<button type="button" class="${badgeBaseClasses} border border-slate-700 bg-slate-900 text-slate-200 transition hover:bg-slate-800" 
+        onclick="addFriendFromLeaderboard('${profile.uid}')">
+        + Add
+        </button>`;
+
+    html += `
+      <tr class="border-b border-slate-800/60 ${isMe ? 'bg-emerald-500/10 font-bold' : ''}">
+        <td class="py-3 font-mono text-slate-500">#${rankCounter++}</td>
+        <td class="py-3 flex items-center gap-2">
+          <span class="${isMe ? 'text-emerald-400' : 'text-slate-200'}">${getDisplayName(profile, profile.uid)}</span>
+        </td>
+        <td class="py-3 text-right font-mono font-bold text-emerald-400">${displayScore.toFixed(2)}</td>
+        <td class="py-3 text-right">${actionCell}</td>
+      </tr>`;
+  });
+
+  rowsContainer.innerHTML = html || `<tr><td colspan="4" class="py-4 text-center text-xs text-slate-500 italic">No network entries visible in this grid scope.</td></tr>`;
+}
+
+/**
+ * Fetch and Cache Leaderboard data via real-time snapshot
  */
 function syncLeaderboardFeed() {
-  const currentUser = auth.currentUser;
   if (leaderboardUnsubscribe) {
     leaderboardUnsubscribe();
     leaderboardUnsubscribe = null;
   }
 
-  // Determine target field database sorting path dynamically
   const sortField = currentFormula === 'dots' ? "dotsScore" : "sinclairScore";
 
-  // Firestore query sorts seamlessly by whichever formula is active
   const leaderboardQuery = query(collection(db, "profiles"), orderBy(sortField, "desc"), limit(50));
   
   leaderboardUnsubscribe = onSnapshot(leaderboardQuery, (snapshot) => {
-    const rowsContainer = document.getElementById('leaderboardRows');
-    let html = '';
-    let rankCounter = 1;
-
+    leaderboardCache = [];
     snapshot.forEach((doc) => {
-      const profile = doc.data();
-      const isMe = currentUser && profile.uid === currentUser.uid;
-      const isFriend = userFriendsList.includes(profile.uid);
-
-      if (currentScope === 'friends' && !isMe && !isFriend) {
-        return; // Filter out profiles that aren't the user or a linked friend
-      }
-
-      // Read score value dynamically from the corresponding system property
-      const rawScore = currentFormula === 'dots' ? profile.dotsScore : (profile.sinclairScore || 0);
-      const displayScore = formatDotsScore(rawScore);
-
-      const badgeBaseClasses = 'inline-flex items-center justify-center rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider w-20';
-      const actionCell = isMe
-        ? `<span class="${badgeBaseClasses} bg-slate-700/60 text-slate-400">You</span>`
-        : isFriend
-          ? `<span class="${badgeBaseClasses} bg-emerald-500/10 text-emerald-300">Friend</span>`
-          : `<button type="button" class="${badgeBaseClasses} border border-slate-700 bg-slate-900 text-slate-200 transition hover:bg-slate-800" 
-          onclick="addFriendFromLeaderboard('${profile.uid}')">
-          + Add
-          </button>`;
-
-      html += `
-        <tr class="border-b border-slate-800/60 ${isMe ? 'bg-emerald-500/10 font-bold' : ''}">
-          <td class="py-3 font-mono text-slate-500">#${rankCounter++}</td>
-          <td class="py-3 flex items-center gap-2">
-            <span class="${isMe ? 'text-emerald-400' : 'text-slate-200'}">${getDisplayName(profile, profile.uid)}</span>
-          </td>
-          <td class="py-3 text-right font-mono font-bold text-emerald-400">${displayScore.toFixed(2)}</td>
-          <td class="py-3 text-right">${actionCell}</td>
-        </tr>`;
+      leaderboardCache.push(doc.data());
     });
-
-    rowsContainer.innerHTML = html || `<tr><td colspan="4" class="py-4 text-center text-xs text-slate-500 italic">No network entries visible in this grid scope.</td></tr>`;
+    renderLeaderboardView();
   }, (error) => {
     console.error('Leaderboard snapshot failed', error.code, error.message);
     showFeedback('Leaderboard access denied: update Firestore rules for profiles.', 'red');
@@ -933,7 +961,7 @@ function showFeedback(msg, color, targetId = 'socialFeedback', delay = 2000) {
   if (delay) {
     // Optional: Clear any existing timeout attached to this element to prevent overlapping animations
     if (el.dataset.timeoutId) {
-      clearTimeout(parseInt(el.dataset.timeoutId));
+      clearTimeout(Number(el.dataset.timeoutId));
     }
 
     const timeoutId = setTimeout(() => {
@@ -942,7 +970,7 @@ function showFeedback(msg, color, targetId = 'socialFeedback', delay = 2000) {
       
       // Wait for the 500ms transition animation to finish, then clear the text completely
       setTimeout(() => {
-        el.innerText = '&nbsp;';
+        el.innerText = '\u00A0';
       }, 500);
     }, delay);
 
@@ -999,7 +1027,7 @@ function showQRCode() {
     }
     };
     
-    const qrCode = new QRCodeStyling(qrConfig);;
+    const qrCode = new QRCodeStyling(qrConfig);
     qrCode.append(qrDiv);
     container.classList.remove('hidden');
 }
@@ -1020,7 +1048,7 @@ async function processFriendRequest(friendId) {
             await setDoc(getProfileDocRef(currentUser.uid), {
                 friends: arrayUnion(friendId)
             }, { merge: true });
-            alert("Friend link established successfully!");
+            showFeedback('Friend link established successfully!', 'emerald', 'socialAddFriendFeedback');
         } else {
             console.error("Cyber-Tag not found.");
         }
