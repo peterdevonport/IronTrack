@@ -39,6 +39,13 @@ const totalPagesDisplay = document.getElementById('total-pages');
 const workoutFilter = document.getElementById('workout-filter');
 const entriesPerPage = 5;
 
+const HAPTIC = {
+    tap: 15,
+    confirm: 30,
+    achievement: [50, 30, 50],
+    error: [40, 50, 40]
+};
+
 let currentUser = null;
 let unsubscribeLogs = null;
 let userBiometrics = { gender: 'male', bodyweight: 75 };
@@ -169,10 +176,11 @@ profileForm.addEventListener('submit', async (e) => {
     try {
         await setDoc(doc(db, "profiles", currentUser.uid), userBiometrics, { merge: true });
         processAnalytics();
-        alert("Biometrics updated successfully!");
+        showFeedback('Biometrics updated successfully!', 'emerald', 'profileFeedback');
+        haptic(HAPTIC.confirm);
     } catch (err) {
         console.error('Failed to save biometrics', err.code, err.message);
-        alert(`Unable to update profile: ${err.message}`);
+        showFeedback('Unable to update profile: ' + err.message, 'red', 'profileFeedback');
     }
 });
 
@@ -272,6 +280,10 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.appendChild(document.createTextNode(text));
     return div.innerHTML;
+}
+
+function haptic(pattern) {
+    if (navigator.vibrate) navigator.vibrate(pattern);
 }
 
 function updatePaginationControls(totalPages) {
@@ -568,6 +580,7 @@ workoutForm.addEventListener('submit', async (e) => {
         await addDoc(collection(db, "workouts"), log);
         workoutForm.reset();
         showFeedback('Workout saved. Keep crushing it!', 'emerald');
+        haptic(HAPTIC.confirm);
     } catch (err) {
         console.error('Workout submission failed', err.code, err.message);
         if (err.code === 'permission-denied') {
@@ -632,6 +645,7 @@ function copyCyberTag() {
   const tagText = document.getElementById('myCyberTag').value;
   navigator.clipboard.writeText(tagText);
   showFeedback('Cyber-Tag copied to clipboard!', 'emerald');
+  haptic(HAPTIC.tap);
 }
 
 /**
@@ -674,6 +688,7 @@ async function handleAddFriend() {
 
     input.value = '';
     showFeedback('Friend link established successfully!', 'emerald', feedbackTarget);
+    haptic(HAPTIC.tap);
 
     // Optional: Clear success message after 4 seconds so the UI stays tidy
     setTimeout(() => {
@@ -715,6 +730,7 @@ async function addFriendFromLeaderboard(friendUid) {
       friends: arrayUnion(friendUid)
     }, { merge: true });
     showFeedback('Friend added from leaderboard!', 'emerald');
+    haptic(HAPTIC.tap);
   } catch (err) {
     console.error('Leaderboard friend add failed', err.code, err.message);
     if (err.code === 'permission-denied') {
@@ -1047,6 +1063,7 @@ async function processFriendRequest(friendId) {
                 friends: arrayUnion(friendId)
             }, { merge: true });
             showFeedback('Friend link established successfully!', 'emerald', 'socialAddFriendFeedback');
+            haptic(HAPTIC.tap);
         } else {
             console.error("Cyber-Tag not found.");
         }
