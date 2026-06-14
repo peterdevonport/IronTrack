@@ -55,6 +55,8 @@ let userFriendsList = [];    // Array of friend UIDs
 let leaderboardUnsubscribe = null; //
 let leaderboardCache = [];
 
+// Extract pending friend request from URL before any auth redirect clears it
+const pendingFriendUid = new URLSearchParams(window.location.search).get('addFriend');
 
 // Authentication State Listener
 onAuthStateChanged(auth, async (user) => {
@@ -76,17 +78,10 @@ onAuthStateChanged(auth, async (user) => {
 
         showQRCode()
 
-        // --- NEW: Process URL Params safely here ---
-        if (!urlParamsProcessed) {
-            const urlParams = new URLSearchParams(window.location.search);
-            const friendId = urlParams.get('addFriend');
-            
-            if (friendId) {
-                await processFriendRequest(friendId);
-                // Clean the URL so it doesn't re-trigger
-                window.history.replaceState({}, document.title, "/");
-            }
+        if (pendingFriendUid && !urlParamsProcessed) {
             urlParamsProcessed = true;
+            await processFriendRequest(pendingFriendUid);
+            window.history.replaceState({}, document.title, "/");
         }
 
     } else {
@@ -106,6 +101,7 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('friendsListContainer').innerHTML = '';
         document.getElementById('leaderboardRows').innerHTML = '';
         currentUser = null;
+        urlParamsProcessed = false;
         window.__irontrackAuthState = 'signed-out';
     }
 });
