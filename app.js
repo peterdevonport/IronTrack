@@ -1187,9 +1187,11 @@ async function submitEmomWorkout(e) {
   if (intervalSeconds === 60) {
     name = `${durationMin} Min EMOM`;
   } else if (intervalSeconds % 60 === 0) {
-    name = `${durationMin} Min EMOM${intervalSeconds / 60}`;
+    name = `${durationMin} Min E${intervalSeconds / 60}MOM`;
   } else {
-    name = `${durationMin} Min ${intervalSeconds}s EMOM`;
+    const mins = Math.floor(intervalSeconds / 60);
+    const secs = intervalSeconds % 60;
+    name = `${durationMin} Min Every ${mins}:${secs.toString().padStart(2, '0')}`;
   }
 
   const workoutDoc = {
