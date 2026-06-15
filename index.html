@@ -257,6 +257,7 @@
               <option value="AMRAP">AMRAP</option>
               <option value="EMOM">EMOM</option>
               <option value="FOR_TIME">For Time</option>
+              <option value="INTERVAL">Interval</option>
             </select>
           </div>
 
@@ -454,6 +455,76 @@
             </button>
 
             <p id="fortimeFeedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
+          </form>
+
+          <!-- INTERVAL Form -->
+          <form id="interval-form" class="space-y-4 hidden">
+            <div class="grid grid-cols-3 gap-3">
+              <div>
+                <label class="form-label">Rounds</label>
+                <input type="number" id="interval-rounds" placeholder="5" min="1" step="1" class="input-core" required />
+              </div>
+              <div>
+                <label class="form-label">Work (min)</label>
+                <input type="number" id="interval-work-min" placeholder="2" min="0" step="1" class="input-core" required />
+              </div>
+              <div>
+                <label class="form-label">Rest (min)</label>
+                <input type="number" id="interval-rest-min" placeholder="1" min="0" step="1" class="input-core" required />
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between items-center mb-2">
+                <label class="form-label">Movements (per round)</label>
+                <button type="button" onclick="addIntervalMovementRow()" class="btn-core is-secondary btn-size-row">+ Add</button>
+              </div>
+              <div class="flex gap-2 text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-1">
+                <div class="flex-1">Movement</div>
+                <div class="w-16 flex items-center justify-center">Reps</div>
+                <div class="w-20 flex items-center justify-center">Load</div>
+                <div class="w-9"></div>
+              </div>
+              <div id="interval-movement-list" class="space-y-2">
+                <div class="movement-row flex gap-2 items-end">
+                  <div class="flex-1">
+                    <select class="movement-exercise dropdown-core" onchange="handleMovementExerciseChange(this)">
+                      <option value="">Select exercise...</option>
+                    </select>
+                  </div>
+                  <div class="w-16">
+                    <input type="number" class="movement-reps input-core" placeholder="Reps" min="1" step="1" />
+                  </div>
+                  <div class="w-20">
+                    <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
+                  </div>
+                  <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none">X</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="border-t border-slate-800 pt-4">
+              <h3 class="form-label mb-2">Result</h3>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="form-label">Rounds Completed</label>
+                  <input type="number" id="interval-rounds-completed" placeholder="4" min="0" step="1" class="input-core" required />
+                </div>
+                <div>
+                  <label class="form-label">Partial Reps</label>
+                  <input type="number" id="interval-partial-reps" placeholder="3" min="0" step="1" class="input-core" />
+                </div>
+              </div>
+              <p class="text-xs text-slate-400 mt-2">
+                Score: <span id="interval-score-preview" class="text-emerald-400 font-bold font-mono">—</span>
+              </p>
+            </div>
+
+            <button type="submit" class="btn-core is-primary btn-size-input">
+              Save Workout
+            </button>
+
+            <p id="intervalFeedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
           </form>
         </div>
       </section>

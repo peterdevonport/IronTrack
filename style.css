@@ -267,6 +267,11 @@ body {
   color: #fb923c;
   border: 1px solid rgba(251, 146, 60, 0.3);
 }
+.structured-card .workout-type-badge.interval {
+  background-color: rgba(244, 114, 182, 0.15);
+  color: #f472b6;
+  border: 1px solid rgba(244, 114, 182, 0.3);
+}
 .structured-card .score-display {
   font-size: 1.25rem;
   font-weight: 800;

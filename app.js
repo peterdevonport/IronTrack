@@ -995,10 +995,11 @@ function handleWorkoutTypeChange() {
   const amrapForm = document.getElementById('amrap-form');
   const emomForm = document.getElementById('emom-form');
   const forTimeForm = document.getElementById('for-time-form');
+  const intervalForm = document.getElementById('interval-form');
   const desc = document.getElementById('workout-type-desc');
-  if (!amrapForm || !emomForm || !forTimeForm || !desc) return;
+  if (!amrapForm || !emomForm || !forTimeForm || !intervalForm || !desc) return;
 
-  [amrapForm, emomForm, forTimeForm].forEach(f => f.classList.add('hidden'));
+  [amrapForm, emomForm, forTimeForm, intervalForm].forEach(f => f.classList.add('hidden'));
 
   if (type === 'EMOM') {
     emomForm.classList.remove('hidden');
@@ -1007,6 +1008,9 @@ function handleWorkoutTypeChange() {
   } else if (type === 'FOR_TIME') {
     forTimeForm.classList.remove('hidden');
     desc.textContent = 'Record a For Time workout — complete the rounds as fast as possible.';
+  } else if (type === 'INTERVAL') {
+    intervalForm.classList.remove('hidden');
+    desc.textContent = 'Record an Interval workout — work/rest rounds.';
   } else {
     amrapForm.classList.remove('hidden');
     desc.textContent = 'Record a structured AMRAP workout.';
@@ -1409,6 +1413,171 @@ async function generateForTimeContributions(workoutId, movements, rounds) {
   }
 }
 
+// ─── INTERVAL Functions ───────────────────────────────────────────────────
+
+function addIntervalMovementRow(exerciseName) {
+  const container = document.getElementById('interval-movement-list');
+  if (!container) return;
+  const row = document.createElement('div');
+  row.className = 'movement-row flex gap-2 items-end';
+  row.innerHTML = `
+    <div class="flex-1">
+      <select class="movement-exercise dropdown-core" onchange="handleMovementExerciseChange(this)">
+        <option value="">Select exercise...</option>
+      </select>
+    </div>
+    <div class="w-16">
+      <input type="number" class="movement-reps input-core" placeholder="Reps" min="1" step="1" />
+    </div>
+    <div class="w-20">
+      <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
+    </div>
+    <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none">X</button>
+  `;
+  container.appendChild(row);
+  populateMovementDropdowns();
+  if (exerciseName) {
+    const sel = row.querySelector('.movement-exercise');
+    if (sel) { sel.value = exerciseName; handleMovementExerciseChange(sel); }
+  }
+}
+
+function getIntervalMovementData() {
+  const movements = [];
+  let error = null;
+  document.querySelectorAll('#interval-movement-list .movement-row').forEach(row => {
+    const exercise = row.querySelector('.movement-exercise')?.value;
+    const reps = parseInt(row.querySelector('.movement-reps')?.value, 10);
+    const weight = parseFloat(row.querySelector('.movement-weight')?.value) || 0;
+    if (!exercise) { error = 'Select an exercise for all movements.'; return; }
+    if (!reps || reps < 1) { error = 'Enter reps for all movements.'; return; }
+    const loadFactor = LOAD_FACTORS[exercise];
+    if (!loadFactor && (!weight || weight <= 0)) { error = `Enter a load for ${exercise}.`; return; }
+    movements.push({ exerciseId: exercise, reps, weight });
+  });
+  if (error) throw new Error(error);
+  return movements;
+}
+
+function updateIntervalScorePreview() {
+  const rounds = parseInt(document.getElementById('interval-rounds-completed')?.value, 10) || 0;
+  const partial = parseInt(document.getElementById('interval-partial-reps')?.value, 10) || 0;
+  const preview = document.getElementById('interval-score-preview');
+  if (!preview) return;
+  if (rounds > 0 || partial > 0) {
+    preview.textContent = formatScore_ROUNDS_AND_REPS(rounds, partial);
+  } else {
+    preview.textContent = '—';
+  }
+}
+
+async function submitIntervalWorkout(e) {
+  e.preventDefault();
+  if (!currentUser) return alert('Please sign in first.');
+
+  const rounds = parseInt(document.getElementById('interval-rounds').value, 10);
+  const workMin = parseInt(document.getElementById('interval-work-min').value, 10) || 0;
+  const restMin = parseInt(document.getElementById('interval-rest-min').value, 10) || 0;
+  const roundsCompleted = parseInt(document.getElementById('interval-rounds-completed').value, 10);
+  const partialReps = parseInt(document.getElementById('interval-partial-reps').value, 10) || 0;
+
+  let movements;
+  try {
+    movements = getIntervalMovementData();
+  } catch (err) {
+    return showFeedback(err.message, 'red', 'intervalFeedback');
+  }
+
+  if (!rounds || rounds < 1) return showFeedback('Enter a valid round count.', 'red', 'intervalFeedback');
+  if (roundsCompleted < 0) return showFeedback('Enter rounds completed.', 'red', 'intervalFeedback');
+  if (movements.length === 0) return showFeedback('Add at least one movement.', 'red', 'intervalFeedback');
+
+  const now = Date.now();
+  const workSeconds = workMin * 60;
+  const restSeconds = restMin * 60;
+
+  const workoutDoc = {
+    userId: currentUser.uid,
+    name: `${workMin}:${restMin.toString().padStart(2, '0')} × ${rounds} INTERVAL`,
+    type: 'INTERVAL',
+    structure: {
+      rounds,
+      workSeconds,
+      restSeconds,
+      movements
+    },
+    result: {
+      roundsCompleted,
+      partialReps,
+      completed: roundsCompleted >= rounds
+    },
+    scoreDisplay: formatScore_ROUNDS_AND_REPS(roundsCompleted, partialReps),
+    scoreType: 'ROUNDS_AND_REPS',
+    scoreValue: roundsCompleted * 1000 + partialReps,
+    timestamp: now
+  };
+
+  try {
+    const docRef = await addDoc(collection(db, "structured_workouts"), workoutDoc);
+    await generateIntervalContributions(docRef.id, movements, roundsCompleted);
+
+    document.getElementById('interval-form').reset();
+    document.getElementById('interval-movement-list').innerHTML = '';
+    addIntervalMovementRow();
+    document.getElementById('interval-score-preview').textContent = '—';
+    showFeedback('Interval workout saved!', 'emerald', 'intervalFeedback');
+    haptic(HAPTIC.confirm);
+  } catch (err) {
+    console.error('INTERVAL submission failed', err.code, err.message);
+    if (err.code === 'permission-denied') {
+      showFeedback('Save blocked by Firestore rules.', 'red', 'intervalFeedback');
+    } else {
+      alert(`Failed to save workout: ${err.message}`);
+    }
+  }
+}
+
+async function generateIntervalContributions(workoutId, movements, roundsCompleted) {
+  const bw = userBiometrics.bodyweight || 0;
+  const now = Date.now();
+
+  for (const movement of movements) {
+    const totalRepsPerMovement = movement.reps * roundsCompleted;
+    if (totalRepsPerMovement <= 0) continue;
+
+    const loadFactor = LOAD_FACTORS[movement.exerciseId];
+    let estimatedLoad = 0;
+    let weight = 0;
+
+    if (loadFactor !== undefined) {
+      estimatedLoad = bw * loadFactor;
+      weight = bw;
+    } else {
+      estimatedLoad = movement.weight || 0;
+      weight = movement.weight || 0;
+    }
+
+    const totalVolume = estimatedLoad * totalRepsPerMovement;
+
+    const logEntry = {
+      userId: currentUser.uid,
+      exercise: movement.exerciseId,
+      sets: roundsCompleted,
+      reps: movement.reps,
+      weight,
+      externalLoad: 0,
+      estimatedLoad,
+      totalVolume,
+      timestamp: now,
+      source: 'structured',
+      workoutId,
+      totalWorkReps: totalRepsPerMovement
+    };
+
+    await addDoc(collection(db, "workouts"), logEntry);
+  }
+}
+
 function listenToStructuredWorkouts(uid) {
   const q = query(
     collection(db, "structured_workouts"),
@@ -1456,6 +1625,18 @@ function renderStructuredWorkoutCard(sw) {
     const rdLabel = rounds ? ` · ${rounds} rds` : '';
     durationLabel += rdLabel;
     scoreLabel = sw.result?.completed === false ? 'cap reps' : 'time';
+  } else if (type === 'INTERVAL') {
+    const movements = sw.structure?.movements || [];
+    movementsHtml = movements.map(m =>
+      `<span class="movement-chip">${escapeHtml(m.exerciseId)} × ${m.reps}</span>`
+    ).join('');
+    const ws = sw.structure?.workSeconds || 0;
+    const rs = sw.structure?.restSeconds || 0;
+    const wrk = `${Math.floor(ws / 60)}:${(ws % 60).toString().padStart(2, '0')}`;
+    const rst = `${Math.floor(rs / 60)}:${(rs % 60).toString().padStart(2, '0')}`;
+    const rds = sw.structure?.rounds || 0;
+    durationLabel = `${wrk} / ${rst} × ${rds}`;
+    scoreLabel = 'rounds + reps';
   } else {
     const movements = sw.structure?.movements || [];
     movementsHtml = movements.map(m =>
@@ -1732,6 +1913,23 @@ if (fortimeCapReps) fortimeCapReps.addEventListener('input', updateForTimeScoreP
 // Initial movement row for FOR_TIME
 if (document.getElementById('fortime-movement-list')) {
   addForTimeMovementRow();
+}
+
+// INTERVAL Form Submit
+const intervalForm = document.getElementById('interval-form');
+if (intervalForm) {
+  intervalForm.addEventListener('submit', submitIntervalWorkout);
+}
+
+// INTERVAL Score Preview
+const intervalRounds = document.getElementById('interval-rounds-completed');
+const intervalPartial = document.getElementById('interval-partial-reps');
+if (intervalRounds) intervalRounds.addEventListener('input', updateIntervalScorePreview);
+if (intervalPartial) intervalPartial.addEventListener('input', updateIntervalScorePreview);
+
+// Initial movement row for INTERVAL
+if (document.getElementById('interval-movement-list')) {
+  addIntervalMovementRow();
 }
 
 // EMOM minute slot changes re-trigger rounds calc
@@ -2255,3 +2453,4 @@ window.addMinuteSlot = addMinuteSlot;
 window.removeMinuteSlot = removeMinuteSlot;
 window.addForTimeMovementRow = addForTimeMovementRow;
 window.toggleForTimeDnf = toggleForTimeDnf;
+window.addIntervalMovementRow = addIntervalMovementRow;
