@@ -181,10 +181,22 @@
       </section>
 
       <section class="surface-card">
-        <h2 class="section-heading">Log an Exercise</h2>
-        <p class="text-description">
-          Record your workout details to track progress.
-        </p>
+        <div class="flex gap-1 p-0.5 w-fit rounded-xl bg-slate-800/60 mb-4">
+          <button id="tab-log-set" type="button" class="btn-core is-primary btn-size-row" onclick="switchWorkoutMode('set')">
+            Log Set
+          </button>
+          <button id="tab-log-workout" type="button" class="btn-core is-ghost btn-size-row" onclick="switchWorkoutMode('workout')">
+            Log Workout
+          </button>
+        </div>
+
+        <div id="log-set-section">
+          <h2 class="section-heading">Log an Exercise</h2>
+          <p class="text-description">
+            Record your workout details to track progress.
+          </p>
+        </div>
+
         <form id="workout-form" class="space-y-4">
           <div>
             <label class="form-label">Exercise Name</label>
@@ -232,6 +244,79 @@
           <p id="workoutFeedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
 
         </form>
+
+        <div id="log-workout-section" class="hidden">
+          <h2 class="section-heading">Log a Workout</h2>
+          <p class="text-description">
+            Record a structured AMRAP workout.
+          </p>
+
+          <div id="workout-type-selector" class="mb-4">
+            <label class="form-label">Workout Type</label>
+            <select id="workout-type" class="dropdown-core">
+              <option value="AMRAP">AMRAP</option>
+            </select>
+          </div>
+
+          <form id="amrap-form" class="space-y-4">
+            <div>
+              <label class="form-label">Duration (minutes)</label>
+              <input type="number" id="amrap-duration" placeholder="12" min="1" step="1" class="input-core" required />
+            </div>
+
+            <div>
+              <div class="flex justify-between items-center mb-2">
+                <label class="form-label">Movements</label>
+                <button type="button" onclick="addMovementRow()" class="btn-core is-secondary btn-size-row">+ Add</button>
+              </div>
+                <div class="flex gap-2 text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-1">
+                  <div class="flex-1">Movement</div>
+                  <div class="w-16 flex items-center justify-center">Reps</div>
+                  <div class="w-20 flex items-center justify-center">Load</div>
+                  <div class="w-9"></div>
+                </div>
+                <div id="movement-list" class="space-y-2">
+                  <div class="movement-row flex gap-2 items-end">
+                    <div class="flex-1">
+                      <select class="movement-exercise dropdown-core" onchange="handleMovementExerciseChange(this)">
+                        <option value="">Select exercise...</option>
+                      </select>
+                    </div>
+                    <div class="w-16">
+                      <input type="number" class="movement-reps input-core" placeholder="Reps" min="1" step="1" />
+                    </div>
+                    <div class="w-20">
+                      <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
+                    </div>
+                    <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none">X</button>
+                  </div>
+                </div>
+            </div>
+
+            <div class="border-t border-slate-800 pt-4">
+              <h3 class="form-label mb-2">Result</h3>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="form-label">Rounds Completed</label>
+                  <input type="number" id="amrap-rounds" placeholder="8" min="0" step="1" class="input-core" required />
+                </div>
+                <div>
+                  <label class="form-label">Additional Reps</label>
+                  <input type="number" id="amrap-additional-reps" placeholder="23" min="0" step="1" class="input-core" />
+                </div>
+              </div>
+              <p class="text-xs text-slate-400 mt-2">
+                Score: <span id="amrap-score-preview" class="text-emerald-400 font-bold font-mono">—</span>
+              </p>
+            </div>
+
+            <button type="submit" class="btn-core is-primary btn-size-input">
+              Save Workout
+            </button>
+
+            <p id="amrapFeedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
+          </form>
+        </div>
       </section>
 
       <section class="surface-card">
@@ -268,6 +353,27 @@
             Page <span id="current-page">1</span> of <span id="total-pages">1</span>
           </p>
           <button id="next-page-btn" class="btn-core is-secondary btn-size-input" type="button">
+            Next
+          </button>
+        </div>
+      </section>
+
+      <section class="surface-card">
+        <h2 class="section-heading">Structured Workouts</h2>
+        <p class="text-description mb-4">
+          Your completed AMRAP workouts and scores.
+        </p>
+        <div id="structured-workout-list" class="space-y-3">
+          <p class="text-xs text-slate-500 italic py-2 text-center">No structured workouts logged yet.</p>
+        </div>
+        <div id="structured-pagination" class="hidden mt-4 flex items-center justify-between gap-3">
+          <button id="prev-structured-page-btn" class="btn-core is-secondary btn-size-input" type="button">
+            Previous
+          </button>
+          <p class="text-xs text-slate-400 text-center min-w-[120px]">
+            Page <span id="current-structured-page">1</span> of <span id="total-structured-pages">1</span>
+          </p>
+          <button id="next-structured-page-btn" class="btn-core is-secondary btn-size-input" type="button">
             Next
           </button>
         </div>

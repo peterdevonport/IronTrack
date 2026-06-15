@@ -36,6 +36,18 @@ const EXERCISE_CATALOG = [
   { name: 'Pike Push-up', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 0.75 },
   { name: 'Walking Lunge', category: 'bodyweight', type: 'bodyweight', movement: 'squat', loadFactor: 1.00 },
   { name: 'Step-up', category: 'bodyweight', type: 'bodyweight', movement: 'squat', loadFactor: 1.00 },
+  { name: 'Sit-up', category: 'bodyweight', type: 'bodyweight', movement: 'pull', loadFactor: 0.50 },
+  { name: 'Goblet Squat', category: 'barbell', type: 'weighted', movement: 'squat' },
+  { name: 'Kettlebell Swing', category: 'barbell', type: 'weighted', movement: 'pull' },
+  { name: 'DB Push Press', category: 'barbell', type: 'weighted', movement: 'push' },
+  { name: 'Box Jump', category: 'bodyweight', type: 'bodyweight', movement: 'squat', loadFactor: 1.00 },
+  { name: 'Burpee', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 0.80 },
+  { name: 'Wall Ball', category: 'barbell', type: 'weighted', movement: 'squat' },
+  { name: 'Toes-to-bar', category: 'bodyweight', type: 'bodyweight', movement: 'pull', loadFactor: 0.60 },
+  { name: 'Thruster', category: 'barbell', type: 'weighted', movement: 'squat' },
+  { name: 'Run', category: 'bodyweight', type: 'bodyweight', movement: 'pull' },
+  { name: 'Row', category: 'barbell', type: 'weighted', movement: 'pull' },
+  { name: 'Bike', category: 'barbell', type: 'weighted', movement: 'pull' },
 ];
 
 const LOAD_FACTORS = {};
@@ -97,6 +109,12 @@ let urlParamsProcessed = false; // Add this flag
 
 let paginatedWorkouts = [];
 let lastWorkouts = [];
+
+// Structured workout state
+let lastStructuredWorkouts = [];
+let structuredCurrentPage = 1;
+let unsubscribeStructured = null;
+
 // Global state variables for social & leaderboards
 let currentScope = 'global'; // 'global' or 'friends'
 let currentFormula = 'dots';  // 'dots' or 'sinclair'
@@ -124,6 +142,7 @@ onAuthStateChanged(auth, async (user) => {
         await initSocialProfile(user);
         syncLeaderboardFeed();
         listenToDataStream(user.uid);
+        listenToStructuredWorkouts(user.uid);
 
         showQRCode()
 
@@ -135,12 +154,14 @@ onAuthStateChanged(auth, async (user) => {
 
     } else {
         if (unsubscribeLogs) { unsubscribeLogs(); unsubscribeLogs = null; }
+        if (unsubscribeStructured) { unsubscribeStructured(); unsubscribeStructured = null; }
         if (leaderboardUnsubscribe) { leaderboardUnsubscribe(); leaderboardUnsubscribe = null; }
         loginView.classList.remove('hidden');
         appView.classList.add('hidden');
         authBtn.innerText = "Sign In";
         greeting.innerText = "Analytics Dashboard";
         document.getElementById('workout-list').innerHTML = '';
+        document.getElementById('structured-workout-list').innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">No structured workouts logged yet.</p>';
         document.getElementById('registry-table-body').innerHTML = '';
         pctEntriesByLift = {};
         const pctEntriesList = document.getElementById('pct-entries-list');
@@ -253,6 +274,9 @@ function listenToDataStream(uid) {
             const workout = { id: doc.id, ...data, timestamp };
             workouts.push(workout);
 
+            // Skip structured workout contributions for 1RM/PB tracking
+            if (data.source === 'structured') return;
+
             // Epley 1RM Estimation Formula using effective load
             const effectiveWeight = getEffectiveLoad(workout);
             const reps = parseInt(data.reps, 10);
@@ -268,7 +292,8 @@ function listenToDataStream(uid) {
         lastWorkouts = workouts;
         // dynamicFriend populate filter options from live exercise names
         try {
-          const uniqueExercises = Array.from(new Set(workouts.map(w => w.exercise)));
+          const manualWorkouts = workouts.filter(w => w.source !== 'structured');
+          const uniqueExercises = Array.from(new Set(manualWorkouts.map(w => w.exercise)));
           populateWorkoutFilter(uniqueExercises);
         } catch (e) {
           // ignore if populate not available
@@ -290,8 +315,11 @@ function update1RMRegistryUI() {
     const tableBody = document.getElementById('registry-table-body');
     if (!tableBody) return;
 
+    // Exclude structured workout contributions from records registry
+    const manualWorkouts = lastWorkouts.filter(w => w.source !== 'structured');
+
     // 1. Find all unique exercises currently logged by the user
-    const uniqueExercises = Array.from(new Set(lastWorkouts.map(w => w.exercise))).filter(Boolean).sort();
+    const uniqueExercises = Array.from(new Set(manualWorkouts.map(w => w.exercise))).filter(Boolean).sort();
 
     if (uniqueExercises.length === 0) {
         tableBody.innerHTML = `<p class="col-span-3 text-xs text-slate-500 italic py-2 text-center">No logs recorded yet.</p>`;
@@ -303,7 +331,7 @@ function update1RMRegistryUI() {
     
     uniqueExercises.forEach(exercise => {
         // Filter historical entries just for this specific exercise
-        const exerciseHistory = lastWorkouts.filter(w => w.exercise === exercise);
+        const exerciseHistory = manualWorkouts.filter(w => w.exercise === exercise);
 
         // Calculate Absolute PB: The heaviest effective load successfully logged
         const absolutePB = Math.max(0, ...exerciseHistory.map(w => getEffectiveLoad(w)));
@@ -715,6 +743,336 @@ function getRankingTier(score, system, gender) {
     }
 }
 
+// ==========================================
+// STRUCTURED WORKOUT SYSTEM
+// ==========================================
+
+let workoutMode = 'set';
+
+function switchWorkoutMode(mode) {
+  workoutMode = mode;
+  const tabSet = document.getElementById('tab-log-set');
+  const tabWorkout = document.getElementById('tab-log-workout');
+  const setSection = document.getElementById('log-set-section');
+  const workoutSection = document.getElementById('log-workout-section');
+  const workoutFormEl = document.getElementById('workout-form');
+  if (!tabSet || !tabWorkout || !setSection || !workoutSection) return;
+
+  if (mode === 'set') {
+    tabSet.className = 'btn-core is-primary btn-size-row';
+    tabWorkout.className = 'btn-core is-ghost btn-size-row';
+    setSection.classList.remove('hidden');
+    if (workoutFormEl) workoutFormEl.classList.remove('hidden');
+    workoutSection.classList.add('hidden');
+  } else {
+    tabSet.className = 'btn-core is-ghost btn-size-row';
+    tabWorkout.className = 'btn-core is-primary btn-size-row';
+    setSection.classList.add('hidden');
+    if (workoutFormEl) workoutFormEl.classList.add('hidden');
+    workoutSection.classList.remove('hidden');
+    populateMovementDropdowns();
+  }
+}
+
+function populateMovementDropdowns() {
+  document.querySelectorAll('.movement-exercise').forEach(sel => {
+    if (sel.options.length > 1) return;
+    const currentVal = sel.value;
+    let html = '<option value="">Select exercise...</option>';
+    EXERCISE_CATALOG.forEach(ex => {
+      html += `<option value="${ex.name}">${ex.name}</option>`;
+    });
+    sel.innerHTML = html;
+    if (currentVal && Array.from(sel.options).some(o => o.value === currentVal)) {
+      sel.value = currentVal;
+    }
+  });
+}
+
+function handleMovementExerciseChange(selectEl) {
+  const row = selectEl.closest('.movement-row');
+  if (!row) return;
+  const weightInput = row.querySelector('.movement-weight');
+  const exercise = selectEl.value;
+  const loadFactor = LOAD_FACTORS[exercise];
+
+  if (loadFactor !== undefined) {
+    weightInput.value = '';
+    weightInput.disabled = true;
+    weightInput.placeholder = 'BW';
+  } else {
+    weightInput.value = '';
+    weightInput.disabled = false;
+    weightInput.placeholder = 'Load (kg)';
+  }
+}
+
+function addMovementRow(exerciseName) {
+  const container = document.getElementById('movement-list');
+  if (!container) return;
+  const row = document.createElement('div');
+  row.className = 'movement-row flex gap-2 items-end';
+  row.innerHTML = `
+    <div class="flex-1">
+      <select class="movement-exercise dropdown-core" onchange="handleMovementExerciseChange(this)">
+        <option value="">Select exercise...</option>
+      </select>
+    </div>
+    <div class="w-16">
+      <input type="number" class="movement-reps input-core" placeholder="Reps" min="1" step="1" />
+    </div>
+    <div class="w-20">
+      <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
+    </div>
+    <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none">X</button>
+  `;
+  container.appendChild(row);
+  populateMovementDropdowns();
+  if (exerciseName) {
+    const sel = row.querySelector('.movement-exercise');
+    if (sel) { sel.value = exerciseName; handleMovementExerciseChange(sel); }
+  }
+}
+
+function removeMovementRow(btn) {
+  const row = btn.closest('.movement-row');
+  if (row) row.remove();
+  updateAmrapScorePreview();
+}
+
+function getAmrapMovementData() {
+  const movements = [];
+  let error = null;
+  document.querySelectorAll('.movement-row').forEach(row => {
+    const exercise = row.querySelector('.movement-exercise')?.value;
+    const reps = parseInt(row.querySelector('.movement-reps')?.value, 10);
+    const weight = parseFloat(row.querySelector('.movement-weight')?.value) || 0;
+    if (!exercise) { error = 'Select an exercise for all movements.'; return; }
+    if (!reps || reps < 1) { error = 'Enter reps for all movements.'; return; }
+    const loadFactor = LOAD_FACTORS[exercise];
+    if (!loadFactor && (!weight || weight <= 0)) { error = `Enter a load for ${exercise}.`; return; }
+    movements.push({ exerciseId: exercise, reps, weight });
+  });
+  if (error) throw new Error(error);
+  return movements;
+}
+
+function updateAmrapScorePreview() {
+  const rounds = parseInt(document.getElementById('amrap-rounds')?.value, 10) || 0;
+  const additional = parseInt(document.getElementById('amrap-additional-reps')?.value, 10) || 0;
+  const preview = document.getElementById('amrap-score-preview');
+  if (rounds > 0 || additional > 0) {
+    preview.textContent = formatScore_ROUNDS_AND_REPS(rounds, additional);
+  } else {
+    preview.textContent = '—';
+  }
+}
+
+function formatScore_ROUNDS_AND_REPS(rounds, additionalReps) {
+  if (rounds === 0 && additionalReps === 0) return '—';
+  return `${rounds} + ${additionalReps}`;
+}
+
+async function submitAmrapWorkout(e) {
+  e.preventDefault();
+  if (!currentUser) return alert('Please sign in first.');
+
+  const durationMin = parseInt(document.getElementById('amrap-duration').value, 10);
+  const roundsCompleted = parseInt(document.getElementById('amrap-rounds').value, 10);
+  const additionalReps = parseInt(document.getElementById('amrap-additional-reps').value, 10) || 0;
+  let movements;
+  try {
+    movements = getAmrapMovementData();
+  } catch (err) {
+    return showFeedback(err.message, 'red', 'amrapFeedback');
+  }
+
+  if (!durationMin || durationMin < 1) return showFeedback('Enter a valid duration.', 'red', 'amrapFeedback');
+  if (roundsCompleted < 0) return showFeedback('Enter rounds completed.', 'red', 'amrapFeedback');
+  if (movements.length === 0) return showFeedback('Add at least one movement.', 'red', 'amrapFeedback');
+
+  const durationSeconds = durationMin * 60;
+  const now = Date.now();
+
+  const workoutDoc = {
+    userId: currentUser.uid,
+    name: `${durationMin} Min AMRAP`,
+    type: 'AMRAP',
+    structure: {
+      durationSeconds,
+      movements
+    },
+    result: {
+      roundsCompleted,
+      additionalReps
+    },
+    scoreDisplay: formatScore_ROUNDS_AND_REPS(roundsCompleted, additionalReps),
+    scoreType: 'ROUNDS_AND_REPS',
+    // numeric value for sorting: rounds*1000 + additionalReps (higher is better)
+    scoreValue: roundsCompleted * 1000 + additionalReps,
+    timestamp: now
+  };
+
+  try {
+    const docRef = await addDoc(collection(db, "structured_workouts"), workoutDoc);
+    await generateAmrapContributions(docRef.id, movements, roundsCompleted, additionalReps);
+
+    document.getElementById('amrap-form').reset();
+    document.getElementById('movement-list').innerHTML = '';
+    addMovementRow();
+    document.getElementById('amrap-score-preview').textContent = '—';
+    showFeedback('AMRAP workout saved!', 'emerald', 'amrapFeedback');
+    haptic(HAPTIC.confirm);
+  } catch (err) {
+    console.error('AMRAP submission failed', err.code, err.message);
+    if (err.code === 'permission-denied') {
+      showFeedback('Save blocked by Firestore rules.', 'red', 'amrapFeedback');
+    } else {
+      alert(`Failed to save workout: ${err.message}`);
+    }
+  }
+}
+
+async function generateAmrapContributions(workoutId, movements, roundsCompleted, additionalReps) {
+  const bw = userBiometrics.bodyweight || 0;
+  const now = Date.now();
+
+  for (const movement of movements) {
+    const totalRepsPerMovement = roundsCompleted * movement.reps + additionalReps;
+    if (totalRepsPerMovement <= 0) continue;
+
+    const loadFactor = LOAD_FACTORS[movement.exerciseId];
+    let estimatedLoad = 0;
+    let weight = 0;
+    let externalLoad = 0;
+
+    if (loadFactor !== undefined) {
+      estimatedLoad = bw * loadFactor;
+      weight = bw;
+    } else {
+      estimatedLoad = movement.weight || 0;
+      weight = movement.weight || 0;
+    }
+
+    const totalVolume = estimatedLoad * totalRepsPerMovement;
+
+    const logEntry = {
+      userId: currentUser.uid,
+      exercise: movement.exerciseId,
+      sets: roundsCompleted,
+      reps: movement.reps,
+      weight,
+      externalLoad: 0,
+      estimatedLoad,
+      totalVolume,
+      timestamp: now,
+      source: 'structured',
+      workoutId,
+      additionalReps,
+      totalWorkReps: totalRepsPerMovement
+    };
+
+    await addDoc(collection(db, "workouts"), logEntry);
+  }
+}
+
+function listenToStructuredWorkouts(uid) {
+  const q = query(
+    collection(db, "structured_workouts"),
+    where("userId", "==", uid)
+  );
+  unsubscribeStructured = onSnapshot(q, (snapshot) => {
+    const workouts = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      const timestamp = data.timestamp?.toMillis ? data.timestamp.toMillis() : data.timestamp;
+      workouts.push({ id: doc.id, ...data, timestamp });
+    });
+    workouts.sort((a, b) => b.timestamp - a.timestamp);
+    lastStructuredWorkouts = workouts;
+    renderStructuredWorkoutHistory();
+  }, (error) => {
+    console.error('Structured workouts stream error', error.code, error.message);
+  });
+}
+
+function renderStructuredWorkoutCard(sw) {
+  const movements = sw.structure?.movements || [];
+  const movementsHtml = movements.map(m =>
+    `<span class="movement-chip">${escapeHtml(m.exerciseId)} × ${m.reps}</span>`
+  ).join('');
+
+  const dateStr = new Date(sw.timestamp).toLocaleDateString();
+  const durationMin = Math.round((sw.structure?.durationSeconds || 0) / 60);
+
+  return `
+<div class="structured-card p-4 rounded-2xl mb-3 shadow-2xl shadow-slate-950/60 transition-all duration-200" style="background-color: var(--slate-900);">
+    <div class="flex justify-between items-start mb-2">
+      <div>
+        <span class="workout-type-badge amrap">AMRAP</span>
+        <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm mt-1">${escapeHtml(sw.name)}</h4>
+        <p class="text-slate-500 text-[10px] font-mono mt-0.5">${dateStr} · ${durationMin} min</p>
+      </div>
+      <div class="text-right">
+        <div class="score-display">${escapeHtml(sw.scoreDisplay || '—')}</div>
+        <p class="text-slate-500 text-[10px] font-mono mt-0.5">rounds + reps</p>
+      </div>
+    </div>
+    <div class="flex flex-wrap gap-1.5 mt-2">
+      ${movementsHtml}
+    </div>
+</div>
+  `;
+}
+
+function renderStructuredWorkoutHistory() {
+  const container = document.getElementById('structured-workout-list');
+  const pagination = document.getElementById('structured-pagination');
+  if (!container) return;
+
+  const workouts = lastStructuredWorkouts;
+
+  if (!workouts.length) {
+    container.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">No structured workouts logged yet.</p>';
+    if (pagination) pagination.classList.add('hidden');
+    return;
+  }
+
+  const perPage = 5;
+  const totalPages = Math.max(1, Math.ceil(workouts.length / perPage));
+  structuredCurrentPage = Math.min(structuredCurrentPage, totalPages);
+  const start = (structuredCurrentPage - 1) * perPage;
+  const pageItems = workouts.slice(start, start + perPage);
+
+  container.innerHTML = pageItems.map(renderStructuredWorkoutCard).join('');
+
+  if (pagination) {
+    const currentEl = document.getElementById('current-structured-page');
+    const totalEl = document.getElementById('total-structured-pages');
+    const prevBtn = document.getElementById('prev-structured-page-btn');
+    const nextBtn = document.getElementById('next-structured-page-btn');
+    if (currentEl) currentEl.textContent = structuredCurrentPage;
+    if (totalEl) totalEl.textContent = totalPages;
+    if (prevBtn) prevBtn.disabled = structuredCurrentPage <= 1;
+    if (nextBtn) nextBtn.disabled = structuredCurrentPage >= totalPages;
+    pagination.classList.toggle('hidden', totalPages <= 1);
+  }
+}
+
+function changeStructuredPage(direction) {
+  const totalPages = Math.max(1, Math.ceil(lastStructuredWorkouts.length / 5));
+  if (direction === 'prev' && structuredCurrentPage > 1) {
+    structuredCurrentPage--;
+  } else if (direction === 'next' && structuredCurrentPage < totalPages) {
+    structuredCurrentPage++;
+  }
+  renderStructuredWorkoutHistory();
+}
+
+// ==========================================
+// END STRUCTURED WORKOUT SYSTEM
+// ==========================================
+
 // Render Existing Logs
 function renderLogs(workouts) {
     const logContainer = document.getElementById('workout-list');
@@ -726,14 +1084,15 @@ function renderLogs(workouts) {
         return;
     }
 
-    // keep the full set for analytics/state, but apply a display filter
-    paginatedWorkouts = workouts;
+    // Filter out structured workout contributions from the display log
+    const manualWorkouts = workouts.filter(w => w.source !== 'structured');
+    paginatedWorkouts = manualWorkouts;
     const selected = workoutFilter ? workoutFilter.value : 'All';
 
     // Precompute PB / 1RM flags for chip filtering and rendering (O(n))
     const maxLoadByExercise = {};
     const max1RMByExercise = {};
-    workouts.forEach(w => {
+    paginatedWorkouts.forEach(w => {
         const load = getEffectiveLoad(w);
         const reps = parseInt(w.reps, 10) || 1;
         const oneRM = Math.round(load * (1 + reps / 30));
@@ -744,7 +1103,7 @@ function renderLogs(workouts) {
             max1RMByExercise[w.exercise] = oneRM;
         }
     });
-    workouts.forEach(workout => {
+    paginatedWorkouts.forEach(workout => {
         const load = getEffectiveLoad(workout);
         const reps = parseInt(workout.reps, 10) || 1;
         workout._isPB = load >= maxLoadByExercise[workout.exercise] && load > 0;
@@ -752,7 +1111,7 @@ function renderLogs(workouts) {
         workout._isMax1RM = oneRM >= max1RMByExercise[workout.exercise] && oneRM > 0;
     });
 
-    let displayList = (selected === 'All') ? workouts : workouts.filter(w => w.exercise === selected);
+    let displayList = (selected === 'All') ? paginatedWorkouts : paginatedWorkouts.filter(w => w.exercise === selected);
 
     // Apply PB / 1RM chip filters if enabled (read state from DOM dataset)
     const chipPBActive = document.getElementById('chip-pb')?.dataset?.active === 'true';
@@ -762,7 +1121,7 @@ function renderLogs(workouts) {
     }
 
     // Expose render debug info for testing
-    try { window.__lastRenderInfo = { chipPBActive, chip1RMActive, displayListLength: displayList.length, totalWorkouts: workouts.length }; } catch (e) {}
+    try { window.__lastRenderInfo = { chipPBActive, chip1RMActive, displayListLength: displayList.length, totalWorkouts: paginatedWorkouts.length }; } catch (e) {}
 
     const totalPages = Math.max(1, Math.ceil(displayList.length / entriesPerPage));
     currentPage = Math.min(currentPage, totalPages);
@@ -866,6 +1225,29 @@ workoutForm.addEventListener('submit', async (e) => {
         alert(`Failed to save workout: ${err.message}`);
     }
 });
+
+// AMRAP Form Submit
+const amrapForm = document.getElementById('amrap-form');
+if (amrapForm) {
+  amrapForm.addEventListener('submit', submitAmrapWorkout);
+}
+
+// AMRAP Score Preview
+const amrapRounds = document.getElementById('amrap-rounds');
+const amrapAdditional = document.getElementById('amrap-additional-reps');
+if (amrapRounds) amrapRounds.addEventListener('input', updateAmrapScorePreview);
+if (amrapAdditional) amrapAdditional.addEventListener('input', updateAmrapScorePreview);
+
+// Structured Workout Pagination
+const prevStructuredBtn = document.getElementById('prev-structured-page-btn');
+const nextStructuredBtn = document.getElementById('next-structured-page-btn');
+if (prevStructuredBtn) prevStructuredBtn.addEventListener('click', () => changeStructuredPage('prev'));
+if (nextStructuredBtn) nextStructuredBtn.addEventListener('click', () => changeStructuredPage('next'));
+
+// Initial movement row
+if (document.getElementById('movement-list')) {
+  addMovementRow();
+}
 
 // leaderboard
 
@@ -1357,3 +1739,7 @@ window.switchLeaderboardScope = switchLeaderboardScope;
 window.switchLeaderboardFormula = switchLeaderboardFormula;
 window.showQRCode = showQRCode;
 window.handlePctRemove = handlePctRemove;
+window.switchWorkoutMode = switchWorkoutMode;
+window.addMovementRow = addMovementRow;
+window.removeMovementRow = removeMovementRow;
+window.handleMovementExerciseChange = handleMovementExerciseChange;
