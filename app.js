@@ -21,33 +21,80 @@ window.__irontrackWorkoutCount = 0;
 
 // Exercise Catalog & Load Factors
 const EXERCISE_CATALOG = [
+  // ── Barbell ──
   { name: 'Back Squat', category: 'barbell', type: 'weighted', movement: 'squat' },
   { name: 'Bench Press', category: 'barbell', type: 'weighted', movement: 'push' },
-  { name: 'Deadlift', category: 'barbell', type: 'weighted', movement: 'pull' },
-  { name: 'Snatch', category: 'barbell', type: 'weighted', movement: 'pull' },
   { name: 'Clean & Jerk', category: 'barbell', type: 'weighted', movement: 'push' },
-  { name: 'Push-up', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 0.67 },
-  { name: 'Knee Push-up', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 0.49 },
-  { name: 'Pull-up', category: 'bodyweight', type: 'bodyweight', movement: 'pull', loadFactor: 1.00 },
-  { name: 'Chin-up', category: 'bodyweight', type: 'bodyweight', movement: 'pull', loadFactor: 1.00 },
-  { name: 'Dip', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 0.95 },
-  { name: 'Handstand Push-up', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 1.00 },
+  { name: 'Deadlift', category: 'barbell', type: 'weighted', movement: 'pull' },
+  { name: 'Front Squat', category: 'barbell', type: 'weighted', movement: 'squat' },
+  { name: 'Hang Clean', category: 'barbell', type: 'weighted', movement: 'pull' },
+  { name: 'Hang Power Clean', category: 'barbell', type: 'weighted', movement: 'pull' },
+  { name: 'Hang Power Snatch', category: 'barbell', type: 'weighted', movement: 'pull' },
+  { name: 'Hang Snatch', category: 'barbell', type: 'weighted', movement: 'pull' },
+  { name: 'Overhead Squat', category: 'barbell', type: 'weighted', movement: 'squat' },
+  { name: 'Power Clean', category: 'barbell', type: 'weighted', movement: 'pull' },
+  { name: 'Power Snatch', category: 'barbell', type: 'weighted', movement: 'pull' },
+  { name: 'Push Press', category: 'barbell', type: 'weighted', movement: 'push' },
+  { name: 'Push Jerk', category: 'barbell', type: 'weighted', movement: 'push' },
+  { name: 'Romanian Deadlift', category: 'barbell', type: 'weighted', movement: 'pull' },
+  { name: 'Shoulder Press', category: 'barbell', type: 'weighted', movement: 'push' },
+  { name: 'Snatch', category: 'barbell', type: 'weighted', movement: 'pull' },
+  { name: 'Squat Clean', category: 'barbell', type: 'weighted', movement: 'pull' },
+  { name: 'Sumo Deadlift', category: 'barbell', type: 'weighted', movement: 'pull' },
+  { name: 'Thruster', category: 'barbell', type: 'weighted', movement: 'squat' },
+  { name: 'Wall Ball', category: 'barbell', type: 'weighted', movement: 'squat' },
+
+  // ── Dumbbell ──
+  { name: 'DB Bench Press', category: 'dumbbell', type: 'weighted', movement: 'push' },
+  { name: 'DB Box Step-up', category: 'dumbbell', type: 'weighted', movement: 'squat' },
+  { name: 'DB Clean', category: 'dumbbell', type: 'weighted', movement: 'pull' },
+  { name: 'DB Deadlift', category: 'dumbbell', type: 'weighted', movement: 'pull' },
+  { name: 'DB Goblet Squat', category: 'dumbbell', type: 'weighted', movement: 'squat' },
+  { name: 'DB Hang Clean', category: 'dumbbell', type: 'weighted', movement: 'pull' },
+  { name: 'DB Lunge', category: 'dumbbell', type: 'weighted', movement: 'squat' },
+  { name: 'DB Push Press', category: 'dumbbell', type: 'weighted', movement: 'push' },
+  { name: 'DB Row', category: 'dumbbell', type: 'weighted', movement: 'pull' },
+  { name: 'DB Shoulder Press', category: 'dumbbell', type: 'weighted', movement: 'push' },
+  { name: 'DB Snatch', category: 'dumbbell', type: 'weighted', movement: 'pull' },
+  { name: 'DB Thruster', category: 'dumbbell', type: 'weighted', movement: 'squat' },
+
+  // ── Kettlebell ──
+  { name: 'Kettlebell Clean', category: 'kettlebell', type: 'weighted', movement: 'pull' },
+  { name: 'Kettlebell Goblet Squat', category: 'kettlebell', type: 'weighted', movement: 'squat' },
+  { name: 'Kettlebell High Pull', category: 'kettlebell', type: 'weighted', movement: 'pull' },
+  { name: 'Kettlebell Snatch', category: 'kettlebell', type: 'weighted', movement: 'pull' },
+  { name: 'Kettlebell Swing', category: 'kettlebell', type: 'weighted', movement: 'pull' },
+
+  // ── Cardio ──
+  { name: 'Assault Bike', category: 'cardio', type: 'cardio', movement: 'pull' },
+  { name: 'Bike', category: 'cardio', type: 'cardio', movement: 'pull' },
+  { name: 'Double Under', category: 'cardio', type: 'cardio', movement: 'pull' },
+  { name: 'Row', category: 'cardio', type: 'cardio', movement: 'pull' },
+  { name: 'Run', category: 'cardio', type: 'cardio', movement: 'pull' },
+  { name: 'SkiErg', category: 'cardio', type: 'cardio', movement: 'pull' },
+
+  // ── Bodyweight ──
   { name: 'Air Squat', category: 'bodyweight', type: 'bodyweight', movement: 'squat', loadFactor: 0.65 },
-  { name: 'Pike Push-up', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 0.75 },
-  { name: 'Walking Lunge', category: 'bodyweight', type: 'bodyweight', movement: 'squat', loadFactor: 1.00 },
-  { name: 'Step-up', category: 'bodyweight', type: 'bodyweight', movement: 'squat', loadFactor: 1.00 },
-  { name: 'Sit-up', category: 'bodyweight', type: 'bodyweight', movement: 'pull', loadFactor: 0.50 },
-  { name: 'Goblet Squat', category: 'barbell', type: 'weighted', movement: 'squat' },
-  { name: 'Kettlebell Swing', category: 'barbell', type: 'weighted', movement: 'pull' },
-  { name: 'DB Push Press', category: 'barbell', type: 'weighted', movement: 'push' },
   { name: 'Box Jump', category: 'bodyweight', type: 'bodyweight', movement: 'squat', loadFactor: 1.00 },
   { name: 'Burpee', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 0.80 },
-  { name: 'Wall Ball', category: 'barbell', type: 'weighted', movement: 'squat' },
+  { name: 'Chin-up', category: 'bodyweight', type: 'bodyweight', movement: 'pull', loadFactor: 1.00 },
+  { name: 'Dip', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 0.95 },
+  { name: 'Elevated Push-up', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 0.55 },
+  { name: 'Handstand Push-up', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 1.00 },
+  { name: 'Knee Push-up', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 0.49 },
+  { name: 'L-sit', category: 'bodyweight', type: 'bodyweight', movement: 'pull', loadFactor: 1.00 },
+  { name: 'Muscle-up', category: 'bodyweight', type: 'bodyweight', movement: 'pull', loadFactor: 1.00 },
+  { name: 'Pike Push-up', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 0.75 },
+  { name: 'Pistol', category: 'bodyweight', type: 'bodyweight', movement: 'squat', loadFactor: 1.00 },
+  { name: 'Pull-up', category: 'bodyweight', type: 'bodyweight', movement: 'pull', loadFactor: 1.00 },
+  { name: 'Push-up', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 0.67 },
+  { name: 'Ring Dip', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 1.00 },
+  { name: 'Ring Row', category: 'bodyweight', type: 'bodyweight', movement: 'pull', loadFactor: 0.80 },
+  { name: 'Sit-up', category: 'bodyweight', type: 'bodyweight', movement: 'pull', loadFactor: 0.50 },
+  { name: 'Step-up', category: 'bodyweight', type: 'bodyweight', movement: 'squat', loadFactor: 1.00 },
+  { name: 'Strict Pull-up', category: 'bodyweight', type: 'bodyweight', movement: 'pull', loadFactor: 1.00 },
   { name: 'Toes-to-bar', category: 'bodyweight', type: 'bodyweight', movement: 'pull', loadFactor: 0.60 },
-  { name: 'Thruster', category: 'barbell', type: 'weighted', movement: 'squat' },
-  { name: 'Run', category: 'bodyweight', type: 'bodyweight', movement: 'pull' },
-  { name: 'Row', category: 'barbell', type: 'weighted', movement: 'pull' },
-  { name: 'Bike', category: 'barbell', type: 'weighted', movement: 'pull' },
+  { name: 'Walking Lunge', category: 'bodyweight', type: 'bodyweight', movement: 'squat', loadFactor: 1.00 },
 ];
 
 const LOAD_FACTORS = {};
@@ -568,19 +615,17 @@ function populateExerciseDropdown() {
   if (!select) return;
   const currentVal = select.value;
   const sortByName = (a, b) => a.name.localeCompare(b.name);
-  const barbell = EXERCISE_CATALOG.filter(ex => ex.category === 'barbell').sort(sortByName);
-  const bodyweight = EXERCISE_CATALOG.filter(ex => ex.category === 'bodyweight').sort(sortByName);
+  const groups = ['barbell', 'dumbbell', 'kettlebell', 'cardio', 'bodyweight'];
+  const labels = { barbell: 'Barbell', dumbbell: 'Dumbbell', kettlebell: 'Kettlebell', cardio: 'Cardio', bodyweight: 'Bodyweight' };
   let html = `<option value="" disabled selected>Select exercise...</option>`;
-  if (barbell.length) {
-    html += `<optgroup label="─ Barbell ─">`;
-    barbell.forEach(ex => { html += `<option value="${ex.name}">${ex.name}</option>`; });
-    html += `</optgroup>`;
-  }
-  if (bodyweight.length) {
-    html += `<optgroup label="─ Bodyweight ─">`;
-    bodyweight.forEach(ex => { html += `<option value="${ex.name}">${ex.name}</option>`; });
-    html += `</optgroup>`;
-  }
+  groups.forEach(cat => {
+    const items = EXERCISE_CATALOG.filter(ex => ex.category === cat).sort(sortByName);
+    if (items.length) {
+      html += `<optgroup label="─ ${labels[cat]} ─">`;
+      items.forEach(ex => { html += `<option value="${ex.name}">${ex.name}</option>`; });
+      html += `</optgroup>`;
+    }
+  });
   select.innerHTML = html;
   if (currentVal && Array.from(select.options).some(o => o.value === currentVal)) {
     select.value = currentVal;
@@ -781,19 +826,17 @@ function populateMovementDropdowns() {
     if (sel.options.length > 1) return;
     const currentVal = sel.value;
     const sortByName = (a, b) => a.name.localeCompare(b.name);
-    const barbell = EXERCISE_CATALOG.filter(ex => ex.category === 'barbell').sort(sortByName);
-    const bodyweight = EXERCISE_CATALOG.filter(ex => ex.category === 'bodyweight').sort(sortByName);
+    const groups = ['barbell', 'dumbbell', 'kettlebell', 'cardio', 'bodyweight'];
+    const labels = { barbell: 'Barbell', dumbbell: 'Dumbbell', kettlebell: 'Kettlebell', cardio: 'Cardio', bodyweight: 'Bodyweight' };
     let html = '<option value="">Select exercise...</option>';
-    if (barbell.length) {
-      html += `<optgroup label="─ Barbell ─">`;
-      barbell.forEach(ex => { html += `<option value="${ex.name}">${ex.name}</option>`; });
-      html += `</optgroup>`;
-    }
-    if (bodyweight.length) {
-      html += `<optgroup label="─ Bodyweight ─">`;
-      bodyweight.forEach(ex => { html += `<option value="${ex.name}">${ex.name}</option>`; });
-      html += `</optgroup>`;
-    }
+    groups.forEach(cat => {
+      const items = EXERCISE_CATALOG.filter(ex => ex.category === cat).sort(sortByName);
+      if (items.length) {
+        html += `<optgroup label="─ ${labels[cat]} ─">`;
+        items.forEach(ex => { html += `<option value="${ex.name}">${ex.name}</option>`; });
+        html += `</optgroup>`;
+      }
+    });
     sel.innerHTML = html;
     if (currentVal && Array.from(sel.options).some(o => o.value === currentVal)) {
       sel.value = currentVal;
@@ -855,14 +898,15 @@ function removeMovementRow(btn) {
 function getAmrapMovementData() {
   const movements = [];
   let error = null;
-  document.querySelectorAll('.movement-row').forEach(row => {
+  document.querySelectorAll('#movement-list .movement-row').forEach(row => {
     const exercise = row.querySelector('.movement-exercise')?.value;
     const reps = parseInt(row.querySelector('.movement-reps')?.value, 10);
     const weight = parseFloat(row.querySelector('.movement-weight')?.value) || 0;
     if (!exercise) { error = 'Select an exercise for all movements.'; return; }
     if (!reps || reps < 1) { error = 'Enter reps for all movements.'; return; }
+    const exInfo = getExerciseInfo(exercise);
     const loadFactor = LOAD_FACTORS[exercise];
-    if (!loadFactor && (!weight || weight <= 0)) { error = `Enter a load for ${exercise}.`; return; }
+    if (!loadFactor && exInfo.category !== 'cardio' && (!weight || weight <= 0)) { error = `Enter a load for ${exercise}.`; return; }
     movements.push({ exerciseId: exercise, reps, weight });
   });
   if (error) throw new Error(error);
@@ -950,6 +994,7 @@ async function generateAmrapContributions(workoutId, movements, roundsCompleted,
   const now = Date.now();
 
   for (const movement of movements) {
+    if (getExerciseInfo(movement.exerciseId).category === 'cardio') continue;
     const totalRepsPerMovement = roundsCompleted * movement.reps + additionalReps;
     if (totalRepsPerMovement <= 0) continue;
 
@@ -1085,8 +1130,9 @@ function getEmomMovementData() {
     const weight = parseFloat(row.querySelector('.movement-weight')?.value) || 0;
     if (!exercise) { error = 'Select an exercise for all minutes.'; return; }
     if (!reps || reps < 1) { error = 'Enter reps for all minutes.'; return; }
+    const exInfo = getExerciseInfo(exercise);
     const loadFactor = LOAD_FACTORS[exercise];
-    if (!loadFactor && (!weight || weight <= 0)) { error = `Enter a load for ${exercise}.`; return; }
+    if (!loadFactor && exInfo.category !== 'cardio' && (!weight || weight <= 0)) { error = `Enter a load for ${exercise}.`; return; }
     minutes.push({ movements: [{ exerciseId: exercise, reps, weight }] });
   });
   if (error) throw new Error(error);
@@ -1182,6 +1228,7 @@ async function generateEmomContributions(workoutId, minutes, minutesCompleted) {
     const slot = minutes[i];
     if (!slot.movements || slot.movements.length === 0) continue;
     const movement = slot.movements[0];
+    if (getExerciseInfo(movement.exerciseId).category === 'cardio') continue;
     const performedTimes = fullRounds + (i < remainder ? 1 : 0);
     if (performedTimes <= 0) continue;
 
@@ -1259,8 +1306,9 @@ function getForTimeMovementData() {
     const weight = parseFloat(row.querySelector('.movement-weight')?.value) || 0;
     if (!exercise) { error = 'Select an exercise for all movements.'; return; }
     if (!reps || reps < 1) { error = 'Enter reps for all movements.'; return; }
+    const exInfo = getExerciseInfo(exercise);
     const loadFactor = LOAD_FACTORS[exercise];
-    if (!loadFactor && (!weight || weight <= 0)) { error = `Enter a load for ${exercise}.`; return; }
+    if (!loadFactor && exInfo.category !== 'cardio' && (!weight || weight <= 0)) { error = `Enter a load for ${exercise}.`; return; }
     movements.push({ exerciseId: exercise, reps, weight });
   });
   if (error) throw new Error(error);
@@ -1377,6 +1425,7 @@ async function generateForTimeContributions(workoutId, movements, rounds) {
   const now = Date.now();
 
   for (const movement of movements) {
+    if (getExerciseInfo(movement.exerciseId).category === 'cardio') continue;
     const totalRepsPerMovement = movement.reps * rounds;
     if (totalRepsPerMovement <= 0) continue;
 
@@ -1451,8 +1500,9 @@ function getIntervalMovementData() {
     const weight = parseFloat(row.querySelector('.movement-weight')?.value) || 0;
     if (!exercise) { error = 'Select an exercise for all movements.'; return; }
     if (!reps || reps < 1) { error = 'Enter reps for all movements.'; return; }
+    const exInfo = getExerciseInfo(exercise);
     const loadFactor = LOAD_FACTORS[exercise];
-    if (!loadFactor && (!weight || weight <= 0)) { error = `Enter a load for ${exercise}.`; return; }
+    if (!loadFactor && exInfo.category !== 'cardio' && (!weight || weight <= 0)) { error = `Enter a load for ${exercise}.`; return; }
     movements.push({ exerciseId: exercise, reps, weight });
   });
   if (error) throw new Error(error);
@@ -1498,7 +1548,7 @@ async function submitIntervalWorkout(e) {
 
   const workoutDoc = {
     userId: currentUser.uid,
-    name: `${workMin}:${restMin.toString().padStart(2, '0')} × ${rounds} INTERVAL`,
+    name: `${workMin}:${restMin} × ${rounds} INTERVAL`,
     type: 'INTERVAL',
     structure: {
       rounds,
@@ -1542,6 +1592,7 @@ async function generateIntervalContributions(workoutId, movements, roundsComplet
   const now = Date.now();
 
   for (const movement of movements) {
+    if (getExerciseInfo(movement.exerciseId).category === 'cardio') continue;
     const totalRepsPerMovement = movement.reps * roundsCompleted;
     if (totalRepsPerMovement <= 0) continue;
 
