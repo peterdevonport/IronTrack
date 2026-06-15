@@ -567,8 +567,9 @@ function populateExerciseDropdown() {
   const select = document.getElementById('exercise');
   if (!select) return;
   const currentVal = select.value;
-  const barbell = EXERCISE_CATALOG.filter(ex => ex.category === 'barbell');
-  const bodyweight = EXERCISE_CATALOG.filter(ex => ex.category === 'bodyweight');
+  const sortByName = (a, b) => a.name.localeCompare(b.name);
+  const barbell = EXERCISE_CATALOG.filter(ex => ex.category === 'barbell').sort(sortByName);
+  const bodyweight = EXERCISE_CATALOG.filter(ex => ex.category === 'bodyweight').sort(sortByName);
   let html = `<option value="" disabled selected>Select exercise...</option>`;
   if (barbell.length) {
     html += `<optgroup label="─ Barbell ─">`;
@@ -771,6 +772,7 @@ function switchWorkoutMode(mode) {
     if (workoutFormEl) workoutFormEl.classList.add('hidden');
     workoutSection.classList.remove('hidden');
     populateMovementDropdowns();
+    handleWorkoutTypeChange();
   }
 }
 
@@ -778,10 +780,20 @@ function populateMovementDropdowns() {
   document.querySelectorAll('.movement-exercise').forEach(sel => {
     if (sel.options.length > 1) return;
     const currentVal = sel.value;
+    const sortByName = (a, b) => a.name.localeCompare(b.name);
+    const barbell = EXERCISE_CATALOG.filter(ex => ex.category === 'barbell').sort(sortByName);
+    const bodyweight = EXERCISE_CATALOG.filter(ex => ex.category === 'bodyweight').sort(sortByName);
     let html = '<option value="">Select exercise...</option>';
-    EXERCISE_CATALOG.forEach(ex => {
-      html += `<option value="${ex.name}">${ex.name}</option>`;
-    });
+    if (barbell.length) {
+      html += `<optgroup label="─ Barbell ─">`;
+      barbell.forEach(ex => { html += `<option value="${ex.name}">${ex.name}</option>`; });
+      html += `</optgroup>`;
+    }
+    if (bodyweight.length) {
+      html += `<optgroup label="─ Bodyweight ─">`;
+      bodyweight.forEach(ex => { html += `<option value="${ex.name}">${ex.name}</option>`; });
+      html += `</optgroup>`;
+    }
     sel.innerHTML = html;
     if (currentVal && Array.from(sel.options).some(o => o.value === currentVal)) {
       sel.value = currentVal;
@@ -976,6 +988,232 @@ async function generateAmrapContributions(workoutId, movements, roundsCompleted,
   }
 }
 
+// ─── EMOM Functions ───────────────────────────────────────────────────────
+
+function handleWorkoutTypeChange() {
+  const type = document.getElementById('workout-type')?.value;
+  const amrapForm = document.getElementById('amrap-form');
+  const emomForm = document.getElementById('emom-form');
+  const desc = document.getElementById('workout-type-desc');
+  if (!amrapForm || !emomForm || !desc) return;
+
+  if (type === 'EMOM') {
+    amrapForm.classList.add('hidden');
+    emomForm.classList.remove('hidden');
+    desc.textContent = 'Record an EMOM (Every Minute On the Minute) workout.';
+    populateMovementDropdowns();
+    updateEmomRounds();
+  } else {
+    emomForm.classList.add('hidden');
+    amrapForm.classList.remove('hidden');
+    desc.textContent = 'Record a structured AMRAP workout.';
+    populateMovementDropdowns();
+  }
+}
+
+function addMinuteSlot(exerciseName) {
+  const container = document.getElementById('emom-minute-slots');
+  if (!container) return;
+  const count = container.children.length + 1;
+  const row = document.createElement('div');
+  row.className = 'minute-row flex gap-2 items-end';
+  row.innerHTML = `
+    <div class="flex-1">
+      <span class="text-xs text-slate-500 font-mono mr-1 inline-block w-10">#${count}</span>
+      <select class="movement-exercise dropdown-core w-[calc(100%-3rem)] inline-block" onchange="handleMovementExerciseChange(this)">
+        <option value="">Select exercise...</option>
+      </select>
+    </div>
+    <div class="w-16">
+      <input type="number" class="movement-reps input-core" placeholder="Reps" min="1" step="1" />
+    </div>
+    <div class="w-20">
+      <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
+    </div>
+    <button type="button" onclick="removeMinuteSlot(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none">X</button>
+  `;
+  container.appendChild(row);
+  populateMovementDropdowns();
+  if (exerciseName) {
+    const sel = row.querySelector('.movement-exercise');
+    if (sel) { sel.value = exerciseName; handleMovementExerciseChange(sel); }
+  }
+  updateEmomRounds();
+}
+
+function removeMinuteSlot(btn) {
+  const row = btn.closest('.minute-row');
+  if (row) row.remove();
+  // re-number the minute labels
+  const container = document.getElementById('emom-minute-slots');
+  if (container) {
+    container.querySelectorAll('.minute-row').forEach((r, i) => {
+      const label = r.querySelector('.font-mono');
+      if (label) label.textContent = `#${i + 1}`;
+    });
+  }
+  updateEmomRounds();
+}
+
+function updateEmomRounds() {
+  const duration = parseInt(document.getElementById('emom-duration')?.value, 10);
+  const container = document.getElementById('emom-minute-slots');
+  const displayEl = document.getElementById('emom-rounds-display');
+  if (!container || !displayEl) return;
+  const minuteCount = container.querySelectorAll('.minute-row').length;
+  if (duration > 0 && minuteCount > 0) {
+    const rounds = Math.floor(duration / minuteCount);
+    displayEl.querySelector('span').textContent = `${rounds} (${duration} ÷ ${minuteCount})`;
+  } else {
+    displayEl.querySelector('span').textContent = '—';
+  }
+}
+
+function getEmomMovementData() {
+  const minutes = [];
+  let error = null;
+  document.querySelectorAll('#emom-minute-slots .minute-row').forEach(row => {
+    const exercise = row.querySelector('.movement-exercise')?.value;
+    const reps = parseInt(row.querySelector('.movement-reps')?.value, 10);
+    const weight = parseFloat(row.querySelector('.movement-weight')?.value) || 0;
+    if (!exercise) { error = 'Select an exercise for all minutes.'; return; }
+    if (!reps || reps < 1) { error = 'Enter reps for all minutes.'; return; }
+    const loadFactor = LOAD_FACTORS[exercise];
+    if (!loadFactor && (!weight || weight <= 0)) { error = `Enter a load for ${exercise}.`; return; }
+    minutes.push({ movements: [{ exerciseId: exercise, reps, weight }] });
+  });
+  if (error) throw new Error(error);
+  return minutes;
+}
+
+function updateEmomScorePreview() {
+  const minutesCompleted = parseInt(document.getElementById('emom-minutes-completed')?.value, 10);
+  const duration = parseInt(document.getElementById('emom-duration')?.value, 10);
+  const preview = document.getElementById('emom-score-preview');
+  if (!preview) return;
+  if (duration > 0) {
+    preview.textContent = formatScore_COMPLETED_MINUTES(minutesCompleted || 0, duration);
+  } else {
+    preview.textContent = '—';
+  }
+}
+
+function formatScore_COMPLETED_MINUTES(completed, total) {
+  if (completed === 0 && total === 0) return '—';
+  return `${completed}/${total}`;
+}
+
+async function submitEmomWorkout(e) {
+  e.preventDefault();
+  if (!currentUser) return alert('Please sign in first.');
+
+  const durationMin = parseInt(document.getElementById('emom-duration').value, 10);
+  const minutesCompleted = parseInt(document.getElementById('emom-minutes-completed').value, 10);
+  let minutes;
+  try {
+    minutes = getEmomMovementData();
+  } catch (err) {
+    return showFeedback(err.message, 'red', 'emomFeedback');
+  }
+
+  if (!durationMin || durationMin < 1) return showFeedback('Enter a valid duration.', 'red', 'emomFeedback');
+  if (minutesCompleted < 0) return showFeedback('Enter minutes completed.', 'red', 'emomFeedback');
+  if (minutesCompleted > durationMin) return showFeedback('Minutes completed cannot exceed duration.', 'red', 'emomFeedback');
+  if (minutes.length === 0) return showFeedback('Add at least one minute slot.', 'red', 'emomFeedback');
+
+  const now = Date.now();
+
+  const workoutDoc = {
+    userId: currentUser.uid,
+    name: `${durationMin} Min EMOM`,
+    type: 'EMOM',
+    structure: {
+      durationMinutes: durationMin,
+      minutes
+    },
+    result: {
+      minutesCompleted
+    },
+    scoreDisplay: formatScore_COMPLETED_MINUTES(minutesCompleted, durationMin),
+    scoreType: 'COMPLETED_MINUTES',
+    scoreValue: minutesCompleted,
+    timestamp: now
+  };
+
+  try {
+    const docRef = await addDoc(collection(db, "structured_workouts"), workoutDoc);
+    await generateEmomContributions(docRef.id, minutes, minutesCompleted);
+
+    document.getElementById('emom-form').reset();
+    document.getElementById('emom-minute-slots').innerHTML = '';
+    addMinuteSlot();
+    document.getElementById('emom-score-preview').textContent = '—';
+    updateEmomRounds();
+    showFeedback('EMOM workout saved!', 'emerald', 'emomFeedback');
+    haptic(HAPTIC.confirm);
+  } catch (err) {
+    console.error('EMOM submission failed', err.code, err.message);
+    if (err.code === 'permission-denied') {
+      showFeedback('Save blocked by Firestore rules.', 'red', 'emomFeedback');
+    } else {
+      alert(`Failed to save workout: ${err.message}`);
+    }
+  }
+}
+
+async function generateEmomContributions(workoutId, minutes, minutesCompleted) {
+  const bw = userBiometrics.bodyweight || 0;
+  const numMinutes = minutes.length;
+  const now = Date.now();
+
+  if (numMinutes === 0 || minutesCompleted <= 0) return;
+
+  const fullRounds = Math.floor(minutesCompleted / numMinutes);
+  const remainder = minutesCompleted % numMinutes;
+
+  for (let i = 0; i < minutes.length; i++) {
+    const slot = minutes[i];
+    if (!slot.movements || slot.movements.length === 0) continue;
+    const movement = slot.movements[0];
+    const performedTimes = fullRounds + (i < remainder ? 1 : 0);
+    if (performedTimes <= 0) continue;
+
+    const totalRepsPerMovement = movement.reps * performedTimes;
+
+    const loadFactor = LOAD_FACTORS[movement.exerciseId];
+    let estimatedLoad = 0;
+    let weight = 0;
+
+    if (loadFactor !== undefined) {
+      estimatedLoad = bw * loadFactor;
+      weight = bw;
+    } else {
+      estimatedLoad = movement.weight || 0;
+      weight = movement.weight || 0;
+    }
+
+    const totalVolume = estimatedLoad * totalRepsPerMovement;
+
+    const logEntry = {
+      userId: currentUser.uid,
+      exercise: movement.exerciseId,
+      sets: performedTimes,
+      reps: movement.reps,
+      weight,
+      externalLoad: 0,
+      estimatedLoad,
+      totalVolume,
+      timestamp: now,
+      source: 'structured',
+      workoutId,
+      minuteIndex: i,
+      totalWorkReps: totalRepsPerMovement
+    };
+
+    await addDoc(collection(db, "workouts"), logEntry);
+  }
+}
+
 function listenToStructuredWorkouts(uid) {
   const q = query(
     collection(db, "structured_workouts"),
@@ -997,25 +1235,44 @@ function listenToStructuredWorkouts(uid) {
 }
 
 function renderStructuredWorkoutCard(sw) {
-  const movements = sw.structure?.movements || [];
-  const movementsHtml = movements.map(m =>
-    `<span class="movement-chip">${escapeHtml(m.exerciseId)} × ${m.reps}</span>`
-  ).join('');
+  const type = sw.type || 'AMRAP';
+  const badgeClass = type.toLowerCase();
+  let durationLabel = '';
+  let scoreLabel = '';
+  let movementsHtml = '';
+
+  if (type === 'EMOM') {
+    const minutes = sw.structure?.minutes || [];
+    movementsHtml = minutes.map(m => {
+      const mov = m.movements?.[0];
+      if (!mov) return '';
+      return `<span class="movement-chip">${escapeHtml(mov.exerciseId)} × ${mov.reps}</span>`;
+    }).join('');
+    durationLabel = `${sw.structure?.durationMinutes || 0} min`;
+    scoreLabel = 'min completed';
+  } else {
+    const movements = sw.structure?.movements || [];
+    movementsHtml = movements.map(m =>
+      `<span class="movement-chip">${escapeHtml(m.exerciseId)} × ${m.reps}</span>`
+    ).join('');
+    const durationMin = Math.round((sw.structure?.durationSeconds || 0) / 60);
+    durationLabel = `${durationMin} min`;
+    scoreLabel = 'rounds + reps';
+  }
 
   const dateStr = new Date(sw.timestamp).toLocaleDateString();
-  const durationMin = Math.round((sw.structure?.durationSeconds || 0) / 60);
 
   return `
 <div class="structured-card p-4 rounded-2xl mb-3 shadow-2xl shadow-slate-950/60 transition-all duration-200" style="background-color: var(--slate-900);">
     <div class="flex justify-between items-start mb-2">
       <div>
-        <span class="workout-type-badge amrap">AMRAP</span>
+        <span class="workout-type-badge ${badgeClass}">${escapeHtml(type)}</span>
         <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm mt-1">${escapeHtml(sw.name)}</h4>
-        <p class="text-slate-500 text-[10px] font-mono mt-0.5">${dateStr} · ${durationMin} min</p>
+        <p class="text-slate-500 text-[10px] font-mono mt-0.5">${dateStr} · ${durationLabel}</p>
       </div>
       <div class="text-right">
         <div class="score-display">${escapeHtml(sw.scoreDisplay || '—')}</div>
-        <p class="text-slate-500 text-[10px] font-mono mt-0.5">rounds + reps</p>
+        <p class="text-slate-500 text-[10px] font-mono mt-0.5">${scoreLabel}</p>
       </div>
     </div>
     <div class="flex flex-wrap gap-1.5 mt-2">
@@ -1237,6 +1494,29 @@ const amrapRounds = document.getElementById('amrap-rounds');
 const amrapAdditional = document.getElementById('amrap-additional-reps');
 if (amrapRounds) amrapRounds.addEventListener('input', updateAmrapScorePreview);
 if (amrapAdditional) amrapAdditional.addEventListener('input', updateAmrapScorePreview);
+
+// EMOM Form Submit
+const emomForm = document.getElementById('emom-form');
+if (emomForm) {
+  emomForm.addEventListener('submit', submitEmomWorkout);
+}
+
+// EMOM Score Preview
+const emomMinutesCompleted = document.getElementById('emom-minutes-completed');
+const emomDuration = document.getElementById('emom-duration');
+if (emomMinutesCompleted) emomMinutesCompleted.addEventListener('input', updateEmomScorePreview);
+if (emomDuration) emomDuration.addEventListener('input', () => { updateEmomScorePreview(); updateEmomRounds(); });
+
+// EMOM minute slot changes re-trigger rounds calc
+const emomMinuteSlots = document.getElementById('emom-minute-slots');
+if (emomMinuteSlots) {
+  emomMinuteSlots.addEventListener('change', updateEmomRounds);
+}
+
+// Initial minute row for EMOM
+if (document.getElementById('emom-minute-slots')) {
+  addMinuteSlot();
+}
 
 // Structured Workout Pagination
 const prevStructuredBtn = document.getElementById('prev-structured-page-btn');
@@ -1743,3 +2023,6 @@ window.switchWorkoutMode = switchWorkoutMode;
 window.addMovementRow = addMovementRow;
 window.removeMovementRow = removeMovementRow;
 window.handleMovementExerciseChange = handleMovementExerciseChange;
+window.handleWorkoutTypeChange = handleWorkoutTypeChange;
+window.addMinuteSlot = addMinuteSlot;
+window.removeMinuteSlot = removeMinuteSlot;
