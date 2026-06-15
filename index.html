@@ -583,6 +583,44 @@
         </div>
       </section>
 
+      <section class="surface-card" id="challenges-section">
+        <h2 class="section-heading">Consistency Challenges</h2>
+        <p class="text-description">Unique workout day targets.</p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4" id="challenge-cards">
+          <div class="bg-slate-950 rounded-xl p-3" id="challenge-monthly">
+            <div class="flex justify-between items-start mb-1">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Monthly</span>
+              <span class="text-[10px] font-bold text-emerald-400 challenge-completed-badge hidden" id="challenge-monthly-badge">Done</span>
+            </div>
+            <div class="text-lg font-black text-emerald-400" id="challenge-monthly-progress">0 / 14</div>
+            <div class="mt-1.5 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+              <div id="challenge-monthly-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" style="width: 0%"></div>
+            </div>
+          </div>
+          <div class="bg-slate-950 rounded-xl p-3" id="challenge-yearly">
+            <div class="flex justify-between items-start mb-1">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Yearly</span>
+              <span class="text-[10px] font-bold text-emerald-400 challenge-completed-badge hidden" id="challenge-yearly-badge">Done</span>
+            </div>
+            <div class="text-lg font-black text-emerald-400" id="challenge-yearly-progress">0 / 150</div>
+            <div class="mt-1.5 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+              <div id="challenge-yearly-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" style="width: 0%"></div>
+            </div>
+          </div>
+          <div class="bg-slate-950 rounded-xl p-3" id="challenge-lifetime">
+            <div class="flex justify-between items-start mb-1">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Lifetime</span>
+              <span class="text-[10px] font-bold text-emerald-400 challenge-completed-badge hidden" id="challenge-lifetime-badge">Done</span>
+            </div>
+            <div class="text-lg font-black text-emerald-400" id="challenge-lifetime-progress">0 / 3000</div>
+            <div class="mt-1.5 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+              <div id="challenge-lifetime-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section class="surface-card">
 
         <h2 class="section-heading">Training Log</h2>

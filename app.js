@@ -146,6 +146,12 @@ const HAPTIC = {
     error: [40, 50, 40]
 };
 
+const CONSISTENCY_CONFIG = {
+    monthlyUniqueDays: 14,
+    yearlyUniqueDays: 150,
+    lifetimeUniqueDays: 3000
+};
+
 let currentUser = null;
 let unsubscribeLogs = null;
 let userBiometrics = { gender: 'male', bodyweight: 75 };
@@ -192,6 +198,7 @@ onAuthStateChanged(auth, async (user) => {
         syncLeaderboardFeed();
         listenToDataStream(user.uid);
         listenToStructuredWorkouts(user.uid);
+        loadConsistencyConfig();
 
         showQRCode()
 
@@ -1741,6 +1748,80 @@ async function computeAndSyncDailyActivity() {
 function renderConsistencyUI() {
     renderCalendar();
     updateConsistencyMetrics();
+    renderChallengeCards();
+}
+
+function calculateChallengeProgress() {
+    const activeDates = window.__irontrackActiveDates || new Set();
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth();
+
+    const dateArray = Array.from(activeDates);
+
+    const monthlyActive = dateArray.filter(d => {
+        const [y, m] = d.split('-');
+        return parseInt(y) === currentYear && (parseInt(m) - 1) === currentMonth;
+    }).length;
+
+    const yearlyActive = dateArray.filter(d => {
+        return d.startsWith(String(currentYear));
+    }).length;
+
+    const lifetimeActive = activeDates.size;
+
+    return { monthly: monthlyActive, yearly: yearlyActive, lifetime: lifetimeActive };
+}
+
+function renderChallengeCards() {
+    const progress = calculateChallengeProgress();
+    const cfg = CONSISTENCY_CONFIG;
+
+    const monthlyPct = Math.min(100, (progress.monthly / cfg.monthlyUniqueDays) * 100);
+    const yearlyPct = Math.min(100, (progress.yearly / cfg.yearlyUniqueDays) * 100);
+    const lifetimePct = Math.min(100, (progress.lifetime / cfg.lifetimeUniqueDays) * 100);
+
+    const monthlyDone = progress.monthly >= cfg.monthlyUniqueDays;
+    const yearlyDone = progress.yearly >= cfg.yearlyUniqueDays;
+    const lifetimeDone = progress.lifetime >= cfg.lifetimeUniqueDays;
+
+    setChallengeCard('challenge-monthly', progress.monthly, cfg.monthlyUniqueDays, monthlyPct, monthlyDone);
+    setChallengeCard('challenge-yearly', progress.yearly, cfg.yearlyUniqueDays, yearlyPct, yearlyDone);
+    setChallengeCard('challenge-lifetime', progress.lifetime, cfg.lifetimeUniqueDays, lifetimePct, lifetimeDone);
+}
+
+function setChallengeCard(idPrefix, current, target, pct, completed) {
+    const progressEl = document.getElementById(`${idPrefix}-progress`);
+    const barEl = document.getElementById(`${idPrefix}-bar`);
+    const badgeEl = document.getElementById(`${idPrefix}-badge`);
+    const cardEl = document.getElementById(idPrefix);
+    if (!progressEl || !barEl) return;
+
+    progressEl.textContent = `${current} / ${target}`;
+    barEl.style.width = `${pct}%`;
+
+    if (completed) {
+        if (badgeEl) badgeEl.classList.remove('hidden');
+        if (cardEl) cardEl.classList.add('completed');
+    } else {
+        if (badgeEl) badgeEl.classList.add('hidden');
+        if (cardEl) cardEl.classList.remove('completed');
+    }
+}
+
+async function loadConsistencyConfig() {
+    try {
+        const docSnap = await getDoc(doc(db, "config", "consistency"));
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            if (data.monthlyUniqueDays) CONSISTENCY_CONFIG.monthlyUniqueDays = data.monthlyUniqueDays;
+            if (data.yearlyUniqueDays) CONSISTENCY_CONFIG.yearlyUniqueDays = data.yearlyUniqueDays;
+            if (data.lifetimeUniqueDays) CONSISTENCY_CONFIG.lifetimeUniqueDays = data.lifetimeUniqueDays;
+        }
+    } catch (e) {
+        // Config doc may not exist or permission-denied; use defaults
+    }
+    renderChallengeCards();
 }
 
 function renderCalendar() {

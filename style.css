@@ -340,3 +340,11 @@ body {
   background-repeat: no-repeat;
   color: var(--slate-950);
 }
+
+.challenge-bar {
+  transition: width 0.5s ease-in-out;
+}
+
+#challenge-cards .completed {
+  border: 1px solid var(--emerald-500);
+}
