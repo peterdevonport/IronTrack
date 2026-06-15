@@ -253,6 +253,8 @@
       </section>
 
       <section class="surface-card lg:col-span-1">
+        <h2 class="section-heading">Training Log</h2>
+        <p class="text-description mb-4">Keep track of your training</p>
         <div class="flex gap-1 p-0.5 w-fit rounded-xl bg-slate-800/60 mb-4">
           <button id="tab-log-set" type="button" class="btn-core is-primary btn-size-row" onclick="switchWorkoutMode('set')">
             Log Sets
@@ -262,12 +264,7 @@
           </button>
         </div>
 
-        <div id="log-set-section">
-          <h2 class="section-heading">Log an Exercise</h2>
-          <p class="text-description">
-            Record your workout sets and reps to track progress.
-          </p>
-        </div>
+        <div id="log-set-section"></div>
 
         <form id="workout-form" class="space-y-4">
           <div>
@@ -318,11 +315,6 @@
         </form>
 
         <div id="log-workout-section" class="hidden">
-          <h2 class="section-heading">Log a Workout</h2>
-
-          <p id="workout-type-subheading" class="text-description">
-            Record a structured workout.
-          </p>
           
           <div id="workout-type-selector" class="mb-4">
             <label class="form-label">Workout Type</label>
