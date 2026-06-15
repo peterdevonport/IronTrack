@@ -994,21 +994,24 @@ function handleWorkoutTypeChange() {
   const type = document.getElementById('workout-type')?.value;
   const amrapForm = document.getElementById('amrap-form');
   const emomForm = document.getElementById('emom-form');
+  const forTimeForm = document.getElementById('for-time-form');
   const desc = document.getElementById('workout-type-desc');
-  if (!amrapForm || !emomForm || !desc) return;
+  if (!amrapForm || !emomForm || !forTimeForm || !desc) return;
+
+  [amrapForm, emomForm, forTimeForm].forEach(f => f.classList.add('hidden'));
 
   if (type === 'EMOM') {
-    amrapForm.classList.add('hidden');
     emomForm.classList.remove('hidden');
     desc.textContent = 'Record an EMOM (Every Minute On the Minute) workout.';
-    populateMovementDropdowns();
     updateEmomRounds();
+  } else if (type === 'FOR_TIME') {
+    forTimeForm.classList.remove('hidden');
+    desc.textContent = 'Record a For Time workout — complete the rounds as fast as possible.';
   } else {
-    emomForm.classList.add('hidden');
     amrapForm.classList.remove('hidden');
     desc.textContent = 'Record a structured AMRAP workout.';
-    populateMovementDropdowns();
   }
+  populateMovementDropdowns();
 }
 
 function addMinuteSlot(exerciseName) {
@@ -1214,6 +1217,179 @@ async function generateEmomContributions(workoutId, minutes, minutesCompleted) {
   }
 }
 
+// ─── FOR_TIME Functions ────────────────────────────────────────────────────
+
+function addForTimeMovementRow(exerciseName) {
+  const container = document.getElementById('fortime-movement-list');
+  if (!container) return;
+  const row = document.createElement('div');
+  row.className = 'movement-row flex gap-2 items-end';
+  row.innerHTML = `
+    <div class="flex-1">
+      <select class="movement-exercise dropdown-core" onchange="handleMovementExerciseChange(this)">
+        <option value="">Select exercise...</option>
+      </select>
+    </div>
+    <div class="w-16">
+      <input type="number" class="movement-reps input-core" placeholder="Reps" min="1" step="1" />
+    </div>
+    <div class="w-20">
+      <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
+    </div>
+    <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none">X</button>
+  `;
+  container.appendChild(row);
+  populateMovementDropdowns();
+  if (exerciseName) {
+    const sel = row.querySelector('.movement-exercise');
+    if (sel) { sel.value = exerciseName; handleMovementExerciseChange(sel); }
+  }
+}
+
+function getForTimeMovementData() {
+  const movements = [];
+  let error = null;
+  document.querySelectorAll('#fortime-movement-list .movement-row').forEach(row => {
+    const exercise = row.querySelector('.movement-exercise')?.value;
+    const reps = parseInt(row.querySelector('.movement-reps')?.value, 10);
+    const weight = parseFloat(row.querySelector('.movement-weight')?.value) || 0;
+    if (!exercise) { error = 'Select an exercise for all movements.'; return; }
+    if (!reps || reps < 1) { error = 'Enter reps for all movements.'; return; }
+    const loadFactor = LOAD_FACTORS[exercise];
+    if (!loadFactor && (!weight || weight <= 0)) { error = `Enter a load for ${exercise}.`; return; }
+    movements.push({ exerciseId: exercise, reps, weight });
+  });
+  if (error) throw new Error(error);
+  return movements;
+}
+
+function updateForTimeScorePreview() {
+  const mins = parseInt(document.getElementById('fortime-minutes')?.value, 10);
+  const secs = parseInt(document.getElementById('fortime-seconds')?.value, 10);
+  const dnf = document.getElementById('fortime-dnf')?.checked;
+  const preview = document.getElementById('fortime-score-preview');
+  if (!preview) return;
+  if (dnf) {
+    preview.textContent = 'DNF';
+  } else if (mins > 0 || secs > 0) {
+    preview.textContent = formatScore_TIME_SECONDS(mins * 60 + secs);
+  } else {
+    preview.textContent = '—';
+  }
+}
+
+function formatScore_TIME_SECONDS(totalSeconds) {
+  if (!totalSeconds && totalSeconds !== 0) return '—';
+  const mins = Math.floor(totalSeconds / 60);
+  const secs = totalSeconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+async function submitForTimeWorkout(e) {
+  e.preventDefault();
+  if (!currentUser) return alert('Please sign in first.');
+
+  const timeCap = parseInt(document.getElementById('fortime-cap').value, 10) || 0;
+  const rounds = parseInt(document.getElementById('fortime-rounds').value, 10);
+  const resultMins = parseInt(document.getElementById('fortime-minutes').value, 10);
+  const resultSecs = parseInt(document.getElementById('fortime-seconds').value, 10);
+  const dnf = document.getElementById('fortime-dnf').checked;
+
+  let movements;
+  try {
+    movements = getForTimeMovementData();
+  } catch (err) {
+    return showFeedback(err.message, 'red', 'fortimeFeedback');
+  }
+
+  if (!rounds || rounds < 1) return showFeedback('Enter a valid round count.', 'red', 'fortimeFeedback');
+  if (movements.length === 0) return showFeedback('Add at least one movement.', 'red', 'fortimeFeedback');
+  if (!dnf && (resultMins < 0 || resultSecs < 0)) return showFeedback('Enter a valid time.', 'red', 'fortimeFeedback');
+  if (resultSecs > 59) return showFeedback('Seconds must be 0–59.', 'red', 'fortimeFeedback');
+
+  const now = Date.now();
+  const timeSeconds = dnf ? 0 : resultMins * 60 + resultSecs;
+
+  const workoutDoc = {
+    userId: currentUser.uid,
+    name: timeCap ? `${timeCap} Min For Time` : `For Time`,
+    type: 'FOR_TIME',
+    structure: {
+      durationMinutes: timeCap || null,
+      movements,
+      rounds
+    },
+    result: {
+      timeSeconds,
+      completed: !dnf
+    },
+    scoreDisplay: dnf ? `DNF (${rounds} rds)` : formatScore_TIME_SECONDS(timeSeconds),
+    scoreType: 'TIME_SECONDS',
+    scoreValue: timeSeconds,
+    timestamp: now
+  };
+
+  try {
+    const docRef = await addDoc(collection(db, "structured_workouts"), workoutDoc);
+    await generateForTimeContributions(docRef.id, movements, rounds);
+
+    document.getElementById('for-time-form').reset();
+    document.getElementById('fortime-movement-list').innerHTML = '';
+    addForTimeMovementRow();
+    document.getElementById('fortime-score-preview').textContent = '—';
+    showFeedback('For Time workout saved!', 'emerald', 'fortimeFeedback');
+    haptic(HAPTIC.confirm);
+  } catch (err) {
+    console.error('FOR_TIME submission failed', err.code, err.message);
+    if (err.code === 'permission-denied') {
+      showFeedback('Save blocked by Firestore rules.', 'red', 'fortimeFeedback');
+    } else {
+      alert(`Failed to save workout: ${err.message}`);
+    }
+  }
+}
+
+async function generateForTimeContributions(workoutId, movements, rounds) {
+  const bw = userBiometrics.bodyweight || 0;
+  const now = Date.now();
+
+  for (const movement of movements) {
+    const totalRepsPerMovement = movement.reps * rounds;
+    if (totalRepsPerMovement <= 0) continue;
+
+    const loadFactor = LOAD_FACTORS[movement.exerciseId];
+    let estimatedLoad = 0;
+    let weight = 0;
+
+    if (loadFactor !== undefined) {
+      estimatedLoad = bw * loadFactor;
+      weight = bw;
+    } else {
+      estimatedLoad = movement.weight || 0;
+      weight = movement.weight || 0;
+    }
+
+    const totalVolume = estimatedLoad * totalRepsPerMovement;
+
+    const logEntry = {
+      userId: currentUser.uid,
+      exercise: movement.exerciseId,
+      sets: rounds,
+      reps: movement.reps,
+      weight,
+      externalLoad: 0,
+      estimatedLoad,
+      totalVolume,
+      timestamp: now,
+      source: 'structured',
+      workoutId,
+      totalWorkReps: totalRepsPerMovement
+    };
+
+    await addDoc(collection(db, "workouts"), logEntry);
+  }
+}
+
 function listenToStructuredWorkouts(uid) {
   const q = query(
     collection(db, "structured_workouts"),
@@ -1250,6 +1426,17 @@ function renderStructuredWorkoutCard(sw) {
     }).join('');
     durationLabel = `${sw.structure?.durationMinutes || 0} min`;
     scoreLabel = 'min completed';
+  } else if (type === 'FOR_TIME') {
+    const movements = sw.structure?.movements || [];
+    movementsHtml = movements.map(m =>
+      `<span class="movement-chip">${escapeHtml(m.exerciseId)} × ${m.reps}</span>`
+    ).join('');
+    const cap = sw.structure?.durationMinutes;
+    durationLabel = cap ? `${cap} min cap` : '';
+    const rounds = sw.structure?.rounds;
+    const rdLabel = rounds ? ` · ${rounds} rds` : '';
+    durationLabel += rdLabel;
+    scoreLabel = 'time';
   } else {
     const movements = sw.structure?.movements || [];
     movementsHtml = movements.map(m =>
@@ -1506,6 +1693,25 @@ const emomMinutesCompleted = document.getElementById('emom-minutes-completed');
 const emomDuration = document.getElementById('emom-duration');
 if (emomMinutesCompleted) emomMinutesCompleted.addEventListener('input', updateEmomScorePreview);
 if (emomDuration) emomDuration.addEventListener('input', () => { updateEmomScorePreview(); updateEmomRounds(); });
+
+// FOR_TIME Form Submit
+const forTimeForm = document.getElementById('for-time-form');
+if (forTimeForm) {
+  forTimeForm.addEventListener('submit', submitForTimeWorkout);
+}
+
+// FOR_TIME Score Preview
+const fortimeMinutes = document.getElementById('fortime-minutes');
+const fortimeSeconds = document.getElementById('fortime-seconds');
+const fortimeDnf = document.getElementById('fortime-dnf');
+if (fortimeMinutes) fortimeMinutes.addEventListener('input', updateForTimeScorePreview);
+if (fortimeSeconds) fortimeSeconds.addEventListener('input', updateForTimeScorePreview);
+if (fortimeDnf) fortimeDnf.addEventListener('change', updateForTimeScorePreview);
+
+// Initial movement row for FOR_TIME
+if (document.getElementById('fortime-movement-list')) {
+  addForTimeMovementRow();
+}
 
 // EMOM minute slot changes re-trigger rounds calc
 const emomMinuteSlots = document.getElementById('emom-minute-slots');
@@ -2026,3 +2232,4 @@ window.handleMovementExerciseChange = handleMovementExerciseChange;
 window.handleWorkoutTypeChange = handleWorkoutTypeChange;
 window.addMinuteSlot = addMinuteSlot;
 window.removeMinuteSlot = removeMinuteSlot;
+window.addForTimeMovementRow = addForTimeMovementRow;
