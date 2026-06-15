@@ -1270,6 +1270,11 @@ function toggleForTimeDnf() {
   if (!timeInputs || !capRepsContainer) return;
   timeInputs.classList.toggle('hidden', dnf);
   capRepsContainer.classList.toggle('hidden', !dnf);
+  // Toggle required on time inputs so HTML5 validation doesn't block submit
+  ['fortime-minutes', 'fortime-seconds'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.toggleAttribute('required', !dnf);
+  });
   updateForTimeScorePreview();
 }
 
