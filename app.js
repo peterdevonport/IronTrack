@@ -1049,7 +1049,7 @@ function handleWorkoutTypeChange() {
   if (type === 'EMOM') {
     emomForm.classList.remove('hidden');
     desc.textContent = 'Record an EMOM (Every Minute On the Minute) workout.';
-    updateEmomRounds();
+    updateEmomSummary(); updateEmomDurationDisplay();
   } else if (type === 'FOR_TIME') {
     forTimeForm.classList.remove('hidden');
     desc.textContent = 'Record a For Time workout — complete the rounds as fast as possible.';
@@ -1090,7 +1090,7 @@ function addMinuteSlot(exerciseName) {
     const sel = row.querySelector('.movement-exercise');
     if (sel) { sel.value = exerciseName; handleMovementExerciseChange(sel); }
   }
-  updateEmomRounds();
+  updateEmomSummary();
 }
 
 function removeMinuteSlot(btn) {
@@ -1104,24 +1104,58 @@ function removeMinuteSlot(btn) {
       if (label) label.textContent = `#${i + 1}`;
     });
   }
-  updateEmomRounds();
+  updateEmomSummary();
 }
 
-function updateEmomRounds() {
-  const duration = parseInt(document.getElementById('emom-duration')?.value, 10);
+function updateEmomDurationDisplay() {
+  const rounds = parseInt(document.getElementById('emom-rounds')?.value, 10);
+  const intervalMin = parseInt(document.getElementById('emom-interval-min')?.value, 10) || 0;
+  const intervalSec = parseInt(document.getElementById('emom-interval-sec')?.value, 10) || 0;
+  const display = document.getElementById('emom-duration-display');
+  if (!display) return;
+  if (!rounds || rounds <= 0 || (intervalMin === 0 && intervalSec === 0)) {
+    display.textContent = '\u2014';
+    return;
+  }
+  const totalSec = rounds * (intervalMin * 60 + intervalSec);
+  const mins = Math.floor(totalSec / 60);
+  const secs = totalSec % 60;
+  display.textContent = `${mins}:${String(secs).padStart(2, '0')}`;
+}
+
+function updateEmomSummary() {
+  const rounds = parseInt(document.getElementById('emom-rounds')?.value, 10);
   const intervalMin = parseInt(document.getElementById('emom-interval-min')?.value, 10) || 1;
   const intervalSec = parseInt(document.getElementById('emom-interval-sec')?.value, 10) || 0;
   const intervalSeconds = intervalMin * 60 + intervalSec;
   const container = document.getElementById('emom-minute-slots');
-  const displayEl = document.getElementById('emom-rounds-display');
-  if (!container || !displayEl) return;
-  const minuteCount = container.querySelectorAll('.minute-row').length;
-  if (duration > 0 && minuteCount > 0 && intervalSeconds > 0) {
-    const totalSeconds = duration * 60;
-    const rounds = Math.floor(totalSeconds / (intervalSeconds * minuteCount));
-    displayEl.querySelector('span').textContent = `${rounds} (${totalSeconds}s ÷ ${intervalSeconds}s × ${minuteCount} slots)`;
+  const summaryEl = document.getElementById('emom-summary');
+  const textEl = document.getElementById('emom-summary-text');
+  if (!container || !summaryEl || !textEl) return;
+  const slots = container.querySelectorAll('.minute-row').length;
+  if (rounds > 0 && slots > 0 && intervalSeconds > 0) {
+    const totalSec = rounds * intervalSeconds;
+    let intervalLabel;
+    if (intervalSeconds === 60) {
+      intervalLabel = `EMOM`;
+    } else if (intervalSeconds === 120) {
+      intervalLabel = `E2MOM`;
+    } else if (intervalSeconds === 180) {
+      intervalLabel = `E3MOM`;
+    } else if (intervalMin > 0 && intervalSec === 0) {
+      intervalLabel = `E${intervalMin}MOM`;
+    } else if (intervalMin > 0) {
+      intervalLabel = `Every ${intervalMin}:${String(intervalSec).padStart(2, '0')}`;
+    } else {
+      intervalLabel = `Every :${String(intervalSec).padStart(2, '0')}`;
+    }
+    const prefix = totalSec % 60 === 0 ? `${totalSec / 60} Min ` : '';
+    const name = `${prefix}${intervalLabel}`;
+    const exerciseLabel = slots === 1 ? 'exercise' : 'exercises';
+    textEl.textContent = `${name} \u00D7 ${rounds} rounds \u00B7 ${slots} ${exerciseLabel}`;
+    summaryEl.classList.remove('hidden');
   } else {
-    displayEl.querySelector('span').textContent = '—';
+    summaryEl.classList.add('hidden');
   }
 }
 
@@ -1132,8 +1166,8 @@ function getEmomMovementData() {
     const exercise = row.querySelector('.movement-exercise')?.value;
     const reps = parseInt(row.querySelector('.movement-reps')?.value, 10);
     const weight = parseFloat(row.querySelector('.movement-weight')?.value) || 0;
-    if (!exercise) { error = 'Select an exercise for all minutes.'; return; }
-    if (!reps || reps < 1) { error = 'Enter reps for all minutes.'; return; }
+    if (!exercise) { error = 'Select an exercise for all intervals.'; return; }
+    if (!reps || reps < 1) { error = 'Enter reps for all intervals.'; return; }
     const exInfo = getExerciseInfo(exercise);
     const loadFactor = LOAD_FACTORS[exercise];
     if (!loadFactor && exInfo.category !== 'cardio' && (!weight || weight <= 0)) { error = `Enter a load for ${exercise}.`; return; }
@@ -1144,12 +1178,12 @@ function getEmomMovementData() {
 }
 
 function updateEmomScorePreview() {
-  const minutesCompleted = parseInt(document.getElementById('emom-minutes-completed')?.value, 10);
-  const duration = parseInt(document.getElementById('emom-duration')?.value, 10);
+  const roundsCompleted = parseInt(document.getElementById('emom-rounds-completed')?.value, 10);
+  const rounds = parseInt(document.getElementById('emom-rounds')?.value, 10);
   const preview = document.getElementById('emom-score-preview');
   if (!preview) return;
-  if (duration > 0) {
-    preview.textContent = formatScore_COMPLETED_MINUTES(minutesCompleted || 0, duration);
+  if (rounds > 0) {
+    preview.textContent = formatScore_COMPLETED_MINUTES(roundsCompleted || 0, rounds);
   } else {
     preview.textContent = '—';
   }
@@ -1164,11 +1198,11 @@ async function submitEmomWorkout(e) {
   e.preventDefault();
   if (!currentUser) return alert('Please sign in first.');
 
-  const durationMin = parseInt(document.getElementById('emom-duration').value, 10);
-  const intervalMin = parseInt(document.getElementById('emom-interval-min').value, 10) || 1;
+  const rounds = parseInt(document.getElementById('emom-rounds').value, 10);
+  const intervalMin = parseInt(document.getElementById('emom-interval-min').value, 10) || 0;
   const intervalSec = parseInt(document.getElementById('emom-interval-sec').value, 10) || 0;
   const intervalSeconds = intervalMin * 60 + intervalSec;
-  const minutesCompleted = parseInt(document.getElementById('emom-minutes-completed').value, 10);
+  const roundsCompleted = parseInt(document.getElementById('emom-rounds-completed').value, 10);
   let minutes;
   try {
     minutes = getEmomMovementData();
@@ -1176,51 +1210,63 @@ async function submitEmomWorkout(e) {
     return showFeedback(err.message, 'red', 'emomFeedback');
   }
 
-  if (!durationMin || durationMin < 1) return showFeedback('Enter a valid duration.', 'red', 'emomFeedback');
-  if (minutesCompleted < 0) return showFeedback('Enter minutes completed.', 'red', 'emomFeedback');
-  if (minutesCompleted > durationMin) return showFeedback('Minutes completed cannot exceed duration.', 'red', 'emomFeedback');
-  if (minutes.length === 0) return showFeedback('Add at least one minute slot.', 'red', 'emomFeedback');
+  if (!rounds || rounds < 1) return showFeedback('Enter a valid number of rounds.', 'red', 'emomFeedback');
+  if (intervalSeconds < 1) return showFeedback('Enter a valid interval.', 'red', 'emomFeedback');
+  if (roundsCompleted < 0) return showFeedback('Enter rounds completed.', 'red', 'emomFeedback');
+  if (roundsCompleted > rounds) return showFeedback('Rounds completed cannot exceed total rounds.', 'red', 'emomFeedback');
+  if (minutes.length === 0) return showFeedback('Add at least one interval slot.', 'red', 'emomFeedback');
 
+  const durationSeconds = rounds * intervalSeconds;
+  const durationMinutes = Math.floor(durationSeconds / 60);
   const now = Date.now();
 
   let name;
-  if (intervalSeconds === 60) {
-    name = `${durationMin} Min EMOM`;
-  } else if (intervalSeconds % 60 === 0) {
-    name = `${durationMin} Min E${intervalSeconds / 60}MOM`;
+  const totalSec = intervalSeconds;
+  let intervalLabel;
+  if (totalSec === 60) {
+    intervalLabel = `EMOM`;
+  } else if (totalSec === 120) {
+    intervalLabel = `E2MOM`;
+  } else if (totalSec === 180) {
+    intervalLabel = `E3MOM`;
+  } else if (intervalMin > 0 && intervalSec === 0) {
+    intervalLabel = `E${intervalMin}MOM`;
+  } else if (intervalMin > 0) {
+    intervalLabel = `Every ${intervalMin}:${String(intervalSec).padStart(2, '0')}`;
   } else {
-    const mins = Math.floor(intervalSeconds / 60);
-    const secs = intervalSeconds % 60;
-    name = `${durationMin} Min Every ${mins}:${secs.toString().padStart(2, '0')}`;
+    intervalLabel = `Every :${String(intervalSec).padStart(2, '0')}`;
   }
+  const prefix = durationSeconds % 60 === 0 ? `${durationSeconds / 60} Min ` : '';
+  name = `${prefix}${intervalLabel} \u00D7 ${rounds} rounds`;
 
   const workoutDoc = {
     userId: currentUser.uid,
     name,
     type: 'EMOM',
     structure: {
-      durationMinutes: durationMin,
+      rounds,
+      durationMinutes,
       intervalSeconds,
       minutes
     },
     result: {
-      minutesCompleted
+      roundsCompleted
     },
-    scoreDisplay: formatScore_COMPLETED_MINUTES(minutesCompleted, durationMin),
+    scoreDisplay: formatScore_COMPLETED_MINUTES(roundsCompleted, rounds),
     scoreType: 'COMPLETED_MINUTES',
-    scoreValue: minutesCompleted,
+    scoreValue: roundsCompleted,
     timestamp: now
   };
 
   try {
     const docRef = await addDoc(collection(db, "structured_workouts"), workoutDoc);
-    await generateEmomContributions(docRef.id, minutes, minutesCompleted);
+    await generateEmomContributions(docRef.id, minutes, roundsCompleted);
 
     document.getElementById('emom-form').reset();
     document.getElementById('emom-minute-slots').innerHTML = '';
     addMinuteSlot();
     document.getElementById('emom-score-preview').textContent = '—';
-    updateEmomRounds();
+    updateEmomDurationDisplay();
     showFeedback('EMOM workout saved!', 'emerald', 'emomFeedback');
     haptic(HAPTIC.confirm);
   } catch (err) {
@@ -1687,7 +1733,7 @@ function renderStructuredWorkoutCard(sw) {
     if (intSec && intSec !== 60) {
       durationLabel += ` · ${intSec}s interval`;
     }
-    scoreLabel = 'min completed';
+    scoreLabel = 'rounds completed';
   } else if (type === 'FOR_TIME') {
     const movements = sw.structure?.movements || [];
     movementsHtml = movements.map(m =>
@@ -1963,14 +2009,14 @@ if (emomForm) {
 }
 
 // EMOM Score Preview
-const emomMinutesCompleted = document.getElementById('emom-minutes-completed');
-const emomDuration = document.getElementById('emom-duration');
+const emomRoundsCompleted = document.getElementById('emom-rounds-completed');
+const emomRounds = document.getElementById('emom-rounds');
 const emomIntervalMin = document.getElementById('emom-interval-min');
 const emomIntervalSec = document.getElementById('emom-interval-sec');
-if (emomMinutesCompleted) emomMinutesCompleted.addEventListener('input', updateEmomScorePreview);
-if (emomDuration) emomDuration.addEventListener('input', () => { updateEmomScorePreview(); updateEmomRounds(); });
-if (emomIntervalMin) emomIntervalMin.addEventListener('input', updateEmomRounds);
-if (emomIntervalSec) emomIntervalSec.addEventListener('input', updateEmomRounds);
+if (emomRoundsCompleted) emomRoundsCompleted.addEventListener('input', updateEmomScorePreview);
+if (emomRounds) emomRounds.addEventListener('input', () => { updateEmomScorePreview(); updateEmomSummary(); updateEmomDurationDisplay(); });
+if (emomIntervalMin) emomIntervalMin.addEventListener('input', () => { updateEmomSummary(); updateEmomDurationDisplay(); });
+if (emomIntervalSec) emomIntervalSec.addEventListener('input', () => { updateEmomSummary(); updateEmomDurationDisplay(); });
 
 // FOR_TIME Form Submit
 const forTimeForm = document.getElementById('for-time-form');
@@ -2013,7 +2059,7 @@ if (document.getElementById('interval-movement-list')) {
 // EMOM minute slot changes re-trigger rounds calc
 const emomMinuteSlots = document.getElementById('emom-minute-slots');
 if (emomMinuteSlots) {
-  emomMinuteSlots.addEventListener('change', updateEmomRounds);
+  emomMinuteSlots.addEventListener('change', updateEmomSummary);
 }
 
 // Initial minute row for EMOM

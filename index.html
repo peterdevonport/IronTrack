@@ -329,11 +329,6 @@
           <!-- EMOM Form -->
           <form id="emom-form" class="space-y-4 hidden">
             <div>
-              <label class="form-label">Duration (minutes)</label>
-              <input type="number" id="emom-duration" placeholder="15" min="1" step="1" class="input-core" required />
-            </div>
-
-            <div>
               <label class="form-label">Interval</label>
               <div class="flex gap-2 items-center">
                 <input type="number" id="emom-interval-min" placeholder="1" min="0" step="1" class="input-core w-20" />
@@ -344,9 +339,15 @@
             </div>
 
             <div>
+              <label class="form-label">Rounds</label>
+              <input type="number" id="emom-rounds" placeholder="10" min="1" step="1" class="input-core" required />
+              <p class="text-xs text-slate-400 mt-1">Duration: <span id="emom-duration-display">—</span></p>
+            </div>
+
+            <div>
               <div class="flex justify-between items-center mb-2">
-                <label class="form-label">Minutes</label>
-                <button type="button" onclick="addMinuteSlot()" class="btn-core is-secondary btn-size-row">+ Add Minute</button>
+                <label class="form-label">Sequence</label>
+                <button type="button" onclick="addMinuteSlot()" class="btn-core is-secondary btn-size-row">+ Add Interval</button>
               </div>
               <div class="flex gap-2 text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-1">
                 <div class="flex-1">Movement</div>
@@ -371,14 +372,16 @@
                   <button type="button" onclick="removeMinuteSlot(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none">X</button>
                 </div>
               </div>
-              <p id="emom-rounds-display" class="text-xs text-slate-400 mt-1">Rounds: <span class="text-slate-300 font-mono">—</span></p>
+              <p id="emom-summary" class="text-xs text-slate-400 mt-1 hidden">
+                <span id="emom-summary-text"></span>
+              </p>
             </div>
 
             <div class="border-t border-slate-800 pt-4">
               <h3 class="form-label mb-2">Result</h3>
               <div>
-                <label class="form-label">Minutes Completed</label>
-                <input type="number" id="emom-minutes-completed" placeholder="11" min="0" step="1" class="input-core" required />
+                <label class="form-label">Rounds Completed</label>
+                <input type="number" id="emom-rounds-completed" placeholder="11" min="0" step="1" class="input-core" required />
               </div>
               <p class="text-xs text-slate-400 mt-2">
                 Score: <span id="emom-score-preview" class="text-emerald-400 font-bold font-mono">—</span>
