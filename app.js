@@ -152,6 +152,8 @@ const CONSISTENCY_CONFIG = {
     lifetimeUniqueDays: 3000
 };
 
+const RPE_RIR_MAP = { 10: 0, 9: 1, 8: 2, 7: 3, 6: 4 };
+
 let currentUser = null;
 let unsubscribeLogs = null;
 let userBiometrics = { gender: 'male', bodyweight: 75 };
@@ -359,6 +361,7 @@ function listenToDataStream(uid) {
         }
         update1RMRegistryUI();
         updatePercentageCard();
+        updateRpeCard();
         await processAnalytics();
         renderLogs(workouts);
         computeAndSyncDailyActivity();
@@ -423,6 +426,13 @@ function updatePercentageCard() {
     if (!select || !entriesList) return;
 
     const exercise = select.value;
+    if (!exercise) {
+        if (oneRmDisplay) oneRmDisplay.textContent = '—';
+        if (entriesList) entriesList.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">Select a lift to begin.</p>';
+        if (addResult) addResult.textContent = '—';
+        return;
+    }
+
     const oneRM = activeRecords[exercise] || 0;
 
     if (oneRmDisplay) {
@@ -507,6 +517,51 @@ function handlePctClear() {
     updatePercentageCard();
 }
 
+function updateRpeCard() {
+    const liftSelect = document.getElementById('rpe-lift-select');
+    const repsInput = document.getElementById('rpe-reps');
+    const rpeSelect = document.getElementById('rpe-rpe');
+    const oneRmDisplay = document.getElementById('rpe-one-rm-display');
+    const recommendation = document.getElementById('rpe-recommendation');
+    const targetWeightEl = document.getElementById('rpe-target-weight');
+    const detailEl = document.getElementById('rpe-detail');
+    if (!liftSelect || !repsInput || !rpeSelect || !recommendation || !targetWeightEl || !detailEl) return;
+
+    const exercise = liftSelect.value;
+    const reps = parseInt(repsInput.value, 10);
+    const rpe = parseFloat(rpeSelect.value);
+
+    if (!exercise || !reps || reps < 1 || isNaN(rpe)) {
+        recommendation.classList.add('hidden');
+        if (oneRmDisplay) {
+            const est1RM = exercise && activeRecords[exercise] ? activeRecords[exercise] : 0;
+            oneRmDisplay.textContent = est1RM > 0 ? `${Math.round(est1RM)} kg` : '—';
+        }
+        return;
+    }
+
+    const est1RM = activeRecords[exercise] || 0;
+    if (oneRmDisplay) oneRmDisplay.textContent = est1RM > 0 ? `${Math.round(est1RM)} kg` : '—';
+
+    if (est1RM <= 0) {
+        recommendation.classList.remove('hidden');
+        targetWeightEl.textContent = '—';
+        detailEl.textContent = 'No 1RM data for ' + exercise + ' yet. Log some sets first.';
+        return;
+    }
+
+    const rir = RPE_RIR_MAP[rpe];
+    if (rir === undefined) return;
+
+    const totalRepsPossible = reps + rir;
+    const pct1RM = 100 / (1 + totalRepsPossible / 30);
+    const targetWeight = est1RM * pct1RM / 100;
+
+    recommendation.classList.remove('hidden');
+    targetWeightEl.textContent = targetWeight > 0 ? `${targetWeight.toFixed(1)} kg` : '—';
+    detailEl.textContent = `${reps} reps @ RPE ${rpe}  ·  ${rir} RIR  ·  Based on est. 1RM: ${Math.round(est1RM)} kg`;
+}
+
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.appendChild(document.createTextNode(text));
@@ -562,6 +617,7 @@ if (externalLoadInput) {
 
 // Populate exercise dropdown on load
 populateExerciseDropdown();
+populateLiftSelectors();
 
 // Wire %1RM calculator lift selector, add input, and clear button
 const pctLiftSelect = document.getElementById('pct-lift-select');
@@ -588,6 +644,15 @@ if (pctAddInput) {
 if (pctClearBtn) {
     pctClearBtn.addEventListener('click', handlePctClear);
 }
+
+// Wire RPE Weight Recommendation card events
+const rpeLiftSelect = document.getElementById('rpe-lift-select');
+const rpeRepsInput = document.getElementById('rpe-reps');
+const rpeRpeSelect = document.getElementById('rpe-rpe');
+
+if (rpeLiftSelect) rpeLiftSelect.addEventListener('change', updateRpeCard);
+if (rpeRepsInput) rpeRepsInput.addEventListener('input', updateRpeCard);
+if (rpeRpeSelect) rpeRpeSelect.addEventListener('change', updateRpeCard);
 
 // Wire PB / 1RM chips (toggle buttons) - use dataset.active as single source of truth
 const chipPBEl = document.getElementById('chip-pb'); //
@@ -708,6 +773,32 @@ function populateWorkoutFilter(exercises) {
   } else {
     workoutFilter.value = 'All';
   }
+}
+
+function populateLiftSelectors() {
+    const filtered = EXERCISE_CATALOG.filter(ex => ['barbell', 'dumbbell', 'kettlebell'].includes(ex.category));
+    const sortByName = (a, b) => a.name.localeCompare(b.name);
+    const groups = ['barbell', 'dumbbell', 'kettlebell'];
+    const labels = { barbell: 'Barbell', dumbbell: 'Dumbbell', kettlebell: 'Kettlebell' };
+
+    const buildOptions = () => {
+        let html = '<option value="" disabled selected>Select lift...</option>';
+        groups.forEach(cat => {
+            const items = filtered.filter(ex => ex.category === cat).sort(sortByName);
+            if (items.length) {
+                html += `<optgroup label="─ ${labels[cat]} ─">`;
+                items.forEach(ex => { html += `<option value="${ex.name}">${ex.name}</option>`; });
+                html += `</optgroup>`;
+            }
+        });
+        return html;
+    };
+
+    const html = buildOptions();
+    const pctSelect = document.getElementById('pct-lift-select');
+    const rpeSelect = document.getElementById('rpe-lift-select');
+    if (pctSelect) pctSelect.innerHTML = html;
+    if (rpeSelect) rpeSelect.innerHTML = html;
 }
 
 // Mathematical Engine Implementations
