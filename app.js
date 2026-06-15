@@ -1109,13 +1109,17 @@ function removeMinuteSlot(btn) {
 
 function updateEmomRounds() {
   const duration = parseInt(document.getElementById('emom-duration')?.value, 10);
+  const intervalMin = parseInt(document.getElementById('emom-interval-min')?.value, 10) || 1;
+  const intervalSec = parseInt(document.getElementById('emom-interval-sec')?.value, 10) || 0;
+  const intervalSeconds = intervalMin * 60 + intervalSec;
   const container = document.getElementById('emom-minute-slots');
   const displayEl = document.getElementById('emom-rounds-display');
   if (!container || !displayEl) return;
   const minuteCount = container.querySelectorAll('.minute-row').length;
-  if (duration > 0 && minuteCount > 0) {
-    const rounds = Math.floor(duration / minuteCount);
-    displayEl.querySelector('span').textContent = `${rounds} (${duration} ÷ ${minuteCount})`;
+  if (duration > 0 && minuteCount > 0 && intervalSeconds > 0) {
+    const totalSeconds = duration * 60;
+    const rounds = Math.floor(totalSeconds / (intervalSeconds * minuteCount));
+    displayEl.querySelector('span').textContent = `${rounds} (${totalSeconds}s ÷ ${intervalSeconds}s × ${minuteCount} slots)`;
   } else {
     displayEl.querySelector('span').textContent = '—';
   }
@@ -1161,6 +1165,9 @@ async function submitEmomWorkout(e) {
   if (!currentUser) return alert('Please sign in first.');
 
   const durationMin = parseInt(document.getElementById('emom-duration').value, 10);
+  const intervalMin = parseInt(document.getElementById('emom-interval-min').value, 10) || 1;
+  const intervalSec = parseInt(document.getElementById('emom-interval-sec').value, 10) || 0;
+  const intervalSeconds = intervalMin * 60 + intervalSec;
   const minutesCompleted = parseInt(document.getElementById('emom-minutes-completed').value, 10);
   let minutes;
   try {
@@ -1176,12 +1183,22 @@ async function submitEmomWorkout(e) {
 
   const now = Date.now();
 
+  let name;
+  if (intervalSeconds === 60) {
+    name = `${durationMin} Min EMOM`;
+  } else if (intervalSeconds % 60 === 0) {
+    name = `${durationMin} Min EMOM${intervalSeconds / 60}`;
+  } else {
+    name = `${durationMin} Min ${intervalSeconds}s EMOM`;
+  }
+
   const workoutDoc = {
     userId: currentUser.uid,
-    name: `${durationMin} Min EMOM`,
+    name,
     type: 'EMOM',
     structure: {
       durationMinutes: durationMin,
+      intervalSeconds,
       minutes
     },
     result: {
@@ -1664,6 +1681,10 @@ function renderStructuredWorkoutCard(sw) {
       return `<span class="movement-chip">${escapeHtml(mov.exerciseId)} × ${mov.reps}</span>`;
     }).join('');
     durationLabel = `${sw.structure?.durationMinutes || 0} min`;
+    const intSec = sw.structure?.intervalSeconds;
+    if (intSec && intSec !== 60) {
+      durationLabel += ` · ${intSec}s interval`;
+    }
     scoreLabel = 'min completed';
   } else if (type === 'FOR_TIME') {
     const movements = sw.structure?.movements || [];
@@ -1942,8 +1963,12 @@ if (emomForm) {
 // EMOM Score Preview
 const emomMinutesCompleted = document.getElementById('emom-minutes-completed');
 const emomDuration = document.getElementById('emom-duration');
+const emomIntervalMin = document.getElementById('emom-interval-min');
+const emomIntervalSec = document.getElementById('emom-interval-sec');
 if (emomMinutesCompleted) emomMinutesCompleted.addEventListener('input', updateEmomScorePreview);
 if (emomDuration) emomDuration.addEventListener('input', () => { updateEmomScorePreview(); updateEmomRounds(); });
+if (emomIntervalMin) emomIntervalMin.addEventListener('input', updateEmomRounds);
+if (emomIntervalSec) emomIntervalSec.addEventListener('input', updateEmomRounds);
 
 // FOR_TIME Form Submit
 const forTimeForm = document.getElementById('for-time-form');

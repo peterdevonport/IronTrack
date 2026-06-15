@@ -193,7 +193,7 @@
         <div id="log-set-section">
           <h2 class="section-heading">Log an Exercise</h2>
           <p class="text-description">
-            Record your workout details to track progress.
+            Record your workout sets and reps to track progress.
           </p>
         </div>
 
@@ -247,10 +247,11 @@
 
         <div id="log-workout-section" class="hidden">
           <h2 class="section-heading">Log a Workout</h2>
-          <p id="workout-type-desc" class="text-description">
-            Record a structured AMRAP workout.
-          </p>
 
+          <p id="workout-type-subheading" class="text-description">
+            Record a structured workout.
+          </p>
+          
           <div id="workout-type-selector" class="mb-4">
             <label class="form-label">Workout Type</label>
             <select id="workout-type" class="dropdown-core" onchange="handleWorkoutTypeChange()">
@@ -260,6 +261,10 @@
               <option value="INTERVAL">Interval</option>
             </select>
           </div>
+
+          <p id="workout-type-desc" class="text-description">
+            Record a structured AMRAP workout.
+          </p>
 
           <!-- AMRAP Form -->
           <form id="amrap-form" class="space-y-4">
@@ -326,6 +331,16 @@
             <div>
               <label class="form-label">Duration (minutes)</label>
               <input type="number" id="emom-duration" placeholder="15" min="1" step="1" class="input-core" required />
+            </div>
+
+            <div>
+              <label class="form-label">Interval</label>
+              <div class="flex gap-2 items-center">
+                <input type="number" id="emom-interval-min" placeholder="1" min="0" step="1" class="input-core w-20" />
+                <span class="text-slate-400 text-xs">min</span>
+                <input type="number" id="emom-interval-sec" placeholder="00" min="0" max="59" step="1" class="input-core w-20" />
+                <span class="text-slate-400 text-xs">sec</span>
+              </div>
             </div>
 
             <div>
