@@ -12,7 +12,7 @@
 </head>
 
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
-  <div class="max-w-md mx-auto p-4 sm:p-6 space-y-6">
+  <div class="max-w-md lg:max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
     <header class="flex justify-between items-center pt-4">
       <div id="header">
         <h1 class="text-3xl font-black tracking-tight text-emerald-400">
@@ -27,7 +27,7 @@
       </button>
     </header>
 
-    <section id="login-view" class="surface-card text-center my-12 space-y-4">
+    <section id="login-view" class="surface-card text-center my-12 space-y-4 max-w-sm mx-auto">
       <div class="text-5xl">⚡️</div>
       <div>
         <h2 class="text-xl font-bold mb-1">Unlock Cloud Analytics</h2>
@@ -57,8 +57,8 @@
       </div>
     </section>
 
-    <main id="app-view" class="hidden space-y-6">
-      <section class="surface-card">
+    <main id="app-view" class="hidden grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
+      <section class="surface-card lg:col-span-1">
         <h2 class="section-heading flex items-center gap-2">
           Biometric Profile
         </h2>
@@ -84,7 +84,45 @@
         </form>
       </section>
 
-      <div class="surface-card grid grid-cols-2 items-center">
+      <section class="surface-card lg:col-span-1" id="challenges-section">
+        <h2 class="section-heading">Consistency Challenges</h2>
+        <p class="text-description">Unique workout day targets.</p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4" id="challenge-cards">
+          <div class="bg-slate-950 rounded-xl p-3" id="challenge-monthly">
+            <div class="flex justify-between items-start mb-1">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Monthly</span>
+              <span class="text-[10px] font-bold text-emerald-400 challenge-completed-badge hidden" id="challenge-monthly-badge">Done</span>
+            </div>
+            <div class="text-lg font-black text-emerald-400" id="challenge-monthly-progress">0 / 14</div>
+            <div class="mt-1.5 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+              <div id="challenge-monthly-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" style="width: 0%"></div>
+            </div>
+          </div>
+          <div class="bg-slate-950 rounded-xl p-3" id="challenge-yearly">
+            <div class="flex justify-between items-start mb-1">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Yearly</span>
+              <span class="text-[10px] font-bold text-emerald-400 challenge-completed-badge hidden" id="challenge-yearly-badge">Done</span>
+            </div>
+            <div class="text-lg font-black text-emerald-400" id="challenge-yearly-progress">0 / 150</div>
+            <div class="mt-1.5 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+              <div id="challenge-yearly-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" style="width: 0%"></div>
+            </div>
+          </div>
+          <div class="bg-slate-950 rounded-xl p-3" id="challenge-lifetime">
+            <div class="flex justify-between items-start mb-1">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Lifetime</span>
+              <span class="text-[10px] font-bold text-emerald-400 challenge-completed-badge hidden" id="challenge-lifetime-badge">Done</span>
+            </div>
+            <div class="text-lg font-black text-emerald-400" id="challenge-lifetime-progress">0 / 3000</div>
+            <div class="mt-1.5 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+              <div id="challenge-lifetime-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="surface-card grid grid-cols-2 items-center lg:col-span-1">
         <p class="section-heading">DOTS</p>
         <p class="text-description col-span-2 mb-2">Your pound-for-pound Powerlifting score.</p>
 
@@ -111,7 +149,7 @@
 
       </div>
 
-      <div class="surface-card grid grid-cols-2 items-center">
+      <div class="surface-card grid grid-cols-2 items-center lg:col-span-1">
         <p class="section-heading">Sinclair Score</p>
         <p class="text-description col-span-2 mb-2">Your pound-for-pound Olympic weightlifting score.</p>
 
@@ -133,7 +171,7 @@
       </div>
       </section>
 
-      <section class="surface-card">
+      <section class="surface-card lg:col-span-1">
         <h2 class="section-heading text-emerald-400">Your Records</h2>
         <p class="text-description mb-4">Your maximum lifts tracked across logged exercises.</p>
 
@@ -146,7 +184,7 @@
         </div>
       </section>
 
-      <section class="surface-card">
+      <section class="surface-card lg:col-span-1">
         <h2 class="section-heading text-emerald-400">%1RM Calculator</h2>
         <p class="text-description mb-4">Enter percentages to calculate working weights from your estimated 1RM.</p>
 
@@ -176,7 +214,7 @@
         <button id="pct-clear-btn" class="btn-core is-secondary btn-size-input mt-3">Clear All</button>
       </section>
 
-      <section class="surface-card">
+      <section class="surface-card lg:col-span-1">
         <h2 class="section-heading">RPE Weight Recommendation</h2>
         <p class="text-description mb-4">Suggest working weight from reps and RPE.</p>
 
@@ -214,7 +252,7 @@
         </div>
       </section>
 
-      <section class="surface-card">
+      <section class="surface-card lg:col-span-1">
         <div class="flex gap-1 p-0.5 w-fit rounded-xl bg-slate-800/60 mb-4">
           <button id="tab-log-set" type="button" class="btn-core is-primary btn-size-row" onclick="switchWorkoutMode('set')">
             Log Sets
@@ -581,7 +619,7 @@
         </div>
       </section>
 
-      <section class="surface-card" id="consistency-section">
+      <section class="surface-card lg:col-span-1" id="consistency-section">
         <h2 class="section-heading">Training Consistency</h2>
         <p class="text-description">Your training frequency over time.</p>
 
@@ -617,45 +655,7 @@
         </div>
       </section>
 
-      <section class="surface-card" id="challenges-section">
-        <h2 class="section-heading">Consistency Challenges</h2>
-        <p class="text-description">Unique workout day targets.</p>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4" id="challenge-cards">
-          <div class="bg-slate-950 rounded-xl p-3" id="challenge-monthly">
-            <div class="flex justify-between items-start mb-1">
-              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Monthly</span>
-              <span class="text-[10px] font-bold text-emerald-400 challenge-completed-badge hidden" id="challenge-monthly-badge">Done</span>
-            </div>
-            <div class="text-lg font-black text-emerald-400" id="challenge-monthly-progress">0 / 14</div>
-            <div class="mt-1.5 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-              <div id="challenge-monthly-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" style="width: 0%"></div>
-            </div>
-          </div>
-          <div class="bg-slate-950 rounded-xl p-3" id="challenge-yearly">
-            <div class="flex justify-between items-start mb-1">
-              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Yearly</span>
-              <span class="text-[10px] font-bold text-emerald-400 challenge-completed-badge hidden" id="challenge-yearly-badge">Done</span>
-            </div>
-            <div class="text-lg font-black text-emerald-400" id="challenge-yearly-progress">0 / 150</div>
-            <div class="mt-1.5 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-              <div id="challenge-yearly-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" style="width: 0%"></div>
-            </div>
-          </div>
-          <div class="bg-slate-950 rounded-xl p-3" id="challenge-lifetime">
-            <div class="flex justify-between items-start mb-1">
-              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Lifetime</span>
-              <span class="text-[10px] font-bold text-emerald-400 challenge-completed-badge hidden" id="challenge-lifetime-badge">Done</span>
-            </div>
-            <div class="text-lg font-black text-emerald-400" id="challenge-lifetime-progress">0 / 3000</div>
-            <div class="mt-1.5 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-              <div id="challenge-lifetime-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" style="width: 0%"></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="surface-card">
+      <section class="surface-card lg:col-span-1">
 
         <h2 class="section-heading">Training Log</h2>
         <p class="text-description">
@@ -694,7 +694,7 @@
         </div>
       </section>
 
-      <section class="surface-card">
+      <section class="surface-card lg:col-span-1">
         <h2 class="section-heading">Structured Workouts</h2>
         <p class="text-description mb-4">
           Your completed AMRAP workouts and scores.
@@ -715,7 +715,7 @@
         </div>
       </section>
 
-      <section class="surface-card">
+      <section class="surface-card lg:col-span-1">
         <h2 class="section-heading">
           Friends
         </h2>
@@ -774,7 +774,7 @@
       </section>
 
 
-      <section class="surface-card gap-2">
+      <section class="surface-card gap-2 lg:col-span-1">
 
         <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-4">
           <div>
