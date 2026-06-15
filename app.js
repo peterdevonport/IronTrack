@@ -150,6 +150,8 @@ let currentUser = null;
 let unsubscribeLogs = null;
 let userBiometrics = { gender: 'male', bodyweight: 75 };
 let activeRecords = {};
+let calendarMonth = new Date();
+let calendarSelectedDate = null;
 let pctEntriesByLift = {};
 let currentPage = 1;
 let urlParamsProcessed = false; // Add this flag
@@ -228,6 +230,9 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('leaderboardRows').innerHTML = '';
         currentUser = null;
         urlParamsProcessed = false;
+        window.__irontrackActiveDates = undefined;
+        calendarMonth = new Date();
+        calendarSelectedDate = null;
         window.__irontrackAuthState = 'signed-out';
     }
 });
@@ -349,6 +354,7 @@ function listenToDataStream(uid) {
         updatePercentageCard();
         await processAnalytics();
         renderLogs(workouts);
+        computeAndSyncDailyActivity();
     }, (error) => {
         console.error('Workout stream error', error.code, error.message);
         if (error.code === 'permission-denied') {
@@ -1694,6 +1700,200 @@ async function generateIntervalContributions(workoutId, movements, roundsComplet
   }
 }
 
+// ==========================================
+// WORKOUT CONSISTENCY SYSTEM
+// ==========================================
+
+async function computeAndSyncDailyActivity() {
+    if (!currentUser) return;
+    
+    const allTimestamps = [];
+    lastWorkouts.forEach(w => allTimestamps.push(w.timestamp));
+    lastStructuredWorkouts.forEach(sw => allTimestamps.push(sw.timestamp));
+    
+    const activeDates = new Set();
+    allTimestamps.forEach(ts => {
+        const d = new Date(ts);
+        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        activeDates.add(dateStr);
+    });
+    
+    window.__irontrackActiveDates = activeDates;
+    
+    const writes = [];
+    activeDates.forEach(dateStr => {
+        writes.push(setDoc(doc(db, "daily_activity", `${currentUser.uid}_${dateStr}`), {
+            userId: currentUser.uid,
+            date: dateStr,
+            hasWorkout: true,
+            totalDuration: 0
+        }, { merge: true }));
+    });
+    
+    try {
+        await Promise.all(writes);
+    } catch (e) {
+        if (e.code !== 'permission-denied') console.error('Daily activity sync error', e);
+    }
+    renderConsistencyUI();
+}
+
+function renderConsistencyUI() {
+    renderCalendar();
+    updateConsistencyMetrics();
+}
+
+function renderCalendar() {
+    const grid = document.getElementById('calendar-grid');
+    const label = document.getElementById('cal-month-label');
+    if (!grid || !label) return;
+    
+    const year = calendarMonth.getFullYear();
+    const month = calendarMonth.getMonth();
+    
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    label.textContent = `${monthNames[month]} ${year}`;
+    
+    const firstDay = new Date(year, month, 1);
+    let startDay = firstDay.getDay() - 1;
+    if (startDay < 0) startDay = 6;
+    
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    
+    const activeDates = window.__irontrackActiveDates || new Set();
+    
+    let html = '';
+    
+    for (let i = 0; i < startDay; i++) {
+        html += '<div class="cal-day cal-day-empty"></div>';
+    }
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const isActive = activeDates.has(dateStr);
+        const isToday = dateStr === todayStr;
+        const isSelected = calendarSelectedDate === dateStr;
+        
+        let cls = 'cal-day';
+        if (isActive) cls += ' cal-day-active';
+        if (isToday) cls += ' cal-day-today';
+        if (isSelected) cls += ' cal-day-selected';
+        
+        html += `<div class="${cls}" onclick="selectCalendarDay('${dateStr}')" data-date="${dateStr}">${day}</div>`;
+    }
+    
+    const totalCells = startDay + daysInMonth;
+    const remaining = (7 - (totalCells % 7)) % 7;
+    for (let i = 0; i < remaining; i++) {
+        html += '<div class="cal-day cal-day-empty"></div>';
+    }
+    
+    grid.innerHTML = html;
+}
+
+function updateConsistencyMetrics() {
+    const activeDates = window.__irontrackActiveDates || new Set();
+    const today = new Date();
+    
+    function countActiveDays(daysBack) {
+        let count = 0;
+        for (let i = 0; i < daysBack; i++) {
+            const d = new Date(today);
+            d.setDate(d.getDate() - i);
+            const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            if (activeDates.has(dateStr)) count++;
+        }
+        return count;
+    }
+    
+    const el7 = document.getElementById('consistency-7day');
+    const el30 = document.getElementById('consistency-30day');
+    
+    if (el7) el7.textContent = `${countActiveDays(7)} / 7`;
+    if (el30) el30.textContent = `${countActiveDays(30)} / 30`;
+}
+
+function getWorkoutsForDate(dateStr) {
+    const results = [];
+    
+    function addIfMatches(item) {
+        const d = new Date(item.timestamp);
+        const itemDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        if (itemDate === dateStr) results.push(item);
+    }
+    
+    lastWorkouts.forEach(addIfMatches);
+    lastStructuredWorkouts.forEach(addIfMatches);
+    
+    results.sort((a, b) => a.timestamp - b.timestamp);
+    return results;
+}
+
+function selectCalendarDay(dateStr) {
+    calendarSelectedDate = dateStr;
+    renderCalendar();
+    
+    const detail = document.getElementById('cal-day-detail');
+    const dateLabel = document.getElementById('cal-day-detail-date');
+    const workoutsContainer = document.getElementById('cal-day-workouts');
+    
+    if (!detail || !dateLabel || !workoutsContainer) return;
+    
+    detail.classList.remove('hidden');
+    
+    const parts = dateStr.split('-');
+    const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+    dateLabel.textContent = d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    
+    const items = getWorkoutsForDate(dateStr);
+    
+    if (items.length === 0) {
+        workoutsContainer.innerHTML = '<p class="text-xs text-slate-500 italic">No workouts logged this day.</p>';
+        return;
+    }
+    
+    workoutsContainer.innerHTML = items.map(item => {
+        if (item.type) {
+            const badgeClass = (item.type || '').toLowerCase();
+            return `
+<div class="bg-slate-900 border border-slate-700 rounded-xl p-2.5">
+    <div class="flex justify-between items-center">
+        <span class="workout-type-badge ${badgeClass}">${escapeHtml(item.type)}</span>
+        <span class="text-emerald-400 font-bold font-mono text-xs">${escapeHtml(item.scoreDisplay || '—')}</span>
+    </div>
+    <p class="text-xs text-slate-300 font-bold mt-1">${escapeHtml(item.name || '')}</p>
+</div>`;
+        } else {
+            const load = getEffectiveLoad(item);
+            const reps = parseInt(item.reps, 10) || 1;
+            const sets = item.sets || 1;
+            const oneRM = Math.round(load * (1 + reps / 30));
+            return `
+<div class="bg-slate-900 border border-slate-700 rounded-xl p-2.5">
+    <div class="flex justify-between items-center">
+        <span class="text-emerald-300 font-bold text-xs uppercase tracking-wider">${escapeHtml(item.exercise)}</span>
+        <span class="text-slate-200 font-mono text-xs">${sets} × ${reps} @ ${Math.round(load)}kg</span>
+    </div>
+    <p class="text-slate-500 text-[10px] font-mono mt-0.5">Est. 1RM: ${oneRM}kg</p>
+</div>`;
+        }
+    }).join('');
+}
+
+function changeCalendarMonth(delta) {
+    calendarMonth.setMonth(calendarMonth.getMonth() + delta);
+    renderCalendar();
+}
+
+function closeCalendarDayDetail() {
+    calendarSelectedDate = null;
+    const detail = document.getElementById('cal-day-detail');
+    if (detail) detail.classList.add('hidden');
+    renderCalendar();
+}
+
 function listenToStructuredWorkouts(uid) {
   const q = query(
     collection(db, "structured_workouts"),
@@ -1709,6 +1909,7 @@ function listenToStructuredWorkouts(uid) {
     workouts.sort((a, b) => b.timestamp - a.timestamp);
     lastStructuredWorkouts = workouts;
     renderStructuredWorkoutHistory();
+    computeAndSyncDailyActivity();
   }, (error) => {
     console.error('Structured workouts stream error', error.code, error.message);
   });
@@ -2578,3 +2779,6 @@ window.removeMinuteSlot = removeMinuteSlot;
 window.addForTimeMovementRow = addForTimeMovementRow;
 window.toggleForTimeDnf = toggleForTimeDnf;
 window.addIntervalMovementRow = addIntervalMovementRow;
+window.selectCalendarDay = selectCalendarDay;
+window.changeCalendarMonth = changeCalendarMonth;
+window.closeCalendarDayDetail = closeCalendarDayDetail;

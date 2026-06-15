@@ -300,3 +300,43 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
+
+/* ==========================================
+   WORKOUT CONSISTENCY CALENDAR
+   ========================================== */
+.cal-day {
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--slate-400);
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  border: 1px solid transparent;
+  position: relative;
+}
+.cal-day:hover:not(.cal-day-empty) {
+  background-color: var(--slate-800);
+  border-color: var(--slate-600);
+}
+.cal-day-empty {
+  cursor: default;
+}
+.cal-day-today {
+  border-color: var(--slate-600);
+}
+.cal-day-selected {
+  background-color: var(--slate-800);
+  border-color: var(--emerald-400);
+}
+.cal-day-active {
+  background-image: radial-gradient(circle, var(--emerald-400) 14px, transparent 15px);
+  background-position: center;
+  background-repeat: no-repeat;
+  color: var(--slate-950);
+}
