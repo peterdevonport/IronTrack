@@ -169,7 +169,6 @@
           </div>
         </div>
       </div>
-      </section>
 
       <section class="surface-card lg:col-span-1">
         <h2 class="section-heading text-emerald-400">Your Records</h2>
@@ -277,18 +276,18 @@
           <div class="grid grid-cols-3 gap-3">
             <div>
               <label class="form-label">Sets</label>
-              <input class=input-core type="number" id="sets" value="1" min="1" required
-                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-center text-slate-100 focus:outline-none focus:border-emerald-400 transition" />
+              <input type="number" id="sets" value="1" min="1" required
+                class="input-core w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-center text-slate-100 focus:outline-none focus:border-emerald-400 transition" />
             </div>
             <div>
               <label class="form-label">Reps</label>
-              <input class=input-core type="number" id="reps" value="1" min="1" required
-                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-center text-slate-100 focus:outline-none focus:border-emerald-400 transition" />
+              <input type="number" id="reps" value="1" min="1" required
+                class="input-core w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-center text-slate-100 focus:outline-none focus:border-emerald-400 transition" />
             </div>
             <div id="weight-field">
               <label class="form-label" id="weight-label">Weight (kg)</label>
-              <input class=input-core type="number" id="weight" placeholder="60" min="0" step="any" required
-                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-center text-slate-100 focus:outline-none focus:border-emerald-400 transition" />
+              <input type="number" id="weight" placeholder="60" min="0" step="any" required
+                class="input-core w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-center text-slate-100 focus:outline-none focus:border-emerald-400 transition" />
             </div>
           </div>
 
@@ -816,14 +815,13 @@
         </div>
 
       </section>
-  </div>
+
+    </main>
 
   </div>
 
 <script src="https://unpkg.com/qr-code-styling@1.6.0/lib/qr-code-styling.js"></script>
 <script type="module" src="app.js" defer></script>
-
-</main>
 
 </body>
 
