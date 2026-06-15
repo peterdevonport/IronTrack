@@ -189,12 +189,7 @@
           <div>
             <label class="form-label">Exercise Name</label>
             <select id="exercise" class="dropdown-core">
-
-              <option value="Back Squat">Back Squat</option>
-              <option value="Bench Press">Bench Press</option>
-              <option value="Deadlift">Deadlift</option>
-              <option value="Snatch">Snatch</option>
-              <option value="Clean & Jerk">Clean & Jerk</option>
+              <option value="" disabled selected>Select exercise...</option>
             </select>
           </div>
 
@@ -209,16 +204,32 @@
               <input class=input-core type="number" id="reps" value="1" min="1" required
                 class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-center text-slate-100 focus:outline-none focus:border-emerald-400 transition" />
             </div>
-            <div>
-              <label class="form-label">Weight (kg)</label>
+            <div id="weight-field">
+              <label class="form-label" id="weight-label">Weight (kg)</label>
               <input class=input-core type="number" id="weight" placeholder="60" min="0" step="any" required
                 class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-center text-slate-100 focus:outline-none focus:border-emerald-400 transition" />
             </div>
           </div>
 
+          <div id="bw-extras" class="hidden space-y-4">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="form-label">External Load (kg)</label>
+                <input type="number" id="external-load" placeholder="0" min="0" step="any" class="input-core" />
+              </div>
+              <div>
+                <label class="form-label" id="est-load-label">Est. Load / Rep</label>
+                <div id="estimated-load-display" class="input-core bg-slate-800/50 text-emerald-400 font-bold flex items-center justify-center min-h-[42px]">—</div>
+              </div>
+            </div>
+            <p id="lf-disclaimer" class="text-[10px] text-slate-500 italic leading-relaxed hidden">Load factors derived from biomechanical research where available and coaching estimates otherwise.</p>
+          </div>
+
           <button type="submit" class="btn-core is-primary btn-size-input">
             Log Set
           </button>
+
+          <p id="workoutFeedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
 
         </form>
       </section>

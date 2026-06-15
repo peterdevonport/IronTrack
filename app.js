@@ -19,6 +19,43 @@ window.__irontrackAppLoaded = true;
 window.__irontrackAuthState = 'pending';
 window.__irontrackWorkoutCount = 0;
 
+// Exercise Catalog & Load Factors
+const EXERCISE_CATALOG = [
+  { name: 'Back Squat', category: 'barbell', type: 'weighted', movement: 'squat' },
+  { name: 'Bench Press', category: 'barbell', type: 'weighted', movement: 'push' },
+  { name: 'Deadlift', category: 'barbell', type: 'weighted', movement: 'pull' },
+  { name: 'Snatch', category: 'barbell', type: 'weighted', movement: 'pull' },
+  { name: 'Clean & Jerk', category: 'barbell', type: 'weighted', movement: 'push' },
+  { name: 'Push-up', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 0.67 },
+  { name: 'Knee Push-up', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 0.49 },
+  { name: 'Pull-up', category: 'bodyweight', type: 'bodyweight', movement: 'pull', loadFactor: 1.00 },
+  { name: 'Chin-up', category: 'bodyweight', type: 'bodyweight', movement: 'pull', loadFactor: 1.00 },
+  { name: 'Dip', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 0.95 },
+  { name: 'Handstand Push-up', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 1.00 },
+  { name: 'Air Squat', category: 'bodyweight', type: 'bodyweight', movement: 'squat', loadFactor: 0.65 },
+  { name: 'Pike Push-up', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 0.75 },
+  { name: 'Walking Lunge', category: 'bodyweight', type: 'bodyweight', movement: 'squat', loadFactor: 1.00 },
+  { name: 'Step-up', category: 'bodyweight', type: 'bodyweight', movement: 'squat', loadFactor: 1.00 },
+];
+
+const LOAD_FACTORS = {};
+EXERCISE_CATALOG.forEach(ex => { if (ex.loadFactor) LOAD_FACTORS[ex.name] = ex.loadFactor; });
+
+function getExerciseInfo(name) {
+  return EXERCISE_CATALOG.find(ex => ex.name === name) || { category: 'barbell', type: 'weighted' };
+}
+
+function getEffectiveLoad(workout) {
+  if (workout.estimatedLoad !== undefined && workout.estimatedLoad !== null) {
+    return workout.estimatedLoad;
+  }
+  const loadFactor = LOAD_FACTORS[workout.exercise];
+  if (loadFactor !== undefined) {
+    return (userBiometrics.bodyweight || 0) * loadFactor + (parseFloat(workout.externalLoad) || 0);
+  }
+  return parseFloat(workout.weight) || 0;
+}
+
 // UI Selectors
 const loginView = document.getElementById('login-view');
 const appView = document.getElementById('app-view');
@@ -38,6 +75,10 @@ const currentPageDisplay = document.getElementById('current-page');
 const totalPagesDisplay = document.getElementById('total-pages');
 const workoutFilter = document.getElementById('workout-filter');
 const entriesPerPage = 5;
+const exerciseSelect = document.getElementById('exercise');
+const externalLoadInput = document.getElementById('external-load');
+const estimatedLoadDisplay = document.getElementById('estimated-load-display');
+const estLoadLabel = document.getElementById('est-load-label');
 
 const HAPTIC = {
     tap: 15,
@@ -49,7 +90,7 @@ const HAPTIC = {
 let currentUser = null;
 let unsubscribeLogs = null;
 let userBiometrics = { gender: 'male', bodyweight: 75 };
-let activeRecords = { "Back Squat": 0, "Bench Press": 0, Deadlift: 0, Snatch: 0, "Clean & Jerk": 0 };
+let activeRecords = {};
 let pctEntriesByLift = {};
 let currentPage = 1;
 let urlParamsProcessed = false; // Add this flag
@@ -164,7 +205,7 @@ async function pullProfileMetrics(uid) {
         const docRef = doc(db, "profiles", uid);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-            userBiometrics = docSnap.data();
+            userBiometrics = { gender: 'male', bodyweight: 75, ...docSnap.data() };
             document.getElementById('profile-gender').value = userBiometrics.gender;
             document.getElementById('profile-weight').value = userBiometrics.bodyweight;
         }
@@ -204,22 +245,21 @@ function listenToDataStream(uid) {
     );
     unsubscribeLogs = onSnapshot(q, async (snapshot) => {
         let workouts = [];
-        activeRecords = { "Back Squat": 0, "Bench Press": 0, Deadlift: 0, Snatch: 0, "Clean & Jerk": 0 };
+        activeRecords = {};
 
         snapshot.forEach((doc) => {
             const data = doc.data();
             const timestamp = data.timestamp?.toMillis ? data.timestamp.toMillis() : data.timestamp;
-            workouts.push({ id: doc.id, ...data, timestamp });
+            const workout = { id: doc.id, ...data, timestamp };
+            workouts.push(workout);
 
-            // Epley 1RM Estimation Formula
-            const weight = parseFloat(data.weight);
+            // Epley 1RM Estimation Formula using effective load
+            const effectiveWeight = getEffectiveLoad(workout);
             const reps = parseInt(data.reps, 10);
-            const calculated1RM = reps === 1 ? weight : weight * (1 + reps / 30);
+            const calculated1RM = reps === 1 ? effectiveWeight : effectiveWeight * (1 + reps / 30);
 
-            if (activeRecords[data.exercise] !== undefined) {
-                if (calculated1RM > activeRecords[data.exercise]) {
-                    activeRecords[data.exercise] = calculated1RM;
-                }
+            if (!activeRecords[data.exercise] || calculated1RM > activeRecords[data.exercise]) {
+                activeRecords[data.exercise] = calculated1RM;
             }
         });
 
@@ -265,15 +305,14 @@ function update1RMRegistryUI() {
         // Filter historical entries just for this specific exercise
         const exerciseHistory = lastWorkouts.filter(w => w.exercise === exercise);
 
-        // Calculate Absolute PB: The heaviest actual weight successfully logged
-        const absolutePB = Math.max(0, ...exerciseHistory.map(w => parseFloat(w.weight || 0)));
+        // Calculate Absolute PB: The heaviest effective load successfully logged
+        const absolutePB = Math.max(0, ...exerciseHistory.map(w => getEffectiveLoad(w)));
 
         // Calculate Highest Estimated 1RM across all historical entries for this lift
         const maxEstimated1RM = Math.max(0, ...exerciseHistory.map(w => {
-            const weight = parseFloat(w.weight || 0);
+            const load = getEffectiveLoad(w);
             const reps = parseInt(w.reps || 1, 10);
-            // Using Epley 1RM Formula matching your real-time data stream logic
-            return reps === 1 ? weight : weight * (1 + reps / 30);
+            return reps === 1 ? load : load * (1 + reps / 30);
         }));
 
         // Append the 3 grid components that represent one full layout row
@@ -425,6 +464,17 @@ if (workoutFilter) {
   });
 }
 
+// Wire exercise dropdown change and external load input
+if (exerciseSelect) {
+  exerciseSelect.addEventListener('change', toggleBWFields);
+}
+if (externalLoadInput) {
+  externalLoadInput.addEventListener('input', updateEstimatedLoadDisplay);
+}
+
+// Populate exercise dropdown on load
+populateExerciseDropdown();
+
 // Wire %1RM calculator lift selector, add input, and clear button
 const pctLiftSelect = document.getElementById('pct-lift-select');
 const pctAddInput = document.getElementById('pct-add-input');
@@ -484,6 +534,77 @@ if (chip1RMEl) {
 }
 
 
+
+function populateExerciseDropdown() {
+  const select = document.getElementById('exercise');
+  if (!select) return;
+  const currentVal = select.value;
+  const barbell = EXERCISE_CATALOG.filter(ex => ex.category === 'barbell');
+  const bodyweight = EXERCISE_CATALOG.filter(ex => ex.category === 'bodyweight');
+  let html = `<option value="" disabled selected>Select exercise...</option>`;
+  if (barbell.length) {
+    html += `<optgroup label="─ Barbell ─">`;
+    barbell.forEach(ex => { html += `<option value="${ex.name}">${ex.name}</option>`; });
+    html += `</optgroup>`;
+  }
+  if (bodyweight.length) {
+    html += `<optgroup label="─ Bodyweight ─">`;
+    bodyweight.forEach(ex => { html += `<option value="${ex.name}">${ex.name}</option>`; });
+    html += `</optgroup>`;
+  }
+  select.innerHTML = html;
+  if (currentVal && Array.from(select.options).some(o => o.value === currentVal)) {
+    select.value = currentVal;
+  }
+}
+
+function toggleBWFields() {
+  const exercise = document.getElementById('exercise').value;
+  const info = getExerciseInfo(exercise);
+  const isBodyweight = info.type === 'bodyweight';
+  const bwExtras = document.getElementById('bw-extras');
+  const weightField = document.getElementById('weight-field');
+  const weightInput = document.getElementById('weight');
+  const weightLabel = document.getElementById('weight-label');
+
+  if (isBodyweight) {
+    bwExtras.classList.remove('hidden');
+    weightField.classList.remove('hidden');
+    weightInput.value = userBiometrics.bodyweight || '';
+    weightInput.disabled = true;
+    if (weightLabel) weightLabel.textContent = 'Bodyweight';
+  } else {
+    bwExtras.classList.add('hidden');
+    weightField.classList.remove('hidden');
+    weightInput.disabled = false;
+    if (externalLoadInput) externalLoadInput.value = '';
+    if (weightLabel) weightLabel.textContent = 'Weight (kg)';
+  }
+  updateEstimatedLoadDisplay();
+}
+
+function updateEstimatedLoadDisplay() {
+  const exercise = document.getElementById('exercise').value;
+  const externalLoad = parseFloat(document.getElementById('external-load').value) || 0;
+  const loadFactor = LOAD_FACTORS[exercise];
+  const display = document.getElementById('estimated-load-display');
+  const disclaimer = document.getElementById('lf-disclaimer');
+  if (!display) return;
+
+  if (loadFactor !== undefined) {
+    const bw = userBiometrics.bodyweight || 0;
+    const estLoad = bw * loadFactor + externalLoad;
+    display.textContent = estLoad > 0 ? `${Math.round(estLoad)}` : '—';
+    if (disclaimer) disclaimer.classList.remove('hidden');
+    if (estLoadLabel) {
+      estLoadLabel.textContent = `BW × ${loadFactor} + External Load`;
+    }
+  } else {
+    display.textContent = '—';
+    if (disclaimer) disclaimer.classList.add('hidden');
+    if (estLoadLabel) estLoadLabel.textContent = 'Est. Load / Rep';
+  }
+}
 
 function populateWorkoutFilter(exercises) {
   if (!workoutFilter) return;
@@ -610,24 +731,24 @@ function renderLogs(workouts) {
     const selected = workoutFilter ? workoutFilter.value : 'All';
 
     // Precompute PB / 1RM flags for chip filtering and rendering (O(n))
-    const maxWeightByExercise = {};
+    const maxLoadByExercise = {};
     const max1RMByExercise = {};
     workouts.forEach(w => {
-        const weight = parseFloat(w.weight);
+        const load = getEffectiveLoad(w);
         const reps = parseInt(w.reps, 10) || 1;
-        const oneRM = Math.round(weight * (1 + reps / 30));
-        if (!maxWeightByExercise[w.exercise] || weight > maxWeightByExercise[w.exercise]) {
-            maxWeightByExercise[w.exercise] = weight;
+        const oneRM = Math.round(load * (1 + reps / 30));
+        if (!maxLoadByExercise[w.exercise] || load > maxLoadByExercise[w.exercise]) {
+            maxLoadByExercise[w.exercise] = load;
         }
         if (!max1RMByExercise[w.exercise] || oneRM > max1RMByExercise[w.exercise]) {
             max1RMByExercise[w.exercise] = oneRM;
         }
     });
     workouts.forEach(workout => {
-        const weight = parseFloat(workout.weight);
+        const load = getEffectiveLoad(workout);
         const reps = parseInt(workout.reps, 10) || 1;
-        workout._isPB = weight >= maxWeightByExercise[workout.exercise] && weight > 0;
-        const oneRM = Math.round(weight * (1 + reps / 30));
+        workout._isPB = load >= maxLoadByExercise[workout.exercise] && load > 0;
+        const oneRM = Math.round(load * (1 + reps / 30));
         workout._isMax1RM = oneRM >= max1RMByExercise[workout.exercise] && oneRM > 0;
     });
 
@@ -658,13 +779,17 @@ function renderLogs(workouts) {
 
     // 2. Render logic
     logContainer.innerHTML = pageItems.map(workout => {
-        const weight = parseFloat(workout.weight);
+        const load = getEffectiveLoad(workout);
         const reps = parseInt(workout.reps, 10) || 1;
+        const sets = workout.sets || 1;
         const isPB = !!workout._isPB;
         const isMax1RM = !!workout._isMax1RM;
         const is1RMOnly = isMax1RM && !isPB;
-        const oneRM = Math.round(weight * (1 + reps / 30));
+        const oneRM = Math.round(load * (1 + reps / 30));
+        const totalVolume = Math.round(load * reps * sets);
         const borderClass = isPB ? 'log-entry-pb' : is1RMOnly ? 'log-entry-1rm' : 'log-entry';
+        const secondLine = `Est. 1RM: ${oneRM}kg  <span class="text-slate-600">|</span>  Vol: ${totalVolume.toLocaleString()}kg`;
+
         return `
 <div class="${borderClass} p-4 rounded-2xl mb-3 flex justify-between items-center shadow-2xl shadow-slate-950/60 transition-all duration-200" style="background-color: var(--slate-900);">
     <div>
@@ -679,12 +804,12 @@ function renderLogs(workouts) {
     </div>
     <div class="text-right">
         <span class="text-white font-mono text-base font-semibold">
-            ${workout.sets || 1} x ${workout.reps || 1} 
+            ${sets} × ${reps} 
             <span class="text-slate-500 text-xs">@</span> 
-            ${workout.weight}kg
+            ${Math.round(load)}kg
         </span>
         <p class="text-slate-400 text-xs font-mono mt-0.5">
-            Est. 1RM: ${oneRM}kg
+            ${secondLine}
         </p>
     </div>
 </div>
@@ -697,19 +822,41 @@ workoutForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!currentUser) return alert('Please sign in before logging a workout.');
 
+    const exercise = document.getElementById('exercise').value;
+    if (!exercise) return showFeedback('Please select an exercise.', 'red', 'workoutFeedback');
+    const sets = parseInt(document.getElementById('sets').value, 10);
+    const reps = parseInt(document.getElementById('reps').value, 10);
+    const weight = parseFloat(document.getElementById('weight').value) || 0;
+    const externalLoad = parseFloat(document.getElementById('external-load').value) || 0;
+    const loadFactor = LOAD_FACTORS[exercise];
+    let estimatedLoad = weight;
+    if (loadFactor !== undefined) {
+        estimatedLoad = (userBiometrics.bodyweight || 0) * loadFactor + externalLoad;
+    }
+    const totalVolume = estimatedLoad * reps * sets;
+
     const log = {
         userId: currentUser.uid,
-        exercise: document.getElementById('exercise').value,
-        sets: parseInt(document.getElementById('sets').value, 10),
-        reps: parseInt(document.getElementById('reps').value, 10),
-        weight: parseFloat(document.getElementById('weight').value),
+        exercise,
+        sets,
+        reps,
+        weight,
+        externalLoad,
+        estimatedLoad,
+        totalVolume,
         timestamp: Date.now()
     };
 
     try {
         await addDoc(collection(db, "workouts"), log);
         workoutForm.reset();
-        showFeedback('Workout saved. Keep crushing it!', 'emerald');
+        const weightInput = document.getElementById('weight');
+        const weightLabel = document.getElementById('weight-label');
+        weightInput.disabled = false;
+        if (weightLabel) weightLabel.textContent = 'Weight (kg)';
+        document.getElementById('bw-extras').classList.add('hidden');
+        if (estimatedLoadDisplay) estimatedLoadDisplay.textContent = '—';
+        showFeedback('Workout saved. Keep crushing it!', 'emerald', 'workoutFeedback');
         haptic(HAPTIC.confirm);
     } catch (err) {
         console.error('Workout submission failed', err.code, err.message);
