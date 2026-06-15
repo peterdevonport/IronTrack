@@ -421,17 +421,25 @@
             <div class="border-t border-slate-800 pt-4">
               <h3 class="form-label mb-2">Result</h3>
               <div class="flex gap-3 items-end">
-                <div>
-                  <label class="form-label">Minutes</label>
-                  <input type="number" id="fortime-minutes" placeholder="8" min="0" step="1" class="input-core" required />
+                <div id="fortime-time-inputs">
+                  <div class="flex gap-3">
+                    <div>
+                      <label class="form-label">Minutes</label>
+                      <input type="number" id="fortime-minutes" placeholder="8" min="0" step="1" class="input-core" required />
+                    </div>
+                    <div>
+                      <label class="form-label">Seconds</label>
+                      <input type="number" id="fortime-seconds" placeholder="30" min="0" max="59" step="1" class="input-core" required />
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label class="form-label">Seconds</label>
-                  <input type="number" id="fortime-seconds" placeholder="30" min="0" max="59" step="1" class="input-core" required />
+                <div id="fortime-cap-reps-container" class="hidden">
+                  <label class="form-label">Remaining Reps</label>
+                  <input type="number" id="fortime-cap-reps" placeholder="45" min="0" step="1" class="input-core" />
                 </div>
                 <div class="flex items-center pb-2">
                   <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" id="fortime-dnf" class="w-4 h-4 rounded border-slate-600 bg-slate-800 accent-emerald-500" />
+                    <input type="checkbox" id="fortime-dnf" onchange="toggleForTimeDnf()" class="w-4 h-4 rounded border-slate-600 bg-slate-800 accent-emerald-500" />
                     <span class="text-xs text-slate-400">DNF</span>
                   </label>
                 </div>

@@ -1263,14 +1263,25 @@ function getForTimeMovementData() {
   return movements;
 }
 
+function toggleForTimeDnf() {
+  const dnf = document.getElementById('fortime-dnf')?.checked;
+  const timeInputs = document.getElementById('fortime-time-inputs');
+  const capRepsContainer = document.getElementById('fortime-cap-reps-container');
+  if (!timeInputs || !capRepsContainer) return;
+  timeInputs.classList.toggle('hidden', dnf);
+  capRepsContainer.classList.toggle('hidden', !dnf);
+  updateForTimeScorePreview();
+}
+
 function updateForTimeScorePreview() {
   const mins = parseInt(document.getElementById('fortime-minutes')?.value, 10);
   const secs = parseInt(document.getElementById('fortime-seconds')?.value, 10);
+  const capReps = parseInt(document.getElementById('fortime-cap-reps')?.value, 10);
   const dnf = document.getElementById('fortime-dnf')?.checked;
   const preview = document.getElementById('fortime-score-preview');
   if (!preview) return;
   if (dnf) {
-    preview.textContent = 'DNF';
+    preview.textContent = capReps > 0 ? `Cap ${capReps}` : 'DNF';
   } else if (mins > 0 || secs > 0) {
     preview.textContent = formatScore_TIME_SECONDS(mins * 60 + secs);
   } else {
@@ -1291,9 +1302,10 @@ async function submitForTimeWorkout(e) {
 
   const timeCap = parseInt(document.getElementById('fortime-cap').value, 10) || 0;
   const rounds = parseInt(document.getElementById('fortime-rounds').value, 10);
-  const resultMins = parseInt(document.getElementById('fortime-minutes').value, 10);
-  const resultSecs = parseInt(document.getElementById('fortime-seconds').value, 10);
   const dnf = document.getElementById('fortime-dnf').checked;
+  const remainingReps = dnf ? (parseInt(document.getElementById('fortime-cap-reps').value, 10) || 0) : 0;
+  const resultMins = dnf ? 0 : (parseInt(document.getElementById('fortime-minutes').value, 10) || 0);
+  const resultSecs = dnf ? 0 : (parseInt(document.getElementById('fortime-seconds').value, 10) || 0);
 
   let movements;
   try {
@@ -1304,8 +1316,8 @@ async function submitForTimeWorkout(e) {
 
   if (!rounds || rounds < 1) return showFeedback('Enter a valid round count.', 'red', 'fortimeFeedback');
   if (movements.length === 0) return showFeedback('Add at least one movement.', 'red', 'fortimeFeedback');
-  if (!dnf && (resultMins < 0 || resultSecs < 0)) return showFeedback('Enter a valid time.', 'red', 'fortimeFeedback');
   if (resultSecs > 59) return showFeedback('Seconds must be 0–59.', 'red', 'fortimeFeedback');
+  if (!dnf && (resultMins < 0 || resultSecs < 0)) return showFeedback('Enter a valid time.', 'red', 'fortimeFeedback');
 
   const now = Date.now();
   const timeSeconds = dnf ? 0 : resultMins * 60 + resultSecs;
@@ -1321,11 +1333,12 @@ async function submitForTimeWorkout(e) {
     },
     result: {
       timeSeconds,
-      completed: !dnf
+      completed: !dnf,
+      ...(dnf && { remainingReps })
     },
-    scoreDisplay: dnf ? `DNF (${rounds} rds)` : formatScore_TIME_SECONDS(timeSeconds),
+    scoreDisplay: dnf ? `Cap ${remainingReps}` : formatScore_TIME_SECONDS(timeSeconds),
     scoreType: 'TIME_SECONDS',
-    scoreValue: timeSeconds,
+    scoreValue: dnf ? remainingReps : timeSeconds,
     timestamp: now
   };
 
@@ -1336,6 +1349,7 @@ async function submitForTimeWorkout(e) {
     document.getElementById('for-time-form').reset();
     document.getElementById('fortime-movement-list').innerHTML = '';
     addForTimeMovementRow();
+    toggleForTimeDnf();
     document.getElementById('fortime-score-preview').textContent = '—';
     showFeedback('For Time workout saved!', 'emerald', 'fortimeFeedback');
     haptic(HAPTIC.confirm);
@@ -1436,7 +1450,7 @@ function renderStructuredWorkoutCard(sw) {
     const rounds = sw.structure?.rounds;
     const rdLabel = rounds ? ` · ${rounds} rds` : '';
     durationLabel += rdLabel;
-    scoreLabel = 'time';
+    scoreLabel = sw.result?.completed === false ? 'cap reps' : 'time';
   } else {
     const movements = sw.structure?.movements || [];
     movementsHtml = movements.map(m =>
@@ -1704,9 +1718,11 @@ if (forTimeForm) {
 const fortimeMinutes = document.getElementById('fortime-minutes');
 const fortimeSeconds = document.getElementById('fortime-seconds');
 const fortimeDnf = document.getElementById('fortime-dnf');
+const fortimeCapReps = document.getElementById('fortime-cap-reps');
 if (fortimeMinutes) fortimeMinutes.addEventListener('input', updateForTimeScorePreview);
 if (fortimeSeconds) fortimeSeconds.addEventListener('input', updateForTimeScorePreview);
 if (fortimeDnf) fortimeDnf.addEventListener('change', updateForTimeScorePreview);
+if (fortimeCapReps) fortimeCapReps.addEventListener('input', updateForTimeScorePreview);
 
 // Initial movement row for FOR_TIME
 if (document.getElementById('fortime-movement-list')) {
@@ -2233,3 +2249,4 @@ window.handleWorkoutTypeChange = handleWorkoutTypeChange;
 window.addMinuteSlot = addMinuteSlot;
 window.removeMinuteSlot = removeMinuteSlot;
 window.addForTimeMovementRow = addForTimeMovementRow;
+window.toggleForTimeDnf = toggleForTimeDnf;
