@@ -325,7 +325,9 @@ profileForm.addEventListener('submit', async (e) => {
 function listenToDataStream(uid) {
     const q = query(
         collection(db, "workouts"),
-        where("userId", "==", uid)
+        where("userId", "==", uid),
+        orderBy("timestamp", "desc"),
+        limit(100)
     );
     unsubscribeLogs = onSnapshot(q, async (snapshot) => {
         let workouts = [];
@@ -360,7 +362,7 @@ function listenToDataStream(uid) {
             }
         });
 
-        workouts.sort((a, b) => b.timestamp - a.timestamp);
+        // Data already sorted desc by Firestore
         window.__irontrackWorkoutCount = workouts.length;
         lastWorkouts = workouts;
         // dynamicFriend populate filter options from live exercise names
@@ -375,7 +377,7 @@ function listenToDataStream(uid) {
         updateRpeCard();
         await processAnalytics();
         renderLogs(workouts);
-        computeAndSyncDailyActivity();
+        debouncedSyncActivity();
     }, (error) => {
         console.error('Workout stream error', error.code, error.message);
         if (error.code === 'permission-denied') {
@@ -557,10 +559,21 @@ function updateRpeCard() {
     detailEl.textContent = `${reps} reps @ RPE ${rpe}  ·  ${rir} RIR  ·  Based on est. 1RM: ${Math.round(est1RM)} kg`;
 }
 
+function debounce(fn, wait) {
+    let timer;
+    return function (...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), wait);
+    };
+}
+
 function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.appendChild(document.createTextNode(text));
-    return div.innerHTML;
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 }
 
 function haptic(pattern) {
@@ -868,7 +881,7 @@ async function processAnalytics() {
     // 3. Social Sync Integration
     // ==========================================
     if (currentUser) {
-        await updateUserLeaderboardProfile(currentUser.uid, dots, sinclair);
+        debouncedUpdateLeaderboard(currentUser.uid, dots, sinclair);
     }
 }
 function getRankingTier(score, system, gender) {
@@ -2084,7 +2097,9 @@ function closeCalendarDayDetail() {
 function listenToStructuredWorkouts(uid) {
   const q = query(
     collection(db, "structured_workouts"),
-    where("userId", "==", uid)
+    where("userId", "==", uid),
+    orderBy("timestamp", "desc"),
+    limit(100)
   );
   unsubscribeStructured = onSnapshot(q, (snapshot) => {
     const workouts = [];
@@ -2093,10 +2108,9 @@ function listenToStructuredWorkouts(uid) {
       const timestamp = data.timestamp?.toMillis ? data.timestamp.toMillis() : data.timestamp;
       workouts.push({ id: doc.id, ...data, timestamp });
     });
-    workouts.sort((a, b) => b.timestamp - a.timestamp);
     lastStructuredWorkouts = workouts;
     renderStructuredWorkoutHistory();
-    computeAndSyncDailyActivity();
+    debouncedSyncActivity();
   }, (error) => {
     console.error('Structured workouts stream error', error.code, error.message);
   });
@@ -2814,6 +2828,15 @@ async function updateUserLeaderboardProfile(uid, dotsScore, sinclairScore) {
     lastActive: serverTimestamp()
   }, { merge: true });
 }
+
+const debouncedUpdateLeaderboard = debounce(async (uid, dots, sinclair) => {
+    if (!auth.currentUser || auth.currentUser.uid !== uid) return;
+    await updateUserLeaderboardProfile(uid, dots, sinclair);
+}, 5000);
+
+const debouncedSyncActivity = debounce(() => {
+    computeAndSyncDailyActivity();
+}, 3000);
 
 
 // Visual Alert helper (Updated with dynamic target and optional auto-vanish delay)
