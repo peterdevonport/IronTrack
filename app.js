@@ -1591,10 +1591,17 @@ async function submitForTimeWorkout(e) {
 async function generateForTimeContributions(workoutId, movements, rounds, remainingReps = 0) {
   const bw = userBiometrics.bodyweight || 0;
   const now = Date.now();
+  const repsPerRound = movements.reduce((sum, m) => sum + (m.reps || 0), 0);
+  const totalPlanned = repsPerRound * rounds;
+  const totalCompleted = Math.max(0, totalPlanned - remainingReps);
+  const fullRounds = Math.floor(repsPerRound > 0 ? totalCompleted / repsPerRound : 0);
+  let partialRoundReps = totalCompleted % (repsPerRound || 1);
 
   for (const movement of movements) {
     if (getExerciseInfo(movement.exerciseId).category === 'cardio') continue;
-    const performedReps = Math.max(0, movement.reps * rounds - remainingReps);
+    const movementPartialReps = Math.min(movement.reps, partialRoundReps);
+    partialRoundReps = Math.max(0, partialRoundReps - movement.reps);
+    const performedReps = movement.reps * fullRounds + movementPartialReps;
     if (performedReps <= 0) continue;
 
     const loadFactor = LOAD_FACTORS[movement.exerciseId];
@@ -1614,7 +1621,7 @@ async function generateForTimeContributions(workoutId, movements, rounds, remain
     const logEntry = {
       userId: currentUser.uid,
       exercise: movement.exerciseId,
-      sets: rounds,
+      sets: fullRounds,
       reps: movement.reps,
       weight,
       externalLoad: 0,
@@ -1623,6 +1630,7 @@ async function generateForTimeContributions(workoutId, movements, rounds, remain
       timestamp: now,
       source: 'structured',
       workoutId,
+      ...(movementPartialReps > 0 && { partialReps: movementPartialReps }),
       totalWorkReps: performedReps
     };
 
