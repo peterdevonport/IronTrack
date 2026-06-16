@@ -1604,6 +1604,9 @@ async function generateForTimeContributions(workoutId, movements, rounds, remain
     const performedReps = movement.reps * fullRounds + movementPartialReps;
     if (performedReps <= 0) continue;
 
+    const effectiveSets = fullRounds + (movementPartialReps === movement.reps ? 1 : 0);
+    const displayPartialReps = movementPartialReps < movement.reps ? movementPartialReps : 0;
+
     const loadFactor = LOAD_FACTORS[movement.exerciseId];
     let estimatedLoad = 0;
     let weight = 0;
@@ -1621,7 +1624,7 @@ async function generateForTimeContributions(workoutId, movements, rounds, remain
     const logEntry = {
       userId: currentUser.uid,
       exercise: movement.exerciseId,
-      sets: fullRounds,
+      sets: effectiveSets,
       reps: movement.reps,
       weight,
       externalLoad: 0,
@@ -1630,7 +1633,7 @@ async function generateForTimeContributions(workoutId, movements, rounds, remain
       timestamp: now,
       source: 'structured',
       workoutId,
-      ...(movementPartialReps > 0 && { partialReps: movementPartialReps }),
+      ...(displayPartialReps > 0 && { partialReps: displayPartialReps }),
       totalWorkReps: performedReps
     };
 
@@ -1776,6 +1779,9 @@ async function generateIntervalContributions(workoutId, movements, roundsComplet
     const totalRepsPerMovement = movement.reps * roundsCompleted + movementPartialReps;
     if (totalRepsPerMovement <= 0) continue;
 
+    const effectiveSets = roundsCompleted + (movementPartialReps === movement.reps ? 1 : 0);
+    const displayPartialReps = movementPartialReps < movement.reps ? movementPartialReps : 0;
+
     const loadFactor = LOAD_FACTORS[movement.exerciseId];
     let estimatedLoad = 0;
     let weight = 0;
@@ -1793,7 +1799,7 @@ async function generateIntervalContributions(workoutId, movements, roundsComplet
     const logEntry = {
       userId: currentUser.uid,
       exercise: movement.exerciseId,
-      sets: roundsCompleted,
+      sets: effectiveSets,
       reps: movement.reps,
       weight,
       externalLoad: 0,
@@ -1802,7 +1808,7 @@ async function generateIntervalContributions(workoutId, movements, roundsComplet
       timestamp: now,
       source: 'structured',
       workoutId,
-      ...(movementPartialReps > 0 && { partialReps: movementPartialReps }),
+      ...(displayPartialReps > 0 && { partialReps: displayPartialReps }),
       totalWorkReps: totalRepsPerMovement
     };
 
