@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, collection, addDoc, query, where, onSnapshot, deleteDoc, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, serverTimestamp, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // Integrated Unique Firebase App Configuration
@@ -282,6 +282,83 @@ signupBtn.addEventListener('click', async () => {
 });
 
 authBtn.addEventListener('click', () => { if (currentUser && confirm("Sign out?")) signOut(auth); });
+
+// Toggle Password Visibility
+const togglePasswordBtn = document.getElementById('toggle-password-btn');
+const eyeIcon = document.getElementById('eye-icon');
+const eyeOffIcon = document.getElementById('eye-off-icon');
+
+if (togglePasswordBtn) {
+  togglePasswordBtn.addEventListener('click', () => {
+    const isPassword = passwordInput.type === 'password';
+    passwordInput.type = isPassword ? 'text' : 'password';
+    eyeIcon.classList.toggle('hidden', !isPassword);
+    eyeOffIcon.classList.toggle('hidden', isPassword);
+  });
+}
+
+// Forgot Password Flow
+const forgotPasswordBtn = document.getElementById('forgot-password-btn');
+const forgotPasswordSection = document.getElementById('forgot-password-section');
+const forgotPasswordEmail = document.getElementById('forgot-password-email');
+const forgotPasswordSend = document.getElementById('forgot-password-send');
+const forgotPasswordCancel = document.getElementById('forgot-password-cancel');
+const forgotPasswordFeedback = document.getElementById('forgot-password-feedback');
+const authFormContainer = document.getElementById('auth-form-container');
+
+function showForgotPassword() {
+  authFormContainer.classList.add('hidden');
+  forgotPasswordSection.classList.remove('hidden');
+  forgotPasswordEmail.value = emailInput.value || '';
+  forgotPasswordEmail.focus();
+  forgotPasswordFeedback.textContent = '';
+  forgotPasswordFeedback.className = 'text-xs text-slate-500 font-medium text-center h-4';
+}
+
+function showAuthForm() {
+  forgotPasswordSection.classList.add('hidden');
+  authFormContainer.classList.remove('hidden');
+  forgotPasswordFeedback.textContent = '';
+  forgotPasswordFeedback.className = 'text-xs text-slate-500 font-medium text-center h-4';
+}
+
+if (forgotPasswordBtn) {
+  forgotPasswordBtn.addEventListener('click', showForgotPassword);
+}
+
+if (forgotPasswordCancel) {
+  forgotPasswordCancel.addEventListener('click', showAuthForm);
+}
+
+if (forgotPasswordSend) {
+  forgotPasswordSend.addEventListener('click', async () => {
+    const email = forgotPasswordEmail.value.trim();
+    if (!email) {
+      forgotPasswordFeedback.textContent = 'Enter your email address.';
+      forgotPasswordFeedback.className = 'text-xs text-rose-400 font-medium text-center h-4';
+      return;
+    }
+    forgotPasswordSend.disabled = true;
+    forgotPasswordSend.textContent = 'Sending...';
+    try {
+      await sendPasswordResetEmail(auth, email);
+      forgotPasswordFeedback.textContent = 'Reset link sent! Check your email.';
+      forgotPasswordFeedback.className = 'text-xs text-emerald-400 font-medium text-center h-4';
+      setTimeout(showAuthForm, 2000);
+    } catch (error) {
+      const msg = error.code === 'auth/user-not-found'
+        ? 'No account found with this email.'
+        : error.code === 'auth/invalid-email'
+        ? 'Invalid email address.'
+        : `Failed: ${error.message}`;
+      forgotPasswordFeedback.textContent = msg;
+      forgotPasswordFeedback.className = 'text-xs text-rose-400 font-medium text-center h-4';
+    } finally {
+      forgotPasswordSend.disabled = false;
+      forgotPasswordSend.textContent = 'Send Reset Link';
+    }
+  });
+}
 
 // Profile Management Sync
 async function pullProfileMetrics(uid) {
