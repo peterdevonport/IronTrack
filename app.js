@@ -1017,9 +1017,11 @@ function populateMovementDropdowns() {
 }
 
 function handleMovementExerciseChange(selectEl) {
-  const row = selectEl.closest('.movement-row');
+  const row = selectEl.closest('.movement-row, .minute-row');
   if (!row) return;
   const weightInput = row.querySelector('.movement-weight');
+  const switchEl = row.querySelector('.wms-switch');
+  const calcSpan = row.querySelector('.movement-calc');
   const exercise = selectEl.value;
   const loadFactor = LOAD_FACTORS[exercise];
 
@@ -1027,10 +1029,21 @@ function handleMovementExerciseChange(selectEl) {
     weightInput.value = '';
     weightInput.disabled = true;
     weightInput.placeholder = 'BW';
+    if (switchEl) { switchEl.classList.add('hidden'); switchEl.dataset.mode = 'absolute'; }
+    if (calcSpan) calcSpan.classList.add('hidden');
   } else {
     weightInput.value = '';
     weightInput.disabled = false;
-    weightInput.placeholder = 'Load (kg)';
+    weightInput.placeholder = switchEl?.dataset?.mode === 'pct' ? '%' : 'Load';
+    if (switchEl) switchEl.classList.remove('hidden');
+    if (calcSpan) {
+      if (switchEl?.dataset?.mode === 'pct') {
+        calcSpan.classList.remove('hidden');
+        updateRowPctDisplay(row);
+      } else {
+        calcSpan.classList.add('hidden');
+      }
+    }
   }
 }
 
@@ -1038,21 +1051,34 @@ function addMovementRow(containerId, exerciseName) {
   if (!containerId) containerId = 'movement-list';
   const container = document.getElementById(containerId);
   if (!container) return;
+  // Clear initial static HTML placeholder on first call for this container
+  if (!container.dataset.wmsBootstrapped) {
+    container.innerHTML = '';
+    container.dataset.wmsBootstrapped = 'true';
+  }
   const row = document.createElement('div');
-  row.className = 'movement-row flex gap-2 items-end';
+  row.className = 'movement-row flex gap-2 items-end flex-wrap';
   row.innerHTML = `
-    <div class="flex-1">
+    <div class="flex-1 min-w-[120px]">
       <select class="movement-exercise dropdown-core" onchange="handleMovementExerciseChange(this)">
         <option value="">Select exercise...</option>
       </select>
     </div>
-    <div class="w-16">
+    <div class="w-16 shrink-0">
       <input type="number" class="movement-reps input-core" placeholder="Reps" min="1" step="1" />
     </div>
-    <div class="w-20">
+    <div class="wms-switch shrink-0" data-mode="absolute" onclick="toggleWeightMode(this)">
+      <span class="wms-label is-active" data-mode="absolute">kg</span>
+      <div class="wms-track"><div class="wms-knob"></div></div>
+      <span class="wms-label" data-mode="pct">%</span>
+    </div>
+    <div class="w-20 shrink-0">
       <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
     </div>
-    <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none">X</button>
+    <div class="w-16 shrink-0 flex items-center justify-center">
+      <span class="movement-calc text-emerald-400 font-mono text-xs hidden">\u2192</span>
+    </div>
+    <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none shrink-0">X</button>
   `;
   container.appendChild(row);
   populateMovementDropdowns();
@@ -1069,19 +1095,86 @@ function removeMovementRow(btn) {
   if (container?.id === 'movement-list') updateAmrapScorePreview();
 }
 
+function toggleWeightMode(el) {
+  const switchEl = el.classList.contains('wms-switch') ? el : el.closest('.wms-switch');
+  if (!switchEl) return;
+  const row = switchEl.closest('.movement-row, .minute-row');
+  if (!row) return;
+  const mode = switchEl.dataset.mode;
+  const newMode = mode === 'absolute' ? 'pct' : 'absolute';
+  switchEl.dataset.mode = newMode;
+
+  switchEl.querySelectorAll('.wms-label').forEach(l => {
+    l.classList.toggle('is-active', l.dataset.mode === newMode);
+  });
+
+  const weightInput = row.querySelector('.movement-weight');
+  if (weightInput) weightInput.placeholder = newMode === 'pct' ? '%' : 'Load';
+
+  const calcSpan = row.querySelector('.movement-calc');
+  if (!calcSpan) return;
+  if (newMode === 'pct') {
+    calcSpan.classList.remove('hidden');
+    updateRowPctDisplay(row);
+  } else {
+    calcSpan.classList.add('hidden');
+  }
+}
+
+function updateRowPctDisplay(row) {
+  const exercise = row.querySelector('.movement-exercise')?.value;
+  const pctInput = row.querySelector('.movement-weight');
+  const calcSpan = row.querySelector('.movement-calc');
+  if (!pctInput || !calcSpan) return;
+
+  const pct = parseFloat(pctInput.value);
+  const oneRM = exercise ? (activeRecords[exercise] || 0) : 0;
+
+  if (!exercise) {
+    calcSpan.textContent = '\u2192';
+    calcSpan.className = 'movement-calc text-slate-500 font-mono text-xs';
+    return;
+  }
+  if (isNaN(pct) || pct <= 0 || oneRM <= 0) {
+    calcSpan.textContent = oneRM > 0 ? '\u2192' : 'No 1RM';
+    calcSpan.className = 'movement-calc font-mono text-xs ' + (oneRM > 0 ? 'text-emerald-400' : 'text-rose-400');
+    return;
+  }
+
+  const calculated = Math.round(oneRM * pct / 100);
+  calcSpan.textContent = '\u2192 ' + calculated + ' kg';
+  calcSpan.className = 'movement-calc text-emerald-400 font-mono text-xs';
+}
+
 function getMovementData(containerSelector) {
   const movements = [];
   let error = null;
   document.querySelectorAll(containerSelector).forEach(row => {
     const exercise = row.querySelector('.movement-exercise')?.value;
     const reps = parseInt(row.querySelector('.movement-reps')?.value, 10);
-    const weight = parseFloat(row.querySelector('.movement-weight')?.value) || 0;
+    const weightInput = row.querySelector('.movement-weight');
+    const switchEl = row.querySelector('.wms-switch');
+    const weightMode = switchEl?.dataset?.mode || 'absolute';
+
+    let rawWeight = parseFloat(weightInput?.value) || 0;
+    let pct = null;
+
     if (!exercise) { error = 'Select an exercise for all movements.'; return; }
     if (!reps || reps < 1) { error = 'Enter reps for all movements.'; return; }
+
+    if (weightMode === 'pct') {
+      pct = rawWeight;
+      const oneRM = activeRecords[exercise] || 0;
+      rawWeight = oneRM > 0 ? Math.round(oneRM * rawWeight / 100) : rawWeight;
+    }
+
     const exInfo = getExerciseInfo(exercise);
     const loadFactor = LOAD_FACTORS[exercise];
-    if (!loadFactor && exInfo.category !== 'cardio' && (!weight || weight <= 0)) { error = `Enter a load for ${exercise}.`; return; }
-    movements.push({ exerciseId: exercise, reps, weight });
+    if (!loadFactor && exInfo.category !== 'cardio' && (!rawWeight || rawWeight <= 0)) { error = `Enter a load for ${exercise}.`; return; }
+
+    const movement = { exerciseId: exercise, reps, weight: rawWeight, weightMode };
+    if (pct !== null) movement.pct = pct;
+    movements.push(movement);
   });
   if (error) throw new Error(error);
   return movements;
@@ -1278,24 +1371,36 @@ function switchEmomMode(mode) {
 function addMinuteSlot(exerciseName) {
   const container = document.getElementById('emom-minute-slots');
   if (!container) return;
+  if (!container.dataset.wmsBootstrapped) {
+    container.innerHTML = '';
+    container.dataset.wmsBootstrapped = 'true';
+  }
   const count = container.children.length + 1;
   const label = emomMode === 'sequence' ? `#${count}` : `Round ${count}`;
   const row = document.createElement('div');
-  row.className = 'minute-row flex gap-2 items-end';
+  row.className = 'minute-row flex gap-2 items-end flex-wrap';
   row.innerHTML = `
-    <div class="flex-1">
+    <div class="flex-1 min-w-[120px]">
       <span class="minute-label text-xs text-slate-500 font-mono mr-1 inline-block w-24">${label}</span>
       <select class="movement-exercise dropdown-core w-[calc(100%-7rem)] inline-block" onchange="handleMovementExerciseChange(this)">
         <option value="">Select exercise...</option>
       </select>
     </div>
-    <div class="w-16">
+    <div class="w-16 shrink-0">
       <input type="number" class="movement-reps input-core" placeholder="Reps" min="1" step="1" />
     </div>
-    <div class="w-20">
+    <div class="wms-switch shrink-0" data-mode="absolute" onclick="toggleWeightMode(this)">
+      <span class="wms-label is-active" data-mode="absolute">kg</span>
+      <div class="wms-track"><div class="wms-knob"></div></div>
+      <span class="wms-label" data-mode="pct">%</span>
+    </div>
+    <div class="w-20 shrink-0">
       <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
     </div>
-    <button type="button" onclick="removeMinuteSlot(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none">X</button>
+    <div class="w-16 shrink-0 flex items-center justify-center">
+      <span class="movement-calc text-emerald-400 font-mono text-xs hidden">\u2192</span>
+    </div>
+    <button type="button" onclick="removeMinuteSlot(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none shrink-0">X</button>
   `;
   container.appendChild(row);
   populateMovementDropdowns();
@@ -1389,13 +1494,29 @@ function getEmomMovementData() {
   document.querySelectorAll('#emom-minute-slots .minute-row').forEach(row => {
     const exercise = row.querySelector('.movement-exercise')?.value;
     const reps = parseInt(row.querySelector('.movement-reps')?.value, 10);
-    const weight = parseFloat(row.querySelector('.movement-weight')?.value) || 0;
+    const weightInput = row.querySelector('.movement-weight');
+    const switchEl = row.querySelector('.wms-switch');
+    const weightMode = switchEl?.dataset?.mode || 'absolute';
+
+    let rawWeight = parseFloat(weightInput?.value) || 0;
+    let pct = null;
+
     if (!exercise) { error = 'Select an exercise for all intervals.'; return; }
     if (!reps || reps < 1) { error = 'Enter reps for all intervals.'; return; }
+
+    if (weightMode === 'pct') {
+      pct = rawWeight;
+      const oneRM = activeRecords[exercise] || 0;
+      rawWeight = oneRM > 0 ? Math.round(oneRM * rawWeight / 100) : rawWeight;
+    }
+
     const exInfo = getExerciseInfo(exercise);
     const loadFactor = LOAD_FACTORS[exercise];
-    if (!loadFactor && exInfo.category !== 'cardio' && (!weight || weight <= 0)) { error = `Enter a load for ${exercise}.`; return; }
-    minutes.push({ movements: [{ exerciseId: exercise, reps, weight }] });
+    if (!loadFactor && exInfo.category !== 'cardio' && (!rawWeight || rawWeight <= 0)) { error = `Enter a load for ${exercise}.`; return; }
+
+    const movement = { exerciseId: exercise, reps, weight: rawWeight, weightMode };
+    if (pct !== null) movement.pct = pct;
+    minutes.push({ movements: [movement] });
   });
   if (error) throw new Error(error);
   return minutes;
@@ -2077,6 +2198,13 @@ function listenToStructuredWorkouts(uid) {
   });
 }
 
+function formatMovementLoad(m) {
+  if (m.weightMode === 'pct' && m.pct) {
+    return ` @ ${Math.round(m.pct)}% (${Math.round(m.weight)} kg)`;
+  }
+  return m.weight ? ` @ ${m.weight}kg` : '';
+}
+
 function renderStructuredWorkoutCard(sw) {
   const type = sw.type || 'AMRAP';
   const badgeClass = type.toLowerCase();
@@ -2091,8 +2219,7 @@ function renderStructuredWorkoutCard(sw) {
       const mov = m.movements?.[0];
       if (!mov) return '';
       const label = isByRound ? `Round ${idx + 1}: ` : '';
-      const wt = mov.weight ? ` @ ${mov.weight}kg` : '';
-      return `<span class="movement-chip">${label}${escapeHtml(mov.exerciseId)} × ${mov.reps}${wt}</span>`;
+      return `<span class="movement-chip">${label}${escapeHtml(mov.exerciseId)} × ${mov.reps}${formatMovementLoad(mov)}</span>`;
     }).join('');
     durationLabel = `${sw.structure?.durationMinutes || 0} min`;
     const intSec = sw.structure?.intervalSeconds;
@@ -2103,8 +2230,7 @@ function renderStructuredWorkoutCard(sw) {
   } else if (type === 'FOR_TIME') {
     const movements = sw.structure?.movements || [];
     movementsHtml = movements.map(m => {
-      const wt = m.weight ? ` @ ${m.weight}kg` : '';
-      return `<span class="movement-chip">${escapeHtml(m.exerciseId)} × ${m.reps}${wt}</span>`;
+      return `<span class="movement-chip">${escapeHtml(m.exerciseId)} × ${m.reps}${formatMovementLoad(m)}</span>`;
     }).join('');
     const cap = sw.structure?.durationMinutes;
     durationLabel = cap ? `${cap} min cap` : '';
@@ -2115,8 +2241,7 @@ function renderStructuredWorkoutCard(sw) {
   } else if (type === 'INTERVAL') {
     const movements = sw.structure?.movements || [];
     movementsHtml = movements.map(m => {
-      const wt = m.weight ? ` @ ${m.weight}kg` : '';
-      return `<span class="movement-chip">${escapeHtml(m.exerciseId)} × ${m.reps}${wt}</span>`;
+      return `<span class="movement-chip">${escapeHtml(m.exerciseId)} × ${m.reps}${formatMovementLoad(m)}</span>`;
     }).join('');
     const ws = sw.structure?.workSeconds || 0;
     const rs = sw.structure?.restSeconds || 0;
@@ -2128,8 +2253,7 @@ function renderStructuredWorkoutCard(sw) {
   } else {
     const movements = sw.structure?.movements || [];
     movementsHtml = movements.map(m => {
-      const wt = m.weight ? ` @ ${m.weight}kg` : '';
-      return `<span class="movement-chip">${escapeHtml(m.exerciseId)} × ${m.reps}${wt}</span>`;
+      return `<span class="movement-chip">${escapeHtml(m.exerciseId)} × ${m.reps}${formatMovementLoad(m)}</span>`;
     }).join('');
     const durationMin = Math.round((sw.structure?.durationSeconds || 0) / 60);
     durationLabel = `${durationMin} min`;
@@ -2251,6 +2375,13 @@ function renderPlanCard(plan) {
   const badgeClass = type.toLowerCase();
   const dateStr = new Date(plan.createdAt).toLocaleDateString();
 
+  function formatLoad(m) {
+    if (m.weightMode === 'pct' && m.pct) {
+      return ` @ ${Math.round(m.pct)}% (${Math.round(m.weight)} kg)`;
+    }
+    return m.weight ? ` @ ${m.weight}kg` : '';
+  }
+
   let movementsHtml = '';
   const structure = plan.structure || {};
 
@@ -2259,14 +2390,12 @@ function renderPlanCard(plan) {
     movementsHtml = minutes.map((m, idx) => {
       const mov = m.movements?.[0];
       if (!mov) return '';
-      const wt = mov.weight ? ` @ ${mov.weight}kg` : '';
-      return `<span class="movement-chip">${idx + 1}: ${escapeHtml(mov.exerciseId)} \u00D7 ${mov.reps}${wt}</span>`;
+      return `<span class="movement-chip">${idx + 1}: ${escapeHtml(mov.exerciseId)} \u00D7 ${mov.reps}${formatLoad(mov)}</span>`;
     }).join('');
   } else {
     const movements = structure.movements || [];
     movementsHtml = movements.map(m => {
-      const wt = m.weight ? ` @ ${m.weight}kg` : '';
-      return `<span class="movement-chip">${escapeHtml(m.exerciseId)} \u00D7 ${m.reps}${wt}</span>`;
+      return `<span class="movement-chip">${escapeHtml(m.exerciseId)} \u00D7 ${m.reps}${formatLoad(m)}</span>`;
     }).join('');
   }
 
@@ -2335,8 +2464,25 @@ function populateAmrapForm(structure) {
       if (!mov) return;
       const repsInput = row.querySelector('.movement-reps');
       const weightInput = row.querySelector('.movement-weight');
+      const switchEl = row.querySelector('.wms-switch');
+      const calcSpan = row.querySelector('.movement-calc');
       if (repsInput) repsInput.value = mov.reps;
-      if (weightInput) weightInput.value = mov.weight || '';
+
+      if (mov.weightMode === 'pct' && mov.pct) {
+        if (switchEl) {
+          switchEl.dataset.mode = 'pct';
+          switchEl.querySelectorAll('.wms-label').forEach(l => l.classList.toggle('is-active', l.dataset.mode === 'pct'));
+        }
+        if (weightInput) { weightInput.value = mov.pct; weightInput.placeholder = '%'; }
+        if (calcSpan) { calcSpan.classList.remove('hidden'); updateRowPctDisplay(row); }
+      } else {
+        if (switchEl) {
+          switchEl.dataset.mode = 'absolute';
+          switchEl.querySelectorAll('.wms-label').forEach(l => l.classList.toggle('is-active', l.dataset.mode === 'absolute'));
+        }
+        if (weightInput) { weightInput.value = mov.weight || ''; weightInput.placeholder = 'Load'; }
+        if (calcSpan) calcSpan.classList.add('hidden');
+      }
     });
   }, 0);
 }
@@ -2365,8 +2511,25 @@ function populateEmomForm(structure) {
       if (!mov) return;
       const repsInput = row.querySelector('.movement-reps');
       const weightInput = row.querySelector('.movement-weight');
+      const switchEl = row.querySelector('.wms-switch');
+      const calcSpan = row.querySelector('.movement-calc');
       if (repsInput) repsInput.value = mov.reps;
-      if (weightInput) weightInput.value = mov.weight || '';
+
+      if (mov.weightMode === 'pct' && mov.pct) {
+        if (switchEl) {
+          switchEl.dataset.mode = 'pct';
+          switchEl.querySelectorAll('.wms-label').forEach(l => l.classList.toggle('is-active', l.dataset.mode === 'pct'));
+        }
+        if (weightInput) { weightInput.value = mov.pct; weightInput.placeholder = '%'; }
+        if (calcSpan) { calcSpan.classList.remove('hidden'); updateRowPctDisplay(row); }
+      } else {
+        if (switchEl) {
+          switchEl.dataset.mode = 'absolute';
+          switchEl.querySelectorAll('.wms-label').forEach(l => l.classList.toggle('is-active', l.dataset.mode === 'absolute'));
+        }
+        if (weightInput) { weightInput.value = mov.weight || ''; weightInput.placeholder = 'Load'; }
+        if (calcSpan) calcSpan.classList.add('hidden');
+      }
     });
   }, 0);
 }
@@ -2390,8 +2553,25 @@ function populateForTimeForm(structure) {
       if (!mov) return;
       const repsInput = row.querySelector('.movement-reps');
       const weightInput = row.querySelector('.movement-weight');
+      const switchEl = row.querySelector('.wms-switch');
+      const calcSpan = row.querySelector('.movement-calc');
       if (repsInput) repsInput.value = mov.reps;
-      if (weightInput) weightInput.value = mov.weight || '';
+
+      if (mov.weightMode === 'pct' && mov.pct) {
+        if (switchEl) {
+          switchEl.dataset.mode = 'pct';
+          switchEl.querySelectorAll('.wms-label').forEach(l => l.classList.toggle('is-active', l.dataset.mode === 'pct'));
+        }
+        if (weightInput) { weightInput.value = mov.pct; weightInput.placeholder = '%'; }
+        if (calcSpan) { calcSpan.classList.remove('hidden'); updateRowPctDisplay(row); }
+      } else {
+        if (switchEl) {
+          switchEl.dataset.mode = 'absolute';
+          switchEl.querySelectorAll('.wms-label').forEach(l => l.classList.toggle('is-active', l.dataset.mode === 'absolute'));
+        }
+        if (weightInput) { weightInput.value = mov.weight || ''; weightInput.placeholder = 'Load'; }
+        if (calcSpan) calcSpan.classList.add('hidden');
+      }
     });
   }, 0);
 }
@@ -2415,8 +2595,25 @@ function populateIntervalForm(structure) {
       if (!mov) return;
       const repsInput = row.querySelector('.movement-reps');
       const weightInput = row.querySelector('.movement-weight');
+      const switchEl = row.querySelector('.wms-switch');
+      const calcSpan = row.querySelector('.movement-calc');
       if (repsInput) repsInput.value = mov.reps;
-      if (weightInput) weightInput.value = mov.weight || '';
+
+      if (mov.weightMode === 'pct' && mov.pct) {
+        if (switchEl) {
+          switchEl.dataset.mode = 'pct';
+          switchEl.querySelectorAll('.wms-label').forEach(l => l.classList.toggle('is-active', l.dataset.mode === 'pct'));
+        }
+        if (weightInput) { weightInput.value = mov.pct; weightInput.placeholder = '%'; }
+        if (calcSpan) { calcSpan.classList.remove('hidden'); updateRowPctDisplay(row); }
+      } else {
+        if (switchEl) {
+          switchEl.dataset.mode = 'absolute';
+          switchEl.querySelectorAll('.wms-label').forEach(l => l.classList.toggle('is-active', l.dataset.mode === 'absolute'));
+        }
+        if (weightInput) { weightInput.value = mov.weight || ''; weightInput.placeholder = 'Load'; }
+        if (calcSpan) calcSpan.classList.add('hidden');
+      }
     });
   }, 0);
 }
@@ -2861,6 +3058,31 @@ if (emomMinuteSlots) {
 if (document.getElementById('emom-minute-slots')) {
   addMinuteSlot();
 }
+
+// Real-time % recalculation on weight input change/blur in pct mode
+document.addEventListener('input', (e) => {
+  const input = e.target;
+  if (input.classList.contains('movement-weight')) {
+    const row = input.closest('.movement-row, .minute-row');
+    if (!row) return;
+    const switchEl = row.querySelector('.wms-switch');
+    if (switchEl?.dataset?.mode === 'pct') {
+      updateRowPctDisplay(row);
+    }
+  }
+});
+
+document.addEventListener('blur', (e) => {
+  const input = e.target;
+  if (input.classList.contains('movement-weight')) {
+    const row = input.closest('.movement-row, .minute-row');
+    if (!row) return;
+    const switchEl = row.querySelector('.wms-switch');
+    if (switchEl?.dataset?.mode === 'pct') {
+      updateRowPctDisplay(row);
+    }
+  }
+});
 
 // Structured Workout Pagination
 const prevStructuredBtn = document.getElementById('prev-structured-page-btn');
@@ -3389,3 +3611,4 @@ window.saveForTimePlan = saveForTimePlan;
 window.saveIntervalPlan = saveIntervalPlan;
 window.loadPlan = loadPlan;
 window.deletePlan = deletePlan;
+window.toggleWeightMode = toggleWeightMode;

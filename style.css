@@ -344,3 +344,51 @@ body {
 #challenge-cards .completed {
   border: 1px solid var(--emerald-500);
 }
+
+/* ==========================================
+   WEIGHT MODE TOGGLE SWITCH (kg / %)
+   ========================================== */
+.wms-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+}
+.wms-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--slate-500);
+  transition: color 0.2s;
+}
+.wms-label.is-active {
+  color: var(--emerald-400);
+}
+.wms-track {
+  width: 32px;
+  height: 18px;
+  background-color: var(--slate-700);
+  border-radius: 9999px;
+  position: relative;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+}
+.wms-switch[data-mode="pct"] .wms-track {
+  background-color: var(--emerald-500);
+}
+.wms-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  background-color: #f8fafc;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+.wms-switch[data-mode="pct"] .wms-knob {
+  transform: translateX(14px);
+}
