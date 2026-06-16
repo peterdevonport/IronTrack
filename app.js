@@ -353,8 +353,7 @@ function listenToDataStream(uid) {
         lastWorkouts = workouts;
         // dynamicFriend populate filter options from live exercise names
         try {
-          const manualWorkouts = workouts.filter(w => w.source !== 'structured');
-          const uniqueExercises = Array.from(new Set(manualWorkouts.map(w => w.exercise)));
+          const uniqueExercises = Array.from(new Set(workouts.map(w => w.exercise)));
           populateWorkoutFilter(uniqueExercises);
         } catch (e) {
           // ignore if populate not available
@@ -1570,7 +1569,7 @@ async function submitForTimeWorkout(e) {
 
   try {
     const docRef = await addDoc(collection(db, "structured_workouts"), workoutDoc);
-    await generateForTimeContributions(docRef.id, movements, rounds);
+    await generateForTimeContributions(docRef.id, movements, rounds, remainingReps);
 
     document.getElementById('for-time-form').reset();
     document.getElementById('fortime-movement-list').innerHTML = '';
@@ -1589,14 +1588,14 @@ async function submitForTimeWorkout(e) {
   }
 }
 
-async function generateForTimeContributions(workoutId, movements, rounds) {
+async function generateForTimeContributions(workoutId, movements, rounds, remainingReps = 0) {
   const bw = userBiometrics.bodyweight || 0;
   const now = Date.now();
 
   for (const movement of movements) {
     if (getExerciseInfo(movement.exerciseId).category === 'cardio') continue;
-    const totalRepsPerMovement = movement.reps * rounds;
-    if (totalRepsPerMovement <= 0) continue;
+    const performedReps = Math.max(0, movement.reps * rounds - remainingReps);
+    if (performedReps <= 0) continue;
 
     const loadFactor = LOAD_FACTORS[movement.exerciseId];
     let estimatedLoad = 0;
@@ -1610,7 +1609,7 @@ async function generateForTimeContributions(workoutId, movements, rounds) {
       weight = movement.weight || 0;
     }
 
-    const totalVolume = estimatedLoad * totalRepsPerMovement;
+    const totalVolume = estimatedLoad * performedReps;
 
     const logEntry = {
       userId: currentUser.uid,
@@ -1624,7 +1623,7 @@ async function generateForTimeContributions(workoutId, movements, rounds) {
       timestamp: now,
       source: 'structured',
       workoutId,
-      totalWorkReps: totalRepsPerMovement
+      totalWorkReps: performedReps
     };
 
     await addDoc(collection(db, "workouts"), logEntry);
@@ -1738,7 +1737,7 @@ async function submitIntervalWorkout(e) {
 
   try {
     const docRef = await addDoc(collection(db, "structured_workouts"), workoutDoc);
-    await generateIntervalContributions(docRef.id, movements, roundsCompleted);
+    await generateIntervalContributions(docRef.id, movements, roundsCompleted, partialReps);
 
     document.getElementById('interval-form').reset();
     document.getElementById('interval-movement-list').innerHTML = '';
@@ -1756,13 +1755,17 @@ async function submitIntervalWorkout(e) {
   }
 }
 
-async function generateIntervalContributions(workoutId, movements, roundsCompleted) {
+async function generateIntervalContributions(workoutId, movements, roundsCompleted, partialReps = 0) {
   const bw = userBiometrics.bodyweight || 0;
   const now = Date.now();
+  let remainingPartial = partialReps;
 
-  for (const movement of movements) {
+  for (let i = 0; i < movements.length; i++) {
+    const movement = movements[i];
     if (getExerciseInfo(movement.exerciseId).category === 'cardio') continue;
-    const totalRepsPerMovement = movement.reps * roundsCompleted;
+    const movementPartialReps = Math.min(movement.reps, remainingPartial);
+    remainingPartial = Math.max(0, remainingPartial - movement.reps);
+    const totalRepsPerMovement = movement.reps * roundsCompleted + movementPartialReps;
     if (totalRepsPerMovement <= 0) continue;
 
     const loadFactor = LOAD_FACTORS[movement.exerciseId];
@@ -1791,6 +1794,7 @@ async function generateIntervalContributions(workoutId, movements, roundsComplet
       timestamp: now,
       source: 'structured',
       workoutId,
+      ...(movementPartialReps > 0 && { partialReps: movementPartialReps }),
       totalWorkReps: totalRepsPerMovement
     };
 
@@ -2042,11 +2046,12 @@ function selectCalendarDay(dateStr) {
             const reps = parseInt(item.reps, 10) || 1;
             const sets = item.sets || 1;
             const oneRM = Math.round(load * (1 + reps / 30));
+            const repDisplay = item.partialReps ? `${sets} × ${reps} + ${item.partialReps} reps` : `${sets} × ${reps}`;
             return `
 <div class="bg-slate-900 border border-slate-700 rounded-xl p-2.5">
     <div class="flex justify-between items-center">
         <span class="text-emerald-300 font-bold text-xs uppercase tracking-wider">${escapeHtml(item.exercise)}</span>
-        <span class="text-slate-200 font-mono text-xs">${sets} × ${reps} @ ${Math.round(load)}kg</span>
+        <span class="text-slate-200 font-mono text-xs">${repDisplay} @ ${Math.round(load)}kg</span>
     </div>
     <p class="text-slate-500 text-[10px] font-mono mt-0.5">Est. 1RM: ${oneRM}kg</p>
 </div>`;
@@ -2221,15 +2226,14 @@ function renderLogs(workouts) {
         return;
     }
 
-    // Filter out structured workout contributions from the display log
+    // Compute PB / 1RM from manual entries only (exclude structured contributions)
     const manualWorkouts = workouts.filter(w => w.source !== 'structured');
-    paginatedWorkouts = manualWorkouts;
+    paginatedWorkouts = workouts;
     const selected = workoutFilter ? workoutFilter.value : 'All';
 
-    // Precompute PB / 1RM flags for chip filtering and rendering (O(n))
     const maxLoadByExercise = {};
     const max1RMByExercise = {};
-    paginatedWorkouts.forEach(w => {
+    manualWorkouts.forEach(w => {
         const load = getEffectiveLoad(w);
         const reps = parseInt(w.reps, 10) || 1;
         const oneRM = Math.round(load * (1 + reps / 30));
@@ -2241,6 +2245,7 @@ function renderLogs(workouts) {
         }
     });
     paginatedWorkouts.forEach(workout => {
+        if (workout.source === 'structured') return;
         const load = getEffectiveLoad(workout);
         const reps = parseInt(workout.reps, 10) || 1;
         workout._isPB = load >= maxLoadByExercise[workout.exercise] && load > 0;
@@ -2282,9 +2287,11 @@ function renderLogs(workouts) {
         const isMax1RM = !!workout._isMax1RM;
         const is1RMOnly = isMax1RM && !isPB;
         const oneRM = Math.round(load * (1 + reps / 30));
-        const totalVolume = Math.round(load * reps * sets);
+        const totalWorkReps = workout.totalWorkReps || (reps * sets);
+        const totalVolume = Math.round(load * totalWorkReps);
         const borderClass = isPB ? 'log-entry-pb' : is1RMOnly ? 'log-entry-1rm' : 'log-entry';
         const secondLine = `Est. 1RM: ${oneRM}kg  <span class="text-slate-600">|</span>  Vol: ${totalVolume.toLocaleString()}kg`;
+        const repDisplay = workout.partialReps ? `${sets} × ${reps} + ${workout.partialReps} reps` : `${sets} × ${reps}`;
 
         return `
 <div class="${borderClass} p-4 rounded-2xl mb-3 flex justify-between items-center shadow-2xl shadow-slate-950/60 transition-all duration-200" style="background-color: var(--slate-900);">
@@ -2300,7 +2307,7 @@ function renderLogs(workouts) {
     </div>
     <div class="text-right">
         <span class="text-white font-mono text-base font-semibold">
-            ${sets} × ${reps} 
+            ${repDisplay} 
             <span class="text-slate-500 text-xs">@</span> 
             ${Math.round(load)}kg
         </span>
