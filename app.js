@@ -696,15 +696,11 @@ if (chip1RMEl) {
 
 
 
-function populateExerciseDropdown() {
-  const select = document.getElementById('exercise');
-  if (!select) return;
-  const currentVal = select.value;
-  const sortByName = (a, b) => a.name.localeCompare(b.name);
-  const groups = ['barbell', 'dumbbell', 'kettlebell', 'cardio', 'bodyweight'];
+function buildExerciseOptionsHtml(categories, placeholder) {
   const labels = { barbell: 'Barbell', dumbbell: 'Dumbbell', kettlebell: 'Kettlebell', cardio: 'Cardio', bodyweight: 'Bodyweight' };
-  let html = `<option value="" disabled selected>Select exercise...</option>`;
-  groups.forEach(cat => {
+  const sortByName = (a, b) => a.name.localeCompare(b.name);
+  let html = placeholder;
+  categories.forEach(cat => {
     const items = EXERCISE_CATALOG.filter(ex => ex.category === cat).sort(sortByName);
     if (items.length) {
       html += `<optgroup label="─ ${labels[cat]} ─">`;
@@ -712,7 +708,15 @@ function populateExerciseDropdown() {
       html += `</optgroup>`;
     }
   });
-  select.innerHTML = html;
+  return html;
+}
+
+function populateExerciseDropdown() {
+  const select = document.getElementById('exercise');
+  if (!select) return;
+  const currentVal = select.value;
+  const groups = ['barbell', 'dumbbell', 'kettlebell', 'cardio', 'bodyweight'];
+  select.innerHTML = buildExerciseOptionsHtml(groups, '<option value="" disabled selected>Select exercise...</option>');
   if (currentVal && Array.from(select.options).some(o => o.value === currentVal)) {
     select.value = currentVal;
   }
@@ -784,25 +788,8 @@ function populateWorkoutFilter(exercises) {
 }
 
 function populateLiftSelectors() {
-    const filtered = EXERCISE_CATALOG.filter(ex => ['barbell', 'dumbbell', 'kettlebell'].includes(ex.category));
-    const sortByName = (a, b) => a.name.localeCompare(b.name);
     const groups = ['barbell', 'dumbbell', 'kettlebell'];
-    const labels = { barbell: 'Barbell', dumbbell: 'Dumbbell', kettlebell: 'Kettlebell' };
-
-    const buildOptions = () => {
-        let html = '<option value="" disabled selected>Select lift...</option>';
-        groups.forEach(cat => {
-            const items = filtered.filter(ex => ex.category === cat).sort(sortByName);
-            if (items.length) {
-                html += `<optgroup label="─ ${labels[cat]} ─">`;
-                items.forEach(ex => { html += `<option value="${ex.name}">${ex.name}</option>`; });
-                html += `</optgroup>`;
-            }
-        });
-        return html;
-    };
-
-    const html = buildOptions();
+    const html = buildExerciseOptionsHtml(groups, '<option value="" disabled selected>Select lift...</option>');
     const pctSelect = document.getElementById('pct-lift-select');
     const rpeSelect = document.getElementById('rpe-lift-select');
     if (pctSelect) pctSelect.innerHTML = html;
@@ -938,19 +925,8 @@ function populateMovementDropdowns() {
   document.querySelectorAll('.movement-exercise').forEach(sel => {
     if (sel.options.length > 1) return;
     const currentVal = sel.value;
-    const sortByName = (a, b) => a.name.localeCompare(b.name);
     const groups = ['barbell', 'dumbbell', 'kettlebell', 'cardio', 'bodyweight'];
-    const labels = { barbell: 'Barbell', dumbbell: 'Dumbbell', kettlebell: 'Kettlebell', cardio: 'Cardio', bodyweight: 'Bodyweight' };
-    let html = '<option value="">Select exercise...</option>';
-    groups.forEach(cat => {
-      const items = EXERCISE_CATALOG.filter(ex => ex.category === cat).sort(sortByName);
-      if (items.length) {
-        html += `<optgroup label="─ ${labels[cat]} ─">`;
-        items.forEach(ex => { html += `<option value="${ex.name}">${ex.name}</option>`; });
-        html += `</optgroup>`;
-      }
-    });
-    sel.innerHTML = html;
+    sel.innerHTML = buildExerciseOptionsHtml(groups, '<option value="">Select exercise...</option>');
     if (currentVal && Array.from(sel.options).some(o => o.value === currentVal)) {
       sel.value = currentVal;
     }
