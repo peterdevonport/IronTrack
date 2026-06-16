@@ -1008,10 +1008,10 @@ function removeMovementRow(btn) {
   updateAmrapScorePreview();
 }
 
-function getAmrapMovementData() {
+function getMovementData(containerSelector) {
   const movements = [];
   let error = null;
-  document.querySelectorAll('#movement-list .movement-row').forEach(row => {
+  document.querySelectorAll(containerSelector).forEach(row => {
     const exercise = row.querySelector('.movement-exercise')?.value;
     const reps = parseInt(row.querySelector('.movement-reps')?.value, 10);
     const weight = parseFloat(row.querySelector('.movement-weight')?.value) || 0;
@@ -1051,7 +1051,7 @@ async function submitAmrapWorkout(e) {
   const additionalReps = parseInt(document.getElementById('amrap-additional-reps').value, 10) || 0;
   let movements;
   try {
-    movements = getAmrapMovementData();
+    movements = getMovementData('#movement-list .movement-row');
   } catch (err) {
     return showFeedback(err.message, 'red', 'amrapFeedback');
   }
@@ -1528,24 +1528,6 @@ function addForTimeMovementRow(exerciseName) {
   }
 }
 
-function getForTimeMovementData() {
-  const movements = [];
-  let error = null;
-  document.querySelectorAll('#fortime-movement-list .movement-row').forEach(row => {
-    const exercise = row.querySelector('.movement-exercise')?.value;
-    const reps = parseInt(row.querySelector('.movement-reps')?.value, 10);
-    const weight = parseFloat(row.querySelector('.movement-weight')?.value) || 0;
-    if (!exercise) { error = 'Select an exercise for all movements.'; return; }
-    if (!reps || reps < 1) { error = 'Enter reps for all movements.'; return; }
-    const exInfo = getExerciseInfo(exercise);
-    const loadFactor = LOAD_FACTORS[exercise];
-    if (!loadFactor && exInfo.category !== 'cardio' && (!weight || weight <= 0)) { error = `Enter a load for ${exercise}.`; return; }
-    movements.push({ exerciseId: exercise, reps, weight });
-  });
-  if (error) throw new Error(error);
-  return movements;
-}
-
 function toggleForTimeDnf() {
   const dnf = document.getElementById('fortime-dnf')?.checked;
   const timeInputs = document.getElementById('fortime-time-inputs');
@@ -1597,7 +1579,7 @@ async function submitForTimeWorkout(e) {
 
   let movements;
   try {
-    movements = getForTimeMovementData();
+    movements = getMovementData('#fortime-movement-list .movement-row');
   } catch (err) {
     return showFeedback(err.message, 'red', 'fortimeFeedback');
   }
@@ -1733,24 +1715,6 @@ function addIntervalMovementRow(exerciseName) {
   }
 }
 
-function getIntervalMovementData() {
-  const movements = [];
-  let error = null;
-  document.querySelectorAll('#interval-movement-list .movement-row').forEach(row => {
-    const exercise = row.querySelector('.movement-exercise')?.value;
-    const reps = parseInt(row.querySelector('.movement-reps')?.value, 10);
-    const weight = parseFloat(row.querySelector('.movement-weight')?.value) || 0;
-    if (!exercise) { error = 'Select an exercise for all movements.'; return; }
-    if (!reps || reps < 1) { error = 'Enter reps for all movements.'; return; }
-    const exInfo = getExerciseInfo(exercise);
-    const loadFactor = LOAD_FACTORS[exercise];
-    if (!loadFactor && exInfo.category !== 'cardio' && (!weight || weight <= 0)) { error = `Enter a load for ${exercise}.`; return; }
-    movements.push({ exerciseId: exercise, reps, weight });
-  });
-  if (error) throw new Error(error);
-  return movements;
-}
-
 function updateIntervalScorePreview() {
   const rounds = parseInt(document.getElementById('interval-rounds-completed')?.value, 10) || 0;
   const partial = parseInt(document.getElementById('interval-partial-reps')?.value, 10) || 0;
@@ -1775,7 +1739,7 @@ async function submitIntervalWorkout(e) {
 
   let movements;
   try {
-    movements = getIntervalMovementData();
+    movements = getMovementData('#interval-movement-list .movement-row');
   } catch (err) {
     return showFeedback(err.message, 'red', 'intervalFeedback');
   }
