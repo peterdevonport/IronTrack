@@ -158,6 +158,8 @@ let currentUser = null;
 let unsubscribeLogs = null;
 let userBiometrics = { gender: 'male', bodyweight: 75 };
 let activeRecords = {};
+let cachedMaxLoadByExercise = {};
+let cachedMax1RMByExercise = {};
 let calendarMonth = new Date();
 let calendarSelectedDate = null;
 let pctEntriesByLift = {};
@@ -328,6 +330,8 @@ function listenToDataStream(uid) {
     unsubscribeLogs = onSnapshot(q, async (snapshot) => {
         let workouts = [];
         activeRecords = {};
+        cachedMaxLoadByExercise = {};
+        cachedMax1RMByExercise = {};
 
         snapshot.forEach((doc) => {
             const data = doc.data();
@@ -345,6 +349,14 @@ function listenToDataStream(uid) {
 
             if (!activeRecords[data.exercise] || calculated1RM > activeRecords[data.exercise]) {
                 activeRecords[data.exercise] = calculated1RM;
+            }
+
+            // Track max load and max 1RM per exercise for PB/1RM badge rendering
+            if (!cachedMaxLoadByExercise[data.exercise] || effectiveWeight > cachedMaxLoadByExercise[data.exercise]) {
+                cachedMaxLoadByExercise[data.exercise] = effectiveWeight;
+            }
+            if (!cachedMax1RMByExercise[data.exercise] || calculated1RM > cachedMax1RMByExercise[data.exercise]) {
+                cachedMax1RMByExercise[data.exercise] = calculated1RM;
             }
         });
 
@@ -377,10 +389,8 @@ function update1RMRegistryUI() {
     const tableBody = document.getElementById('registry-table-body');
     if (!tableBody) return;
 
-    // Exclude structured workout contributions from records registry
     const manualWorkouts = lastWorkouts.filter(w => w.source !== 'structured');
 
-    // 1. Find all unique exercises currently logged by the user
     const uniqueExercises = Array.from(new Set(manualWorkouts.map(w => w.exercise))).filter(Boolean).sort();
 
     if (uniqueExercises.length === 0) {
@@ -388,24 +398,10 @@ function update1RMRegistryUI() {
         return;
     }
 
-    // 2. Generate grid tracking elements dynamically for each logged lift
     let html = '';
-    
     uniqueExercises.forEach(exercise => {
-        // Filter historical entries just for this specific exercise
-        const exerciseHistory = manualWorkouts.filter(w => w.exercise === exercise);
-
-        // Calculate Absolute PB: The heaviest effective load successfully logged
-        const absolutePB = Math.max(0, ...exerciseHistory.map(w => getEffectiveLoad(w)));
-
-        // Calculate Highest Estimated 1RM across all historical entries for this lift
-        const maxEstimated1RM = Math.max(0, ...exerciseHistory.map(w => {
-            const load = getEffectiveLoad(w);
-            const reps = parseInt(w.reps || 1, 10);
-            return reps === 1 ? load : load * (1 + reps / 30);
-        }));
-
-        // Append the 3 grid components that represent one full layout row
+        const maxEstimated1RM = cachedMax1RMByExercise[exercise] || 0;
+        const absolutePB = cachedMaxLoadByExercise[exercise] || 0;
         html += `
             <span class="text-slate-400 font-medium truncate">${escapeHtml(exercise)}</span>
             <span class="text-slate-200 font-mono text-right">${Math.round(maxEstimated1RM)} kg</span>
@@ -2240,31 +2236,16 @@ function renderLogs(workouts) {
         return;
     }
 
-    // Compute PB / 1RM from manual entries only (exclude structured contributions)
-    const manualWorkouts = workouts.filter(w => w.source !== 'structured');
     paginatedWorkouts = workouts;
     const selected = workoutFilter ? workoutFilter.value : 'All';
 
-    const maxLoadByExercise = {};
-    const max1RMByExercise = {};
-    manualWorkouts.forEach(w => {
-        const load = getEffectiveLoad(w);
-        const reps = parseInt(w.reps, 10) || 1;
-        const oneRM = Math.round(load * (1 + reps / 30));
-        if (!maxLoadByExercise[w.exercise] || load > maxLoadByExercise[w.exercise]) {
-            maxLoadByExercise[w.exercise] = load;
-        }
-        if (!max1RMByExercise[w.exercise] || oneRM > max1RMByExercise[w.exercise]) {
-            max1RMByExercise[w.exercise] = oneRM;
-        }
-    });
     paginatedWorkouts.forEach(workout => {
         if (workout.source === 'structured') return;
         const load = getEffectiveLoad(workout);
+        workout._isPB = load >= (cachedMaxLoadByExercise[workout.exercise] || 0) && load > 0;
         const reps = parseInt(workout.reps, 10) || 1;
-        workout._isPB = load >= maxLoadByExercise[workout.exercise] && load > 0;
         const oneRM = Math.round(load * (1 + reps / 30));
-        workout._isMax1RM = oneRM >= max1RMByExercise[workout.exercise] && oneRM > 0;
+        workout._isMax1RM = oneRM >= (cachedMax1RMByExercise[workout.exercise] || 0) && oneRM > 0;
     });
 
     let displayList = (selected === 'All') ? paginatedWorkouts : paginatedWorkouts.filter(w => w.exercise === selected);
