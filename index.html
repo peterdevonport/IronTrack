@@ -354,6 +354,15 @@
 
         <div id="log-workout-section" class="hidden">
           
+          <details id="saved-plans-details" class="mb-4">
+            <summary class="text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer select-none">
+              Saved Plans (<span id="saved-plans-count">0</span>)
+            </summary>
+            <div id="saved-plans-inline" class="mt-2 space-y-2 max-h-64 overflow-y-auto">
+              <p class="text-xs text-slate-500 italic py-2 text-center">No saved plans yet.</p>
+            </div>
+          </details>
+
           <div id="workout-type-selector" class="mb-4">
             <label class="form-label">Workout Type</label>
             <select id="workout-type" class="dropdown-core" onchange="handleWorkoutTypeChange()">
@@ -404,6 +413,8 @@
                 </div>
             </div>
 
+            <button type="button" onclick="saveAmrapPlan()" class="btn-core is-secondary btn-size-input">Save for Later</button>
+
             <div class="border-t border-slate-800 pt-4">
               <h3 class="form-label mb-2">Result</h3>
               <div class="grid grid-cols-2 gap-3">
@@ -422,7 +433,7 @@
             </div>
 
             <button type="submit" class="btn-core is-primary btn-size-input">
-              Save Workout
+              Log Workout
             </button>
 
             <p id="amrapFeedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
@@ -484,6 +495,8 @@
               </p>
             </div>
 
+            <button type="button" onclick="saveEmomPlan()" class="btn-core is-secondary btn-size-input">Save for Later</button>
+
             <div class="border-t border-slate-800 pt-4">
               <h3 class="form-label mb-2">Result</h3>
               <div>
@@ -496,7 +509,7 @@
             </div>
 
             <button type="submit" class="btn-core is-primary btn-size-input">
-              Save Workout
+              Log Workout
             </button>
 
             <p id="emomFeedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
@@ -544,6 +557,8 @@
               </div>
             </div>
 
+            <button type="button" onclick="saveForTimePlan()" class="btn-core is-secondary btn-size-input">Save for Later</button>
+
             <div class="border-t border-slate-800 pt-4">
               <h3 class="form-label mb-2">Result</h3>
               <div class="flex gap-3 items-end">
@@ -576,7 +591,7 @@
             </div>
 
             <button type="submit" class="btn-core is-primary btn-size-input">
-              Save Workout
+              Log Workout
             </button>
 
             <p id="fortimeFeedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
@@ -628,6 +643,8 @@
               </div>
             </div>
 
+            <button type="button" onclick="saveIntervalPlan()" class="btn-core is-secondary btn-size-input">Save for Later</button>
+
             <div class="border-t border-slate-800 pt-4">
               <h3 class="form-label mb-2">Result</h3>
               <div class="grid grid-cols-2 gap-3">
@@ -646,11 +663,24 @@
             </div>
 
             <button type="submit" class="btn-core is-primary btn-size-input">
-              Save Workout
+              Log Workout
             </button>
 
             <p id="intervalFeedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
           </form>
+        </div>
+
+        <!-- Plan Name Modal Overlay -->
+        <div id="plan-name-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80" style="backdrop-filter: blur(4px);">
+          <div class="surface-card w-full max-w-sm mx-4 space-y-4">
+            <p class="form-label text-base">Name Your Plan</p>
+            <input type="text" id="plan-name-input" class="input-core" placeholder="e.g. Monday Push Day" />
+            <div class="flex gap-2">
+              <button type="button" id="plan-name-cancel" class="btn-core is-ghost btn-size-input">Cancel</button>
+              <button type="button" id="plan-name-save" class="btn-core is-primary btn-size-input">Save Plan</button>
+            </div>
+            <p id="plan-name-feedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
+          </div>
         </div>
       </section>
 

@@ -174,6 +174,10 @@ let lastStructuredWorkouts = [];
 let structuredCurrentPage = 1;
 let unsubscribeStructured = null;
 
+// Workout plan state
+let lastWorkoutPlans = [];
+let unsubscribePlans = null;
+
 // Global state variables for social & leaderboards
 let currentScope = 'global'; // 'global' or 'friends'
 let currentFormula = 'dots';  // 'dots' or 'sinclair'
@@ -202,6 +206,7 @@ onAuthStateChanged(auth, async (user) => {
         syncLeaderboardFeed();
         listenToDataStream(user.uid);
         listenToStructuredWorkouts(user.uid);
+        listenToPlans(user.uid);
         loadConsistencyConfig();
 
         showQRCode()
@@ -215,6 +220,7 @@ onAuthStateChanged(auth, async (user) => {
     } else {
         if (unsubscribeLogs) { unsubscribeLogs(); unsubscribeLogs = null; }
         if (unsubscribeStructured) { unsubscribeStructured(); unsubscribeStructured = null; }
+        if (unsubscribePlans) { unsubscribePlans(); unsubscribePlans = null; }
         if (leaderboardUnsubscribe) { leaderboardUnsubscribe(); leaderboardUnsubscribe = null; }
         loginView.classList.remove('hidden');
         appView.classList.add('hidden');
@@ -2200,6 +2206,435 @@ function changeStructuredPage(direction) {
 // END STRUCTURED WORKOUT SYSTEM
 // ==========================================
 
+// ==========================================
+// WORKOUT PLAN SYSTEM
+// ==========================================
+
+function listenToPlans(uid) {
+  const q = query(
+    collection(db, "workout_plans"),
+    where("userId", "==", uid)
+  );
+  unsubscribePlans = onSnapshot(q, (snapshot) => {
+    const plans = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      if (data.status !== 'active') return;
+      const createdAt = data.createdAt?.toMillis ? data.createdAt.toMillis() : data.createdAt;
+      plans.push({ id: doc.id, ...data, createdAt });
+    });
+    plans.sort((a, b) => b.createdAt - a.createdAt);
+    lastWorkoutPlans = plans;
+    renderPlansUI();
+  }, (error) => {
+    console.error('Plans stream error', error.code, error.message);
+  });
+}
+
+function renderPlansUI() {
+  const container = document.getElementById('saved-plans-inline');
+  const countEl = document.getElementById('saved-plans-count');
+  if (!container) return;
+
+  if (countEl) countEl.textContent = lastWorkoutPlans.length;
+
+  if (!lastWorkoutPlans.length) {
+    container.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">No saved plans yet.</p>';
+    return;
+  }
+
+  container.innerHTML = lastWorkoutPlans.map(plan => renderPlanCard(plan)).join('');
+}
+
+function renderPlanCard(plan) {
+  const type = plan.type || 'AMRAP';
+  const badgeClass = type.toLowerCase();
+  const dateStr = new Date(plan.createdAt).toLocaleDateString();
+
+  let movementsHtml = '';
+  const structure = plan.structure || {};
+
+  if (type === 'EMOM') {
+    const minutes = structure.minutes || [];
+    movementsHtml = minutes.map((m, idx) => {
+      const mov = m.movements?.[0];
+      if (!mov) return '';
+      const wt = mov.weight ? ` @ ${mov.weight}kg` : '';
+      return `<span class="movement-chip">${idx + 1}: ${escapeHtml(mov.exerciseId)} \u00D7 ${mov.reps}${wt}</span>`;
+    }).join('');
+  } else {
+    const movements = structure.movements || [];
+    movementsHtml = movements.map(m => {
+      const wt = m.weight ? ` @ ${m.weight}kg` : '';
+      return `<span class="movement-chip">${escapeHtml(m.exerciseId)} \u00D7 ${m.reps}${wt}</span>`;
+    }).join('');
+  }
+
+  return `
+<div class="structured-card p-4 rounded-2xl mb-3 shadow-2xl shadow-slate-950/60 transition-all duration-200" style="background-color: var(--slate-900);">
+    <div class="flex justify-between items-start mb-2">
+      <div>
+        <span class="workout-type-badge ${badgeClass}">${escapeHtml(type)}</span>
+        <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm mt-1">${escapeHtml(plan.name)}</h4>
+        <p class="text-slate-500 text-[10px] font-mono mt-0.5">${dateStr}</p>
+      </div>
+    </div>
+    <div class="flex flex-wrap gap-1.5 mt-2 mb-3">
+      ${movementsHtml}
+    </div>
+    <div class="flex gap-2">
+      <button type="button" onclick="loadPlan('${plan.id}')" class="btn-core is-secondary btn-size-row">Load</button>
+      <button type="button" onclick="deletePlan('${plan.id}')" class="btn-core is-ghost btn-size-row">Delete</button>
+    </div>
+</div>`;
+}
+
+async function deletePlan(planId) {
+  if (!currentUser) return;
+  if (!confirm('Delete this saved plan?')) return;
+  try {
+    await updateDoc(doc(db, "workout_plans", planId), { status: 'deleted' });
+    haptic(HAPTIC.confirm);
+  } catch (err) {
+    console.error('Delete plan failed', err.code, err.message);
+    alert('Failed to delete plan: ' + err.message);
+  }
+}
+
+function loadPlan(planId) {
+  const plan = lastWorkoutPlans.find(p => p.id === planId);
+  if (!plan) return;
+
+  const typeSelect = document.getElementById('workout-type');
+  if (typeSelect) typeSelect.value = plan.type;
+  handleWorkoutTypeChange();
+
+  const structure = plan.structure || {};
+
+  switch (plan.type) {
+    case 'AMRAP': populateAmrapForm(structure); break;
+    case 'EMOM': populateEmomForm(structure); break;
+    case 'FOR_TIME': populateForTimeForm(structure); break;
+    case 'INTERVAL': populateIntervalForm(structure); break;
+  }
+
+  showFeedback(`Plan "${plan.name}" loaded!`, 'emerald', `${plan.type.toLowerCase()}Feedback`);
+  haptic(HAPTIC.tap);
+}
+
+function populateAmrapForm(structure) {
+  if (structure.durationSeconds) {
+    document.getElementById('amrap-duration').value = Math.round(structure.durationSeconds / 60);
+  }
+  const list = document.getElementById('movement-list');
+  if (list) list.innerHTML = '';
+  (structure.movements || []).forEach(m => addMovementRow('movement-list', m.exerciseId));
+  setTimeout(() => {
+    document.querySelectorAll('#movement-list .movement-row').forEach((row, i) => {
+      const mov = structure.movements[i];
+      if (!mov) return;
+      const repsInput = row.querySelector('.movement-reps');
+      const weightInput = row.querySelector('.movement-weight');
+      if (repsInput) repsInput.value = mov.reps;
+      if (weightInput) weightInput.value = mov.weight || '';
+    });
+  }, 0);
+}
+
+function populateEmomForm(structure) {
+  if (structure.intervalSeconds) {
+    const mins = Math.floor(structure.intervalSeconds / 60);
+    const secs = structure.intervalSeconds % 60;
+    document.getElementById('emom-interval-min').value = mins || '';
+    document.getElementById('emom-interval-sec').value = secs || '';
+  }
+  const mode = structure.mode || 'sequence';
+  switchEmomMode(mode);
+  if (mode !== 'by_round' && structure.rounds) {
+    document.getElementById('emom-rounds').value = structure.rounds;
+  }
+  const slots = document.getElementById('emom-minute-slots');
+  if (slots) slots.innerHTML = '';
+  (structure.minutes || []).forEach(m => {
+    const mov = m.movements?.[0];
+    addMinuteSlot(mov?.exerciseId);
+  });
+  setTimeout(() => {
+    document.querySelectorAll('#emom-minute-slots .minute-row').forEach((row, i) => {
+      const mov = structure.minutes?.[i]?.movements?.[0];
+      if (!mov) return;
+      const repsInput = row.querySelector('.movement-reps');
+      const weightInput = row.querySelector('.movement-weight');
+      if (repsInput) repsInput.value = mov.reps;
+      if (weightInput) weightInput.value = mov.weight || '';
+    });
+  }, 0);
+}
+
+function populateForTimeForm(structure) {
+  if (structure.durationMinutes) {
+    document.getElementById('fortime-cap').value = structure.durationMinutes;
+  }
+  if (structure.rounds) {
+    document.getElementById('fortime-rounds').value = structure.rounds;
+  }
+  // Reset DNF state
+  const dnfCheck = document.getElementById('fortime-dnf');
+  if (dnfCheck) { dnfCheck.checked = false; toggleForTimeDnf(); }
+  const list = document.getElementById('fortime-movement-list');
+  if (list) list.innerHTML = '';
+  (structure.movements || []).forEach(m => addMovementRow('fortime-movement-list', m.exerciseId));
+  setTimeout(() => {
+    document.querySelectorAll('#fortime-movement-list .movement-row').forEach((row, i) => {
+      const mov = structure.movements[i];
+      if (!mov) return;
+      const repsInput = row.querySelector('.movement-reps');
+      const weightInput = row.querySelector('.movement-weight');
+      if (repsInput) repsInput.value = mov.reps;
+      if (weightInput) weightInput.value = mov.weight || '';
+    });
+  }, 0);
+}
+
+function populateIntervalForm(structure) {
+  if (structure.rounds) {
+    document.getElementById('interval-rounds').value = structure.rounds;
+  }
+  if (structure.workSeconds) {
+    document.getElementById('interval-work-min').value = Math.round(structure.workSeconds / 60);
+  }
+  if (structure.restSeconds) {
+    document.getElementById('interval-rest-min').value = Math.round(structure.restSeconds / 60);
+  }
+  const list = document.getElementById('interval-movement-list');
+  if (list) list.innerHTML = '';
+  (structure.movements || []).forEach(m => addMovementRow('interval-movement-list', m.exerciseId));
+  setTimeout(() => {
+    document.querySelectorAll('#interval-movement-list .movement-row').forEach((row, i) => {
+      const mov = structure.movements[i];
+      if (!mov) return;
+      const repsInput = row.querySelector('.movement-reps');
+      const weightInput = row.querySelector('.movement-weight');
+      if (repsInput) repsInput.value = mov.reps;
+      if (weightInput) weightInput.value = mov.weight || '';
+    });
+  }, 0);
+}
+
+// Plan name modal — replaces prompt() with themed overlay
+let planNameResolve = null;
+
+function showPlanNameModal(defaultName) {
+  return new Promise((resolve) => {
+    planNameResolve = resolve;
+    const modal = document.getElementById('plan-name-modal');
+    const input = document.getElementById('plan-name-input');
+    const feedback = document.getElementById('plan-name-feedback');
+    const saveBtn = document.getElementById('plan-name-save');
+    const cancelBtn = document.getElementById('plan-name-cancel');
+    if (!modal || !input) { resolve(null); return; }
+
+    input.value = defaultName || '';
+    feedback.textContent = '';
+    modal.classList.remove('hidden');
+    setTimeout(() => input.focus(), 100);
+
+    function cleanup() {
+      modal.classList.add('hidden');
+      saveBtn.removeEventListener('click', onSave);
+      cancelBtn.removeEventListener('click', onCancel);
+      input.removeEventListener('keydown', onKey);
+    }
+
+    function onSave() {
+      const val = input.value.trim();
+      if (!val) {
+        feedback.textContent = 'Enter a plan name.';
+        feedback.className = 'text-xs text-rose-400 font-medium text-center h-4';
+        input.focus();
+        return;
+      }
+      cleanup();
+      planNameResolve(val);
+      planNameResolve = null;
+    }
+
+    function onCancel() {
+      cleanup();
+      planNameResolve(null);
+      planNameResolve = null;
+    }
+
+    function onKey(e) {
+      if (e.key === 'Enter') onSave();
+      if (e.key === 'Escape') onCancel();
+    }
+
+    saveBtn.addEventListener('click', onSave);
+    cancelBtn.addEventListener('click', onCancel);
+    input.addEventListener('keydown', onKey);
+  });
+}
+
+async function saveAmrapPlan() {
+  if (!currentUser) return alert('Please sign in first.');
+  const durationMin = parseInt(document.getElementById('amrap-duration').value, 10);
+  let movements;
+  try {
+    movements = getMovementData('#movement-list .movement-row');
+  } catch (err) {
+    return showFeedback(err.message, 'red', 'amrapFeedback');
+  }
+  if (!durationMin || durationMin < 1) return showFeedback('Enter a valid duration.', 'red', 'amrapFeedback');
+  if (movements.length === 0) return showFeedback('Add at least one movement.', 'red', 'amrapFeedback');
+
+  const autoName = `${durationMin} Min AMRAP`;
+  const name = await showPlanNameModal(autoName);
+  if (!name) return;
+
+  const planDoc = {
+    userId: currentUser.uid,
+    name: name.trim() || autoName,
+    type: 'AMRAP',
+    structure: { durationSeconds: durationMin * 60, movements },
+    status: 'active',
+    createdAt: Date.now()
+  };
+
+  addDoc(collection(db, "workout_plans"), planDoc).then(() => {
+    showFeedback('AMRAP plan saved!', 'emerald', 'amrapFeedback');
+    haptic(HAPTIC.confirm);
+  }).catch(err => {
+    console.error('Save plan failed', err.code, err.message);
+    showFeedback('Failed to save plan: ' + err.message, 'red', 'amrapFeedback');
+  });
+}
+
+async function saveEmomPlan() {
+  if (!currentUser) return alert('Please sign in first.');
+  const intervalMin = parseInt(document.getElementById('emom-interval-min').value, 10) || 0;
+  const intervalSec = parseInt(document.getElementById('emom-interval-sec').value, 10) || 0;
+  const intervalSeconds = intervalMin * 60 + intervalSec;
+  let minutes;
+  try {
+    minutes = getEmomMovementData();
+  } catch (err) {
+    return showFeedback(err.message, 'red', 'emomFeedback');
+  }
+  const rounds = emomMode === 'by_round' ? minutes.length : parseInt(document.getElementById('emom-rounds').value, 10);
+  if (!rounds || rounds < 1) return showFeedback('Enter a valid number of rounds.', 'red', 'emomFeedback');
+  if (intervalSeconds < 1) return showFeedback('Enter a valid interval.', 'red', 'emomFeedback');
+  if (minutes.length === 0) return showFeedback('Add at least one interval slot.', 'red', 'emomFeedback');
+
+  const durationSeconds = rounds * intervalSeconds;
+  const durationMinutes = Math.floor(durationSeconds / 60);
+  let intervalLabel;
+  if (intervalSeconds === 60) { intervalLabel = 'EMOM'; }
+  else if (intervalSeconds === 120) { intervalLabel = 'E2MOM'; }
+  else if (intervalSeconds === 180) { intervalLabel = 'E3MOM'; }
+  else if (intervalMin > 0 && intervalSec === 0) { intervalLabel = `E${intervalMin}MOM`; }
+  else if (intervalMin > 0) { intervalLabel = `Every ${intervalMin}:${String(intervalSec).padStart(2, '0')}`; }
+  else { intervalLabel = `Every :${String(intervalSec).padStart(2, '0')}`; }
+  const prefix = durationSeconds % 60 === 0 ? `${durationSeconds / 60} Min ` : '';
+  const autoName = `${prefix}${intervalLabel} \u00D7 ${rounds} rounds`;
+  const name = await showPlanNameModal(autoName);
+  if (!name) return;
+
+  const planDoc = {
+    userId: currentUser.uid,
+    name: name.trim() || autoName,
+    type: 'EMOM',
+    structure: { mode: emomMode, rounds, durationMinutes, intervalSeconds, minutes },
+    status: 'active',
+    createdAt: Date.now()
+  };
+
+  addDoc(collection(db, "workout_plans"), planDoc).then(() => {
+    showFeedback('EMOM plan saved!', 'emerald', 'emomFeedback');
+    haptic(HAPTIC.confirm);
+  }).catch(err => {
+    console.error('Save plan failed', err.code, err.message);
+    showFeedback('Failed to save plan: ' + err.message, 'red', 'emomFeedback');
+  });
+}
+
+async function saveForTimePlan() {
+  if (!currentUser) return alert('Please sign in first.');
+  const timeCap = parseInt(document.getElementById('fortime-cap').value, 10) || 0;
+  const rounds = parseInt(document.getElementById('fortime-rounds').value, 10);
+  let movements;
+  try {
+    movements = getMovementData('#fortime-movement-list .movement-row');
+  } catch (err) {
+    return showFeedback(err.message, 'red', 'fortimeFeedback');
+  }
+  if (!rounds || rounds < 1) return showFeedback('Enter a valid round count.', 'red', 'fortimeFeedback');
+  if (movements.length === 0) return showFeedback('Add at least one movement.', 'red', 'fortimeFeedback');
+
+  const autoName = timeCap ? `${timeCap} Min For Time` : 'For Time';
+  const name = await showPlanNameModal(autoName);
+  if (!name) return;
+
+  const planDoc = {
+    userId: currentUser.uid,
+    name: name.trim() || autoName,
+    type: 'FOR_TIME',
+    structure: { durationMinutes: timeCap || null, movements, rounds },
+    status: 'active',
+    createdAt: Date.now()
+  };
+
+  addDoc(collection(db, "workout_plans"), planDoc).then(() => {
+    showFeedback('For Time plan saved!', 'emerald', 'fortimeFeedback');
+    haptic(HAPTIC.confirm);
+  }).catch(err => {
+    console.error('Save plan failed', err.code, err.message);
+    showFeedback('Failed to save plan: ' + err.message, 'red', 'fortimeFeedback');
+  });
+}
+
+async function saveIntervalPlan() {
+  if (!currentUser) return alert('Please sign in first.');
+  const rounds = parseInt(document.getElementById('interval-rounds').value, 10);
+  const workMin = parseInt(document.getElementById('interval-work-min').value, 10) || 0;
+  const restMin = parseInt(document.getElementById('interval-rest-min').value, 10) || 0;
+  let movements;
+  try {
+    movements = getMovementData('#interval-movement-list .movement-row');
+  } catch (err) {
+    return showFeedback(err.message, 'red', 'intervalFeedback');
+  }
+  if (!rounds || rounds < 1) return showFeedback('Enter a valid round count.', 'red', 'intervalFeedback');
+  if (movements.length === 0) return showFeedback('Add at least one movement.', 'red', 'intervalFeedback');
+
+  const workSeconds = workMin * 60;
+  const restSeconds = restMin * 60;
+  const autoName = `${workMin}:${restMin} \u00D7 ${rounds} INTERVAL`;
+  const name = await showPlanNameModal(autoName);
+  if (!name) return;
+
+  const planDoc = {
+    userId: currentUser.uid,
+    name: name.trim() || autoName,
+    type: 'INTERVAL',
+    structure: { rounds, workSeconds, restSeconds, movements },
+    status: 'active',
+    createdAt: Date.now()
+  };
+
+  addDoc(collection(db, "workout_plans"), planDoc).then(() => {
+    showFeedback('Interval plan saved!', 'emerald', 'intervalFeedback');
+    haptic(HAPTIC.confirm);
+  }).catch(err => {
+    console.error('Save plan failed', err.code, err.message);
+    showFeedback('Failed to save plan: ' + err.message, 'red', 'intervalFeedback');
+  });
+}
+
+// ==========================================
+// END WORKOUT PLAN SYSTEM
+// ==========================================
+
 // Render Existing Logs
 function renderLogs(workouts) {
     const logContainer = document.getElementById('workout-list');
@@ -2948,3 +3383,9 @@ window.toggleForTimeDnf = toggleForTimeDnf;
 window.selectCalendarDay = selectCalendarDay;
 window.changeCalendarMonth = changeCalendarMonth;
 window.closeCalendarDayDetail = closeCalendarDayDetail;
+window.saveAmrapPlan = saveAmrapPlan;
+window.saveEmomPlan = saveEmomPlan;
+window.saveForTimePlan = saveForTimePlan;
+window.saveIntervalPlan = saveIntervalPlan;
+window.loadPlan = loadPlan;
+window.deletePlan = deletePlan;
