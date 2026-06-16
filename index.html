@@ -396,7 +396,7 @@
           <form id="emom-form" class="space-y-4 hidden">
             <div class="inline-flex gap-1 p-0.5 w-fit rounded-xl bg-slate-800/60">
               <button id="emom-mode-seq" type="button" class="btn-core is-primary btn-size-row" onclick="switchEmomMode('sequence')">Sequence</button>
-              <button id="emom-mode-by-minute" type="button" class="btn-core is-ghost btn-size-row" onclick="switchEmomMode('by_minute')">By Minute</button>
+              <button id="emom-mode-by-round" type="button" class="btn-core is-ghost btn-size-row" onclick="switchEmomMode('by_round')">By Round</button>
             </div>
 
             <div>
@@ -409,7 +409,7 @@
               </div>
             </div>
 
-            <div>
+            <div id="emom-rounds-field">
               <label class="form-label">Rounds</label>
               <input type="number" id="emom-rounds" placeholder="10" min="1" step="1" class="input-core" required />
               <p class="text-xs text-slate-400 mt-1">Duration: <span id="emom-duration-display">—</span></p>
