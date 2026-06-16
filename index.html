@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="icon" type="image/png" href="irontrack.png">
   <link rel="manifest" href="manifest.json?v=2">
-  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4" defer></script>
 </head>
@@ -832,7 +832,7 @@
 <script type="module" src="app.js" defer></script>
 <script>
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js");
+    navigator.serviceWorker.register("sw.js", { updateViaCache: "none" });
   }
 </script>
 
