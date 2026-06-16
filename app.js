@@ -906,6 +906,7 @@ function getRankingTier(score, system, gender) {
 // ==========================================
 
 let workoutMode = 'set';
+let emomMode = 'sequence';
 
 function switchWorkoutMode(mode) {
   workoutMode = mode;
@@ -1161,6 +1162,7 @@ function handleWorkoutTypeChange() {
   if (type === 'EMOM') {
     emomForm.classList.remove('hidden');
     desc.textContent = 'Record an EMOM (Every Minute On the Minute) workout.';
+    switchEmomMode(emomMode);
     updateEmomSummary(); updateEmomDurationDisplay();
   } else if (type === 'FOR_TIME') {
     forTimeForm.classList.remove('hidden');
@@ -1175,16 +1177,39 @@ function handleWorkoutTypeChange() {
   populateMovementDropdowns();
 }
 
+function switchEmomMode(mode) {
+  emomMode = mode;
+  const btnSeq = document.getElementById('emom-mode-seq');
+  const btnByMin = document.getElementById('emom-mode-by-minute');
+  const heading = document.getElementById('emom-slot-heading');
+  const addBtn = document.getElementById('emom-add-slot-btn');
+  if (btnSeq && btnByMin) {
+    if (mode === 'sequence') {
+      btnSeq.className = 'btn-core is-primary btn-size-row';
+      btnByMin.className = 'btn-core is-ghost btn-size-row';
+    } else {
+      btnSeq.className = 'btn-core is-ghost btn-size-row';
+      btnByMin.className = 'btn-core is-primary btn-size-row';
+    }
+  }
+  if (heading) heading.textContent = mode === 'sequence' ? 'Sequence' : 'Minute Schedule';
+  if (addBtn) addBtn.textContent = mode === 'sequence' ? '+ Add Interval' : '+ Add Minute';
+  document.querySelectorAll('#emom-minute-slots .minute-label').forEach((el, i) => {
+    el.textContent = mode === 'sequence' ? `#${i + 1}` : `Minute ${i + 1}`;
+  });
+}
+
 function addMinuteSlot(exerciseName) {
   const container = document.getElementById('emom-minute-slots');
   if (!container) return;
   const count = container.children.length + 1;
+  const label = emomMode === 'sequence' ? `#${count}` : `Minute ${count}`;
   const row = document.createElement('div');
   row.className = 'minute-row flex gap-2 items-end';
   row.innerHTML = `
     <div class="flex-1">
-      <span class="text-xs text-slate-500 font-mono mr-1 inline-block w-10">#${count}</span>
-      <select class="movement-exercise dropdown-core w-[calc(100%-3rem)] inline-block" onchange="handleMovementExerciseChange(this)">
+      <span class="minute-label text-xs text-slate-500 font-mono mr-1 inline-block w-24">${label}</span>
+      <select class="movement-exercise dropdown-core w-[calc(100%-7rem)] inline-block" onchange="handleMovementExerciseChange(this)">
         <option value="">Select exercise...</option>
       </select>
     </div>
@@ -1212,8 +1237,8 @@ function removeMinuteSlot(btn) {
   const container = document.getElementById('emom-minute-slots');
   if (container) {
     container.querySelectorAll('.minute-row').forEach((r, i) => {
-      const label = r.querySelector('.font-mono');
-      if (label) label.textContent = `#${i + 1}`;
+      const label = r.querySelector('.minute-label');
+      if (label) label.textContent = emomMode === 'sequence' ? `#${i + 1}` : `Minute ${i + 1}`;
     });
   }
   updateEmomSummary();
@@ -1263,8 +1288,12 @@ function updateEmomSummary() {
     }
     const prefix = totalSec % 60 === 0 ? `${totalSec / 60} Min ` : '';
     const name = `${prefix}${intervalLabel}`;
-    const exerciseLabel = slots === 1 ? 'exercise' : 'exercises';
-    textEl.textContent = `${name} \u00D7 ${rounds} rounds \u00B7 ${slots} ${exerciseLabel}`;
+    if (emomMode === 'sequence') {
+      const exerciseLabel = slots === 1 ? 'exercise' : 'exercises';
+      textEl.textContent = `${name} \u00D7 ${rounds} rounds \u00B7 ${slots}-${exerciseLabel} sequence`;
+    } else {
+      textEl.textContent = `${name} \u00D7 ${rounds} rounds \u00B7 ${slots} minute slots`;
+    }
     summaryEl.classList.remove('hidden');
   } else {
     summaryEl.classList.add('hidden');
@@ -1327,6 +1356,9 @@ async function submitEmomWorkout(e) {
   if (roundsCompleted < 0) return showFeedback('Enter rounds completed.', 'red', 'emomFeedback');
   if (roundsCompleted > rounds) return showFeedback('Rounds completed cannot exceed total rounds.', 'red', 'emomFeedback');
   if (minutes.length === 0) return showFeedback('Add at least one interval slot.', 'red', 'emomFeedback');
+  if (emomMode === 'by_minute' && minutes.length !== rounds) {
+    return showFeedback(`Number of minute slots (${minutes.length}) must equal total rounds (${rounds}).`, 'red', 'emomFeedback');
+  }
 
   const durationSeconds = rounds * intervalSeconds;
   const durationMinutes = Math.floor(durationSeconds / 60);
@@ -1356,6 +1388,7 @@ async function submitEmomWorkout(e) {
     name,
     type: 'EMOM',
     structure: {
+      mode: emomMode,
       rounds,
       durationMinutes,
       intervalSeconds,
@@ -1372,7 +1405,7 @@ async function submitEmomWorkout(e) {
 
   try {
     const docRef = await addDoc(collection(db, "structured_workouts"), workoutDoc);
-    await generateEmomContributions(docRef.id, minutes, roundsCompleted);
+    await generateEmomContributions(docRef.id, minutes, roundsCompleted, emomMode);
 
     document.getElementById('emom-form').reset();
     document.getElementById('emom-minute-slots').innerHTML = '';
@@ -1391,22 +1424,28 @@ async function submitEmomWorkout(e) {
   }
 }
 
-async function generateEmomContributions(workoutId, minutes, minutesCompleted) {
+async function generateEmomContributions(workoutId, minutes, minutesCompleted, mode) {
   const bw = userBiometrics.bodyweight || 0;
   const numMinutes = minutes.length;
   const now = Date.now();
+  const isByMinute = mode === 'by_minute';
 
   if (numMinutes === 0 || minutesCompleted <= 0) return;
-
-  const fullRounds = Math.floor(minutesCompleted / numMinutes);
-  const remainder = minutesCompleted % numMinutes;
 
   for (let i = 0; i < minutes.length; i++) {
     const slot = minutes[i];
     if (!slot.movements || slot.movements.length === 0) continue;
     const movement = slot.movements[0];
     if (getExerciseInfo(movement.exerciseId).category === 'cardio') continue;
-    const performedTimes = fullRounds + (i < remainder ? 1 : 0);
+
+    let performedTimes;
+    if (isByMinute) {
+      performedTimes = i < minutesCompleted ? 1 : 0;
+    } else {
+      const fullRounds = Math.floor(minutesCompleted / numMinutes);
+      const remainder = minutesCompleted % numMinutes;
+      performedTimes = fullRounds + (i < remainder ? 1 : 0);
+    }
     if (performedTimes <= 0) continue;
 
     const totalRepsPerMovement = movement.reps * performedTimes;
@@ -2125,10 +2164,12 @@ function renderStructuredWorkoutCard(sw) {
 
   if (type === 'EMOM') {
     const minutes = sw.structure?.minutes || [];
-    movementsHtml = minutes.map(m => {
+    const isByMinute = sw.structure?.mode === 'by_minute';
+    movementsHtml = minutes.map((m, idx) => {
       const mov = m.movements?.[0];
       if (!mov) return '';
-      return `<span class="movement-chip">${escapeHtml(mov.exerciseId)} × ${mov.reps}</span>`;
+      const label = isByMinute ? `Min ${idx + 1}: ` : '';
+      return `<span class="movement-chip">${label}${escapeHtml(mov.exerciseId)} × ${mov.reps}</span>`;
     }).join('');
     durationLabel = `${sw.structure?.durationMinutes || 0} min`;
     const intSec = sw.structure?.intervalSeconds;
@@ -2444,6 +2485,12 @@ if (intervalPartial) intervalPartial.addEventListener('input', updateIntervalSco
 if (document.getElementById('interval-movement-list')) {
   addIntervalMovementRow();
 }
+
+// EMOM mode toggle
+const emomModeSeq = document.getElementById('emom-mode-seq');
+const emomModeByMin = document.getElementById('emom-mode-by-minute');
+if (emomModeSeq) emomModeSeq.addEventListener('click', () => switchEmomMode('sequence'));
+if (emomModeByMin) emomModeByMin.addEventListener('click', () => switchEmomMode('by_minute'));
 
 // EMOM minute slot changes re-trigger rounds calc
 const emomMinuteSlots = document.getElementById('emom-minute-slots');

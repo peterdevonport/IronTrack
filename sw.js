@@ -1,5 +1,5 @@
 const CACHE = "irontrack-v2";
-const URLS = ["/", "/index.html", "/style.css", "/app.js", "/manifest.json", "/irontrack.png"];
+const URLS = ["./", "./index.html", "./style.css", "./app.js", "./manifest.json", "./irontrack.png"];
 
 self.addEventListener("install", (e) => {
   self.skipWaiting();
