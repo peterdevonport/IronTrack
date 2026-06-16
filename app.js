@@ -975,8 +975,9 @@ function handleMovementExerciseChange(selectEl) {
   }
 }
 
-function addMovementRow(exerciseName) {
-  const container = document.getElementById('movement-list');
+function addMovementRow(containerId, exerciseName) {
+  if (!containerId) containerId = 'movement-list';
+  const container = document.getElementById(containerId);
   if (!container) return;
   const row = document.createElement('div');
   row.className = 'movement-row flex gap-2 items-end';
@@ -1005,7 +1006,8 @@ function addMovementRow(exerciseName) {
 function removeMovementRow(btn) {
   const row = btn.closest('.movement-row');
   if (row) row.remove();
-  updateAmrapScorePreview();
+  const container = btn.closest('#movement-list, #fortime-movement-list, #interval-movement-list');
+  if (container?.id === 'movement-list') updateAmrapScorePreview();
 }
 
 function getMovementData(containerSelector) {
@@ -1483,33 +1485,6 @@ async function generateEmomContributions(workoutId, minutes, minutesCompleted, m
 
 // ─── FOR_TIME Functions ────────────────────────────────────────────────────
 
-function addForTimeMovementRow(exerciseName) {
-  const container = document.getElementById('fortime-movement-list');
-  if (!container) return;
-  const row = document.createElement('div');
-  row.className = 'movement-row flex gap-2 items-end';
-  row.innerHTML = `
-    <div class="flex-1">
-      <select class="movement-exercise dropdown-core" onchange="handleMovementExerciseChange(this)">
-        <option value="">Select exercise...</option>
-      </select>
-    </div>
-    <div class="w-16">
-      <input type="number" class="movement-reps input-core" placeholder="Reps" min="1" step="1" />
-    </div>
-    <div class="w-20">
-      <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
-    </div>
-    <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none">X</button>
-  `;
-  container.appendChild(row);
-  populateMovementDropdowns();
-  if (exerciseName) {
-    const sel = row.querySelector('.movement-exercise');
-    if (sel) { sel.value = exerciseName; handleMovementExerciseChange(sel); }
-  }
-}
-
 function toggleForTimeDnf() {
   const dnf = document.getElementById('fortime-dnf')?.checked;
   const timeInputs = document.getElementById('fortime-time-inputs');
@@ -1600,7 +1575,7 @@ async function submitForTimeWorkout(e) {
 
     document.getElementById('for-time-form').reset();
     document.getElementById('fortime-movement-list').innerHTML = '';
-    addForTimeMovementRow();
+    addMovementRow('fortime-movement-list');
     toggleForTimeDnf();
     document.getElementById('fortime-score-preview').textContent = '—';
     showFeedback('For Time workout saved!', 'emerald', 'fortimeFeedback');
@@ -1646,33 +1621,6 @@ async function generateForTimeContributions(workoutId, movements, rounds, remain
 }
 
 // ─── INTERVAL Functions ───────────────────────────────────────────────────
-
-function addIntervalMovementRow(exerciseName) {
-  const container = document.getElementById('interval-movement-list');
-  if (!container) return;
-  const row = document.createElement('div');
-  row.className = 'movement-row flex gap-2 items-end';
-  row.innerHTML = `
-    <div class="flex-1">
-      <select class="movement-exercise dropdown-core" onchange="handleMovementExerciseChange(this)">
-        <option value="">Select exercise...</option>
-      </select>
-    </div>
-    <div class="w-16">
-      <input type="number" class="movement-reps input-core" placeholder="Reps" min="1" step="1" />
-    </div>
-    <div class="w-20">
-      <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
-    </div>
-    <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none">X</button>
-  `;
-  container.appendChild(row);
-  populateMovementDropdowns();
-  if (exerciseName) {
-    const sel = row.querySelector('.movement-exercise');
-    if (sel) { sel.value = exerciseName; handleMovementExerciseChange(sel); }
-  }
-}
 
 function updateIntervalScorePreview() {
   const rounds = parseInt(document.getElementById('interval-rounds-completed')?.value, 10) || 0;
@@ -1738,7 +1686,7 @@ async function submitIntervalWorkout(e) {
 
     document.getElementById('interval-form').reset();
     document.getElementById('interval-movement-list').innerHTML = '';
-    addIntervalMovementRow();
+    addMovementRow('interval-movement-list');
     document.getElementById('interval-score-preview').textContent = '—';
     showFeedback('Interval workout saved!', 'emerald', 'intervalFeedback');
     haptic(HAPTIC.confirm);
@@ -2385,10 +2333,10 @@ if (fortimeCapReps) fortimeCapReps.addEventListener('input', updateForTimeScoreP
 
 // Initial movement row for FOR_TIME
 if (document.getElementById('fortime-movement-list')) {
-  addForTimeMovementRow();
-}
+    addMovementRow('fortime-movement-list');
+  }
 
-// INTERVAL Form Submit
+  // INTERVAL Form Submit
 const intervalForm = document.getElementById('interval-form');
 if (intervalForm) {
   intervalForm.addEventListener('submit', submitIntervalWorkout);
@@ -2402,10 +2350,10 @@ if (intervalPartial) intervalPartial.addEventListener('input', updateIntervalSco
 
 // Initial movement row for INTERVAL
 if (document.getElementById('interval-movement-list')) {
-  addIntervalMovementRow();
-}
+    addMovementRow('interval-movement-list');
+  }
 
-// EMOM mode toggle
+  // EMOM mode toggle
 const emomModeSeq = document.getElementById('emom-mode-seq');
 const emomModeByRound = document.getElementById('emom-mode-by-round');
 if (emomModeSeq) emomModeSeq.addEventListener('click', () => switchEmomMode('sequence'));
@@ -2943,9 +2891,7 @@ window.handleMovementExerciseChange = handleMovementExerciseChange;
 window.handleWorkoutTypeChange = handleWorkoutTypeChange;
 window.addMinuteSlot = addMinuteSlot;
 window.removeMinuteSlot = removeMinuteSlot;
-window.addForTimeMovementRow = addForTimeMovementRow;
 window.toggleForTimeDnf = toggleForTimeDnf;
-window.addIntervalMovementRow = addIntervalMovementRow;
 window.selectCalendarDay = selectCalendarDay;
 window.changeCalendarMonth = changeCalendarMonth;
 window.closeCalendarDayDetail = closeCalendarDayDetail;
