@@ -1102,8 +1102,42 @@ async function submitAmrapWorkout(e) {
   }
 }
 
-async function generateAmrapContributions(workoutId, movements, roundsCompleted, additionalReps) {
+async function writeStructuredLogEntry({ workoutId, movement, sets, totalReps, extraFields = {}, now = Date.now() }) {
   const bw = userBiometrics.bodyweight || 0;
+  const loadFactor = LOAD_FACTORS[movement.exerciseId];
+  let estimatedLoad = 0;
+  let weight = 0;
+
+  if (loadFactor !== undefined) {
+    estimatedLoad = bw * loadFactor;
+    weight = bw;
+  } else {
+    estimatedLoad = movement.weight || 0;
+    weight = movement.weight || 0;
+  }
+
+  const totalVolume = estimatedLoad * totalReps;
+
+  const logEntry = {
+    userId: currentUser.uid,
+    exercise: movement.exerciseId,
+    sets,
+    reps: movement.reps,
+    weight,
+    externalLoad: 0,
+    estimatedLoad,
+    totalVolume,
+    timestamp: now,
+    source: 'structured',
+    workoutId,
+    ...extraFields,
+    totalWorkReps: totalReps
+  };
+
+  await addDoc(collection(db, "workouts"), logEntry);
+}
+
+async function generateAmrapContributions(workoutId, movements, roundsCompleted, additionalReps) {
   const now = Date.now();
 
   for (const movement of movements) {
@@ -1111,38 +1145,12 @@ async function generateAmrapContributions(workoutId, movements, roundsCompleted,
     const totalRepsPerMovement = roundsCompleted * movement.reps + additionalReps;
     if (totalRepsPerMovement <= 0) continue;
 
-    const loadFactor = LOAD_FACTORS[movement.exerciseId];
-    let estimatedLoad = 0;
-    let weight = 0;
-    let externalLoad = 0;
-
-    if (loadFactor !== undefined) {
-      estimatedLoad = bw * loadFactor;
-      weight = bw;
-    } else {
-      estimatedLoad = movement.weight || 0;
-      weight = movement.weight || 0;
-    }
-
-    const totalVolume = estimatedLoad * totalRepsPerMovement;
-
-    const logEntry = {
-      userId: currentUser.uid,
-      exercise: movement.exerciseId,
+    await writeStructuredLogEntry({
+      workoutId, movement, now,
       sets: roundsCompleted,
-      reps: movement.reps,
-      weight,
-      externalLoad: 0,
-      estimatedLoad,
-      totalVolume,
-      timestamp: now,
-      source: 'structured',
-      workoutId,
-      additionalReps,
-      totalWorkReps: totalRepsPerMovement
-    };
-
-    await addDoc(collection(db, "workouts"), logEntry);
+      totalReps: totalRepsPerMovement,
+      extraFields: { additionalReps }
+    });
   }
 }
 
@@ -1440,9 +1448,8 @@ async function submitEmomWorkout(e) {
 }
 
 async function generateEmomContributions(workoutId, minutes, minutesCompleted, mode) {
-  const bw = userBiometrics.bodyweight || 0;
-  const numMinutes = minutes.length;
   const now = Date.now();
+  const numMinutes = minutes.length;
   const isByRound = mode === 'by_round';
 
   if (numMinutes === 0 || minutesCompleted <= 0) return;
@@ -1465,37 +1472,12 @@ async function generateEmomContributions(workoutId, minutes, minutesCompleted, m
 
     const totalRepsPerMovement = movement.reps * performedTimes;
 
-    const loadFactor = LOAD_FACTORS[movement.exerciseId];
-    let estimatedLoad = 0;
-    let weight = 0;
-
-    if (loadFactor !== undefined) {
-      estimatedLoad = bw * loadFactor;
-      weight = bw;
-    } else {
-      estimatedLoad = movement.weight || 0;
-      weight = movement.weight || 0;
-    }
-
-    const totalVolume = estimatedLoad * totalRepsPerMovement;
-
-    const logEntry = {
-      userId: currentUser.uid,
-      exercise: movement.exerciseId,
+    await writeStructuredLogEntry({
+      workoutId, movement, now,
       sets: performedTimes,
-      reps: movement.reps,
-      weight,
-      externalLoad: 0,
-      estimatedLoad,
-      totalVolume,
-      timestamp: now,
-      source: 'structured',
-      workoutId,
-      minuteIndex: i,
-      totalWorkReps: totalRepsPerMovement
-    };
-
-    await addDoc(collection(db, "workouts"), logEntry);
+      totalReps: totalRepsPerMovement,
+      extraFields: { minuteIndex: i }
+    });
   }
 }
 
@@ -1634,7 +1616,6 @@ async function submitForTimeWorkout(e) {
 }
 
 async function generateForTimeContributions(workoutId, movements, rounds, remainingReps = 0) {
-  const bw = userBiometrics.bodyweight || 0;
   const now = Date.now();
   const repsPerRound = movements.reduce((sum, m) => sum + (m.reps || 0), 0);
   const totalPlanned = repsPerRound * rounds;
@@ -1652,37 +1633,15 @@ async function generateForTimeContributions(workoutId, movements, rounds, remain
     const effectiveSets = fullRounds + (movementPartialReps === movement.reps ? 1 : 0);
     const displayPartialReps = movementPartialReps < movement.reps ? movementPartialReps : 0;
 
-    const loadFactor = LOAD_FACTORS[movement.exerciseId];
-    let estimatedLoad = 0;
-    let weight = 0;
+    const extraFields = {};
+    if (displayPartialReps > 0) extraFields.partialReps = displayPartialReps;
 
-    if (loadFactor !== undefined) {
-      estimatedLoad = bw * loadFactor;
-      weight = bw;
-    } else {
-      estimatedLoad = movement.weight || 0;
-      weight = movement.weight || 0;
-    }
-
-    const totalVolume = estimatedLoad * performedReps;
-
-    const logEntry = {
-      userId: currentUser.uid,
-      exercise: movement.exerciseId,
+    await writeStructuredLogEntry({
+      workoutId, movement, now,
       sets: effectiveSets,
-      reps: movement.reps,
-      weight,
-      externalLoad: 0,
-      estimatedLoad,
-      totalVolume,
-      timestamp: now,
-      source: 'structured',
-      workoutId,
-      ...(displayPartialReps > 0 && { partialReps: displayPartialReps }),
-      totalWorkReps: performedReps
-    };
-
-    await addDoc(collection(db, "workouts"), logEntry);
+      totalReps: performedReps,
+      extraFields
+    });
   }
 }
 
@@ -1794,7 +1753,6 @@ async function submitIntervalWorkout(e) {
 }
 
 async function generateIntervalContributions(workoutId, movements, roundsCompleted, partialReps = 0) {
-  const bw = userBiometrics.bodyweight || 0;
   const now = Date.now();
   let remainingPartial = partialReps;
 
@@ -1809,37 +1767,15 @@ async function generateIntervalContributions(workoutId, movements, roundsComplet
     const effectiveSets = roundsCompleted + (movementPartialReps === movement.reps ? 1 : 0);
     const displayPartialReps = movementPartialReps < movement.reps ? movementPartialReps : 0;
 
-    const loadFactor = LOAD_FACTORS[movement.exerciseId];
-    let estimatedLoad = 0;
-    let weight = 0;
+    const extraFields = {};
+    if (displayPartialReps > 0) extraFields.partialReps = displayPartialReps;
 
-    if (loadFactor !== undefined) {
-      estimatedLoad = bw * loadFactor;
-      weight = bw;
-    } else {
-      estimatedLoad = movement.weight || 0;
-      weight = movement.weight || 0;
-    }
-
-    const totalVolume = estimatedLoad * totalRepsPerMovement;
-
-    const logEntry = {
-      userId: currentUser.uid,
-      exercise: movement.exerciseId,
+    await writeStructuredLogEntry({
+      workoutId, movement, now,
       sets: effectiveSets,
-      reps: movement.reps,
-      weight,
-      externalLoad: 0,
-      estimatedLoad,
-      totalVolume,
-      timestamp: now,
-      source: 'structured',
-      workoutId,
-      ...(displayPartialReps > 0 && { partialReps: displayPartialReps }),
-      totalWorkReps: totalRepsPerMovement
-    };
-
-    await addDoc(collection(db, "workouts"), logEntry);
+      totalReps: totalRepsPerMovement,
+      extraFields
+    });
   }
 }
 
