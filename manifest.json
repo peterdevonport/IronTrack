@@ -1,0 +1,16 @@
+{
+  "name": "IronTrack",
+  "short_name": "IronTrack",
+  "description": "Analytics & Sync for weightlifting",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#34d399",
+  "icons": [
+    {
+      "src": "irontrack.png",
+      "sizes": "197x35",
+      "type": "image/png"
+    }
+  ]
+}
