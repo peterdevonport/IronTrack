@@ -7,7 +7,7 @@
   <title>IronTrack // Analytics & Sync</title>
 
   <link rel="stylesheet" href="style.css" />
-  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="icon" type="image/png" href="irontrack.png">
   <link rel="manifest" href="manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -394,6 +394,11 @@
 
           <!-- EMOM Form -->
           <form id="emom-form" class="space-y-4 hidden">
+            <div class="inline-flex gap-1 p-0.5 w-fit rounded-xl bg-slate-800/60">
+              <button id="emom-mode-seq" type="button" class="btn-core is-primary btn-size-row" onclick="switchEmomMode('sequence')">Sequence</button>
+              <button id="emom-mode-by-minute" type="button" class="btn-core is-ghost btn-size-row" onclick="switchEmomMode('by_minute')">By Minute</button>
+            </div>
+
             <div>
               <label class="form-label">Interval</label>
               <div class="flex gap-2 items-center">
@@ -412,8 +417,8 @@
 
             <div>
               <div class="flex justify-between items-center mb-2">
-                <label class="form-label">Sequence</label>
-                <button type="button" onclick="addMinuteSlot()" class="btn-core is-secondary btn-size-row">+ Add Interval</button>
+                <label class="form-label" id="emom-slot-heading">Sequence</label>
+                <button type="button" id="emom-add-slot-btn" onclick="addMinuteSlot()" class="btn-core is-secondary btn-size-row">+ Add Interval</button>
               </div>
               <div class="flex gap-2 text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-1">
                 <div class="flex-1">Movement</div>
@@ -424,8 +429,8 @@
               <div id="emom-minute-slots" class="space-y-2">
                 <div class="minute-row flex gap-2 items-end">
                   <div class="flex-1">
-                    <span class="text-xs text-slate-500 font-mono mr-1 inline-block w-10">#1</span>
-                    <select class="movement-exercise dropdown-core w-[calc(100%-3rem)] inline-block" onchange="handleMovementExerciseChange(this)">
+                    <span class="minute-label text-xs text-slate-500 font-mono mr-1 inline-block w-24">#1</span>
+                    <select class="movement-exercise dropdown-core w-[calc(100%-7rem)] inline-block" onchange="handleMovementExerciseChange(this)">
                       <option value="">Select exercise...</option>
                     </select>
                   </div>
