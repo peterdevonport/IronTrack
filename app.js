@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential, updatePassword, deleteUser } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, collection, addDoc, query, where, onSnapshot, deleteDoc, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, serverTimestamp, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // Integrated Unique Firebase App Configuration
@@ -334,6 +334,17 @@ if (togglePasswordBtn) {
   });
 }
 
+document.querySelectorAll('.toggle-pw-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = document.getElementById(btn.dataset.target);
+    if (!target) return;
+    const isPassword = target.type === 'password';
+    target.type = isPassword ? 'text' : 'password';
+    btn.querySelector('.eye-icon').classList.toggle('hidden', !isPassword);
+    btn.querySelector('.eye-off-icon').classList.toggle('hidden', isPassword);
+  });
+});
+
 // Forgot Password Flow
 const forgotPasswordBtn = document.getElementById('forgot-password-btn');
 const forgotPasswordSection = document.getElementById('forgot-password-section');
@@ -403,10 +414,15 @@ async function pullProfileMetrics(uid) {
         const docRef = doc(db, "profiles", uid);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-            userBiometrics = { gender: 'male', bodyweight: 75, ...docSnap.data() };
+            userBiometrics = { gender: 'male', bodyweight: 75, displayName: '', ...docSnap.data() };
             document.getElementById('profile-gender').value = userBiometrics.gender;
             document.getElementById('profile-weight').value = userBiometrics.bodyweight;
+            document.getElementById('profile-display-name').value = userBiometrics.displayName || '';
         }
+        const emailEl = document.getElementById('profile-email');
+        if (emailEl && auth.currentUser) emailEl.value = auth.currentUser.email || '';
+        const saveBtn = document.getElementById('save-profile-btn');
+        if (saveBtn) saveBtn.disabled = true;
     } catch (err) {
         console.error('Failed to load profile metrics', err.code, err.message);
         showFeedback('Unable to load profile metrics. Check Firestore rules for profiles.', 'red');
@@ -612,21 +628,166 @@ profileForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!currentUser) return;
     
+    const displayName = document.getElementById('profile-display-name').value.trim()
+        || currentUser.email?.split('@')[0]
+        || 'Anonymous Cyber-Lifter';
+    document.getElementById('profile-display-name').value = displayName;
+
     userBiometrics = {
         gender: document.getElementById('profile-gender').value,
-        bodyweight: parseFloat(document.getElementById('profile-weight').value)
+        bodyweight: parseFloat(document.getElementById('profile-weight').value),
+        displayName
     };
 
     try {
         await setDoc(doc(db, "profiles", currentUser.uid), userBiometrics, { merge: true });
         processAnalytics();
-        showFeedback('Biometrics updated successfully!', 'emerald', 'profileFeedback');
+        showFeedback('Profile updated successfully!', 'emerald', 'profileFeedback');
+        saveProfileBtn.disabled = true;
         haptic(HAPTIC.confirm);
     } catch (err) {
-        console.error('Failed to save biometrics', err.code, err.message);
+        console.error('Failed to save profile', err.code, err.message);
         showFeedback('Unable to update profile: ' + err.message, 'red', 'profileFeedback');
     }
 });
+
+// ── Profile form dirty-state tracking ────────────────────────
+const saveProfileBtn = document.getElementById('save-profile-btn');
+const profileFields = ['profile-display-name', 'profile-gender', 'profile-weight'];
+function enableSaveOnDirty() { saveProfileBtn.disabled = false; }
+profileFields.forEach(id => {
+  const el = document.getElementById(id);
+  if (el) {
+    el.addEventListener('input', enableSaveOnDirty);
+    el.addEventListener('change', enableSaveOnDirty);
+  }
+});
+
+// ── Change Password ────────────────────────────────────────────
+const changePasswordBtn = document.getElementById('change-password-btn');
+const changePasswordForm = document.getElementById('change-password-form');
+const cpCurrent = document.getElementById('cp-current');
+const cpNew = document.getElementById('cp-new');
+const cpConfirm = document.getElementById('cp-confirm');
+const cpCancel = document.getElementById('cp-cancel');
+const cpUpdate = document.getElementById('cp-update');
+const cpFeedback = document.getElementById('cp-feedback');
+
+if (changePasswordBtn && changePasswordForm) {
+  changePasswordBtn.addEventListener('click', () => {
+    changePasswordBtn.classList.add('hidden');
+    changePasswordForm.classList.remove('hidden');
+    cpFeedback.textContent = '';
+    cpFeedback.className = 'text-xs text-slate-500 font-medium h-4 text-center';
+  });
+}
+
+if (cpCancel) {
+  cpCancel.addEventListener('click', () => {
+    changePasswordForm.classList.add('hidden');
+    changePasswordBtn.classList.remove('hidden');
+    cpCurrent.value = '';
+    cpNew.value = '';
+    cpConfirm.value = '';
+    cpFeedback.textContent = '';
+  });
+}
+
+if (cpUpdate) {
+  cpUpdate.addEventListener('click', async () => {
+    const currentPw = cpCurrent.value;
+    const newPw = cpNew.value;
+    const confirmPw = cpConfirm.value;
+
+    if (!currentPw || !newPw || !confirmPw) {
+      cpFeedback.textContent = 'Fill in all password fields.';
+      cpFeedback.className = 'text-xs text-rose-400 font-medium h-4 text-center';
+      return;
+    }
+    if (newPw.length < 6) {
+      cpFeedback.textContent = 'New password must be at least 6 characters.';
+      cpFeedback.className = 'text-xs text-rose-400 font-medium h-4 text-center';
+      return;
+    }
+    if (newPw !== confirmPw) {
+      cpFeedback.textContent = 'New passwords do not match.';
+      cpFeedback.className = 'text-xs text-rose-400 font-medium h-4 text-center';
+      return;
+    }
+    if (newPw === currentPw) {
+      cpFeedback.textContent = 'New password must differ from current.';
+      cpFeedback.className = 'text-xs text-rose-400 font-medium h-4 text-center';
+      return;
+    }
+
+    cpUpdate.disabled = true;
+    cpUpdate.textContent = 'Updating...';
+    try {
+      const credential = EmailAuthProvider.credential(auth.currentUser.email, currentPw);
+      await reauthenticateWithCredential(auth.currentUser, credential);
+      await updatePassword(auth.currentUser, newPw);
+      cpFeedback.textContent = 'Password updated successfully!';
+      cpFeedback.className = 'text-xs text-emerald-400 font-medium h-4 text-center';
+      cpCurrent.value = '';
+      cpNew.value = '';
+      cpConfirm.value = '';
+      setTimeout(() => {
+        changePasswordForm.classList.add('hidden');
+        changePasswordBtn.classList.remove('hidden');
+        cpFeedback.textContent = '';
+      }, 2000);
+      haptic(HAPTIC.confirm);
+    } catch (err) {
+      const msg = err.code === 'auth/wrong-password'
+        ? 'Current password is incorrect.'
+        : err.code === 'auth/weak-password'
+        ? 'New password is too weak.'
+        : err.code === 'auth/requires-recent-login'
+        ? 'Please sign out and sign in again, then retry.'
+        : `Failed: ${err.message}`;
+      cpFeedback.textContent = msg;
+      cpFeedback.className = 'text-xs text-rose-400 font-medium h-4 text-center';
+    } finally {
+      cpUpdate.disabled = false;
+      cpUpdate.textContent = 'Update Password';
+    }
+  });
+}
+
+// ── Delete Account ─────────────────────────────────────────────
+const deleteAccountBtn = document.getElementById('delete-account-btn');
+
+if (deleteAccountBtn) {
+  deleteAccountBtn.addEventListener('click', async () => {
+    if (!auth.currentUser) return;
+    const email = auth.currentUser.email || 'Unknown';
+    const msg = `⚠️ PERMANENT ACTION ⚠️\n\nThis will permanently delete your IronTrack account.\n\nEmail: ${email}\n\nYour lifts and workout history will remain anonymised, but your profile, display name, and social connections will be lost forever.\n\nThis cannot be undone.\n\nType "DELETE" to confirm.`;
+    const input = prompt(msg);
+    if (input !== 'DELETE') return;
+
+    const pw = prompt('Enter your password to confirm deletion:');
+    if (!pw) return;
+
+    deleteAccountBtn.disabled = true;
+    deleteAccountBtn.textContent = 'Deleting...';
+    try {
+      const credential = EmailAuthProvider.credential(auth.currentUser.email, pw);
+      await reauthenticateWithCredential(auth.currentUser, credential);
+      await deleteDoc(doc(db, "profiles", auth.currentUser.uid));
+      await deleteUser(auth.currentUser);
+      haptic(HAPTIC.confirm);
+    } catch (err) {
+      const msg = err.code === 'auth/wrong-password'
+        ? 'Incorrect password. Account not deleted.'
+        : err.code === 'auth/requires-recent-login'
+        ? 'Session expired. Please sign out and sign in again, then retry.'
+        : `Failed to delete account: ${err.message}`;
+      showFeedback(msg, 'red', 'profileFeedback');
+      deleteAccountBtn.disabled = false;
+      deleteAccountBtn.textContent = 'Delete Account';
+    }
+  });
+}
 
 // Onboarding Event Listeners
 if (onboardingAddBtn) {
@@ -3534,12 +3695,20 @@ async function initSocialProfile(user, dotsScore = 0) {
 
   const profileRef = getProfileDocRef(user.uid);
 
-  await setDoc(profileRef, {
-    uid: user.uid,
-    displayName: user.displayName || user.email?.split('@')[0] || 'Anonymous Cyber-Lifter',
-    dotsScore: parseFloat(dotsScore) || 0,
-    lastActive: serverTimestamp()
-  }, { merge: true });
+  const existingSnap = await getDoc(profileRef);
+  if (!existingSnap.exists() || !existingSnap.data().displayName) {
+    await setDoc(profileRef, {
+      uid: user.uid,
+      displayName: user.displayName || user.email?.split('@')[0] || 'Anonymous Cyber-Lifter',
+      dotsScore: parseFloat(dotsScore) || 0,
+      lastActive: serverTimestamp()
+    }, { merge: true });
+  } else {
+    await updateDoc(profileRef, {
+      dotsScore: parseFloat(dotsScore) || 0,
+      lastActive: serverTimestamp()
+    });
+  }
 
   onSnapshot(profileRef, (snapshot) => {
     const data = snapshot.data();
