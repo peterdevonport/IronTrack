@@ -839,21 +839,14 @@ function updateCalcPreview() {
         const reps = parseInt(repsInput?.value, 10);
         const rpe = parseFloat(rpeSelect?.value);
 
-        if (!reps || reps < 1 || isNaN(rpe)) {
+        if (!reps || reps < 1 || isNaN(rpe) || rpe < 1 || rpe > 10) {
             previewWeight.textContent = '—';
-            previewDetail.textContent = 'Enter reps and RPE to calculate working weight.';
+            previewDetail.textContent = 'Enter reps and RPE (1–10) to calculate working weight.';
             if (addBtn) addBtn.disabled = true;
             return;
         }
 
-        const rir = RPE_RIR_MAP[rpe];
-        if (rir === undefined) {
-            previewWeight.textContent = '—';
-            previewDetail.textContent = 'Select a valid RPE value.';
-            if (addBtn) addBtn.disabled = true;
-            return;
-        }
-
+        const rir = 10 - rpe;
         const totalRepsPossible = reps + rir;
         const pct1RM = 100 / (1 + totalRepsPossible / 30);
         weight = oneRM * pct1RM / 100;
@@ -936,7 +929,7 @@ function renderCalcEntries(exercise, oneRM) {
             weight = Math.round(oneRM * entry.pct / 100);
             source = `${entry.pct}%`;
         } else {
-            const rir = RPE_RIR_MAP[entry.rpe];
+            const rir = 10 - entry.rpe;
             weight = Math.round(oneRM * (100 / (1 + (entry.reps + rir) / 30)) / 100);
             source = `${entry.reps} reps @ RPE ${entry.rpe}`;
         }
