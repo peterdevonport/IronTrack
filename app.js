@@ -1020,7 +1020,7 @@ function handleMovementExerciseChange(selectEl) {
   const row = selectEl.closest('.movement-row, .minute-row');
   if (!row) return;
   const weightInput = row.querySelector('.movement-weight');
-  const switchEl = row.querySelector('.wms-switch');
+  const pill = row.querySelector('.wms-pill');
   const calcSpan = row.querySelector('.movement-calc');
   const exercise = selectEl.value;
   const loadFactor = LOAD_FACTORS[exercise];
@@ -1029,16 +1029,17 @@ function handleMovementExerciseChange(selectEl) {
     weightInput.value = '';
     weightInput.disabled = true;
     weightInput.placeholder = 'BW';
-    if (switchEl) { switchEl.classList.add('hidden'); switchEl.dataset.mode = 'absolute'; }
+    if (pill) { pill.classList.add('hidden'); pill.dataset.mode = 'absolute'; }
     if (calcSpan) calcSpan.classList.add('hidden');
   } else {
     weightInput.disabled = false;
-    weightInput.placeholder = switchEl?.dataset?.mode === 'pct' ? '%' : 'Load';
-    if (switchEl) switchEl.classList.remove('hidden');
+    const mode = pill?.dataset?.mode || 'absolute';
+    weightInput.placeholder = mode === 'pct' ? '%' : (mode === 'rpe' ? 'RPE' : 'Load');
+    if (pill) pill.classList.remove('hidden');
     if (calcSpan) {
-      if (switchEl?.dataset?.mode === 'pct') {
+      if (mode === 'pct' || mode === 'rpe') {
         calcSpan.classList.remove('hidden');
-        updateRowPctDisplay(row);
+        updateRowCalcDisplay(row);
       } else {
         calcSpan.classList.add('hidden');
       }
@@ -1058,10 +1059,11 @@ function addMovementRow(containerId, exerciseName) {
   const row = document.createElement('div');
   row.className = 'movement-row flex flex-col gap-1.5';
   row.innerHTML = `
-    <div class="w-full">
-      <select class="movement-exercise dropdown-core" onchange="handleMovementExerciseChange(this)">
+    <div class="w-full flex gap-2 items-center">
+      <select class="movement-exercise dropdown-core flex-1" onchange="handleMovementExerciseChange(this)">
         <option value="">Select exercise...</option>
       </select>
+      <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none shrink-0">X</button>
     </div>
     <div class="flex gap-2 items-center flex-wrap">
       <div class="w-16 shrink-0">
@@ -1071,15 +1073,14 @@ function addMovementRow(containerId, exerciseName) {
       <div class="w-20 shrink-0">
         <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
       </div>
-      <div class="wms-switch shrink-0" data-mode="absolute" onclick="toggleWeightMode(this)">
-        <span class="wms-label is-active" data-mode="absolute">kg</span>
-        <div class="wms-track"><div class="wms-knob"></div></div>
-        <span class="wms-label" data-mode="pct">%</span>
+      <div class="wms-pill shrink-0" data-mode="absolute">
+        <button type="button" class="wms-pill-btn is-active" data-mode="absolute" onclick="toggleWeightMode(this)">kg</button>
+        <button type="button" class="wms-pill-btn" data-mode="pct" onclick="toggleWeightMode(this)">%</button>
+        <button type="button" class="wms-pill-btn" data-mode="rpe" onclick="toggleWeightMode(this)">RPE</button>
       </div>
       <div class="w-16 shrink-0 flex items-center justify-center">
         <span class="movement-calc text-emerald-400 font-mono text-xs hidden">\u2192</span>
       </div>
-      <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none shrink-0">X</button>
     </div>
   `;
   container.appendChild(row);
@@ -1097,39 +1098,53 @@ function removeMovementRow(btn) {
   if (container?.id === 'movement-list') updateAmrapScorePreview();
 }
 
-function toggleWeightMode(el) {
-  const switchEl = el.classList.contains('wms-switch') ? el : el.closest('.wms-switch');
-  if (!switchEl) return;
-  const row = switchEl.closest('.movement-row, .minute-row');
-  if (!row) return;
-  const mode = switchEl.dataset.mode;
-  const newMode = mode === 'absolute' ? 'pct' : 'absolute';
-  switchEl.dataset.mode = newMode;
-
-  switchEl.querySelectorAll('.wms-label').forEach(l => {
-    l.classList.toggle('is-active', l.dataset.mode === newMode);
+function updatePillActive(pill, mode) {
+  pill.querySelectorAll('.wms-pill-btn').forEach(btn => {
+    btn.classList.toggle('is-active', btn.dataset.mode === mode);
   });
+}
+
+function toggleWeightMode(el) {
+  const pill = el.closest('.wms-pill');
+  if (!pill) return;
+  const row = pill.closest('.movement-row, .minute-row');
+  if (!row) return;
+  const newMode = el.dataset.mode;
+  pill.dataset.mode = newMode;
+  updatePillActive(pill, newMode);
 
   const weightInput = row.querySelector('.movement-weight');
-  if (weightInput) weightInput.placeholder = newMode === 'pct' ? '%' : 'Load';
+  if (weightInput) {
+    weightInput.placeholder = newMode === 'pct' ? '%' : (newMode === 'rpe' ? 'RPE' : 'Load');
+    if (newMode === 'rpe') {
+      weightInput.min = 1;
+      weightInput.max = 10;
+      weightInput.step = 0.5;
+    } else {
+      weightInput.min = 0;
+      weightInput.step = 'any';
+      weightInput.removeAttribute('max');
+    }
+  }
 
   const calcSpan = row.querySelector('.movement-calc');
   if (!calcSpan) return;
-  if (newMode === 'pct') {
+  if (newMode === 'pct' || newMode === 'rpe') {
     calcSpan.classList.remove('hidden');
-    updateRowPctDisplay(row);
+    updateRowCalcDisplay(row);
   } else {
     calcSpan.classList.add('hidden');
   }
 }
 
-function updateRowPctDisplay(row) {
+function updateRowCalcDisplay(row) {
   const exercise = row.querySelector('.movement-exercise')?.value;
-  const pctInput = row.querySelector('.movement-weight');
+  const weightInput = row.querySelector('.movement-weight');
   const calcSpan = row.querySelector('.movement-calc');
-  if (!pctInput || !calcSpan) return;
+  const pill = row.querySelector('.wms-pill');
+  if (!weightInput || !calcSpan || !pill) return;
 
-  const pct = parseFloat(pctInput.value);
+  const mode = pill.dataset.mode;
   const oneRM = exercise ? (activeRecords[exercise] || 0) : 0;
 
   if (!exercise) {
@@ -1137,15 +1152,39 @@ function updateRowPctDisplay(row) {
     calcSpan.className = 'movement-calc text-slate-500 font-mono text-xs';
     return;
   }
-  if (isNaN(pct) || pct <= 0 || oneRM <= 0) {
-    calcSpan.textContent = oneRM > 0 ? '\u2192' : 'No 1RM';
-    calcSpan.className = 'movement-calc font-mono text-xs ' + (oneRM > 0 ? 'text-emerald-400' : 'text-rose-400');
-    return;
-  }
 
-  const calculated = Math.round(oneRM * pct / 100);
-  calcSpan.textContent = '\u2192 ' + calculated + ' kg';
-  calcSpan.className = 'movement-calc text-emerald-400 font-mono text-xs';
+  if (mode === 'pct') {
+    const pct = parseFloat(weightInput.value);
+    if (isNaN(pct) || pct <= 0 || oneRM <= 0) {
+      calcSpan.textContent = oneRM > 0 ? '\u2192' : 'No 1RM';
+      calcSpan.className = 'movement-calc font-mono text-xs ' + (oneRM > 0 ? 'text-emerald-400' : 'text-rose-400');
+      return;
+    }
+    const calculated = Math.round(oneRM * pct / 100);
+    calcSpan.textContent = '\u2192 ' + calculated + ' kg';
+    calcSpan.className = 'movement-calc text-emerald-400 font-mono text-xs';
+  } else if (mode === 'rpe') {
+    const rpe = parseFloat(weightInput.value);
+    const reps = parseInt(row.querySelector('.movement-reps')?.value, 10);
+    if (isNaN(rpe) || rpe < 1 || rpe > 10 || isNaN(reps) || reps < 1 || oneRM <= 0) {
+      if (oneRM <= 0) {
+        calcSpan.textContent = 'No 1RM';
+        calcSpan.className = 'movement-calc font-mono text-xs text-rose-400';
+      } else if (isNaN(rpe) || rpe < 1 || rpe > 10) {
+        calcSpan.textContent = '\u2192';
+        calcSpan.className = 'movement-calc font-mono text-xs text-slate-500';
+      } else {
+        calcSpan.textContent = '\u2192';
+        calcSpan.className = 'movement-calc font-mono text-xs text-emerald-400';
+      }
+      return;
+    }
+    const rir = 10 - rpe;
+    const totalRepsPossible = reps + rir;
+    const targetWeight = Math.round(oneRM / (1 + totalRepsPossible / 30));
+    calcSpan.textContent = '\u2192 ' + targetWeight + ' kg';
+    calcSpan.className = 'movement-calc text-emerald-400 font-mono text-xs';
+  }
 }
 
 function getMovementData(containerSelector) {
@@ -1155,11 +1194,12 @@ function getMovementData(containerSelector) {
     const exercise = row.querySelector('.movement-exercise')?.value;
     const reps = parseInt(row.querySelector('.movement-reps')?.value, 10);
     const weightInput = row.querySelector('.movement-weight');
-    const switchEl = row.querySelector('.wms-switch');
-    const weightMode = switchEl?.dataset?.mode || 'absolute';
+    const pill = row.querySelector('.wms-pill');
+    const weightMode = pill?.dataset?.mode || 'absolute';
 
     let rawWeight = parseFloat(weightInput?.value) || 0;
     let pct = null;
+    let rpe = null;
 
     if (!exercise) { error = 'Select an exercise for all movements.'; return; }
     if (!reps || reps < 1) { error = 'Enter reps for all movements.'; return; }
@@ -1168,6 +1208,14 @@ function getMovementData(containerSelector) {
       pct = rawWeight;
       const oneRM = activeRecords[exercise] || 0;
       rawWeight = oneRM > 0 ? Math.round(oneRM * rawWeight / 100) : rawWeight;
+    } else if (weightMode === 'rpe') {
+      rpe = rawWeight;
+      const oneRM = activeRecords[exercise] || 0;
+      if (oneRM > 0 && rpe >= 1 && rpe <= 10) {
+        const rir = 10 - rpe;
+        const totalRepsPossible = reps + rir;
+        rawWeight = Math.round(oneRM / (1 + totalRepsPossible / 30));
+      }
     }
 
     const exInfo = getExerciseInfo(exercise);
@@ -1176,6 +1224,7 @@ function getMovementData(containerSelector) {
 
     const movement = { exerciseId: exercise, reps, weight: rawWeight, weightMode };
     if (pct !== null) movement.pct = pct;
+    if (rpe !== null) movement.rpe = rpe;
     movements.push(movement);
   });
   if (error) throw new Error(error);
@@ -1383,10 +1432,13 @@ function addMinuteSlot(exerciseName) {
   row.className = 'minute-row flex flex-col gap-1.5';
   row.innerHTML = `
     <div class="w-full">
-      <span class="minute-label text-xs text-slate-500 font-mono mr-1 inline-block w-24">${label}</span>
-      <select class="movement-exercise dropdown-core inline-block w-[calc(100%-7rem)]" onchange="handleMovementExerciseChange(this)">
+      <span class="minute-label text-xs text-slate-500 font-mono">${label}</span>
+    </div>
+    <div class="w-full flex gap-2 items-center">
+      <select class="movement-exercise dropdown-core flex-1" onchange="handleMovementExerciseChange(this)">
         <option value="">Select exercise...</option>
       </select>
+      <button type="button" onclick="removeMinuteSlot(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none shrink-0">X</button>
     </div>
     <div class="flex gap-2 items-center flex-wrap">
       <div class="w-16 shrink-0">
@@ -1396,15 +1448,14 @@ function addMinuteSlot(exerciseName) {
       <div class="w-20 shrink-0">
         <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
       </div>
-      <div class="wms-switch shrink-0" data-mode="absolute" onclick="toggleWeightMode(this)">
-        <span class="wms-label is-active" data-mode="absolute">kg</span>
-        <div class="wms-track"><div class="wms-knob"></div></div>
-        <span class="wms-label" data-mode="pct">%</span>
+      <div class="wms-pill shrink-0" data-mode="absolute">
+        <button type="button" class="wms-pill-btn is-active" data-mode="absolute" onclick="toggleWeightMode(this)">kg</button>
+        <button type="button" class="wms-pill-btn" data-mode="pct" onclick="toggleWeightMode(this)">%</button>
+        <button type="button" class="wms-pill-btn" data-mode="rpe" onclick="toggleWeightMode(this)">RPE</button>
       </div>
       <div class="w-16 shrink-0 flex items-center justify-center">
         <span class="movement-calc text-emerald-400 font-mono text-xs hidden">\u2192</span>
       </div>
-      <button type="button" onclick="removeMinuteSlot(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none shrink-0">X</button>
     </div>
   `;
   container.appendChild(row);
@@ -1500,11 +1551,12 @@ function getEmomMovementData() {
     const exercise = row.querySelector('.movement-exercise')?.value;
     const reps = parseInt(row.querySelector('.movement-reps')?.value, 10);
     const weightInput = row.querySelector('.movement-weight');
-    const switchEl = row.querySelector('.wms-switch');
-    const weightMode = switchEl?.dataset?.mode || 'absolute';
+    const pill = row.querySelector('.wms-pill');
+    const weightMode = pill?.dataset?.mode || 'absolute';
 
     let rawWeight = parseFloat(weightInput?.value) || 0;
     let pct = null;
+    let rpe = null;
 
     if (!exercise) { error = 'Select an exercise for all intervals.'; return; }
     if (!reps || reps < 1) { error = 'Enter reps for all intervals.'; return; }
@@ -1513,6 +1565,14 @@ function getEmomMovementData() {
       pct = rawWeight;
       const oneRM = activeRecords[exercise] || 0;
       rawWeight = oneRM > 0 ? Math.round(oneRM * rawWeight / 100) : rawWeight;
+    } else if (weightMode === 'rpe') {
+      rpe = rawWeight;
+      const oneRM = activeRecords[exercise] || 0;
+      if (oneRM > 0 && rpe >= 1 && rpe <= 10) {
+        const rir = 10 - rpe;
+        const totalRepsPossible = reps + rir;
+        rawWeight = Math.round(oneRM / (1 + totalRepsPossible / 30));
+      }
     }
 
     const exInfo = getExerciseInfo(exercise);
@@ -1521,6 +1581,7 @@ function getEmomMovementData() {
 
     const movement = { exerciseId: exercise, reps, weight: rawWeight, weightMode };
     if (pct !== null) movement.pct = pct;
+    if (rpe !== null) movement.rpe = rpe;
     minutes.push({ movements: [movement] });
   });
   if (error) throw new Error(error);
@@ -2204,6 +2265,9 @@ function listenToStructuredWorkouts(uid) {
 }
 
 function formatMovementLoad(m) {
+  if (m.weightMode === 'rpe' && m.rpe) {
+    return ` @ RPE ${m.rpe}`;
+  }
   if (m.weightMode === 'pct' && m.pct) {
     return ` @ ${Math.round(m.pct)}%`;
   }
@@ -2381,6 +2445,9 @@ function renderPlanCard(plan) {
   const dateStr = new Date(plan.createdAt).toLocaleDateString();
 
   function formatLoad(m) {
+    if (m.weightMode === 'rpe' && m.rpe) {
+      return ` @ RPE ${m.rpe}`;
+    }
     if (m.weightMode === 'pct' && m.pct) {
       return ` @ ${Math.round(m.pct)}%`;
     }
@@ -2469,24 +2536,29 @@ function populateAmrapForm(structure) {
       if (!mov) return;
       const repsInput = row.querySelector('.movement-reps');
       const weightInput = row.querySelector('.movement-weight');
-      const switchEl = row.querySelector('.wms-switch');
+      const pill = row.querySelector('.wms-pill');
       const calcSpan = row.querySelector('.movement-calc');
       if (repsInput) repsInput.value = mov.reps;
 
-      if (mov.weightMode === 'pct' && mov.pct) {
-        if (switchEl) {
-          switchEl.dataset.mode = 'pct';
-          switchEl.querySelectorAll('.wms-label').forEach(l => l.classList.toggle('is-active', l.dataset.mode === 'pct'));
+      const setMode = (mode, value, placeholder) => {
+        if (pill) { pill.dataset.mode = mode; updatePillActive(pill, mode); }
+        if (weightInput) { weightInput.value = value; weightInput.placeholder = placeholder; }
+        if (calcSpan) {
+          if (mode === 'pct' || mode === 'rpe') {
+            calcSpan.classList.remove('hidden');
+            updateRowCalcDisplay(row);
+          } else {
+            calcSpan.classList.add('hidden');
+          }
         }
-        if (weightInput) { weightInput.value = mov.pct; weightInput.placeholder = '%'; }
-        if (calcSpan) { calcSpan.classList.remove('hidden'); updateRowPctDisplay(row); }
+      };
+
+      if (mov.weightMode === 'rpe' && mov.rpe) {
+        setMode('rpe', mov.rpe, 'RPE');
+      } else if (mov.weightMode === 'pct' && mov.pct) {
+        setMode('pct', mov.pct, '%');
       } else {
-        if (switchEl) {
-          switchEl.dataset.mode = 'absolute';
-          switchEl.querySelectorAll('.wms-label').forEach(l => l.classList.toggle('is-active', l.dataset.mode === 'absolute'));
-        }
-        if (weightInput) { weightInput.value = mov.weight || ''; weightInput.placeholder = 'Load'; }
-        if (calcSpan) calcSpan.classList.add('hidden');
+        setMode('absolute', mov.weight || '', 'Load');
       }
     });
   }, 0);
@@ -2516,24 +2588,29 @@ function populateEmomForm(structure) {
       if (!mov) return;
       const repsInput = row.querySelector('.movement-reps');
       const weightInput = row.querySelector('.movement-weight');
-      const switchEl = row.querySelector('.wms-switch');
+      const pill = row.querySelector('.wms-pill');
       const calcSpan = row.querySelector('.movement-calc');
       if (repsInput) repsInput.value = mov.reps;
 
-      if (mov.weightMode === 'pct' && mov.pct) {
-        if (switchEl) {
-          switchEl.dataset.mode = 'pct';
-          switchEl.querySelectorAll('.wms-label').forEach(l => l.classList.toggle('is-active', l.dataset.mode === 'pct'));
+      const setMode = (mode, value, placeholder) => {
+        if (pill) { pill.dataset.mode = mode; updatePillActive(pill, mode); }
+        if (weightInput) { weightInput.value = value; weightInput.placeholder = placeholder; }
+        if (calcSpan) {
+          if (mode === 'pct' || mode === 'rpe') {
+            calcSpan.classList.remove('hidden');
+            updateRowCalcDisplay(row);
+          } else {
+            calcSpan.classList.add('hidden');
+          }
         }
-        if (weightInput) { weightInput.value = mov.pct; weightInput.placeholder = '%'; }
-        if (calcSpan) { calcSpan.classList.remove('hidden'); updateRowPctDisplay(row); }
+      };
+
+      if (mov.weightMode === 'rpe' && mov.rpe) {
+        setMode('rpe', mov.rpe, 'RPE');
+      } else if (mov.weightMode === 'pct' && mov.pct) {
+        setMode('pct', mov.pct, '%');
       } else {
-        if (switchEl) {
-          switchEl.dataset.mode = 'absolute';
-          switchEl.querySelectorAll('.wms-label').forEach(l => l.classList.toggle('is-active', l.dataset.mode === 'absolute'));
-        }
-        if (weightInput) { weightInput.value = mov.weight || ''; weightInput.placeholder = 'Load'; }
-        if (calcSpan) calcSpan.classList.add('hidden');
+        setMode('absolute', mov.weight || '', 'Load');
       }
     });
   }, 0);
@@ -2558,24 +2635,29 @@ function populateForTimeForm(structure) {
       if (!mov) return;
       const repsInput = row.querySelector('.movement-reps');
       const weightInput = row.querySelector('.movement-weight');
-      const switchEl = row.querySelector('.wms-switch');
+      const pill = row.querySelector('.wms-pill');
       const calcSpan = row.querySelector('.movement-calc');
       if (repsInput) repsInput.value = mov.reps;
 
-      if (mov.weightMode === 'pct' && mov.pct) {
-        if (switchEl) {
-          switchEl.dataset.mode = 'pct';
-          switchEl.querySelectorAll('.wms-label').forEach(l => l.classList.toggle('is-active', l.dataset.mode === 'pct'));
+      const setMode = (mode, value, placeholder) => {
+        if (pill) { pill.dataset.mode = mode; updatePillActive(pill, mode); }
+        if (weightInput) { weightInput.value = value; weightInput.placeholder = placeholder; }
+        if (calcSpan) {
+          if (mode === 'pct' || mode === 'rpe') {
+            calcSpan.classList.remove('hidden');
+            updateRowCalcDisplay(row);
+          } else {
+            calcSpan.classList.add('hidden');
+          }
         }
-        if (weightInput) { weightInput.value = mov.pct; weightInput.placeholder = '%'; }
-        if (calcSpan) { calcSpan.classList.remove('hidden'); updateRowPctDisplay(row); }
+      };
+
+      if (mov.weightMode === 'rpe' && mov.rpe) {
+        setMode('rpe', mov.rpe, 'RPE');
+      } else if (mov.weightMode === 'pct' && mov.pct) {
+        setMode('pct', mov.pct, '%');
       } else {
-        if (switchEl) {
-          switchEl.dataset.mode = 'absolute';
-          switchEl.querySelectorAll('.wms-label').forEach(l => l.classList.toggle('is-active', l.dataset.mode === 'absolute'));
-        }
-        if (weightInput) { weightInput.value = mov.weight || ''; weightInput.placeholder = 'Load'; }
-        if (calcSpan) calcSpan.classList.add('hidden');
+        setMode('absolute', mov.weight || '', 'Load');
       }
     });
   }, 0);
@@ -2600,24 +2682,29 @@ function populateIntervalForm(structure) {
       if (!mov) return;
       const repsInput = row.querySelector('.movement-reps');
       const weightInput = row.querySelector('.movement-weight');
-      const switchEl = row.querySelector('.wms-switch');
+      const pill = row.querySelector('.wms-pill');
       const calcSpan = row.querySelector('.movement-calc');
       if (repsInput) repsInput.value = mov.reps;
 
-      if (mov.weightMode === 'pct' && mov.pct) {
-        if (switchEl) {
-          switchEl.dataset.mode = 'pct';
-          switchEl.querySelectorAll('.wms-label').forEach(l => l.classList.toggle('is-active', l.dataset.mode === 'pct'));
+      const setMode = (mode, value, placeholder) => {
+        if (pill) { pill.dataset.mode = mode; updatePillActive(pill, mode); }
+        if (weightInput) { weightInput.value = value; weightInput.placeholder = placeholder; }
+        if (calcSpan) {
+          if (mode === 'pct' || mode === 'rpe') {
+            calcSpan.classList.remove('hidden');
+            updateRowCalcDisplay(row);
+          } else {
+            calcSpan.classList.add('hidden');
+          }
         }
-        if (weightInput) { weightInput.value = mov.pct; weightInput.placeholder = '%'; }
-        if (calcSpan) { calcSpan.classList.remove('hidden'); updateRowPctDisplay(row); }
+      };
+
+      if (mov.weightMode === 'rpe' && mov.rpe) {
+        setMode('rpe', mov.rpe, 'RPE');
+      } else if (mov.weightMode === 'pct' && mov.pct) {
+        setMode('pct', mov.pct, '%');
       } else {
-        if (switchEl) {
-          switchEl.dataset.mode = 'absolute';
-          switchEl.querySelectorAll('.wms-label').forEach(l => l.classList.toggle('is-active', l.dataset.mode === 'absolute'));
-        }
-        if (weightInput) { weightInput.value = mov.weight || ''; weightInput.placeholder = 'Load'; }
-        if (calcSpan) calcSpan.classList.add('hidden');
+        setMode('absolute', mov.weight || '', 'Load');
       }
     });
   }, 0);
@@ -3064,15 +3151,15 @@ if (document.getElementById('emom-minute-slots')) {
   addMinuteSlot();
 }
 
-// Real-time % recalculation on weight input change/blur in pct mode
+// Real-time calc recalculation on weight input change/blur in pct/rpe mode
 document.addEventListener('input', (e) => {
   const input = e.target;
   if (input.classList.contains('movement-weight')) {
     const row = input.closest('.movement-row, .minute-row');
     if (!row) return;
-    const switchEl = row.querySelector('.wms-switch');
-    if (switchEl?.dataset?.mode === 'pct') {
-      updateRowPctDisplay(row);
+    const pill = row.querySelector('.wms-pill');
+    if (pill?.dataset?.mode === 'pct' || pill?.dataset?.mode === 'rpe') {
+      updateRowCalcDisplay(row);
     }
   }
 });
@@ -3082,9 +3169,9 @@ document.addEventListener('blur', (e) => {
   if (input.classList.contains('movement-weight')) {
     const row = input.closest('.movement-row, .minute-row');
     if (!row) return;
-    const switchEl = row.querySelector('.wms-switch');
-    if (switchEl?.dataset?.mode === 'pct') {
-      updateRowPctDisplay(row);
+    const pill = row.querySelector('.wms-pill');
+    if (pill?.dataset?.mode === 'pct' || pill?.dataset?.mode === 'rpe') {
+      updateRowCalcDisplay(row);
     }
   }
 });
@@ -3617,3 +3704,4 @@ window.saveIntervalPlan = saveIntervalPlan;
 window.loadPlan = loadPlan;
 window.deletePlan = deletePlan;
 window.toggleWeightMode = toggleWeightMode;
+window.updatePillActive = updatePillActive;
