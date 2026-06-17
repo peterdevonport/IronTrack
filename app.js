@@ -139,6 +139,29 @@ const externalLoadInput = document.getElementById('external-load');
 const estimatedLoadDisplay = document.getElementById('estimated-load-display');
 const estLoadLabel = document.getElementById('est-load-label');
 
+// Onboarding
+const onboardingView = document.getElementById('onboarding-view');
+const onboardingGender = document.getElementById('onboarding-gender');
+const onboardingWeight = document.getElementById('onboarding-weight');
+const onboardingDaysMonthly = document.getElementById('onboarding-days-monthly');
+const onboardingDaysYearly = document.getElementById('onboarding-days-yearly');
+const onboardingDaysLifetime = document.getElementById('onboarding-days-lifetime');
+const onboardingExerciseSelect = document.getElementById('onboarding-1rm-exercise');
+const onboardingWeightInput = document.getElementById('onboarding-1rm-weight');
+const onboardingRepsInput = document.getElementById('onboarding-1rm-reps');
+const onboardingAddBtn = document.getElementById('onboarding-add-1rm');
+const onboardingList = document.getElementById('onboarding-1rm-list');
+const onboardingEmpty = document.getElementById('onboarding-1rm-empty');
+const onboardingSaveBtn = document.getElementById('onboarding-save-btn');
+const onboardingFeedback = document.getElementById('onboarding-feedback');
+
+// PB Log
+const pbLogExercise = document.getElementById('pb-log-exercise');
+const pbLogWeight = document.getElementById('pb-log-weight');
+const pbLogReps = document.getElementById('pb-log-reps');
+const pbLogBtn = document.getElementById('pb-log-btn');
+const pbLogFeedback = document.getElementById('pb-log-feedback');
+
 const HAPTIC = {
     tap: 15,
     confirm: 30,
@@ -157,6 +180,7 @@ const RPE_RIR_MAP = { 10: 0, 9: 1, 8: 2, 7: 3, 6: 4 };
 let currentUser = null;
 let unsubscribeLogs = null;
 let userBiometrics = { gender: 'male', bodyweight: 75 };
+let pendingOnboarding1RMs = [];
 let activeRecords = {};
 let cachedMaxLoadByExercise = {};
 let cachedMax1RMByExercise = {};
@@ -203,6 +227,15 @@ onAuthStateChanged(auth, async (user) => {
         
         await pullProfileMetrics(user.uid);
         await initSocialProfile(user);
+
+        // Check if onboarding is needed (first-time user)
+        if (!userBiometrics.onboardingComplete) {
+            loginView.classList.add('hidden');
+            appView.classList.add('hidden');
+            showOnboarding();
+            return;
+        }
+
         syncLeaderboardFeed();
         listenToDataStream(user.uid);
         listenToStructuredWorkouts(user.uid);
@@ -224,6 +257,8 @@ onAuthStateChanged(auth, async (user) => {
         if (leaderboardUnsubscribe) { leaderboardUnsubscribe(); leaderboardUnsubscribe = null; }
         loginView.classList.remove('hidden');
         appView.classList.add('hidden');
+        onboardingView.classList.add('hidden');
+        pendingOnboarding1RMs = [];
         authBtn.innerText = "Sign In";
         greeting.innerText = "Analytics Dashboard";
         document.getElementById('workout-list').innerHTML = '';
@@ -382,6 +417,201 @@ async function pullProfileMetrics(uid) {
     }
 }
 
+function showOnboarding() {
+    onboardingView.classList.remove('hidden');
+    // Populate exercise dropdown
+    const groups = ['barbell', 'dumbbell', 'kettlebell', 'cardio', 'bodyweight'];
+    if (onboardingExerciseSelect) {
+        onboardingExerciseSelect.innerHTML = buildExerciseOptionsHtml(groups, '<option value="" disabled selected>Select exercise...</option>');
+    }
+    pendingOnboarding1RMs = [];
+    renderOnboarding1RMList();
+}
+
+function hideOnboarding() {
+    onboardingView.classList.add('hidden');
+    appView.classList.remove('hidden');
+}
+
+function renderOnboarding1RMList() {
+    if (!onboardingList || !onboardingEmpty) return;
+    if (pendingOnboarding1RMs.length === 0) {
+        onboardingList.innerHTML = `<p class="text-xs text-slate-500 italic py-2 text-center" id="onboarding-1rm-empty">No lifts added yet.</p>`;
+        return;
+    }
+    let html = '';
+    pendingOnboarding1RMs.forEach((item, index) => {
+        const repLabel = item.reps > 1 ? ` @ ${item.reps} reps` : '';
+        html += `
+            <div class="flex items-center justify-between bg-slate-800 rounded-xl px-3 py-2">
+                <span class="text-sm text-slate-200 font-medium">${escapeHtml(item.exercise)}</span>
+                <span class="text-sm text-emerald-400 font-mono font-bold">${item.weight} kg${repLabel}</span>
+                <button type="button" class="text-rose-400 hover:text-rose-300 text-xs font-bold cursor-pointer bg-transparent border-none" data-index="${index}">Remove</button>
+            </div>`;
+    });
+    onboardingList.innerHTML = html;
+
+    // Attach remove handlers
+    onboardingList.querySelectorAll('[data-index]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const idx = parseInt(btn.dataset.index, 10);
+            pendingOnboarding1RMs.splice(idx, 1);
+            renderOnboarding1RMList();
+        });
+    });
+}
+
+function addOnboarding1RM() {
+    const exercise = onboardingExerciseSelect?.value;
+    const weight = parseFloat(onboardingWeightInput?.value);
+    const reps = parseInt(onboardingRepsInput?.value, 10) || 1;
+
+    if (!exercise) {
+        showFeedback('Please select an exercise.', 'red', 'onboarding-feedback');
+        return;
+    }
+    if (!weight || weight <= 0) {
+        showFeedback('Please enter a valid weight.', 'red', 'onboarding-feedback');
+        return;
+    }
+    if (pendingOnboarding1RMs.some(item => item.exercise === exercise)) {
+        showFeedback('Exercise already added. Remove it first to re-enter.', 'red', 'onboarding-feedback');
+        return;
+    }
+
+    pendingOnboarding1RMs.push({ exercise, weight, reps });
+    renderOnboarding1RMList();
+
+    // Reset inputs
+    onboardingExerciseSelect.value = '';
+    onboardingWeightInput.value = '';
+    onboardingRepsInput.value = '1';
+    document.getElementById('onboarding-feedback').textContent = '';
+}
+
+async function saveOnboarding() {
+    if (!currentUser) return;
+
+    const gender = onboardingGender?.value || 'male';
+    const bodyweight = parseFloat(onboardingWeight?.value) || 75;
+    const day0Monthly = parseInt(onboardingDaysMonthly?.value, 10) || 0;
+    const day0Yearly = parseInt(onboardingDaysYearly?.value, 10) || 0;
+    const day0Lifetime = parseInt(onboardingDaysLifetime?.value, 10) || 0;
+
+    if (onboardingSaveBtn) onboardingSaveBtn.disabled = true;
+
+    try {
+        // Save biometrics + day0 + onboarding flag to profile
+        const profileRef = doc(db, "profiles", currentUser.uid);
+        const profileData = {
+            gender,
+            bodyweight,
+            day0TrainingDays: { monthly: day0Monthly, yearly: day0Yearly, lifetime: day0Lifetime },
+            onboardingComplete: true,
+            onboardedAt: serverTimestamp()
+        };
+        // Also store startingMaxes as a map for reference
+        if (pendingOnboarding1RMs.length > 0) {
+            const startingMaxes = {};
+            pendingOnboarding1RMs.forEach(item => { startingMaxes[item.exercise] = item.weight; });
+            profileData.startingMaxes = startingMaxes;
+        }
+        await setDoc(profileRef, profileData, { merge: true });
+
+        // Update local userBiometrics
+        userBiometrics.gender = gender;
+        userBiometrics.bodyweight = bodyweight;
+        userBiometrics.day0TrainingDays = { monthly: day0Monthly, yearly: day0Yearly, lifetime: day0Lifetime };
+        userBiometrics.onboardingComplete = true;
+
+        // Also update the sidebar profile form
+        document.getElementById('profile-gender').value = gender;
+        document.getElementById('profile-weight').value = bodyweight;
+
+        // Create synthetic workout entries for each 1RM
+        const now = Date.now();
+        for (const item of pendingOnboarding1RMs) {
+            const logEntry = {
+                userId: currentUser.uid,
+                exercise: item.exercise,
+                sets: 1,
+                reps: item.reps,
+                weight: item.weight,
+                externalLoad: 0,
+                estimatedLoad: item.weight,
+                totalVolume: item.weight * item.reps,
+                timestamp: now,
+                source: 'onboarding',
+                isInitialMax: true
+            };
+            await addDoc(collection(db, "workouts"), logEntry);
+        }
+
+        hideOnboarding();
+        showFeedback('Profile initialized! Welcome to IronTrack.', 'emerald');
+
+        // Now start the dashboard
+        syncLeaderboardFeed();
+        listenToDataStream(currentUser.uid);
+        listenToStructuredWorkouts(currentUser.uid);
+        listenToPlans(currentUser.uid);
+        loadConsistencyConfig();
+        showQRCode();
+
+    } catch (err) {
+        console.error('Onboarding failed', err.code, err.message);
+        showFeedback('Failed to save profile: ' + err.message, 'red', 'onboarding-feedback');
+    } finally {
+        if (onboardingSaveBtn) onboardingSaveBtn.disabled = false;
+    }
+}
+
+async function logPB() {
+    if (!currentUser) return;
+    const exercise = pbLogExercise?.value;
+    const weight = parseFloat(pbLogWeight?.value);
+    const reps = parseInt(pbLogReps?.value, 10) || 1;
+
+    if (!exercise) {
+        showFeedback('Please select an exercise.', 'red', 'pb-log-feedback');
+        return;
+    }
+    if (!weight || weight <= 0) {
+        showFeedback('Please enter a valid weight.', 'red', 'pb-log-feedback');
+        return;
+    }
+
+    if (pbLogBtn) pbLogBtn.disabled = true;
+
+    try {
+        const logEntry = {
+            userId: currentUser.uid,
+            exercise,
+            sets: 1,
+            reps,
+            weight,
+            externalLoad: 0,
+            estimatedLoad: weight,
+            totalVolume: weight * reps,
+            timestamp: Date.now(),
+            source: 'pb-log',
+            isInitialMax: false
+        };
+        await addDoc(collection(db, "workouts"), logEntry);
+
+        pbLogExercise.value = '';
+        pbLogWeight.value = '';
+        pbLogReps.value = '1';
+        showFeedback('Record logged! It will appear in your records.', 'emerald', 'pb-log-feedback');
+        haptic(HAPTIC.confirm);
+    } catch (err) {
+        console.error('Failed to log record', err.code, err.message);
+        showFeedback('Failed to log record: ' + err.message, 'red', 'pb-log-feedback');
+    } finally {
+        if (pbLogBtn) pbLogBtn.disabled = false;
+    }
+}
+
 profileForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!currentUser) return;
@@ -402,7 +632,39 @@ profileForm.addEventListener('submit', async (e) => {
     }
 });
 
+// Onboarding Event Listeners
+if (onboardingAddBtn) {
+    onboardingAddBtn.addEventListener('click', addOnboarding1RM);
+}
+if (onboardingSaveBtn) {
+    onboardingSaveBtn.addEventListener('click', saveOnboarding);
+}
+// Allow pressing Enter in weight input to trigger add
+if (onboardingWeightInput) {
+    onboardingWeightInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); addOnboarding1RM(); }
+    });
+}
+if (onboardingExerciseSelect) {
+    onboardingExerciseSelect.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); addOnboarding1RM(); }
+    });
+}
 
+// PB Log Event Listeners
+if (pbLogBtn) {
+    pbLogBtn.addEventListener('click', logPB);
+}
+if (pbLogWeight) {
+    pbLogWeight.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); logPB(); }
+    });
+}
+if (pbLogExercise) {
+    pbLogExercise.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); logPB(); }
+    });
+}
 
 // Realtime Data Mining
 function listenToDataStream(uid) {
@@ -795,13 +1057,21 @@ function buildExerciseOptionsHtml(categories, placeholder) {
 }
 
 function populateExerciseDropdown() {
-  const select = document.getElementById('exercise');
-  if (!select) return;
-  const currentVal = select.value;
   const groups = ['barbell', 'dumbbell', 'kettlebell', 'cardio', 'bodyweight'];
-  select.innerHTML = buildExerciseOptionsHtml(groups, '<option value="" disabled selected>Select exercise...</option>');
-  if (currentVal && Array.from(select.options).some(o => o.value === currentVal)) {
-    select.value = currentVal;
+  const html = buildExerciseOptionsHtml(groups, '<option value="" disabled selected>Select exercise...</option>');
+
+  const select = document.getElementById('exercise');
+  if (select) {
+    const currentVal = select.value;
+    select.innerHTML = html;
+    if (currentVal && Array.from(select.options).some(o => o.value === currentVal)) {
+      select.value = currentVal;
+    }
+  }
+
+  // Populate PB Log dropdown
+  if (pbLogExercise) {
+    pbLogExercise.innerHTML = buildExerciseOptionsHtml(groups, '<option value="" disabled selected>Select exercise...</option>');
   }
 }
 
@@ -2036,7 +2306,10 @@ function calculateChallengeProgress() {
 
     const lifetimeActive = activeDates.size;
 
-    return { monthly: monthlyActive, yearly: yearlyActive, lifetime: lifetimeActive };
+    // Add day0 offsets from onboarding
+    const day0 = userBiometrics?.day0TrainingDays || { monthly: 0, yearly: 0, lifetime: 0 };
+
+    return { monthly: monthlyActive + (day0.monthly || 0), yearly: yearlyActive + (day0.yearly || 0), lifetime: lifetimeActive + (day0.lifetime || 0) };
 }
 
 function renderChallengeCards() {
@@ -2939,7 +3212,7 @@ function renderLogs(workouts) {
     const selected = workoutFilter ? workoutFilter.value : 'All';
 
     paginatedWorkouts.forEach(workout => {
-        if (workout.source === 'structured') return;
+        if (workout.source === 'structured' || workout.source === 'onboarding' || workout.source === 'pb-log') return;
         const load = getEffectiveLoad(workout);
         workout._isPB = load >= (cachedMaxLoadByExercise[workout.exercise] || 0) && load > 0;
         const reps = parseInt(workout.reps, 10) || 1;
