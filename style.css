@@ -376,9 +376,6 @@ body {
   transition: background-color 0.2s;
   flex-shrink: 0;
 }
-.wms-switch[data-mode="pct"] .wms-track {
-  background-color: var(--emerald-500);
-}
 .wms-knob {
   position: absolute;
   top: 2px;

@@ -1032,7 +1032,6 @@ function handleMovementExerciseChange(selectEl) {
     if (switchEl) { switchEl.classList.add('hidden'); switchEl.dataset.mode = 'absolute'; }
     if (calcSpan) calcSpan.classList.add('hidden');
   } else {
-    weightInput.value = '';
     weightInput.disabled = false;
     weightInput.placeholder = switchEl?.dataset?.mode === 'pct' ? '%' : 'Load';
     if (switchEl) switchEl.classList.remove('hidden');
@@ -1057,28 +1056,31 @@ function addMovementRow(containerId, exerciseName) {
     container.dataset.wmsBootstrapped = 'true';
   }
   const row = document.createElement('div');
-  row.className = 'movement-row flex gap-2 items-end flex-wrap';
+  row.className = 'movement-row flex flex-col gap-1.5';
   row.innerHTML = `
-    <div class="flex-1 min-w-[120px]">
+    <div class="w-full">
       <select class="movement-exercise dropdown-core" onchange="handleMovementExerciseChange(this)">
         <option value="">Select exercise...</option>
       </select>
     </div>
-    <div class="w-16 shrink-0">
-      <input type="number" class="movement-reps input-core" placeholder="Reps" min="1" step="1" />
+    <div class="flex gap-2 items-center flex-wrap">
+      <div class="w-16 shrink-0">
+        <input type="number" class="movement-reps input-core" placeholder="Reps" min="1" step="1" />
+      </div>
+      <span class="text-slate-500 text-xs font-mono shrink-0">@</span>
+      <div class="w-20 shrink-0">
+        <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
+      </div>
+      <div class="wms-switch shrink-0" data-mode="absolute" onclick="toggleWeightMode(this)">
+        <span class="wms-label is-active" data-mode="absolute">kg</span>
+        <div class="wms-track"><div class="wms-knob"></div></div>
+        <span class="wms-label" data-mode="pct">%</span>
+      </div>
+      <div class="w-16 shrink-0 flex items-center justify-center">
+        <span class="movement-calc text-emerald-400 font-mono text-xs hidden">\u2192</span>
+      </div>
+      <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none shrink-0">X</button>
     </div>
-    <div class="wms-switch shrink-0" data-mode="absolute" onclick="toggleWeightMode(this)">
-      <span class="wms-label is-active" data-mode="absolute">kg</span>
-      <div class="wms-track"><div class="wms-knob"></div></div>
-      <span class="wms-label" data-mode="pct">%</span>
-    </div>
-    <div class="w-20 shrink-0">
-      <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
-    </div>
-    <div class="w-16 shrink-0 flex items-center justify-center">
-      <span class="movement-calc text-emerald-400 font-mono text-xs hidden">\u2192</span>
-    </div>
-    <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none shrink-0">X</button>
   `;
   container.appendChild(row);
   populateMovementDropdowns();
@@ -1378,29 +1380,32 @@ function addMinuteSlot(exerciseName) {
   const count = container.children.length + 1;
   const label = emomMode === 'sequence' ? `#${count}` : `Round ${count}`;
   const row = document.createElement('div');
-  row.className = 'minute-row flex gap-2 items-end flex-wrap';
+  row.className = 'minute-row flex flex-col gap-1.5';
   row.innerHTML = `
-    <div class="flex-1 min-w-[120px]">
+    <div class="w-full">
       <span class="minute-label text-xs text-slate-500 font-mono mr-1 inline-block w-24">${label}</span>
-      <select class="movement-exercise dropdown-core w-[calc(100%-7rem)] inline-block" onchange="handleMovementExerciseChange(this)">
+      <select class="movement-exercise dropdown-core inline-block w-[calc(100%-7rem)]" onchange="handleMovementExerciseChange(this)">
         <option value="">Select exercise...</option>
       </select>
     </div>
-    <div class="w-16 shrink-0">
-      <input type="number" class="movement-reps input-core" placeholder="Reps" min="1" step="1" />
+    <div class="flex gap-2 items-center flex-wrap">
+      <div class="w-16 shrink-0">
+        <input type="number" class="movement-reps input-core" placeholder="Reps" min="1" step="1" />
+      </div>
+      <span class="text-slate-500 text-xs font-mono shrink-0">@</span>
+      <div class="w-20 shrink-0">
+        <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
+      </div>
+      <div class="wms-switch shrink-0" data-mode="absolute" onclick="toggleWeightMode(this)">
+        <span class="wms-label is-active" data-mode="absolute">kg</span>
+        <div class="wms-track"><div class="wms-knob"></div></div>
+        <span class="wms-label" data-mode="pct">%</span>
+      </div>
+      <div class="w-16 shrink-0 flex items-center justify-center">
+        <span class="movement-calc text-emerald-400 font-mono text-xs hidden">\u2192</span>
+      </div>
+      <button type="button" onclick="removeMinuteSlot(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none shrink-0">X</button>
     </div>
-    <div class="wms-switch shrink-0" data-mode="absolute" onclick="toggleWeightMode(this)">
-      <span class="wms-label is-active" data-mode="absolute">kg</span>
-      <div class="wms-track"><div class="wms-knob"></div></div>
-      <span class="wms-label" data-mode="pct">%</span>
-    </div>
-    <div class="w-20 shrink-0">
-      <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
-    </div>
-    <div class="w-16 shrink-0 flex items-center justify-center">
-      <span class="movement-calc text-emerald-400 font-mono text-xs hidden">\u2192</span>
-    </div>
-    <button type="button" onclick="removeMinuteSlot(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none shrink-0">X</button>
   `;
   container.appendChild(row);
   populateMovementDropdowns();
@@ -2200,7 +2205,7 @@ function listenToStructuredWorkouts(uid) {
 
 function formatMovementLoad(m) {
   if (m.weightMode === 'pct' && m.pct) {
-    return ` @ ${Math.round(m.pct)}% (${Math.round(m.weight)} kg)`;
+    return ` @ ${Math.round(m.pct)}%`;
   }
   return m.weight ? ` @ ${m.weight}kg` : '';
 }
@@ -2377,7 +2382,7 @@ function renderPlanCard(plan) {
 
   function formatLoad(m) {
     if (m.weightMode === 'pct' && m.pct) {
-      return ` @ ${Math.round(m.pct)}% (${Math.round(m.weight)} kg)`;
+      return ` @ ${Math.round(m.pct)}%`;
     }
     return m.weight ? ` @ ${m.weight}kg` : '';
   }
