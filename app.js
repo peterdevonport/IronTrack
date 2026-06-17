@@ -269,7 +269,7 @@ onAuthStateChanged(auth, async (user) => {
         if (pctEntriesList) pctEntriesList.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">Select a lift with data to get started.</p>';
         const pctAddInput = document.getElementById('pct-add-input');
         if (pctAddInput) pctAddInput.value = '';
-        const pctOneRm = document.getElementById('pct-one-rm-display');
+        const pctOneRm = document.getElementById('calc-one-rm-display');
         if (pctOneRm) pctOneRm.textContent = '—';
         const pctAddResult = document.getElementById('pct-add-result');
         if (pctAddResult) pctAddResult.textContent = '—';
@@ -760,9 +760,9 @@ function update1RMRegistryUI() {
 }
 
 function updatePercentageCard() {
-    const select = document.getElementById('pct-lift-select');
+    const select = document.getElementById('calc-lift-select');
     const entriesList = document.getElementById('pct-entries-list');
-    const oneRmDisplay = document.getElementById('pct-one-rm-display');
+    const oneRmDisplay = document.getElementById('calc-one-rm-display');
     const addInput = document.getElementById('pct-add-input');
     const addResult = document.getElementById('pct-add-result');
     if (!select || !entriesList) return;
@@ -821,7 +821,7 @@ function updatePercentageCard() {
 }
 
 function handlePctAdd() {
-    const select = document.getElementById('pct-lift-select');
+    const select = document.getElementById('calc-lift-select');
     const addInput = document.getElementById('pct-add-input');
     if (!select || !addInput) return;
 
@@ -840,7 +840,7 @@ function handlePctAdd() {
 }
 
 function handlePctRemove(btnEl) {
-    const select = document.getElementById('pct-lift-select');
+    const select = document.getElementById('calc-lift-select');
     if (!select || !btnEl) return;
     const exercise = select.value;
     const idx = parseInt(btnEl.dataset.index, 10);
@@ -850,7 +850,7 @@ function handlePctRemove(btnEl) {
 }
 
 function handlePctClear() {
-    const select = document.getElementById('pct-lift-select');
+    const select = document.getElementById('calc-lift-select');
     if (!select) return;
     const exercise = select.value;
     pctEntriesByLift[exercise] = [];
@@ -860,10 +860,10 @@ function handlePctClear() {
 }
 
 function updateRpeCard() {
-    const liftSelect = document.getElementById('rpe-lift-select');
+    const liftSelect = document.getElementById('calc-lift-select');
     const repsInput = document.getElementById('rpe-reps');
     const rpeSelect = document.getElementById('rpe-rpe');
-    const oneRmDisplay = document.getElementById('rpe-one-rm-display');
+    const oneRmDisplay = document.getElementById('calc-one-rm-display');
     const recommendation = document.getElementById('rpe-recommendation');
     const targetWeightEl = document.getElementById('rpe-target-weight');
     const detailEl = document.getElementById('rpe-detail');
@@ -902,6 +902,26 @@ function updateRpeCard() {
     recommendation.classList.remove('hidden');
     targetWeightEl.textContent = targetWeight > 0 ? `${targetWeight.toFixed(1)} kg` : '—';
     detailEl.textContent = `${reps} reps @ RPE ${rpe}  ·  ${rir} RIR  ·  Based on est. 1RM: ${Math.round(est1RM)} kg`;
+}
+
+function switchCalcTab(tab) {
+    const pctPanel = document.getElementById('calc-pct-panel');
+    const rpePanel = document.getElementById('calc-rpe-panel');
+    const pctTab = document.getElementById('tab-calc-pct');
+    const rpeTab = document.getElementById('tab-calc-rpe');
+    if (!pctPanel || !rpePanel || !pctTab || !rpeTab) return;
+
+    if (tab === 'pct') {
+        pctPanel.classList.remove('hidden');
+        rpePanel.classList.add('hidden');
+        pctTab.className = 'btn-core is-primary btn-size-row';
+        rpeTab.className = 'btn-core is-ghost btn-size-row';
+    } else {
+        pctPanel.classList.add('hidden');
+        rpePanel.classList.remove('hidden');
+        pctTab.className = 'btn-core is-ghost btn-size-row';
+        rpeTab.className = 'btn-core is-primary btn-size-row';
+    }
 }
 
 function debounce(fn, wait) {
@@ -972,13 +992,16 @@ if (externalLoadInput) {
 populateExerciseDropdown();
 populateLiftSelectors();
 
-// Wire %1RM calculator lift selector, add input, and clear button
-const pctLiftSelect = document.getElementById('pct-lift-select');
+// Wire calculator lift selector, add input, and clear button
+const calcLiftSelect = document.getElementById('calc-lift-select');
 const pctAddInput = document.getElementById('pct-add-input');
 const pctClearBtn = document.getElementById('pct-clear-btn');
 
-if (pctLiftSelect) {
-    pctLiftSelect.addEventListener('change', updatePercentageCard);
+if (calcLiftSelect) {
+    calcLiftSelect.addEventListener('change', () => {
+        updatePercentageCard();
+        updateRpeCard();
+    });
 }
 if (pctAddInput) {
     pctAddInput.addEventListener('input', updatePercentageCard);
@@ -998,12 +1021,10 @@ if (pctClearBtn) {
     pctClearBtn.addEventListener('click', handlePctClear);
 }
 
-// Wire RPE Weight Recommendation card events
-const rpeLiftSelect = document.getElementById('rpe-lift-select');
+// Wire RPE calculator events
 const rpeRepsInput = document.getElementById('rpe-reps');
 const rpeRpeSelect = document.getElementById('rpe-rpe');
 
-if (rpeLiftSelect) rpeLiftSelect.addEventListener('change', updateRpeCard);
 if (rpeRepsInput) rpeRepsInput.addEventListener('input', updateRpeCard);
 if (rpeRpeSelect) rpeRpeSelect.addEventListener('change', updateRpeCard);
 
@@ -1143,10 +1164,8 @@ function populateWorkoutFilter(exercises) {
 function populateLiftSelectors() {
     const groups = ['barbell', 'dumbbell', 'kettlebell'];
     const html = buildExerciseOptionsHtml(groups, '<option value="" disabled selected>Select lift...</option>');
-    const pctSelect = document.getElementById('pct-lift-select');
-    const rpeSelect = document.getElementById('rpe-lift-select');
-    if (pctSelect) pctSelect.innerHTML = html;
-    if (rpeSelect) rpeSelect.innerHTML = html;
+    const calcSelect = document.getElementById('calc-lift-select');
+    if (calcSelect) calcSelect.innerHTML = html;
 }
 
 // Mathematical Engine Implementations
@@ -3959,6 +3978,7 @@ window.switchLeaderboardScope = switchLeaderboardScope;
 window.switchLeaderboardFormula = switchLeaderboardFormula;
 window.showQRCode = showQRCode;
 window.handlePctRemove = handlePctRemove;
+window.switchCalcTab = switchCalcTab;
 window.switchWorkoutMode = switchWorkoutMode;
 window.addMovementRow = addMovementRow;
 window.removeMovementRow = removeMovementRow;
