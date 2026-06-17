@@ -758,14 +758,13 @@ function updateCalcCard() {
     const select = document.getElementById('calc-lift-select');
     const entriesList = document.getElementById('calc-entries-list');
     const oneRmDisplay = document.getElementById('calc-one-rm-display');
+    const previewBox = document.getElementById('calc-preview-box');
     if (!select || !entriesList) return;
 
     const exercise = select.value;
     if (!exercise) {
         if (oneRmDisplay) oneRmDisplay.textContent = '—';
         entriesList.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">Select a lift to begin.</p>';
-        const previewBox = document.getElementById('calc-preview-box');
-        if (previewBox) previewBox.classList.add('hidden');
         return;
     }
 
@@ -803,10 +802,10 @@ function switchCalcMode(mode) {
 }
 
 function updateCalcPreview() {
-    const previewBox = document.getElementById('calc-preview-box');
     const previewWeight = document.getElementById('calc-preview-weight');
     const previewDetail = document.getElementById('calc-preview-detail');
-    if (!previewBox || !previewWeight || !previewDetail) return;
+    const addBtn = document.getElementById('calc-add-btn');
+    if (!previewWeight || !previewDetail) return;
 
     const select = document.getElementById('calc-lift-select');
     if (!select) return;
@@ -814,7 +813,9 @@ function updateCalcPreview() {
     const oneRM = activeRecords[exercise] || 0;
 
     if (!exercise || oneRM <= 0) {
-        previewBox.classList.add('hidden');
+        previewWeight.textContent = '—';
+        previewDetail.textContent = 'Select a lift with 1RM data to see recommended weight.';
+        if (addBtn) addBtn.disabled = true;
         return;
     }
 
@@ -825,7 +826,9 @@ function updateCalcPreview() {
         const pctInput = document.getElementById('calc-pct-input');
         const pct = parseFloat(pctInput?.value);
         if (isNaN(pct) || pct <= 0) {
-            previewBox.classList.add('hidden');
+            previewWeight.textContent = '—';
+            previewDetail.textContent = 'Enter a percentage to calculate working weight.';
+            if (addBtn) addBtn.disabled = true;
             return;
         }
         weight = oneRM * pct / 100;
@@ -837,13 +840,17 @@ function updateCalcPreview() {
         const rpe = parseFloat(rpeSelect?.value);
 
         if (!reps || reps < 1 || isNaN(rpe)) {
-            previewBox.classList.add('hidden');
+            previewWeight.textContent = '—';
+            previewDetail.textContent = 'Enter reps and RPE to calculate working weight.';
+            if (addBtn) addBtn.disabled = true;
             return;
         }
 
         const rir = RPE_RIR_MAP[rpe];
         if (rir === undefined) {
-            previewBox.classList.add('hidden');
+            previewWeight.textContent = '—';
+            previewDetail.textContent = 'Select a valid RPE value.';
+            if (addBtn) addBtn.disabled = true;
             return;
         }
 
@@ -853,9 +860,9 @@ function updateCalcPreview() {
         detail = `${reps} reps @ RPE ${rpe}  ·  ${rir} RIR  ·  Based on est. 1RM: ${Math.round(oneRM)} kg`;
     }
 
-    previewBox.classList.remove('hidden');
     previewWeight.textContent = weight > 0 ? `${weight.toFixed(1)} kg` : '—';
     previewDetail.textContent = detail;
+    if (addBtn) addBtn.disabled = weight <= 0;
 }
 
 function handleCalcAdd() {
