@@ -186,7 +186,7 @@ let cachedMaxLoadByExercise = {};
 let cachedMax1RMByExercise = {};
 let calendarMonth = new Date();
 let calendarSelectedDate = null;
-let pctEntriesByLift = {};
+let calcEntriesByLift = {};
 let currentPage = 1;
 let urlParamsProcessed = false; // Add this flag
 
@@ -264,15 +264,11 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('workout-list').innerHTML = '';
         document.getElementById('structured-workout-list').innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">No structured workouts logged yet.</p>';
         document.getElementById('registry-table-body').innerHTML = '';
-        pctEntriesByLift = {};
-        const pctEntriesList = document.getElementById('pct-entries-list');
-        if (pctEntriesList) pctEntriesList.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">Select a lift with data to get started.</p>';
-        const pctAddInput = document.getElementById('pct-add-input');
-        if (pctAddInput) pctAddInput.value = '';
-        const pctOneRm = document.getElementById('calc-one-rm-display');
-        if (pctOneRm) pctOneRm.textContent = '—';
-        const pctAddResult = document.getElementById('pct-add-result');
-        if (pctAddResult) pctAddResult.textContent = '—';
+        calcEntriesByLift = {};
+        const calcEntriesList = document.getElementById('calc-entries-list');
+        if (calcEntriesList) calcEntriesList.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">Select a lift with data to get started.</p>';
+        const calcOneRm = document.getElementById('calc-one-rm-display');
+        if (calcOneRm) calcOneRm.textContent = '—';
         document.getElementById('dots-display').innerText = '0.0';
         document.getElementById('dots-tier').innerText = '-';
         document.getElementById('sinclair-display').innerText = '0.0';
@@ -718,8 +714,7 @@ function listenToDataStream(uid) {
           // ignore if populate not available
         }
         update1RMRegistryUI();
-        updatePercentageCard();
-        updateRpeCard();
+        updateCalcCard();
         await processAnalytics();
         renderLogs(workouts);
         debouncedSyncActivity();
@@ -759,169 +754,196 @@ function update1RMRegistryUI() {
     tableBody.innerHTML = html;
 }
 
-function updatePercentageCard() {
+function updateCalcCard() {
     const select = document.getElementById('calc-lift-select');
-    const entriesList = document.getElementById('pct-entries-list');
+    const entriesList = document.getElementById('calc-entries-list');
     const oneRmDisplay = document.getElementById('calc-one-rm-display');
-    const addInput = document.getElementById('pct-add-input');
-    const addResult = document.getElementById('pct-add-result');
     if (!select || !entriesList) return;
 
     const exercise = select.value;
     if (!exercise) {
         if (oneRmDisplay) oneRmDisplay.textContent = '—';
-        if (entriesList) entriesList.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">Select a lift to begin.</p>';
-        if (addResult) addResult.textContent = '—';
+        entriesList.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">Select a lift to begin.</p>';
+        const previewBox = document.getElementById('calc-preview-box');
+        if (previewBox) previewBox.classList.add('hidden');
         return;
     }
 
     const oneRM = activeRecords[exercise] || 0;
-
     if (oneRmDisplay) {
         oneRmDisplay.textContent = oneRM > 0 ? `${Math.round(oneRM)} kg` : '—';
     }
 
-    const entries = pctEntriesByLift[exercise] || [];
+    renderCalcEntries(exercise, oneRM);
+    updateCalcPreview();
+}
 
-    if (entries.length === 0 && oneRM <= 0) {
-        entriesList.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">No 1RM data for ' + escapeHtml(exercise) + ' yet. Log some sets first.</p>';
-        if (addResult) addResult.textContent = '—';
+let currentCalcMode = 'pct';
+
+function switchCalcMode(mode) {
+    currentCalcMode = mode;
+    const pctInputs = document.getElementById('calc-pct-inputs');
+    const rpeInputs = document.getElementById('calc-rpe-inputs');
+    const pctTab = document.getElementById('calc-mode-pct');
+    const rpeTab = document.getElementById('calc-mode-rpe');
+    if (!pctInputs || !rpeInputs || !pctTab || !rpeTab) return;
+
+    if (mode === 'pct') {
+        pctInputs.classList.remove('hidden');
+        rpeInputs.classList.add('hidden');
+        pctTab.className = 'btn-core is-primary btn-size-row';
+        rpeTab.className = 'btn-core is-ghost btn-size-row';
+    } else {
+        pctInputs.classList.add('hidden');
+        rpeInputs.classList.remove('hidden');
+        pctTab.className = 'btn-core is-ghost btn-size-row';
+        rpeTab.className = 'btn-core is-primary btn-size-row';
+    }
+    updateCalcPreview();
+}
+
+function updateCalcPreview() {
+    const previewBox = document.getElementById('calc-preview-box');
+    const previewWeight = document.getElementById('calc-preview-weight');
+    const previewDetail = document.getElementById('calc-preview-detail');
+    if (!previewBox || !previewWeight || !previewDetail) return;
+
+    const select = document.getElementById('calc-lift-select');
+    if (!select) return;
+    const exercise = select.value;
+    const oneRM = activeRecords[exercise] || 0;
+
+    if (!exercise || oneRM <= 0) {
+        previewBox.classList.add('hidden');
         return;
     }
 
+    let weight = null;
+    let detail = '';
+
+    if (currentCalcMode === 'pct') {
+        const pctInput = document.getElementById('calc-pct-input');
+        const pct = parseFloat(pctInput?.value);
+        if (isNaN(pct) || pct <= 0) {
+            previewBox.classList.add('hidden');
+            return;
+        }
+        weight = oneRM * pct / 100;
+        detail = `${pct}% of ${Math.round(oneRM)} kg`;
+    } else {
+        const repsInput = document.getElementById('calc-rpe-reps');
+        const rpeSelect = document.getElementById('calc-rpe-select');
+        const reps = parseInt(repsInput?.value, 10);
+        const rpe = parseFloat(rpeSelect?.value);
+
+        if (!reps || reps < 1 || isNaN(rpe)) {
+            previewBox.classList.add('hidden');
+            return;
+        }
+
+        const rir = RPE_RIR_MAP[rpe];
+        if (rir === undefined) {
+            previewBox.classList.add('hidden');
+            return;
+        }
+
+        const totalRepsPossible = reps + rir;
+        const pct1RM = 100 / (1 + totalRepsPossible / 30);
+        weight = oneRM * pct1RM / 100;
+        detail = `${reps} reps @ RPE ${rpe}  ·  ${rir} RIR  ·  Based on est. 1RM: ${Math.round(oneRM)} kg`;
+    }
+
+    previewBox.classList.remove('hidden');
+    previewWeight.textContent = weight > 0 ? `${weight.toFixed(1)} kg` : '—';
+    previewDetail.textContent = detail;
+}
+
+function handleCalcAdd() {
+    const select = document.getElementById('calc-lift-select');
+    if (!select) return;
+    const exercise = select.value;
+    const oneRM = activeRecords[exercise] || 0;
+    if (!exercise || oneRM <= 0) return;
+
+    if (!calcEntriesByLift[exercise]) {
+        calcEntriesByLift[exercise] = [];
+    }
+
+    if (currentCalcMode === 'pct') {
+        const pctInput = document.getElementById('calc-pct-input');
+        const pct = parseFloat(pctInput?.value);
+        if (isNaN(pct) || pct <= 0) return;
+        calcEntriesByLift[exercise].push({ type: 'pct', pct });
+        pctInput.value = '';
+    } else {
+        const repsInput = document.getElementById('calc-rpe-reps');
+        const rpeSelect = document.getElementById('calc-rpe-select');
+        const reps = parseInt(repsInput?.value, 10);
+        const rpe = parseFloat(rpeSelect?.value);
+        if (!reps || reps < 1 || isNaN(rpe)) return;
+        calcEntriesByLift[exercise].push({ type: 'rpe', reps, rpe });
+        repsInput.value = '';
+        rpeSelect.value = '';
+    }
+
+    renderCalcEntries(exercise, oneRM);
+    updateCalcPreview();
+    haptic(HAPTIC.confirm);
+}
+
+function handleCalcRemove(btnEl) {
+    const select = document.getElementById('calc-lift-select');
+    if (!select || !btnEl) return;
+    const exercise = select.value;
+    const idx = parseInt(btnEl.dataset.index, 10);
+    if (!calcEntriesByLift[exercise] || isNaN(idx) || idx < 0 || idx >= calcEntriesByLift[exercise].length) return;
+    calcEntriesByLift[exercise].splice(idx, 1);
+    const oneRM = activeRecords[exercise] || 0;
+    renderCalcEntries(exercise, oneRM);
+}
+
+function handleCalcClear() {
+    const select = document.getElementById('calc-lift-select');
+    if (!select) return;
+    const exercise = select.value;
+    calcEntriesByLift[exercise] = [];
+    const oneRM = activeRecords[exercise] || 0;
+    renderCalcEntries(exercise, oneRM);
+}
+
+function renderCalcEntries(exercise, oneRM) {
+    const entriesList = document.getElementById('calc-entries-list');
+    if (!entriesList) return;
+
+    const entries = calcEntriesByLift[exercise] || [];
+
     if (entries.length === 0) {
-        entriesList.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">Enter a % below to add a row.</p>';
-        if (addResult) addResult.textContent = '—';
+        entriesList.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">Enter values above and click Add to save working weights.</p>';
         return;
     }
 
     let html = '';
-    entries.forEach((pct, idx) => {
-        const weight = Math.round(oneRM * pct / 100);
+    entries.forEach((entry, idx) => {
+        let source, weight;
+        if (entry.type === 'pct') {
+            weight = Math.round(oneRM * entry.pct / 100);
+            source = `${entry.pct}%`;
+        } else {
+            const rir = RPE_RIR_MAP[entry.rpe];
+            weight = Math.round(oneRM * (100 / (1 + (entry.reps + rir) / 30)) / 100);
+            source = `${entry.reps} reps @ RPE ${entry.rpe}`;
+        }
         html += `
         <div class="flex justify-between items-center py-1.5 px-1 rounded-lg hover:bg-slate-800/40">
-            <span class="text-slate-200 font-mono text-sm">${pct}%</span>
+            <span class="text-slate-200 font-mono text-sm">${escapeHtml(source)}</span>
             <div class="flex items-center gap-2">
                 <span class="text-slate-200 font-mono text-sm">${weight} kg</span>
-                <button onclick="handlePctRemove(this)" data-index="${idx}" class="text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer">−</button>
+                <button onclick="handleCalcRemove(this)" data-index="${idx}" class="text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer">−</button>
             </div>
         </div>`;
     });
 
     entriesList.innerHTML = html;
-
-    if (addInput && addResult && oneRM > 0) {
-        const val = parseFloat(addInput.value);
-        if (!isNaN(val) && val > 0) {
-            addResult.textContent = `${Math.round(oneRM * val / 100)} kg`;
-        } else {
-            addResult.textContent = '—';
-        }
-    }
-}
-
-function handlePctAdd() {
-    const select = document.getElementById('calc-lift-select');
-    const addInput = document.getElementById('pct-add-input');
-    if (!select || !addInput) return;
-
-    const exercise = select.value;
-    const val = parseFloat(addInput.value);
-    const oneRM = activeRecords[exercise] || 0;
-
-    if (isNaN(val) || val <= 0 || oneRM <= 0) return;
-
-    if (!pctEntriesByLift[exercise]) {
-        pctEntriesByLift[exercise] = [];
-    }
-    pctEntriesByLift[exercise].push(val);
-    addInput.value = '';
-    updatePercentageCard();
-}
-
-function handlePctRemove(btnEl) {
-    const select = document.getElementById('calc-lift-select');
-    if (!select || !btnEl) return;
-    const exercise = select.value;
-    const idx = parseInt(btnEl.dataset.index, 10);
-    if (!pctEntriesByLift[exercise] || isNaN(idx) || idx < 0 || idx >= pctEntriesByLift[exercise].length) return;
-    pctEntriesByLift[exercise].splice(idx, 1);
-    updatePercentageCard();
-}
-
-function handlePctClear() {
-    const select = document.getElementById('calc-lift-select');
-    if (!select) return;
-    const exercise = select.value;
-    pctEntriesByLift[exercise] = [];
-    const addInput = document.getElementById('pct-add-input');
-    if (addInput) addInput.value = '';
-    updatePercentageCard();
-}
-
-function updateRpeCard() {
-    const liftSelect = document.getElementById('calc-lift-select');
-    const repsInput = document.getElementById('rpe-reps');
-    const rpeSelect = document.getElementById('rpe-rpe');
-    const oneRmDisplay = document.getElementById('calc-one-rm-display');
-    const recommendation = document.getElementById('rpe-recommendation');
-    const targetWeightEl = document.getElementById('rpe-target-weight');
-    const detailEl = document.getElementById('rpe-detail');
-    if (!liftSelect || !repsInput || !rpeSelect || !recommendation || !targetWeightEl || !detailEl) return;
-
-    const exercise = liftSelect.value;
-    const reps = parseInt(repsInput.value, 10);
-    const rpe = parseFloat(rpeSelect.value);
-
-    if (!exercise || !reps || reps < 1 || isNaN(rpe)) {
-        recommendation.classList.add('hidden');
-        if (oneRmDisplay) {
-            const est1RM = exercise && activeRecords[exercise] ? activeRecords[exercise] : 0;
-            oneRmDisplay.textContent = est1RM > 0 ? `${Math.round(est1RM)} kg` : '—';
-        }
-        return;
-    }
-
-    const est1RM = activeRecords[exercise] || 0;
-    if (oneRmDisplay) oneRmDisplay.textContent = est1RM > 0 ? `${Math.round(est1RM)} kg` : '—';
-
-    if (est1RM <= 0) {
-        recommendation.classList.remove('hidden');
-        targetWeightEl.textContent = '—';
-        detailEl.textContent = 'No 1RM data for ' + exercise + ' yet. Log some sets first.';
-        return;
-    }
-
-    const rir = RPE_RIR_MAP[rpe];
-    if (rir === undefined) return;
-
-    const totalRepsPossible = reps + rir;
-    const pct1RM = 100 / (1 + totalRepsPossible / 30);
-    const targetWeight = est1RM * pct1RM / 100;
-
-    recommendation.classList.remove('hidden');
-    targetWeightEl.textContent = targetWeight > 0 ? `${targetWeight.toFixed(1)} kg` : '—';
-    detailEl.textContent = `${reps} reps @ RPE ${rpe}  ·  ${rir} RIR  ·  Based on est. 1RM: ${Math.round(est1RM)} kg`;
-}
-
-function switchCalcTab(tab) {
-    const pctPanel = document.getElementById('calc-pct-panel');
-    const rpePanel = document.getElementById('calc-rpe-panel');
-    const pctTab = document.getElementById('tab-calc-pct');
-    const rpeTab = document.getElementById('tab-calc-rpe');
-    if (!pctPanel || !rpePanel || !pctTab || !rpeTab) return;
-
-    if (tab === 'pct') {
-        pctPanel.classList.remove('hidden');
-        rpePanel.classList.add('hidden');
-        pctTab.className = 'btn-core is-primary btn-size-row';
-        rpeTab.className = 'btn-core is-ghost btn-size-row';
-    } else {
-        pctPanel.classList.add('hidden');
-        rpePanel.classList.remove('hidden');
-        pctTab.className = 'btn-core is-ghost btn-size-row';
-        rpeTab.className = 'btn-core is-primary btn-size-row';
-    }
 }
 
 function debounce(fn, wait) {
@@ -992,41 +1014,44 @@ if (externalLoadInput) {
 populateExerciseDropdown();
 populateLiftSelectors();
 
-// Wire calculator lift selector, add input, and clear button
+// Wire calculator events
 const calcLiftSelect = document.getElementById('calc-lift-select');
-const pctAddInput = document.getElementById('pct-add-input');
-const pctClearBtn = document.getElementById('pct-clear-btn');
+const calcPctInput = document.getElementById('calc-pct-input');
+const calcRpeReps = document.getElementById('calc-rpe-reps');
+const calcRpeSelect = document.getElementById('calc-rpe-select');
+const calcAddBtn = document.getElementById('calc-add-btn');
+const calcClearBtn = document.getElementById('calc-clear-btn');
 
 if (calcLiftSelect) {
-    calcLiftSelect.addEventListener('change', () => {
-        updatePercentageCard();
-        updateRpeCard();
-    });
+    calcLiftSelect.addEventListener('change', updateCalcCard);
 }
-if (pctAddInput) {
-    pctAddInput.addEventListener('input', updatePercentageCard);
-    pctAddInput.addEventListener('keydown', (e) => {
+if (calcPctInput) {
+    calcPctInput.addEventListener('input', updateCalcPreview);
+    calcPctInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
-            handlePctAdd();
-        }
-    });
-    pctAddInput.addEventListener('blur', () => {
-        if (pctAddInput.value.trim()) {
-            handlePctAdd();
+            handleCalcAdd();
         }
     });
 }
-if (pctClearBtn) {
-    pctClearBtn.addEventListener('click', handlePctClear);
+if (calcRpeReps) {
+    calcRpeReps.addEventListener('input', updateCalcPreview);
+    calcRpeReps.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleCalcAdd();
+        }
+    });
 }
-
-// Wire RPE calculator events
-const rpeRepsInput = document.getElementById('rpe-reps');
-const rpeRpeSelect = document.getElementById('rpe-rpe');
-
-if (rpeRepsInput) rpeRepsInput.addEventListener('input', updateRpeCard);
-if (rpeRpeSelect) rpeRpeSelect.addEventListener('change', updateRpeCard);
+if (calcRpeSelect) {
+    calcRpeSelect.addEventListener('change', updateCalcPreview);
+}
+if (calcAddBtn) {
+    calcAddBtn.addEventListener('click', handleCalcAdd);
+}
+if (calcClearBtn) {
+    calcClearBtn.addEventListener('click', handleCalcClear);
+}
 
 // Wire PB / 1RM chips (toggle buttons) - use dataset.active as single source of truth
 const chipPBEl = document.getElementById('chip-pb'); //
@@ -3977,8 +4002,8 @@ window.removeFriend = removeFriend;
 window.switchLeaderboardScope = switchLeaderboardScope;
 window.switchLeaderboardFormula = switchLeaderboardFormula;
 window.showQRCode = showQRCode;
-window.handlePctRemove = handlePctRemove;
-window.switchCalcTab = switchCalcTab;
+window.handleCalcRemove = handleCalcRemove;
+window.switchCalcMode = switchCalcMode;
 window.switchWorkoutMode = switchWorkoutMode;
 window.addMovementRow = addMovementRow;
 window.removeMovementRow = removeMovementRow;
