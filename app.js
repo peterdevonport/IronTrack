@@ -196,6 +196,7 @@ let lastWorkouts = [];
 // Structured workout state
 let lastStructuredWorkouts = [];
 let structuredCurrentPage = 1;
+let plansCurrentPage = 1;
 let unsubscribeStructured = null;
 
 // Workout plan state
@@ -2825,6 +2826,9 @@ function renderStructuredWorkoutCard(sw) {
     <div class="flex flex-wrap gap-1.5 mt-2">
       ${movementsHtml}
     </div>
+    <div class="mt-3 flex justify-end">
+      <button type="button" onclick="redoWorkout('${sw.id}')" class="btn-core is-secondary btn-size-row">Load</button>
+    </div>
 </div>
   `;
 }
@@ -2842,7 +2846,7 @@ function renderStructuredWorkoutHistory() {
     return;
   }
 
-  const perPage = 5;
+  const perPage = 3;
   const totalPages = Math.max(1, Math.ceil(workouts.length / perPage));
   structuredCurrentPage = Math.min(structuredCurrentPage, totalPages);
   const start = (structuredCurrentPage - 1) * perPage;
@@ -2864,7 +2868,7 @@ function renderStructuredWorkoutHistory() {
 }
 
 function changeStructuredPage(direction) {
-  const totalPages = Math.max(1, Math.ceil(lastStructuredWorkouts.length / 5));
+  const totalPages = Math.max(1, Math.ceil(lastStructuredWorkouts.length / 3));
   if (direction === 'prev' && structuredCurrentPage > 1) {
     structuredCurrentPage--;
   } else if (direction === 'next' && structuredCurrentPage < totalPages) {
@@ -2905,16 +2909,46 @@ function listenToPlans(uid) {
 function renderPlansUI() {
   const container = document.getElementById('saved-plans-inline');
   const countEl = document.getElementById('saved-plans-count');
+  const pagination = document.getElementById('plans-pagination');
   if (!container) return;
 
   if (countEl) countEl.textContent = lastWorkoutPlans.length;
 
   if (!lastWorkoutPlans.length) {
     container.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">No saved plans yet.</p>';
+    if (pagination) pagination.classList.add('hidden');
     return;
   }
 
-  container.innerHTML = lastWorkoutPlans.map(plan => renderPlanCard(plan)).join('');
+  const perPage = 3;
+  const totalPages = Math.max(1, Math.ceil(lastWorkoutPlans.length / perPage));
+  plansCurrentPage = Math.min(plansCurrentPage, totalPages);
+  const start = (plansCurrentPage - 1) * perPage;
+  const pageItems = lastWorkoutPlans.slice(start, start + perPage);
+
+  container.innerHTML = pageItems.map(plan => renderPlanCard(plan)).join('');
+
+  if (pagination) {
+    const currentEl = document.getElementById('current-plans-page');
+    const totalEl = document.getElementById('total-plans-pages');
+    const prevBtn = document.getElementById('prev-plans-page-btn');
+    const nextBtn = document.getElementById('next-plans-page-btn');
+    if (currentEl) currentEl.textContent = plansCurrentPage;
+    if (totalEl) totalEl.textContent = totalPages;
+    if (prevBtn) prevBtn.disabled = plansCurrentPage <= 1;
+    if (nextBtn) nextBtn.disabled = plansCurrentPage >= totalPages;
+    pagination.classList.toggle('hidden', totalPages <= 1);
+  }
+}
+
+function changePlansPage(direction) {
+  const totalPages = Math.max(1, Math.ceil(lastWorkoutPlans.length / 3));
+  if (direction === 'prev' && plansCurrentPage > 1) {
+    plansCurrentPage--;
+  } else if (direction === 'next' && plansCurrentPage < totalPages) {
+    plansCurrentPage++;
+  }
+  renderPlansUI();
 }
 
 function renderPlanCard(plan) {
@@ -2984,6 +3018,8 @@ function loadPlan(planId) {
   const plan = lastWorkoutPlans.find(p => p.id === planId);
   if (!plan) return;
 
+  switchWorkoutMode('workout');
+
   const typeSelect = document.getElementById('workout-type');
   if (typeSelect) typeSelect.value = plan.type;
   handleWorkoutTypeChange();
@@ -2997,7 +3033,35 @@ function loadPlan(planId) {
     case 'INTERVAL': populateIntervalForm(structure); break;
   }
 
+  const recordCard = document.getElementById('record-training-card');
+  if (recordCard) recordCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
   showFeedback(`Plan "${plan.name}" loaded!`, 'emerald', `${plan.type.toLowerCase()}Feedback`);
+  haptic(HAPTIC.tap);
+}
+
+function redoWorkout(workoutId) {
+  const sw = lastStructuredWorkouts.find(w => w.id === workoutId);
+  if (!sw) return;
+
+  switchWorkoutMode('workout');
+
+  const typeSelect = document.getElementById('workout-type');
+  if (typeSelect) typeSelect.value = sw.type;
+  handleWorkoutTypeChange();
+
+  const structure = sw.structure || {};
+  switch (sw.type) {
+    case 'AMRAP': populateAmrapForm(structure); break;
+    case 'EMOM': populateEmomForm(structure); break;
+    case 'FOR_TIME': populateForTimeForm(structure); break;
+    case 'INTERVAL': populateIntervalForm(structure); break;
+  }
+
+  const recordCard = document.getElementById('record-training-card');
+  if (recordCard) recordCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  showFeedback(`Workout "${sw.name}" loaded for redo!`, 'emerald', `${sw.type.toLowerCase()}Feedback`);
   haptic(HAPTIC.tap);
 }
 
@@ -3660,6 +3724,12 @@ const nextStructuredBtn = document.getElementById('next-structured-page-btn');
 if (prevStructuredBtn) prevStructuredBtn.addEventListener('click', () => changeStructuredPage('prev'));
 if (nextStructuredBtn) nextStructuredBtn.addEventListener('click', () => changeStructuredPage('next'));
 
+// Plans Pagination
+const prevPlansBtn = document.getElementById('prev-plans-page-btn');
+const nextPlansBtn = document.getElementById('next-plans-page-btn');
+if (prevPlansBtn) prevPlansBtn.addEventListener('click', () => changePlansPage('prev'));
+if (nextPlansBtn) nextPlansBtn.addEventListener('click', () => changePlansPage('next'));
+
 // Initial movement row
 if (document.getElementById('movement-list')) {
   addMovementRow();
@@ -4189,6 +4259,7 @@ window.saveEmomPlan = saveEmomPlan;
 window.saveForTimePlan = saveForTimePlan;
 window.saveIntervalPlan = saveIntervalPlan;
 window.loadPlan = loadPlan;
+window.redoWorkout = redoWorkout;
 window.deletePlan = deletePlan;
 window.toggleWeightMode = toggleWeightMode;
 window.updatePillActive = updatePillActive;

@@ -499,7 +499,7 @@
             </div>
           </section>
 
-          <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1">
+          <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1" id="record-training-card">
             <h2 class="section-heading">Record Training</h2>
             <p class="text-description mb-4">Keep track of your training</p>
             <div class="flex gap-1 p-0.5 w-fit rounded-xl bg-slate-800/60 mb-4">
@@ -561,15 +561,6 @@
             </form>
 
             <div id="log-workout-section" class="hidden">
-              <details id="saved-plans-details" class="mb-4">
-                <summary class="text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer select-none">
-                  Saved Plans (<span id="saved-plans-count">0</span>)
-                </summary>
-                <div id="saved-plans-inline" class="mt-2 space-y-2 max-h-64 overflow-y-auto">
-                  <p class="text-xs text-slate-500 italic py-2 text-center">No saved plans yet.</p>
-                </div>
-              </details>
-
               <div id="workout-type-selector" class="mb-4">
                 <label class="form-label">Workout Type</label>
                 <select id="workout-type" class="dropdown-core" onchange="handleWorkoutTypeChange()">
@@ -833,6 +824,25 @@
           </section>
 
           <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1">
+            <h2 class="section-heading">Saved Plans</h2>
+            <p class="text-description mb-4">Your saved workout templates.</p>
+            <div id="saved-plans-inline" class="space-y-2">
+              <p class="text-xs text-slate-500 italic py-2 text-center">No saved plans yet.</p>
+            </div>
+            <div id="plans-pagination" class="hidden mt-4 flex items-center justify-between gap-3">
+              <button id="prev-plans-page-btn" class="btn-core is-secondary btn-size-input" type="button">
+                Previous
+              </button>
+              <p class="text-xs text-slate-400 text-center min-w-[120px]">
+                Page <span id="current-plans-page">1</span> of <span id="total-plans-pages">1</span>
+              </p>
+              <button id="next-plans-page-btn" class="btn-core is-secondary btn-size-input" type="button">
+                Next
+              </button>
+            </div>
+          </section>
+
+          <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1">
             <h2 class="section-heading">Calculators</h2>
             <p class="text-description mb-4">Estimate working weights from %1RM or RPE.</p>
 
@@ -889,6 +899,13 @@
 
             <button id="calc-clear-btn" class="btn-core is-secondary btn-size-input mt-3">Clear All</button>
           </section>
+
+        </div>
+      </details>
+
+      <details class="surface-card" open>
+        <summary class="section-heading cursor-pointer select-none">History</summary>
+        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6 mt-4">
 
           <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1" id="consistency-section">
             <h2 class="section-heading">Training Calendar</h2>
