@@ -180,6 +180,7 @@ const RPE_RIR_MAP = { 10: 0, 9: 1, 8: 2, 7: 3, 6: 4 };
 let currentUser = null;
 let unsubscribeLogs = null;
 let userBiometrics = { gender: 'male', bodyweight: 75 };
+let userChallengeStreaks = { monthly: { completedPeriods: [], currentStreak: 0, bestStreak: 0 }, yearly: { completedPeriods: [], currentStreak: 0, bestStreak: 0 } };
 let pendingOnboarding1RMs = [];
 let activeRecords = {};
 let cachedMaxLoadByExercise = {};
@@ -416,6 +417,12 @@ async function pullProfileMetrics(uid) {
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
             userBiometrics = { gender: 'male', bodyweight: 75, displayName: '', ...docSnap.data() };
+            if (docSnap.data().challengeStreaks) {
+                userChallengeStreaks = {
+                    monthly: { completedPeriods: [], currentStreak: 0, bestStreak: 0, ...docSnap.data().challengeStreaks.monthly },
+                    yearly: { completedPeriods: [], currentStreak: 0, bestStreak: 0, ...docSnap.data().challengeStreaks.yearly }
+                };
+            }
             document.getElementById('profile-gender').value = userBiometrics.gender;
             document.getElementById('profile-weight').value = userBiometrics.bodyweight;
             document.getElementById('profile-display-name').value = userBiometrics.displayName || '';
@@ -2533,25 +2540,18 @@ function renderChallengeCards() {
     setChallengeCard('challenge-monthly', progress.monthly, cfg.monthlyUniqueDays, monthlyPct, monthlyDone);
     setChallengeCard('challenge-yearly', progress.yearly, cfg.yearlyUniqueDays, yearlyPct, yearlyDone);
     setChallengeCard('challenge-lifetime', progress.lifetime, cfg.lifetimeUniqueDays, lifetimePct, lifetimeDone);
+
+    updateChallengeStreaks(monthlyDone, yearlyDone);
 }
 
 function setChallengeCard(idPrefix, current, target, pct, completed) {
     const progressEl = document.getElementById(`${idPrefix}-progress`);
     const barEl = document.getElementById(`${idPrefix}-bar`);
-    const badgeEl = document.getElementById(`${idPrefix}-badge`);
     const cardEl = document.getElementById(idPrefix);
     if (!progressEl || !barEl) return;
 
-    progressEl.textContent = `${current} / ${target}`;
+    progressEl.textContent = completed ? `${current} / ${target} \u{1F3C6}` : `${current} / ${target}`;
     barEl.style.width = `${pct}%`;
-
-    if (completed) {
-        if (badgeEl) badgeEl.classList.remove('hidden');
-        if (cardEl) cardEl.classList.add('completed');
-    } else {
-        if (badgeEl) badgeEl.classList.add('hidden');
-        if (cardEl) cardEl.classList.remove('completed');
-    }
 }
 
 async function loadConsistencyConfig() {
@@ -2567,6 +2567,89 @@ async function loadConsistencyConfig() {
         // Config doc may not exist or permission-denied; use defaults
     }
     renderChallengeCards();
+}
+
+function getPreviousPeriodId(periodId, type) {
+    if (type === 'monthly') {
+        const [y, m] = periodId.split('-').map(Number);
+        const d = new Date(y, m - 2, 1);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    }
+    return String(parseInt(periodId) - 1);
+}
+
+function calculateStreakFromPeriods(completedPeriods, type) {
+    if (!completedPeriods || completedPeriods.length === 0) return 0;
+    const sorted = [...completedPeriods].sort().reverse();
+    let streak = 1;
+    let current = sorted[0];
+    for (let i = 1; i < sorted.length; i++) {
+        if (sorted[i] === getPreviousPeriodId(current, type)) {
+            streak++;
+            current = sorted[i];
+        } else {
+            break;
+        }
+    }
+    return streak;
+}
+
+function renderStreakUI(monthlyStreak, yearlyStreak) {
+    const monthlyEl = document.getElementById('challenge-monthly-streak');
+    const yearlyEl = document.getElementById('challenge-yearly-streak');
+    if (monthlyEl) {
+        if (monthlyStreak > 0) {
+            monthlyEl.textContent = `\u{1F525} ${monthlyStreak}-month streak`;
+            monthlyEl.classList.remove('hidden');
+        } else {
+            monthlyEl.classList.add('hidden');
+        }
+    }
+    if (yearlyEl) {
+        if (yearlyStreak > 0) {
+            yearlyEl.textContent = `\u{1F525} ${yearlyStreak}-year streak`;
+            yearlyEl.classList.remove('hidden');
+        } else {
+            yearlyEl.classList.add('hidden');
+        }
+    }
+}
+
+async function updateChallengeStreaks(monthlyDone, yearlyDone) {
+    if (!currentUser) return;
+    const now = new Date();
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const currentYear = String(now.getFullYear());
+
+    let updated = false;
+    const monthly = { completedPeriods: [...userChallengeStreaks.monthly.completedPeriods], currentStreak: 0, bestStreak: userChallengeStreaks.monthly.bestStreak || 0 };
+    const yearly = { completedPeriods: [...userChallengeStreaks.yearly.completedPeriods], currentStreak: 0, bestStreak: userChallengeStreaks.yearly.bestStreak || 0 };
+
+    if (monthlyDone && !monthly.completedPeriods.includes(currentMonth)) {
+        monthly.completedPeriods.push(currentMonth);
+        updated = true;
+    }
+    if (yearlyDone && !yearly.completedPeriods.includes(currentYear)) {
+        yearly.completedPeriods.push(currentYear);
+        updated = true;
+    }
+
+    monthly.currentStreak = calculateStreakFromPeriods(monthly.completedPeriods, 'monthly');
+    yearly.currentStreak = calculateStreakFromPeriods(yearly.completedPeriods, 'yearly');
+    monthly.bestStreak = Math.max(monthly.bestStreak, monthly.currentStreak);
+    yearly.bestStreak = Math.max(yearly.bestStreak, yearly.currentStreak);
+
+    userChallengeStreaks = { monthly, yearly };
+
+    renderStreakUI(monthly.currentStreak, yearly.currentStreak);
+
+    if (updated) {
+        try {
+            await setDoc(doc(db, "profiles", currentUser.uid), { challengeStreaks: userChallengeStreaks }, { merge: true });
+        } catch (e) {
+            console.error('Failed to sync challenge streaks', e);
+        }
+    }
 }
 
 function renderCalendar() {
