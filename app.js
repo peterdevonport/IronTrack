@@ -228,6 +228,7 @@ let leaderboardCache = [];
 
 // Extract pending friend request from URL before any auth redirect clears it
 const pendingFriendUid = new URLSearchParams(window.location.search).get('addFriend');
+const pendingClaimPlanId = new URLSearchParams(window.location.search).get('claimPlan');
 
 // Authentication State Listener
 onAuthStateChanged(auth, async (user) => {
@@ -264,8 +265,15 @@ onAuthStateChanged(auth, async (user) => {
         showQRCode()
 
         if (pendingFriendUid && !urlParamsProcessed) {
-            urlParamsProcessed = true;
             await processFriendRequest(pendingFriendUid);
+        }
+
+        if (pendingClaimPlanId && !urlParamsProcessed) {
+            await processClaimedPlan(pendingClaimPlanId);
+        }
+
+        if (pendingFriendUid || pendingClaimPlanId) {
+            urlParamsProcessed = true;
             window.history.replaceState({}, document.title, window.location.pathname);
         }
 
@@ -1192,7 +1200,7 @@ function escapeHtml(text) {
 }
 
 function haptic(pattern) {
-    if (navigator.vibrate) navigator.vibrate(pattern);
+    try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (_) {}
 }
 
 function updatePaginationControls(totalPages) {
@@ -3269,6 +3277,29 @@ function redoWorkout(workoutId) {
 // ── Share Plan with Friend ──
 
 let sharePlanId = null;
+let shareMode = 'friends'; // 'friends' | 'qr'
+
+function switchShareMode(mode) {
+  shareMode = mode;
+  const btnFriends = document.getElementById('share-mode-friends');
+  const btnQR = document.getElementById('share-mode-qr');
+  const friendsSection = document.getElementById('share-friends-section');
+  const qrSection = document.getElementById('share-qr-section');
+
+  if (mode === 'friends') {
+    btnFriends.className = 'btn-core is-primary btn-size-row';
+    btnQR.className = 'btn-core is-ghost btn-size-row';
+    friendsSection.classList.remove('hidden');
+    qrSection.classList.add('hidden');
+    document.getElementById('share-plan-feedback').textContent = '';
+  } else {
+    btnQR.className = 'btn-core is-primary btn-size-row';
+    btnFriends.className = 'btn-core is-ghost btn-size-row';
+    friendsSection.classList.add('hidden');
+    qrSection.classList.remove('hidden');
+    shareByQR();
+  }
+}
 
 async function openShareModal(planId) {
   const modal = document.getElementById('share-plan-modal');
@@ -3279,6 +3310,8 @@ async function openShareModal(planId) {
   sharePlanId = planId;
   feedback.textContent = '';
 
+  switchShareMode('friends');
+  document.getElementById('share-qr-display').innerHTML = '';
   document.getElementById('share-select-all-container').classList.add('hidden');
   if (!userFriendsList.length) {
     list.innerHTML = '<p class="text-xs text-slate-500 italic text-center py-2">No friends linked yet. Add friends in the Friends section first.</p>';
@@ -3365,6 +3398,64 @@ async function shareWithFriends() {
   }
 }
 
+async function shareByQR() {
+  const feedback = document.getElementById('share-plan-feedback');
+  const qrDisplay = document.getElementById('share-qr-display');
+  if (!qrDisplay) return;
+
+  const plan = lastWorkoutPlans.find(p => p.id === sharePlanId);
+  if (!plan) {
+    feedback.textContent = 'Plan not found.';
+    return;
+  }
+
+  const sharerSnap = await getDoc(getProfileDocRef(currentUser.uid));
+  const sharerData = sharerSnap.exists() ? sharerSnap.data() : {};
+  const displayName = sharerData.displayName || currentUser?.email?.split('@')[0] || 'Unknown';
+
+  try {
+    const docRef = await addDoc(collection(db, "shared_plans"), {
+      sharedBy: currentUser.uid,
+      sharedByDisplayName: displayName,
+      sharedWith: '__qr__',
+      shareMethod: 'qr',
+      planId: plan.id,
+      contentType: 'plan',
+      content: {
+        name: plan.name,
+        type: plan.type,
+        structure: plan.structure
+      },
+      status: 'pending',
+      createdAt: serverTimestamp()
+    });
+
+    const qrUrl = window.location.origin + '/?claimPlan=' + docRef.id;
+    qrDisplay.innerHTML = '';
+    const qrConfig = {
+      type: "canvas",
+      shape: "square",
+      width: 300,
+      height: 300,
+      data: qrUrl,
+      margin: 0,
+      qrOptions: { typeNumber: 0, mode: "Byte", errorCorrectionLevel: "Q" },
+      imageOptions: { saveAsBlob: true, hideBackgroundDots: true, imageSize: 0.4, margin: 0 },
+      dotsOptions: { type: "dots", color: "#f8fafc", roundSize: true, gradient: null },
+      backgroundOptions: { round: 0, color: "#0f172a" },
+      cornersSquareOptions: { type: "extra-rounded", color: "#34d399" },
+      cornersDotOptions: { type: "", color: "#f8fafc" }
+    };
+    const qrCode = new QRCodeStyling(qrConfig);
+    qrCode.append(qrDisplay);
+    feedback.textContent = 'QR code generated! Friend scans to import.';
+    haptic(HAPTIC.confirm);
+  } catch (err) {
+    console.error('QR share failed', err.code, err.message);
+    feedback.textContent = 'Failed to generate QR: ' + err.message;
+  }
+}
+
 function listenToSharedPlans(uid) {
   const q = query(
     collection(db, "shared_plans"),
@@ -3374,7 +3465,6 @@ function listenToSharedPlans(uid) {
     const plans = [];
     snapshot.forEach((doc) => {
       const data = doc.data();
-      if (data.status !== 'pending') return;
       const createdAt = data.createdAt?.toMillis ? data.createdAt.toMillis() : data.createdAt;
       plans.push({ id: doc.id, ...data, createdAt });
     });
@@ -4489,6 +4579,7 @@ if (shareSendBtn) shareSendBtn.addEventListener('click', () => shareWithFriends(
 if (shareCancelBtn) shareCancelBtn.addEventListener('click', () => {
   document.getElementById('share-plan-modal').classList.add('hidden');
   document.getElementById('share-plan-feedback').textContent = '';
+  document.getElementById('share-qr-display').innerHTML = '';
   sharePlanId = null;
 });
 
@@ -4953,6 +5044,19 @@ function showFeedback(msg, color, targetId = 'socialFeedback', delay = 2000) {
   }
 }
 
+function showToast(msg, color) {
+    const inner = document.getElementById('toast-notification-inner');
+    if (!inner) return;
+    const colorClasses = { emerald: 'text-emerald-400', red: 'text-red-400', yellow: 'text-yellow-400', slate: 'text-slate-400' };
+    inner.innerText = msg;
+    inner.className = `px-4 py-2 rounded-lg bg-slate-800/90 backdrop-blur-sm border border-slate-700 shadow-xl text-xs font-medium transition-all duration-500 opacity-100 ${colorClasses[color] || 'text-slate-400'}`;
+    if (inner.dataset.timeoutId) clearTimeout(Number(inner.dataset.timeoutId));
+    inner.dataset.timeoutId = String(setTimeout(() => {
+        inner.classList.replace('opacity-100', 'opacity-0');
+        setTimeout(() => { inner.innerText = ''; }, 500);
+    }, 3000));
+}
+
 function showQRCode() {
     const container = document.getElementById('qrcode-container');
     const qrDiv = document.getElementById('qrcode');
@@ -5034,6 +5138,46 @@ async function processFriendRequest(friendId) {
     }
 }
 
+async function processClaimedPlan(claimId) {
+    if (!currentUser) return;
+
+    try {
+        const shareSnap = await getDoc(doc(db, "shared_plans", claimId));
+        if (!shareSnap.exists()) {
+            console.error("Claimed plan not found.");
+            return;
+        }
+
+        const data = shareSnap.data();
+        if (data.shareMethod !== 'qr' || data.status !== 'pending') {
+            console.error("Invalid or already claimed plan.");
+            return;
+        }
+
+        if (data.sharedBy === currentUser.uid) {
+            console.log("Cannot claim your own QR share.");
+            return;
+        }
+
+        await addDoc(collection(db, "shared_plans"), {
+            sharedBy: data.sharedBy,
+            sharedByDisplayName: data.sharedByDisplayName,
+            sharedWith: currentUser.uid,
+            shareMethod: 'qr_claimed',
+            planId: data.planId,
+            contentType: 'plan',
+            content: data.content,
+            status: 'active',
+            createdAt: serverTimestamp()
+        });
+        await updateDoc(doc(db, "shared_plans", claimId), { status: 'claimed', claimedBy: currentUser.uid });
+        showToast('Plan imported from QR code!', 'emerald');
+    } catch (err) {
+        console.error("Claim plan failed:", err);
+        showToast('Failed to import plan from QR.', 'red');
+    }
+}
+
 window.copyCyberTag = copyCyberTag;
 window.handleAddFriend = handleAddFriend;
 window.addFriendFromLeaderboard = addFriendFromLeaderboard;
@@ -5068,6 +5212,8 @@ window.switchPlansFilter = switchPlansFilter;
 window.toggleSelectAllFriends = toggleSelectAllFriends;
 window.toggleFavorite = toggleFavorite;
 window.loadSharedPlan = loadSharedPlan;
+window.switchShareMode = switchShareMode;
+window.shareByQR = shareByQR;
 window.toggleWeightMode = toggleWeightMode;
 window.updatePillActive = updatePillActive;
 window.switchVolumePeriod = switchVolumePeriod;
