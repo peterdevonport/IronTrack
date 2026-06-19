@@ -1,5 +1,10 @@
-const CACHE = "irontrack-v2";
-const URLS = ["./", "./index.html", "./style.css", "./app.js", "./manifest.json", "./irontrack.png"];
+const CACHE = "irontrack-v3";
+const URLS = ["./", "./index.html", "./style.css", "./app.js", "./manifest.json",
+  "./favicon.ico", "./icon-16x16.png", "./icon-32x32.png",
+  "./icon-48x48.png", "./icon-64x64.png", "./icon-96x96.png",
+  "./icon-128x128.png", "./icon-144x144.png", "./icon-152x152.png",
+  "./icon-192x192.png", "./icon-256x256.png", "./icon-512x512.png",
+  "./apple-touch-icon.png"];
 
 self.addEventListener("install", (e) => {
   self.skipWaiting();
