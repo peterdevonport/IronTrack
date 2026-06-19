@@ -451,6 +451,13 @@
               <span class="text-purple-400 font-bold uppercase text-[10px] text-right">Personal Best</span>
 
               <div id="registry-table-body" class="col-span-3 grid grid-cols-3 gap-y-3 gap-x-4"></div>
+              <div id="records-pagination" class="hidden col-span-3 flex items-center justify-between gap-3 mt-2">
+                <button id="prev-records-page-btn" class="btn-core is-secondary btn-size-input" type="button">Previous</button>
+                <p class="text-xs text-slate-400 text-center min-w-[120px]">
+                  Page <span id="current-records-page">1</span> of <span id="total-records-pages">1</span>
+                </p>
+                <button id="next-records-page-btn" class="btn-core is-secondary btn-size-input" type="button">Next</button>
+              </div>
             </div>
           </section>
 

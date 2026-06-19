@@ -189,6 +189,7 @@ let calendarMonth = new Date();
 let calendarSelectedDate = null;
 let calcEntriesByLift = {};
 let currentPage = 1;
+let recordsCurrentPage = 1;
 let urlParamsProcessed = false; // Add this flag
 
 let paginatedWorkouts = [];
@@ -906,11 +907,19 @@ function update1RMRegistryUI() {
 
     if (uniqueExercises.length === 0) {
         tableBody.innerHTML = `<p class="col-span-3 text-xs text-slate-500 italic py-2 text-center">No logs recorded yet.</p>`;
+        const pagination = document.getElementById('records-pagination');
+        if (pagination) pagination.classList.add('hidden');
         return;
     }
 
+    const recordsPerPage = 10;
+    const totalPages = Math.max(1, Math.ceil(uniqueExercises.length / recordsPerPage));
+    recordsCurrentPage = Math.min(recordsCurrentPage, totalPages);
+    const start = (recordsCurrentPage - 1) * recordsPerPage;
+    const pageExercises = uniqueExercises.slice(start, start + recordsPerPage);
+
     let html = '';
-    uniqueExercises.forEach(exercise => {
+    pageExercises.forEach(exercise => {
         const maxEstimated1RM = cachedMax1RMByExercise[exercise] || 0;
         const absolutePB = cachedMaxLoadByExercise[exercise] || 0;
         html += `
@@ -921,6 +930,19 @@ function update1RMRegistryUI() {
     });
 
     tableBody.innerHTML = html;
+
+    const pagination = document.getElementById('records-pagination');
+    if (pagination) {
+        const currentEl = document.getElementById('current-records-page');
+        const totalEl = document.getElementById('total-records-pages');
+        const prevBtn = document.getElementById('prev-records-page-btn');
+        const nextBtn = document.getElementById('next-records-page-btn');
+        if (currentEl) currentEl.textContent = recordsCurrentPage;
+        if (totalEl) totalEl.textContent = totalPages;
+        if (prevBtn) prevBtn.disabled = recordsCurrentPage <= 1;
+        if (nextBtn) nextBtn.disabled = recordsCurrentPage >= totalPages;
+        pagination.classList.toggle('hidden', totalPages <= 1);
+    }
 }
 
 function updateCalcCard() {
@@ -1163,6 +1185,27 @@ if (prevPageBtn) {
 }
 if (nextPageBtn) {
     nextPageBtn.addEventListener('click', () => changePage('next'));
+}
+
+function changeRecordsPage(direction) {
+    const manualWorkouts = lastWorkouts.filter(w => w.source !== 'structured');
+    const uniqueExercises = Array.from(new Set(manualWorkouts.map(w => w.exercise))).filter(Boolean).sort();
+    const totalPages = Math.max(1, Math.ceil(uniqueExercises.length / 10));
+    if (direction === 'prev' && recordsCurrentPage > 1) {
+        recordsCurrentPage--;
+    } else if (direction === 'next' && recordsCurrentPage < totalPages) {
+        recordsCurrentPage++;
+    }
+    update1RMRegistryUI();
+}
+
+const prevRecordsBtn = document.getElementById('prev-records-page-btn');
+const nextRecordsBtn = document.getElementById('next-records-page-btn');
+if (prevRecordsBtn) {
+    prevRecordsBtn.addEventListener('click', () => changeRecordsPage('prev'));
+}
+if (nextRecordsBtn) {
+    nextRecordsBtn.addEventListener('click', () => changeRecordsPage('next'));
 }
 if (workoutFilter) {
   workoutFilter.addEventListener('change', () => {
