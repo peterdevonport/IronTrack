@@ -394,3 +394,86 @@ details.surface-card summary::after {
 details.surface-card[open] summary::after {
   transform: rotate(180deg);
 }
+
+/* ==========================================
+   VOLUME HISTORY (Issue #38)
+   ========================================== */
+#vh-bars-container {
+  height: 120px;
+  position: relative;
+}
+.vh-bar-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+  height: 100%;
+}
+.vh-bar {
+  width: 100%;
+  max-width: 40px;
+  border-radius: 4px 4px 0 0;
+  background: linear-gradient(180deg, var(--emerald-400), #059669);
+  min-height: 4px;
+  transition: height 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+}
+.vh-bar:hover {
+  opacity: 0.8;
+}
+.vh-bar.is-zero {
+  height: 0 !important;
+  min-height: 0;
+  background: none;
+  cursor: default;
+}
+.vh-bar-label {
+  font-size: 9px;
+  line-height: 1;
+  color: var(--slate-400);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  flex-shrink: 0;
+  min-height: 9px;
+}
+.vh-bar-tooltip {
+  display: none;
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--slate-800);
+  border: 1px solid var(--slate-700);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 10px;
+  color: var(--emerald-400);
+  font-weight: 700;
+  font-family: monospace;
+  white-space: nowrap;
+  z-index: 10;
+  pointer-events: none;
+  margin-bottom: 4px;
+}
+.vh-bar:hover .vh-bar-tooltip {
+  display: block;
+}
+.vh-avg-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1.5px dashed var(--slate-400);
+  pointer-events: none;
+  z-index: 5;
+}
+#vh-avg,
+#vh-total {
+  font-family: monospace;
+}

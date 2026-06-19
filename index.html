@@ -1002,6 +1002,41 @@
             </div>
           </section>
 
+          <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1" id="volume-history-section">
+            <h2 class="section-heading">Volume History</h2>
+            <p class="text-description mb-4">Track your training volume over time.</p>
+
+            <div class="flex flex-wrap items-end justify-between gap-3 mb-4">
+              <div class="inline-flex gap-1 p-0.5 rounded-xl bg-slate-800/60">
+                <button id="vh-period-daily" type="button" class="btn-core is-primary btn-size-row" onclick="switchVolumePeriod('daily')">Daily</button>
+                <button id="vh-period-weekly" type="button" class="btn-core is-ghost btn-size-row" onclick="switchVolumePeriod('weekly')">Weekly</button>
+                <button id="vh-period-monthly" type="button" class="btn-core is-ghost btn-size-row" onclick="switchVolumePeriod('monthly')">Monthly</button>
+                <button id="vh-period-yearly" type="button" class="btn-core is-ghost btn-size-row" onclick="switchVolumePeriod('yearly')">Yearly</button>
+              </div>
+              <div class="flex gap-1">
+                <button id="vh-prev" type="button" class="btn-core is-secondary btn-size-row" onclick="shiftVolumePeriod(-1)">&lt;</button>
+                <button id="vh-next" type="button" class="btn-core is-secondary btn-size-row" onclick="shiftVolumePeriod(1)">&gt;</button>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <select id="vh-filter" class="dropdown-core" onchange="onVolumeFilterChange()">
+                <option value="All">All Exercises</option>
+              </select>
+            </div>
+
+            <p id="vh-range-label" class="text-xs text-slate-400 font-mono mb-3"></p>
+
+            <div id="vh-bars-container" class="flex items-end gap-1.5">
+              <p class="text-xs text-slate-500 italic py-8 text-center w-full">Computing volume history...</p>
+            </div>
+
+            <div class="flex justify-between text-sm font-mono mt-3">
+              <span id="vh-avg" class="text-slate-400 font-bold"></span>
+              <span id="vh-total" class="text-emerald-400 font-bold"></span>
+            </div>
+          </section>
+
         </div>
       </details>
 

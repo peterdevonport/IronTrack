@@ -19,6 +19,12 @@ window.__irontrackAppLoaded = true;
 window.__irontrackAuthState = 'pending';
 window.__irontrackWorkoutCount = 0;
 
+// Volume History State (Issue #38)
+let volumePeriod = 'daily';
+let volumePeriodOffset = 0;
+let volumeFilter = 'All';
+let userSignupTs = 0;
+
 // Exercise Catalog & Load Factors
 const EXERCISE_CATALOG = [
   // ── Barbell ──
@@ -223,6 +229,7 @@ onAuthStateChanged(auth, async (user) => {
         appView.classList.remove('hidden');
         authBtn.innerText = "Sign Out";
         window.__irontrackAuthState = 'signed-in';
+        userSignupTs = new Date(user.metadata.creationTime).getTime() || 0;
         
         // ... (existing code: handle, greeting, cyberTag, pullProfileMetrics) ...
         const handle = (user.email || user.uid).split('@')[0];
@@ -880,6 +887,7 @@ function listenToDataStream(uid) {
         try {
           const uniqueExercises = Array.from(new Set(workouts.map(w => w.exercise)));
           populateWorkoutFilter(uniqueExercises);
+          populateVolumeFilter(uniqueExercises);
         } catch (e) {
           // ignore if populate not available
         }
@@ -887,6 +895,7 @@ function listenToDataStream(uid) {
         updateCalcCard();
         await processAnalytics();
         renderLogs(workouts);
+        renderVolumeHistory();
         debouncedSyncActivity();
     }, (error) => {
         console.error('Workout stream error', error.code, error.message);
@@ -3682,6 +3691,262 @@ function renderLogs(workouts) {
     }).join('');
 }
 
+// ==========================================
+// VOLUME HISTORY (Issue #38)
+// ==========================================
+
+function getWeekStart(date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  d.setDate(diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function getWeekEnd(date) {
+  const d = getWeekStart(date);
+  d.setDate(d.getDate() + 6);
+  d.setHours(23, 59, 59, 999);
+  return d;
+}
+
+function toLocalDateKey(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function computeVolumeHistory(workouts, period, filterExercise) {
+  const now = new Date();
+  const buckets = {};
+
+  if (period === 'daily') {
+    const ref = new Date(now);
+    ref.setDate(ref.getDate() + volumePeriodOffset * 7);
+    const weekStart = getWeekStart(ref);
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(weekStart);
+      d.setDate(d.getDate() + i);
+      const key = toLocalDateKey(d);
+      const periodStart = new Date(d);
+      const periodEnd = new Date(d);
+      periodEnd.setHours(23, 59, 59, 999);
+      const periodEndMs = periodEnd.getTime();
+      buckets[key] = { label: periodEndMs < userSignupTs ? '' : d.toLocaleDateString('en-US', { weekday: 'short' }), volume: 0, periodStart: periodStart.getTime(), periodEnd: periodEndMs };
+    }
+  } else if (period === 'weekly') {
+    const monthRef = new Date(now.getFullYear(), now.getMonth() + volumePeriodOffset, 1);
+    const monthStart = monthRef;
+    const monthEnd = new Date(monthRef.getFullYear(), monthRef.getMonth() + 1, 0, 23, 59, 59, 999);
+    const firstWeekStart = getWeekStart(monthStart);
+    const lastWeekStart = getWeekStart(monthEnd);
+    let cursor = new Date(firstWeekStart);
+    while (cursor <= lastWeekStart) {
+      const weekEnd = getWeekEnd(cursor);
+      const key = toLocalDateKey(cursor);
+      const weekEndMs = weekEnd.getTime();
+      const label = weekEndMs < userSignupTs ? '' : cursor.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      buckets[key] = { label, volume: 0, weekStart: new Date(cursor), weekEnd: new Date(weekEnd), periodStart: cursor.getTime(), periodEnd: weekEndMs };
+      cursor.setDate(cursor.getDate() + 7);
+    }
+  } else if (period === 'monthly') {
+    const year = now.getFullYear() + volumePeriodOffset;
+    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    for (let i = 0; i < 12; i++) {
+      const key = `${year}-${String(i + 1).padStart(2, '0')}`;
+      const monthEnd = new Date(year, i + 1, 0, 23, 59, 59, 999);
+      const monthStart = new Date(year, i, 1);
+      const monthEndMs = monthEnd.getTime();
+      buckets[key] = { label: monthEndMs < userSignupTs ? '' : monthNames[i], volume: 0, periodStart: monthStart.getTime(), periodEnd: monthEndMs };
+    }
+  } else {
+    const baseYear = now.getFullYear() + volumePeriodOffset * 5;
+    for (let i = 0; i < 5; i++) {
+      const yr = baseYear - 4 + i;
+      const key = String(yr);
+      const yearEnd = new Date(yr + 1, 0, 0, 23, 59, 59, 999);
+      const yearStart = new Date(yr, 0, 1);
+      const yearEndMs = yearEnd.getTime();
+      buckets[key] = { label: yearEndMs < userSignupTs ? '' : String(yr), volume: 0, periodStart: yearStart.getTime(), periodEnd: yearEndMs };
+    }
+  }
+
+  workouts.forEach(w => {
+    const ts = w.timestamp;
+    if (!ts) return;
+    const d = new Date(ts);
+    if (isNaN(d.getTime())) return;
+
+    if (filterExercise !== 'All' && w.exercise !== filterExercise) return;
+
+    const volume = parseFloat(w.totalVolume) || 0;
+    if (volume <= 0) return;
+
+    if (period === 'daily') {
+      const ref = new Date(now);
+      ref.setDate(ref.getDate() + volumePeriodOffset * 7);
+      const weekStart = getWeekStart(ref);
+      const weekEnd = getWeekEnd(ref);
+      if (d < weekStart || d > weekEnd) return;
+      const key = toLocalDateKey(d);
+      if (buckets[key] !== undefined) {
+        buckets[key].volume += volume;
+      }
+    } else if (period === 'weekly') {
+      for (const key in buckets) {
+        const b = buckets[key];
+        if (d >= b.weekStart && d <= b.weekEnd) {
+          b.volume += volume;
+          break;
+        }
+      }
+    } else if (period === 'monthly') {
+      const year = now.getFullYear() + volumePeriodOffset;
+      if (d.getFullYear() !== year) return;
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      if (buckets[key] !== undefined) {
+        buckets[key].volume += volume;
+      }
+    } else {
+      const baseYear = now.getFullYear() + volumePeriodOffset * 5;
+      const startYear = baseYear - 4;
+      const endYear = baseYear;
+      if (d.getFullYear() < startYear || d.getFullYear() > endYear) return;
+      const key = String(d.getFullYear());
+      if (buckets[key] !== undefined) {
+        buckets[key].volume += volume;
+      }
+    }
+  });
+
+  return Object.values(buckets);
+}
+
+function formatRangeLabel(period, offset) {
+  const now = new Date();
+  if (period === 'daily') {
+    const ref = new Date(now);
+    ref.setDate(ref.getDate() + offset * 7);
+    const start = getWeekStart(ref);
+    const end = getWeekEnd(ref);
+    const opts = { month: 'short', day: 'numeric' };
+    return `${start.toLocaleDateString('en-US', opts)} - ${end.toLocaleDateString('en-US', opts)}`;
+  }
+  if (period === 'weekly') {
+    const d = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+    return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  }
+  if (period === 'monthly') {
+    return String(now.getFullYear() + offset);
+  }
+  const baseYear = now.getFullYear() + offset * 5;
+  return `${baseYear - 4} - ${baseYear}`;
+}
+
+function renderVolumeHistory() {
+  const container = document.getElementById('vh-bars-container');
+  const totalEl = document.getElementById('vh-total');
+  const rangeLabel = document.getElementById('vh-range-label');
+  if (!container) return;
+
+  if (!lastWorkouts || lastWorkouts.length === 0) {
+    container.innerHTML = '<p class="text-xs text-slate-500 italic py-8 text-center w-full">Log some workouts to see your volume history.</p>';
+    if (totalEl) totalEl.textContent = '';
+    if (rangeLabel) rangeLabel.textContent = '';
+    return;
+  }
+
+  if (rangeLabel) {
+    rangeLabel.textContent = formatRangeLabel(volumePeriod, volumePeriodOffset);
+  }
+
+  const buckets = computeVolumeHistory(lastWorkouts, volumePeriod, volumeFilter);
+
+  const maxVolume = Math.max(...buckets.map(b => b.volume), 1);
+  const totalVolume = buckets.reduce((sum, b) => sum + b.volume, 0);
+
+  if (totalEl) {
+    totalEl.textContent = `Total: ${Math.round(totalVolume).toLocaleString()} kg`;
+  }
+
+  const avgEl = document.getElementById('vh-avg');
+  const nowMs = Date.now();
+  const startedCount = buckets.filter(b => b.periodStart <= nowMs && b.periodEnd >= userSignupTs).length;
+  const avgVolume = startedCount >= 2 ? totalVolume / startedCount : 0;
+  if (avgEl) {
+    avgEl.textContent = avgVolume > 0 ? `Avg: ${Math.round(avgVolume).toLocaleString()} kg` : '';
+  }
+
+  const chartHeight = 104;
+  const avgHeight = maxVolume > 0 ? (avgVolume / maxVolume) * chartHeight : 0;
+
+  let barsHtml = buckets.map(b => {
+    const volStr = Math.round(b.volume).toLocaleString();
+    const hasVol = b.volume > 0;
+    const h = hasVol ? Math.max(4, (b.volume / maxVolume) * chartHeight) : 0;
+    return `
+      <div class="vh-bar-wrap">
+        ${hasVol ? `<div class="vh-bar" style="height: ${h}px"><div class="vh-bar-tooltip">${volStr} kg</div></div>` : '<div class="vh-bar is-zero"></div>'}
+        <span class="vh-bar-label">${b.label || ''}</span>
+      </div>
+    `;
+  }).join('');
+
+  let avgLineHtml = '';
+  if (avgVolume > 0 && avgHeight > 0) {
+    avgLineHtml = `<div class="vh-avg-line" style="bottom: ${avgHeight}px"></div>`;
+  }
+
+  container.innerHTML = barsHtml + avgLineHtml;
+}
+
+function switchVolumePeriod(period) {
+  volumePeriod = period;
+  volumePeriodOffset = 0;
+
+  ['daily', 'weekly', 'monthly', 'yearly'].forEach(p => {
+    const btn = document.getElementById(`vh-period-${p}`);
+    if (btn) {
+      btn.className = p === period ? 'btn-core is-primary btn-size-row' : 'btn-core is-ghost btn-size-row';
+    }
+  });
+
+  renderVolumeHistory();
+}
+
+function shiftVolumePeriod(delta) {
+  volumePeriodOffset += delta;
+  renderVolumeHistory();
+}
+
+function populateVolumeFilter(exercises) {
+  const select = document.getElementById('vh-filter');
+  if (!select) return;
+  const currentVal = select.value;
+  select.innerHTML = '<option value="All">All Exercises</option>';
+  exercises.sort().forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    select.appendChild(opt);
+  });
+  if (currentVal && Array.from(select.options).some(o => o.value === currentVal)) {
+    select.value = currentVal;
+    volumeFilter = currentVal;
+  } else {
+    select.value = 'All';
+    volumeFilter = 'All';
+  }
+}
+
+function onVolumeFilterChange() {
+  const select = document.getElementById('vh-filter');
+  volumeFilter = select ? select.value : 'All';
+  renderVolumeHistory();
+}
+
 // Add Log Submission
 workoutForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -4389,3 +4654,6 @@ window.redoWorkout = redoWorkout;
 window.deletePlan = deletePlan;
 window.toggleWeightMode = toggleWeightMode;
 window.updatePillActive = updatePillActive;
+window.switchVolumePeriod = switchVolumePeriod;
+window.shiftVolumePeriod = shiftVolumePeriod;
+window.onVolumeFilterChange = onVolumeFilterChange;
