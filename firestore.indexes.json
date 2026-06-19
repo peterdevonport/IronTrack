@@ -1,0 +1,13 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "structured_workouts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "timestamp", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

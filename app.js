@@ -883,6 +883,13 @@ function listenToDataStream(uid) {
         // Data already sorted desc by Firestore
         window.__irontrackWorkoutCount = workouts.length;
         lastWorkouts = workouts;
+        // Align signup reference to earliest workout for volume history
+        if (workouts.length > 0) {
+          const earliestTs = Math.min(...workouts.map(w => w.timestamp));
+          if (earliestTs > 0 && earliestTs < userSignupTs) {
+            userSignupTs = earliestTs;
+          }
+        }
         // dynamicFriend populate filter options from live exercise names
         try {
           const uniqueExercises = Array.from(new Set(workouts.map(w => w.exercise)));
@@ -2875,6 +2882,14 @@ function listenToStructuredWorkouts(uid) {
     debouncedSyncActivity();
   }, (error) => {
     console.error('Structured workouts stream error', error.code, error.message);
+    // Show a visible hint so users know a composite index may be needed
+    const container = document.getElementById('structured-workout-list');
+    if (container && !container.querySelector('.index-hint')) {
+      const hint = document.createElement('p');
+      hint.className = 'index-hint text-xs text-yellow-400 italic py-2 text-center';
+      hint.textContent = 'Structured workouts unavailable — check browser console for index link.';
+      container.prepend(hint);
+    }
   });
 }
 
