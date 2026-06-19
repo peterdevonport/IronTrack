@@ -305,10 +305,19 @@
                 <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
                   Your Friends
                 </h3>
-                <div id="friendsListContainer" class="space-y-2 max-h-48 overflow-y-auto pr-1 text-slate-400 text-sm">
+                <div id="friendsListContainer" class="space-y-2 pr-1 text-slate-400 text-sm">
                   <p class="text-xs text-slate-500 italic">
                     No allies linked yet. Share your Cyber-Tag!
                   </p>
+                </div>
+                <div id="friends-pagination" class="hidden mt-3 flex items-center justify-between gap-3">
+                  <button id="prev-friends-page-btn" class="btn-core is-secondary btn-size-input" type="button">
+                    &laquo; Prev
+                  </button>
+                  <span class="text-xs text-slate-400">Page <span id="current-friends-page">1</span> of <span id="total-friends-pages">1</span></span>
+                  <button id="next-friends-page-btn" class="btn-core is-secondary btn-size-input" type="button">
+                    Next &raquo;
+                  </button>
                 </div>
               </div>
             </div>

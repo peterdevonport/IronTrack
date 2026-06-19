@@ -215,6 +215,7 @@ let unsubscribePlans = null;
 let currentScope = 'global'; // 'global' or 'friends'
 let currentFormula = 'dots';  // 'dots' or 'sinclair'
 let userFriendsList = [];    // Array of friend UIDs
+let friendsPage = 1;         // Pagination for friends list
 let leaderboardUnsubscribe = null; //
 let leaderboardCache = [];
 
@@ -284,6 +285,7 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('sinclair-display').innerText = '0.0';
         document.getElementById('sinclair-tier').innerText = '-';
         userFriendsList = [];
+        friendsPage = 1;
         document.getElementById('friendsListContainer').innerHTML = '';
         document.getElementById('leaderboardRows').innerHTML = '';
         currentUser = null;
@@ -4130,6 +4132,12 @@ const nextStructuredBtn = document.getElementById('next-structured-page-btn');
 if (prevStructuredBtn) prevStructuredBtn.addEventListener('click', () => changeStructuredPage('prev'));
 if (nextStructuredBtn) nextStructuredBtn.addEventListener('click', () => changeStructuredPage('next'));
 
+// Friends Pagination
+const prevFriendsBtn = document.getElementById('prev-friends-page-btn');
+const nextFriendsBtn = document.getElementById('next-friends-page-btn');
+if (prevFriendsBtn) prevFriendsBtn.addEventListener('click', () => changeFriendsPage('prev'));
+if (nextFriendsBtn) nextFriendsBtn.addEventListener('click', () => changeFriendsPage('next'));
+
 // Plans Pagination
 const prevPlansBtn = document.getElementById('prev-plans-page-btn');
 const nextPlansBtn = document.getElementById('next-plans-page-btn');
@@ -4324,27 +4332,34 @@ async function removeFriend(friendUid) {
 }
 
 /**
- * Render the side panel showing friends' names and current scores
+ * Render the side panel showing friends' names and current scores (paginated, 3 per page)
  */
 async function renderActiveFriendsList() {
   const container = document.getElementById('friendsListContainer');
+  const pagination = document.getElementById('friends-pagination');
   if (userFriendsList.length === 0) {
     container.innerHTML = `<p class="text-xs text-slate-500 italic">No allies linked yet. Share your Cyber-Tag!</p>`;
+    if (pagination) pagination.classList.add('hidden');
     return;
   }
 
   try {
-    // Fetch all friend profiles in parallel
     const friendResults = await Promise.allSettled(
       userFriendsList.map(fUid => getProfileDocument(fUid))
     );
 
+    const perPage = 3;
+    const totalPages = Math.max(1, Math.ceil(userFriendsList.length / perPage));
+    friendsPage = Math.min(friendsPage, totalPages);
+    const start = (friendsPage - 1) * perPage;
+    const pageItems = userFriendsList.slice(start, start + perPage);
+
     let html = '';
-    userFriendsList.forEach((fUid, i) => {
-      const result = friendResults[i];
+    pageItems.forEach((fUid, i) => {
+      const globalIdx = start + i;
+      const result = friendResults[globalIdx];
 
       if (result.status === 'rejected') {
-        console.error('Friend profile fetch failed', fUid, result.reason);
         html += `
           <div class="flex justify-between items-center bg-slate-900/50 p-2 border border-slate-800 rounded">
             <span class="font-medium text-slate-300 truncate max-w-[120px]">Locked Friend</span>
@@ -4375,15 +4390,33 @@ async function renderActiveFriendsList() {
       }
     });
 
-    if (!html) {
-      container.innerHTML = `<p class="text-xs text-slate-500 italic">No valid allies found for the linked Cyber-Tags.</p>`;
-    } else {
-      container.innerHTML = html;
+    container.innerHTML = html || `<p class="text-xs text-slate-500 italic">No valid allies found for the linked Cyber-Tags.</p>`;
+
+    if (pagination) {
+      const currentEl = document.getElementById('current-friends-page');
+      const totalEl = document.getElementById('total-friends-pages');
+      const prevBtn = document.getElementById('prev-friends-page-btn');
+      const nextBtn = document.getElementById('next-friends-page-btn');
+      if (currentEl) currentEl.textContent = friendsPage;
+      if (totalEl) totalEl.textContent = totalPages;
+      if (prevBtn) prevBtn.disabled = friendsPage <= 1;
+      if (nextBtn) nextBtn.disabled = friendsPage >= totalPages;
+      pagination.classList.toggle('hidden', totalPages <= 1);
     }
   } catch (error) {
     console.error('Active friends render failed', error.code, error.message);
     container.innerHTML = `<p class="text-xs text-red-400">Failed to render active grid context. Check Firestore rules for profiles.</p>`;
   }
+}
+
+function changeFriendsPage(direction) {
+  const totalPages = Math.max(1, Math.ceil(userFriendsList.length / 3));
+  if (direction === 'prev' && friendsPage > 1) {
+    friendsPage--;
+  } else if (direction === 'next' && friendsPage < totalPages) {
+    friendsPage++;
+  }
+  renderActiveFriendsList();
 }
 
 /**
