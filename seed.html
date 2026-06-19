@@ -1,0 +1,768 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IronTrack // Seed Test Data</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4" defer></script>
+  <style>
+    body { font-family: system-ui, sans-serif; }
+    .log-entry { font-family: monospace; font-size: 0.8rem; padding: 0.15rem 0; }
+    .log-entry.ok { color: #34d399; }
+    .log-entry.err { color: #f87171; }
+    .log-entry.info { color: #94a3b8; }
+    .log-entry.busy { color: #fbbf24; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
+  <div class="max-w-2xl mx-auto p-4 sm:p-6 space-y-6">
+    <header class="flex justify-between items-center pt-4">
+      <div>
+        <h1 class="text-3xl font-black tracking-tight text-emerald-400">IRONTRACK</h1>
+        <p class="text-xs text-slate-400 uppercase tracking-widest">Seed Test Data</p>
+      </div>
+      <a href="index.html" class="btn-core is-secondary btn-size-header-util cursor-pointer no-underline">Back</a>
+    </header>
+
+    <div id="view-login" class="surface-card text-center my-12 space-y-4 max-w-sm mx-auto">
+      <div class="text-5xl">&#9889;</div>
+      <div>
+        <h2 class="text-xl font-bold mb-1">Sign In to Seed</h2>
+        <p class="text-sm text-slate-400">
+          Sign in with your IronTrack account to generate 6 test users with 3 months of workout data.
+        </p>
+      </div>
+      <div class="space-y-3 text-left">
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Email</label>
+          <input type="email" id="seed-email" class="input-core" placeholder="athlete@irontrack.com" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Password</label>
+          <input type="password" id="seed-password" class="input-core" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
+        </div>
+        <button id="seed-signin-btn" class="btn-core is-primary w-full btn-size-input cursor-pointer">Sign In</button>
+        <p id="seed-signin-err" class="text-xs text-red-400 hidden"></p>
+      </div>
+    </div>
+
+    <div id="view-seed" class="hidden space-y-4">
+      <div class="surface-card p-4 space-y-2">
+        <p class="text-sm text-slate-300">Signed in as <span id="seed-user-email" class="text-emerald-400 font-semibold"></span></p>
+        <p class="text-xs text-slate-500">UID: <span id="seed-user-uid"></span></p>
+      </div>
+
+      <div class="surface-card p-4 space-y-3">
+        <h3 class="text-lg font-bold">Generate Test Data</h3>
+        <p class="text-xs text-slate-400">Creates 6 test users with 3 months of workouts, structured sessions, saved plans, and activity data. All users are connected as friends.</p>
+        <div class="text-xs text-slate-500 bg-slate-900 p-3 rounded space-y-1">
+          <p><strong>Test emails:</strong> test_user_1@irontrack.test &ndash; test_user_6@irontrack.test</p>
+          <p><strong>Password for all:</strong> <code class="text-emerald-400">Test1234!</code></p>
+          <p class="text-yellow-400">Your profile will <strong>not</strong> be modified.</p>
+        </div>
+        <button id="seed-run-btn" class="btn-core is-primary btn-size-input w-full cursor-pointer">
+          Generate 6 Test Users
+        </button>
+      </div>
+
+      <div id="seed-progress" class="surface-card p-4 hidden">
+        <h4 class="text-sm font-semibold text-slate-300 mb-2">Progress</h4>
+        <div id="seed-log" class="bg-slate-900 rounded p-2 max-h-64 overflow-y-auto space-y-0"></div>
+      </div>
+
+      <div id="seed-summary" class="hidden surface-card p-4 space-y-3">
+        <h3 class="text-lg font-bold text-emerald-400">Done</h3>
+        <div id="seed-summary-content"></div>
+        <a href="index.html" class="btn-core is-secondary btn-size-input w-full inline-block text-center no-underline cursor-pointer">Go to Dashboard</a>
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, doc, addDoc, setDoc, getDoc, updateDoc, Timestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAJNl8NIZB9UGnqUOXPjWcRgFOiroEbPUY",
+  authDomain: "irontrack-f4b19.firebaseapp.com",
+  projectId: "irontrack-f4b19",
+  storageBucket: "irontrack-f4b19.firebasestorage.app",
+  messagingSenderId: "576459465985",
+  appId: "1:576459465985:web:c5e387990eabf0c840a700"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const TEST_USERS = [
+  { idx: 1, email: 'test_user_1@irontrack.test', displayName: 'test_User 1', gender: 'male',   bw: 85 },
+  { idx: 2, email: 'test_user_2@irontrack.test', displayName: 'test_User 2', gender: 'male',   bw: 92 },
+  { idx: 3, email: 'test_user_3@irontrack.test', displayName: 'test_User 3', gender: 'female', bw: 63 },
+  { idx: 4, email: 'test_user_4@irontrack.test', displayName: 'test_User 4', gender: 'male',   bw: 78 },
+  { idx: 5, email: 'test_user_5@irontrack.test', displayName: 'test_User 5', gender: 'female', bw: 70 },
+  { idx: 6, email: 'test_user_6@irontrack.test', displayName: 'test_User 6', gender: 'male',   bw: 100 },
+];
+const PASSWORD = 'Test1234!';
+
+const EXERCISE_CATALOG = [
+  { name: 'Back Squat', category: 'barbell', type: 'weighted' },
+  { name: 'Bench Press', category: 'barbell', type: 'weighted' },
+  { name: 'Deadlift', category: 'barbell', type: 'weighted' },
+  { name: 'Front Squat', category: 'barbell', type: 'weighted' },
+  { name: 'Shoulder Press', category: 'barbell', type: 'weighted' },
+  { name: 'Clean & Jerk', category: 'barbell', type: 'weighted' },
+  { name: 'Snatch', category: 'barbell', type: 'weighted' },
+  { name: 'Power Clean', category: 'barbell', type: 'weighted' },
+  { name: 'Push Press', category: 'barbell', type: 'weighted' },
+  { name: 'Romanian Deadlift', category: 'barbell', type: 'weighted' },
+  { name: 'Thruster', category: 'barbell', type: 'weighted' },
+  { name: 'DB Bench Press', category: 'dumbbell', type: 'weighted' },
+  { name: 'DB Row', category: 'dumbbell', type: 'weighted' },
+  { name: 'DB Shoulder Press', category: 'dumbbell', type: 'weighted' },
+  { name: 'DB Goblet Squat', category: 'dumbbell', type: 'weighted' },
+  { name: 'DB Lunge', category: 'dumbbell', type: 'weighted' },
+  { name: 'Kettlebell Swing', category: 'kettlebell', type: 'weighted' },
+  { name: 'Kettlebell Goblet Squat', category: 'kettlebell', type: 'weighted' },
+  { name: 'Pull-up', category: 'bodyweight', type: 'bodyweight', loadFactor: 1.00 },
+  { name: 'Push-up', category: 'bodyweight', type: 'bodyweight', loadFactor: 0.67 },
+  { name: 'Air Squat', category: 'bodyweight', type: 'bodyweight', loadFactor: 0.65 },
+  { name: 'Burpee', category: 'bodyweight', type: 'bodyweight', loadFactor: 0.80 },
+  { name: 'Dip', category: 'bodyweight', type: 'bodyweight', loadFactor: 0.95 },
+  { name: 'Chin-up', category: 'bodyweight', type: 'bodyweight', loadFactor: 1.00 },
+  { name: 'Sit-up', category: 'bodyweight', type: 'bodyweight', loadFactor: 0.50 },
+  { name: 'Box Jump', category: 'bodyweight', type: 'bodyweight', loadFactor: 1.00 },
+  { name: 'Row', category: 'cardio', type: 'cardio' },
+  { name: 'Assault Bike', category: 'cardio', type: 'cardio' },
+  { name: 'Double Under', category: 'cardio', type: 'cardio' },
+  { name: 'Run', category: 'cardio', type: 'cardio' },
+];
+
+const STRENGTH_MAP = [
+  { squat: 140, bench: 100, deadlift: 175, press: 60, clean: 90, snatch: 65 },
+  { squat: 160, bench: 115, deadlift: 200, press: 70, clean: 105, snatch: 75 },
+  { squat: 90,  bench: 50,  deadlift: 120, press: 35, clean: 55, snatch: 40 },
+  { squat: 130, bench: 95,  deadlift: 160, press: 55, clean: 85, snatch: 60 },
+  { squat: 100, bench: 55,  deadlift: 130, press: 38, clean: 60, snatch: 45 },
+  { squat: 180, bench: 130, deadlift: 220, press: 75, clean: 110, snatch: 80 },
+];
+
+const LIFT_TO_KEY = {
+  'Back Squat': 'squat', 'Front Squat': 'squat', 'DB Lunge': 'squat',
+  'Air Squat': 'squat', 'Box Jump': 'squat', 'DB Goblet Squat': 'squat',
+  'Kettlebell Goblet Squat': 'squat', 'Thruster': 'squat',
+  'Bench Press': 'bench', 'DB Bench Press': 'bench', 'Push-up': 'bench', 'Dip': 'bench',
+  'Deadlift': 'deadlift', 'Romanian Deadlift': 'deadlift',
+  'Shoulder Press': 'press', 'DB Shoulder Press': 'press', 'Push Press': 'press',
+  'Clean & Jerk': 'clean', 'Power Clean': 'clean',
+  'Snatch': 'snatch',
+  'DB Row': 'deadlift', 'Pull-up': 'deadlift', 'Chin-up': 'deadlift',
+  'Kettlebell Swing': 'deadlift', 'Burpee': 'bench',
+  'Sit-up': 'press',
+};
+
+const WEIGHT_RATIO = {
+  'Front Squat': 0.85, 'DB Lunge': 0.40, 'DB Goblet Squat': 0.50,
+  'Kettlebell Goblet Squat': 0.50, 'Thruster': 0.65,
+  'DB Bench Press': 0.40, 'Push Press': 0.85,
+  'Romanian Deadlift': 0.75, 'DB Row': 0.40,
+  'DB Shoulder Press': 0.40, 'Power Clean': 0.85,
+  'Kettlebell Swing': 0.60,
+};
+
+const SESSION_TEMPLATES = [
+  ['Back Squat', 'Bench Press', 'DB Row', 'Pull-up', 'Sit-up'],
+  ['Deadlift', 'Shoulder Press', 'DB Lunge', 'Chin-up'],
+  ['Front Squat', 'Push Press', 'Romanian Deadlift', 'Kettlebell Swing', 'Box Jump'],
+  ['Bench Press', 'DB Goblet Squat', 'DB Shoulder Press', 'Dip'],
+  ['Snatch', 'Clean & Jerk', 'Back Squat', 'Push Press'],
+  ['Power Clean', 'Front Squat', 'DB Bench Press', 'Pull-up', 'Burpee'],
+  ['Romanian Deadlift', 'Shoulder Press', 'DB Row', 'Chin-up', 'Air Squat'],
+  ['Back Squat', 'Bench Press', 'Deadlift', 'Sit-up'],
+  ['Thruster', 'Kettlebell Swing', 'DB Lunge', 'Box Jump'],
+  ['Clean & Jerk', 'Snatch', 'Front Squat', 'Push Press'],
+  ['Deadlift', 'DB Shoulder Press', 'DB Goblet Squat', 'Pull-up', 'Dip'],
+  ['Back Squat', 'Push Press', 'Romanian Deadlift', 'Kettlebell Swing'],
+  ['Bench Press', 'DB Row', 'Front Squat', 'Burpee', 'Chin-up'],
+  ['Power Clean', 'Snatch', 'Thruster', 'Air Squat'],
+];
+
+const AMRAP_EXERCISES = [
+  { exerciseId: 'Pull-up', reps: 10, weight: 0, weightMode: 'absolute' },
+  { exerciseId: 'Push Press', reps: 10, weight: 40, weightMode: 'absolute' },
+  { exerciseId: 'Air Squat', reps: 15, weight: 0, weightMode: 'absolute' },
+];
+
+const FORTIME_MOVEMENTS = (bw) => [
+  { exerciseId: 'Row', reps: 500, weight: 0, weightMode: 'absolute' },
+  { exerciseId: 'Kettlebell Swing', reps: 21, weight: bw >= 90 ? 32 : bw >= 75 ? 24 : 16, weightMode: 'absolute' },
+  { exerciseId: 'Burpee', reps: 12, weight: 0, weightMode: 'absolute' },
+];
+
+const EMOM_MOVEMENT = (bw) => ({
+  exerciseId: 'Power Clean',
+  reps: 3,
+  weight: bw >= 90 ? 70 : bw >= 75 ? 60 : 45,
+  weightMode: 'absolute',
+});
+
+const INTERVAL_MOVEMENTS = [
+  { exerciseId: 'Thruster', reps: 10, weight: 30, weightMode: 'absolute' },
+  { exerciseId: 'Box Jump', reps: 8, weight: 0, weightMode: 'absolute' },
+];
+
+const PLAN_AMRAP = [
+  { exerciseId: 'Chin-up', reps: 8, weight: 0, weightMode: 'absolute' },
+  { exerciseId: 'DB Bench Press', reps: 12, weight: 20, weightMode: 'absolute' },
+  { exerciseId: 'Air Squat', reps: 20, weight: 0, weightMode: 'absolute' },
+];
+
+const PLAN_FORTIME = [
+  { exerciseId: 'Assault Bike', reps: 25, weight: 0, weightMode: 'absolute' },
+  { exerciseId: 'Kettlebell Swing', reps: 15, weight: 24, weightMode: 'absolute' },
+];
+
+const PLAN_EMOM = {
+  exerciseId: 'Deadlift', reps: 5, weight: 80, weightMode: 'absolute',
+};
+
+let originalEmail = '';
+let originalPassword = '';
+let userUids = [];
+
+const el = id => document.getElementById(id);
+
+function log(msg, type = 'info') {
+  const logEl = el('seed-log');
+  if (!logEl) return;
+  const d = document.createElement('div');
+  d.className = `log-entry ${type}`;
+  d.textContent = msg;
+  logEl.appendChild(d);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function clearLog() {
+  const logEl = el('seed-log');
+  if (logEl) logEl.innerHTML = '';
+}
+
+function delay(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
+
+function getStrength(userIdx) {
+  return STRENGTH_MAP[userIdx];
+}
+
+function get1RM(exerciseName, strength) {
+  const key = LIFT_TO_KEY[exerciseName];
+  if (!key) return 0;
+  let base = strength[key];
+  const ratio = WEIGHT_RATIO[exerciseName];
+  if (ratio) base = Math.round(base * ratio);
+  return base;
+}
+
+function getEstimatedLoad(exerciseName, weight, bodyweight) {
+  const ex = EXERCISE_CATALOG.find(e => e.name === exerciseName);
+  if (!ex) return weight;
+  if (ex.type === 'bodyweight') {
+    const lf = ex.loadFactor || 1;
+    return +(bodyweight * lf).toFixed(1);
+  }
+  if (ex.type === 'cardio') return 1;
+  return weight;
+}
+
+function getDotsScore(gender, bw, total) {
+  if (total <= 0 || bw <= 0) return 0;
+  const c = gender === 'male'
+    ? [47.46178854, 8.472061379, -0.07369410346, 0.0002586110512, -0.0000003634089054, 0.000000001790898013]
+    : [-125.4255398, 13.71219419, -0.03307250631, 0.00004809990691, -0.00000003622531999, 0.000000000105123006];
+  const denom = c[0] + c[1]*bw + c[2]*Math.pow(bw,2) + c[3]*Math.pow(bw,3) + c[4]*Math.pow(bw,4) + c[5]*Math.pow(bw,5);
+  return +((total * 500) / denom).toFixed(1);
+}
+
+function getSinclairScore(gender, bw, total) {
+  if (total <= 0 || bw <= 0) return 0;
+  const A = gender === 'male' ? 0.722762521 : 0.787004341;
+  const b = gender === 'male' ? 193.609 : 153.757;
+  if (bw >= b) return total;
+  const coeff = Math.pow(10, A * Math.pow(Math.log10(bw / b), 2));
+  return +(total * coeff).toFixed(1);
+}
+
+function getDateStr(d) {
+  return d.toISOString().split('T')[0];
+}
+
+async function createOrSignInUser(email) {
+  try {
+    await createUserWithEmailAndPassword(auth, email, PASSWORD);
+    log(`Created account: ${email}`, 'ok');
+  } catch (e) {
+    if (e.code === 'auth/email-already-in-use') {
+      await signInWithEmailAndPassword(auth, email, PASSWORD);
+      log(`Signed into existing: ${email}`, 'info');
+    } else {
+      throw e;
+    }
+  }
+}
+
+async function seedProfile(userDef, uid) {
+  const maxes = {};
+  const strength = getStrength(userDef.idx - 1);
+  for (const ex of ['Back Squat', 'Bench Press', 'Deadlift', 'Shoulder Press', 'Clean & Jerk', 'Snatch']) {
+    maxes[ex] = get1RM(ex, strength);
+  }
+
+  const bw = userDef.bw;
+  const gender = userDef.gender;
+  const plTotal = maxes['Back Squat'] + maxes['Bench Press'] + maxes['Deadlift'];
+  const olyTotal = maxes['Snatch'] + maxes['Clean & Jerk'];
+
+  await setDoc(doc(db, 'profiles', uid), {
+    uid,
+    displayName: userDef.displayName,
+    gender,
+    bodyweight: bw,
+    onboardingComplete: true,
+    onboardedAt: Timestamp.now(),
+    startingMaxes: maxes,
+    day0TrainingDays: { monthly: 0, yearly: 0, lifetime: 0 },
+    challengeStreaks: {
+      monthly: { completedPeriods: [], currentStreak: 0, bestStreak: 0 },
+      yearly: { completedPeriods: [], currentStreak: 0, bestStreak: 0 },
+    },
+    dotsScore: getDotsScore(gender, bw, plTotal),
+    sinclairScore: getSinclairScore(gender, bw, olyTotal),
+    lastActive: Timestamp.now(),
+    friends: [],
+  });
+  log(`  Profile created`, 'ok');
+}
+
+async function seedWorkouts(userDef, uid) {
+  const strength = getStrength(userDef.idx - 1);
+  const bw = userDef.bw;
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - 90);
+  startDate.setHours(12, 0, 0, 0);
+
+  const sessionDays = [];
+  for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+    const dayOfWeek = d.getDay();
+    if (dayOfWeek === 0 || dayOfWeek === 2 || dayOfWeek === 5) {
+      sessionDays.push(new Date(d));
+    }
+  }
+
+  let count = 0;
+  for (let si = 0; si < sessionDays.length; si++) {
+    const sessionDate = sessionDays[si];
+    const week = Math.floor(si / 3);
+    const templateIdx = si % SESSION_TEMPLATES.length;
+    const exercises = SESSION_TEMPLATES[templateIdx];
+    const progressFactor = 0.80 + (week / 13) * 0.20;
+
+    for (const exName of exercises) {
+      const ex = EXERCISE_CATALOG.find(e => e.name === exName);
+      if (!ex) continue;
+
+      const isCardio = ex.type === 'cardio';
+      const isBodyweight = ex.type === 'bodyweight';
+      const reps = isCardio ? 1 : (exName === 'Deadlift' || exName === 'Clean & Jerk' || exName === 'Snatch' || exName === 'Power Clean') ? 3 + (si % 3) * 1 : 5 + (si % 4) * 2;
+      const sets = isCardio ? 1 : 3 + (si % 3);
+      const oneRM = get1RM(exName, strength);
+      const weight = oneRM > 0 ? Math.round(oneRM * progressFactor) : (isBodyweight ? 0 : (isCardio ? 0 : 20 + userDef.idx * 5));
+      const estimatedLoad = getEstimatedLoad(exName, weight, bw);
+      const totalVolume = +(estimatedLoad * reps * sets).toFixed(1);
+
+      const ts = new Date(sessionDate);
+      ts.setHours(8 + (count % 12), (count * 7) % 60, 0, 0);
+
+      await addDoc(collection(db, 'workouts'), {
+        userId: uid,
+        exercise: exName,
+        sets,
+        reps,
+        weight,
+        externalLoad: 0,
+        estimatedLoad,
+        totalVolume,
+        timestamp: Timestamp.fromDate(ts),
+      });
+      count++;
+    }
+  }
+
+  log(`  ${count} workouts seeded`, 'ok');
+  return count;
+}
+
+async function seedDailyActivity(userDef, uid) {
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - 90);
+  startDate.setHours(12, 0, 0, 0);
+
+  let count = 0;
+  const writes = [];
+  for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+    const dayOfWeek = d.getDay();
+    if (dayOfWeek === 0 || dayOfWeek === 2 || dayOfWeek === 5) {
+      const dateStr = getDateStr(d);
+      writes.push(setDoc(doc(db, 'daily_activity', `${uid}_${dateStr}`), {
+        userId: uid,
+        date: dateStr,
+        hasWorkout: true,
+        totalDuration: 0,
+      }, { merge: true }));
+      count++;
+    }
+  }
+  try {
+    await Promise.all(writes);
+    log(`  ${count} daily activity entries`, 'ok');
+  } catch (e) {
+    if (e.code === 'permission-denied') {
+      log(`  daily_activity writes restricted by rules (ok, app repopulates it)`, 'info');
+    } else {
+      throw e;
+    }
+  }
+}
+
+async function seedStructuredWorkouts(userDef, uid) {
+  const bw = userDef.bw;
+  const ts1 = new Date(); ts1.setDate(ts1.getDate() - 60);
+  const ts2 = new Date(); ts2.setDate(ts2.getDate() - 40);
+  const ts3 = new Date(); ts3.setDate(ts3.getDate() - 20);
+  const ts4 = new Date(); ts4.setDate(ts4.getDate() - 5);
+
+  // AMRAP
+  const amrapRef = await addDoc(collection(db, 'structured_workouts'), {
+    userId: uid, name: 'Test AMRAP - 12 min', type: 'AMRAP',
+    structure: { durationSeconds: 720, movements: AMRAP_EXERCISES },
+    result: { roundsCompleted: 5 + (userDef.idx % 4), additionalReps: 3 + userDef.idx },
+    scoreDisplay: `${5 + (userDef.idx % 4)} + ${3 + userDef.idx}`,
+    scoreType: 'ROUNDS_AND_REPS',
+    scoreValue: (5 + (userDef.idx % 4)) * 1000 + 3 + userDef.idx,
+    timestamp: Timestamp.fromDate(ts1),
+  });
+
+  const rounds = 5 + (userDef.idx % 4);
+  const addReps = 3 + userDef.idx;
+  for (const m of AMRAP_EXERCISES) {
+    const totalReps = m.reps * rounds + addReps;
+    const eload = getEstimatedLoad(m.exerciseId, m.weight, bw);
+    await addDoc(collection(db, 'workouts'), {
+      userId: uid, exercise: m.exerciseId, sets: 1, reps: totalReps,
+      weight: m.weight, externalLoad: 0, estimatedLoad: eload,
+      totalVolume: +(eload * totalReps).toFixed(1),
+      timestamp: Timestamp.fromDate(ts1), source: 'structured',
+      workoutId: amrapRef.id, totalWorkReps: totalReps,
+    });
+  }
+
+  // FOR TIME
+  const ftMoves = FORTIME_MOVEMENTS(bw);
+  const ftRef = await addDoc(collection(db, 'structured_workouts'), {
+    userId: uid, name: 'Test For Time - 3 Rounds', type: 'FOR_TIME',
+    structure: { durationMinutes: 20, movements: ftMoves, rounds: 3 },
+    result: { timeSeconds: 540 + userDef.idx * 15, completed: true },
+    scoreDisplay: `${Math.floor((540 + userDef.idx * 15) / 60)}:${String((540 + userDef.idx * 15) % 60).padStart(2, '0')}`,
+    scoreType: 'TIME_SECONDS', scoreValue: 540 + userDef.idx * 15,
+    timestamp: Timestamp.fromDate(ts2),
+  });
+
+  for (const m of ftMoves) {
+    const totalReps = m.reps * 3;
+    const eload = getEstimatedLoad(m.exerciseId, m.weight, bw);
+    await addDoc(collection(db, 'workouts'), {
+      userId: uid, exercise: m.exerciseId, sets: 3, reps: m.reps,
+      weight: m.weight, externalLoad: 0, estimatedLoad: eload,
+      totalVolume: +(eload * totalReps).toFixed(1),
+      timestamp: Timestamp.fromDate(ts2), source: 'structured',
+      workoutId: ftRef.id, totalWorkReps: totalReps,
+    });
+  }
+
+  // EMOM
+  const emomMove = EMOM_MOVEMENT(bw);
+  const minutes = Array.from({ length: 10 }, () => ({ movements: [{ ...emomMove }] }));
+  const emomRef = await addDoc(collection(db, 'structured_workouts'), {
+    userId: uid, name: 'Test EMOM - 10 min', type: 'EMOM',
+    structure: { mode: 'by_round', rounds: 10, durationMinutes: 10, intervalSeconds: 60, minutes },
+    result: { roundsCompleted: 9 + (userDef.idx % 2) },
+    scoreDisplay: `${9 + (userDef.idx % 2)}/10`, scoreType: 'COMPLETED_MINUTES',
+    scoreValue: 9 + (userDef.idx % 2),
+    timestamp: Timestamp.fromDate(ts3),
+  });
+
+  const emomDone = 9 + (userDef.idx % 2);
+  for (let i = 0; i < emomDone; i++) {
+    const eload = getEstimatedLoad(emomMove.exerciseId, emomMove.weight, bw);
+    await addDoc(collection(db, 'workouts'), {
+      userId: uid, exercise: emomMove.exerciseId, sets: 1, reps: emomMove.reps,
+      weight: emomMove.weight, externalLoad: 0, estimatedLoad: eload,
+      totalVolume: +(eload * emomMove.reps).toFixed(1),
+      timestamp: Timestamp.fromDate(ts3), source: 'structured',
+      workoutId: emomRef.id, minuteIndex: i, totalWorkReps: emomMove.reps,
+    });
+  }
+
+  // INTERVAL
+  const intRef = await addDoc(collection(db, 'structured_workouts'), {
+    userId: uid, name: 'Test Interval - 5 Rounds', type: 'INTERVAL',
+    structure: { rounds: 5, workSeconds: 120, restSeconds: 60, movements: INTERVAL_MOVEMENTS },
+    result: { roundsCompleted: 4 + (userDef.idx % 2), partialReps: 5, completed: !!(userDef.idx % 2) },
+    scoreDisplay: `${4 + (userDef.idx % 2)} + 5`, scoreType: 'ROUNDS_AND_REPS',
+    scoreValue: (4 + (userDef.idx % 2)) * 1000 + 5,
+    timestamp: Timestamp.fromDate(ts4),
+  });
+
+  const intDone = 4 + (userDef.idx % 2);
+  for (const m of INTERVAL_MOVEMENTS) {
+    const totalReps = m.reps * intDone + 5;
+    const eload = getEstimatedLoad(m.exerciseId, m.weight, bw);
+    await addDoc(collection(db, 'workouts'), {
+      userId: uid, exercise: m.exerciseId, sets: intDone, reps: m.reps,
+      weight: m.weight, externalLoad: 0, estimatedLoad: eload,
+      totalVolume: +(eload * totalReps).toFixed(1),
+      timestamp: Timestamp.fromDate(ts4), source: 'structured',
+      workoutId: intRef.id, partialReps: 5, totalWorkReps: totalReps,
+    });
+  }
+
+  log(`  4 structured workouts with contributions seeded`, 'ok');
+}
+
+async function seedPlans(userDef, uid) {
+  const now = Date.now();
+  const minutes = Array.from({ length: 8 }, () => ({ movements: [{ ...PLAN_EMOM }] }));
+
+  await addDoc(collection(db, 'workout_plans'), {
+    userId: uid, name: 'Weekend MetCon', type: 'AMRAP',
+    structure: { durationSeconds: 900, movements: PLAN_AMRAP },
+    status: 'active', createdAt: now - 86400000 * 60,
+  });
+
+  await addDoc(collection(db, 'workout_plans'), {
+    userId: uid, name: 'Conditioning', type: 'FOR_TIME',
+    structure: { durationMinutes: 15, movements: PLAN_FORTIME, rounds: 4 },
+    status: 'active', createdAt: now - 86400000 * 45,
+  });
+
+  await addDoc(collection(db, 'workout_plans'), {
+    userId: uid, name: 'Barbell Warm-up', type: 'EMOM',
+    structure: { mode: 'by_round', rounds: 8, durationMinutes: 8, intervalSeconds: 60, minutes },
+    status: 'active', createdAt: now - 86400000 * 30,
+  });
+
+  log(`  3 workout plans saved`, 'ok');
+}
+
+async function seedConfig() {
+  try {
+    const snap = await getDoc(doc(db, 'config', 'consistency'));
+    if (!snap.exists()) {
+      await setDoc(doc(db, 'config', 'consistency'), {
+        monthlyUniqueDays: 14, yearlyUniqueDays: 150, lifetimeUniqueDays: 3000,
+      });
+      log('Config document created', 'ok');
+    } else {
+      log('Config document already exists', 'info');
+    }
+  } catch (e) {
+    log(`Config note: ${e.message} (non-fatal)`, 'info');
+  }
+}
+
+async function addFriends(uid, allUids) {
+  const others = allUids.filter(u => u !== uid);
+  await updateDoc(doc(db, 'profiles', uid), {
+    friends: arrayUnion(...others),
+  });
+  log(`  Friends added to ${uid.substring(0, 8)}...`, 'ok');
+}
+
+async function seedUser(userDef) {
+  const email = userDef.email;
+  log(`\n[${userDef.displayName}] ${email}`, 'busy');
+
+  await createOrSignInUser(email);
+  // let auth token propagate
+  await delay(1500);
+  const uid = auth.currentUser ? auth.currentUser.uid : null;
+  if (!uid) {
+    throw new Error(`No user after sign-in for ${email}`);
+  }
+  log(`  UID: ${uid}`, 'info');
+  userUids.push(uid);
+
+  // Check if already seeded — try read, default to not seeded on permission error
+  let alreadySeeded = false;
+  try {
+    const profileDoc = await getDoc(doc(db, 'profiles', uid));
+    if (profileDoc.exists() && profileDoc.data().onboardingComplete) {
+      alreadySeeded = true;
+    }
+  } catch (readErr) {
+    log(`  Profile read unavailable (${readErr.message}), will seed anyway`, 'info');
+  }
+
+  if (alreadySeeded) {
+    log(`  Already seeded - skipping`, 'info');
+    return { ...userDef, uid, skipped: true, workoutCount: 0 };
+  }
+
+  let wc = 0;
+  try { await seedProfile(userDef, uid); } catch (e) { log(`  Profile failed: ${e.message}`, 'err'); }
+  await delay(300);
+  try { wc = await seedWorkouts(userDef, uid); } catch (e) { log(`  Workouts failed: ${e.message}`, 'err'); }
+  await delay(300);
+  try { await seedDailyActivity(userDef, uid); } catch (e) { log(`  Daily activity failed: ${e.message} (non-fatal)`, 'info'); }
+  await delay(300);
+  try { await seedStructuredWorkouts(userDef, uid); } catch (e) { log(`  Structured workouts failed: ${e.message} (non-fatal)`, 'info'); }
+  await delay(300);
+  try { await seedPlans(userDef, uid); } catch (e) { log(`  Plans failed: ${e.message} (non-fatal)`, 'info'); }
+
+  return { ...userDef, uid, skipped: false, workoutCount: wc };
+}
+
+async function runSeed() {
+  const runBtn = el('seed-run-btn');
+  runBtn.disabled = true;
+  runBtn.textContent = 'Seeding...';
+  clearLog();
+  el('seed-progress').classList.remove('hidden');
+  el('seed-summary').classList.add('hidden');
+  userUids = [];
+
+  log('=== IronTrack Seed Tool ===', 'info');
+  log(`Started at ${new Date().toLocaleTimeString()}`, 'info');
+  log('', 'info');
+
+  try {
+    await seedConfig();
+
+    log('=== Step 1: Creating users & seeding data ===', 'info');
+    const seededUsers = [];
+    for (const userDef of TEST_USERS) {
+      const result = await seedUser(userDef);
+      seededUsers.push(result);
+      await delay(300);
+    }
+
+    log('', 'info');
+    log('=== Step 2: Setting up friendships ===', 'info');
+    const allUids = [...userUids];
+    for (let i = 0; i < TEST_USERS.length; i++) {
+      await signInWithEmailAndPassword(auth, TEST_USERS[i].email, PASSWORD);
+      await delay(1000);
+      if (!auth.currentUser) throw new Error(`Sign-in failed for ${TEST_USERS[i].email}`);
+      log(`Signed in as ${TEST_USERS[i].email}`, 'info');
+      await addFriends(auth.currentUser.uid, allUids);
+      await signOut(auth);
+      await delay(300);
+    }
+
+    log('', 'info');
+    log('=== Step 3: Restoring your session ===', 'info');
+    if (originalPassword) {
+      await signInWithEmailAndPassword(auth, originalEmail, originalPassword);
+      log(`Signed back in as ${originalEmail}`, 'ok');
+    } else {
+      log('No password saved — sign in manually on the dashboard', 'info');
+    }
+
+    log('', 'info');
+    log('=== SEED COMPLETE ===', 'ok');
+
+    const summaryEl = el('seed-summary-content');
+    let html = '<table class="w-full text-xs text-left border-collapse"><thead><tr class="text-slate-400 border-b border-slate-700"><th class="pb-1">User</th><th class="pb-1">Email</th><th class="pb-1">UID</th><th class="pb-1">Workouts</th></tr></thead><tbody>';
+    for (const u of seededUsers) {
+      html += `<tr class="border-b border-slate-800"><td class="py-1 text-emerald-400">${u.displayName}</td><td class="py-1 text-slate-300">${u.email}</td><td class="py-1 text-slate-500">${u.uid.substring(0, 12)}...</td><td class="py-1">${u.skipped ? 'already done' : u.workoutCount}</td></tr>`;
+    }
+    html += '</tbody></table>';
+    html += '<div class="text-xs text-slate-400 pt-3 space-y-1">';
+    html += '<p><strong>Password for all:</strong> <code class="text-emerald-400">Test1234!</code></p>';
+    html += '<p>All 6 users are connected as friends.</p>';
+    html += '</div>';
+    summaryEl.innerHTML = html;
+    el('seed-summary').classList.remove('hidden');
+
+  } catch (err) {
+    log(`ERROR: ${err.message}`, 'err');
+    log(`Code: ${err.code || 'none'}`, 'err');
+    if (err.code === 'permission-denied') {
+      log(`Permission denied — check Firestore security rules`, 'err');
+      log(`The rules may need to allow writes from authenticated users to these collections.`, 'info');
+    }
+    if (originalPassword) {
+      try {
+        await signInWithEmailAndPassword(auth, originalEmail, originalPassword);
+        log('Restored your session', 'ok');
+      } catch (e2) {
+        log('Could not restore session - please re-sign-in', 'err');
+      }
+    } else {
+      log('No password saved - please re-sign-in on the dashboard', 'info');
+    }
+  }
+
+  runBtn.disabled = false;
+  runBtn.textContent = 'Generate 6 Test Users';
+}
+
+el('seed-signin-btn').addEventListener('click', async () => {
+  const email = el('seed-email').value.trim();
+  const pass = el('seed-password').value;
+  const errEl = el('seed-signin-err');
+
+  if (!email || !pass) {
+    errEl.textContent = 'Enter email and password.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  originalEmail = email;
+  originalPassword = pass;
+
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+  } catch (e) {
+    errEl.textContent = e.message;
+    errEl.classList.remove('hidden');
+  }
+});
+
+onAuthStateChanged(auth, user => {
+  const loginView = el('view-login');
+  const seedView = el('view-seed');
+
+  if (user) {
+    if (!originalEmail) {
+      originalEmail = user.email || '';
+    }
+    el('seed-user-email').textContent = user.email;
+    el('seed-user-uid').textContent = user.uid;
+    loginView.classList.add('hidden');
+    seedView.classList.remove('hidden');
+    el('seed-signin-err').classList.add('hidden');
+  } else {
+    loginView.classList.remove('hidden');
+    seedView.classList.add('hidden');
+  }
+});
+
+el('seed-run-btn').addEventListener('click', runSeed);
+</script>
+</body>
+</html>
