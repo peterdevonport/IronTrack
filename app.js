@@ -211,10 +211,17 @@ let unsubscribeStructured = null;
 let lastWorkoutPlans = [];
 let unsubscribePlans = null;
 
+// Shared plan state
+let lastSharedPlans = [];
+let sharedPlansPage = 1;
+let plansFilter = 'mine'; // 'mine' | 'shared'
+let unsubscribeSharedPlans = null;
+
 // Global state variables for social & leaderboards
 let currentScope = 'global'; // 'global' or 'friends'
 let currentFormula = 'dots';  // 'dots' or 'sinclair'
 let userFriendsList = [];    // Array of friend UIDs
+let friendDisplayCache = {}; // uid -> profile data snapshot
 let friendsPage = 1;         // Pagination for friends list
 let leaderboardUnsubscribe = null; //
 let leaderboardCache = [];
@@ -251,6 +258,7 @@ onAuthStateChanged(auth, async (user) => {
         listenToDataStream(user.uid);
         listenToStructuredWorkouts(user.uid);
         listenToPlans(user.uid);
+        listenToSharedPlans(user.uid);
         loadConsistencyConfig();
 
         showQRCode()
@@ -265,6 +273,7 @@ onAuthStateChanged(auth, async (user) => {
         if (unsubscribeLogs) { unsubscribeLogs(); unsubscribeLogs = null; }
         if (unsubscribeStructured) { unsubscribeStructured(); unsubscribeStructured = null; }
         if (unsubscribePlans) { unsubscribePlans(); unsubscribePlans = null; }
+        if (unsubscribeSharedPlans) { unsubscribeSharedPlans(); unsubscribeSharedPlans = null; }
         if (leaderboardUnsubscribe) { leaderboardUnsubscribe(); leaderboardUnsubscribe = null; }
         loginView.classList.remove('hidden');
         appView.classList.add('hidden');
@@ -285,8 +294,18 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('sinclair-display').innerText = '0.0';
         document.getElementById('sinclair-tier').innerText = '-';
         userFriendsList = [];
+        friendDisplayCache = {};
+        sharedPlanId = null;
         friendsPage = 1;
+        sharedPlansPage = 1;
+        plansFilter = 'mine';
         document.getElementById('friendsListContainer').innerHTML = '';
+        const filterMineBtn = document.getElementById('plans-filter-mine');
+        const filterSharedBtn = document.getElementById('plans-filter-shared');
+        const filterFavBtn = document.getElementById('plans-filter-favorites');
+        if (filterMineBtn) filterMineBtn.className = 'btn-core is-primary btn-size-row';
+        if (filterSharedBtn) filterSharedBtn.className = 'btn-core is-ghost btn-size-row';
+        if (filterFavBtn) filterFavBtn.className = 'btn-core is-ghost btn-size-row';
         document.getElementById('leaderboardRows').innerHTML = '';
         currentUser = null;
         urlParamsProcessed = false;
@@ -3060,11 +3079,8 @@ function listenToPlans(uid) {
 
 function renderPlansUI() {
   const container = document.getElementById('saved-plans-inline');
-  const countEl = document.getElementById('saved-plans-count');
   const pagination = document.getElementById('plans-pagination');
   if (!container) return;
-
-  if (countEl) countEl.textContent = lastWorkoutPlans.length;
 
   if (!lastWorkoutPlans.length) {
     container.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">No saved plans yet.</p>';
@@ -3090,6 +3106,38 @@ function renderPlansUI() {
     if (prevBtn) prevBtn.disabled = plansCurrentPage <= 1;
     if (nextBtn) nextBtn.disabled = plansCurrentPage >= totalPages;
     pagination.classList.toggle('hidden', totalPages <= 1);
+  }
+}
+
+function switchPlansFilter(filter) {
+  plansFilter = filter;
+  const btnMine = document.getElementById('plans-filter-mine');
+  const btnShared = document.getElementById('plans-filter-shared');
+  const btnFavs = document.getElementById('plans-filter-favorites');
+  const plansSection = document.getElementById('saved-plans-inline');
+  const plansPagination = document.getElementById('plans-pagination');
+  const sharedSection = document.getElementById('shared-plans-inline');
+  const sharedPagination = document.getElementById('shared-plans-pagination');
+
+  const setActive = (btn) => btn.className = 'btn-core is-primary btn-size-row';
+  const setInactive = (btn) => btn.className = 'btn-core is-ghost btn-size-row';
+
+  if (filter === 'mine') {
+    setActive(btnMine); setInactive(btnShared); setInactive(btnFavs);
+    if (plansSection) plansSection.classList.remove('hidden');
+    if (plansPagination) plansPagination.classList.remove('hidden');
+    if (sharedSection) sharedSection.classList.add('hidden');
+    if (sharedPagination) sharedPagination.classList.add('hidden');
+    renderPlansUI();
+  } else {
+    setInactive(btnMine);
+    if (filter === 'shared') { setActive(btnShared); setInactive(btnFavs); }
+    else { setActive(btnFavs); setInactive(btnShared); }
+    if (plansSection) plansSection.classList.add('hidden');
+    if (plansPagination) plansPagination.classList.add('hidden');
+    if (sharedSection) sharedSection.classList.remove('hidden');
+    if (sharedPagination) sharedPagination.classList.remove('hidden');
+    renderSharedPlansUI();
   }
 }
 
@@ -3149,6 +3197,7 @@ function renderPlanCard(plan) {
     </div>
     <div class="flex gap-2">
       <button type="button" onclick="loadPlan('${plan.id}')" class="btn-core is-secondary btn-size-row">Load</button>
+      <button type="button" onclick="openShareModal('${plan.id}')" class="btn-core is-secondary btn-size-row">Share</button>
       <button type="button" onclick="deletePlan('${plan.id}')" class="btn-core is-ghost btn-size-row">Delete</button>
     </div>
 </div>`;
@@ -3214,6 +3263,295 @@ function redoWorkout(workoutId) {
   if (recordCard) recordCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   showFeedback(`Workout "${sw.name}" loaded for redo!`, 'emerald', `${sw.type.toLowerCase()}Feedback`);
+  haptic(HAPTIC.tap);
+}
+
+// ── Share Plan with Friend ──
+
+let sharePlanId = null;
+
+async function openShareModal(planId) {
+  const modal = document.getElementById('share-plan-modal');
+  const list = document.getElementById('share-friend-list');
+  const feedback = document.getElementById('share-plan-feedback');
+  if (!modal || !list) return;
+
+  sharePlanId = planId;
+  feedback.textContent = '';
+
+  document.getElementById('share-select-all-container').classList.add('hidden');
+  if (!userFriendsList.length) {
+    list.innerHTML = '<p class="text-xs text-slate-500 italic text-center py-2">No friends linked yet. Add friends in the Friends section first.</p>';
+    modal.classList.remove('hidden');
+    return;
+  }
+
+  const friendDocs = await Promise.allSettled(
+    userFriendsList.filter(fUid => !friendDisplayCache[fUid]).map(fUid => getProfileDocument(fUid))
+  );
+  friendDocs.forEach((result, i) => {
+    if (result.status === 'fulfilled' && result.value.exists()) {
+      const uid = userFriendsList.filter(fUid => !friendDisplayCache[fUid])[i];
+      if (uid) friendDisplayCache[uid] = result.value.data();
+    }
+  });
+
+  document.getElementById('share-select-all-container').classList.remove('hidden');
+  document.getElementById('share-select-all').checked = false;
+
+  let html = '';
+  userFriendsList.forEach((fUid) => {
+    const fDoc = friendDisplayCache[fUid];
+    const name = fDoc ? getDisplayName(fDoc, fUid) : fUid;
+    html += `
+      <label class="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-800 cursor-pointer">
+        <input type="checkbox" class="share-friend-checkbox" value="${fUid}" />
+        <span class="text-sm text-slate-200">${escapeHtml(name)}</span>
+      </label>`;
+  });
+  list.innerHTML = html;
+  modal.classList.remove('hidden');
+}
+
+function toggleSelectAllFriends() {
+  const selectAll = document.getElementById('share-select-all');
+  const checked = selectAll?.checked ?? false;
+  document.querySelectorAll('.share-friend-checkbox').forEach(cb => cb.checked = checked);
+}
+
+async function shareWithFriends() {
+  const modal = document.getElementById('share-plan-modal');
+  const feedback = document.getElementById('share-plan-feedback');
+  const checked = document.querySelectorAll('.share-friend-checkbox:checked');
+  if (!checked.length) {
+    feedback.textContent = 'Select at least one friend.';
+    return;
+  }
+
+  const plan = lastWorkoutPlans.find(p => p.id === sharePlanId);
+  if (!plan) {
+    feedback.textContent = 'Plan not found.';
+    return;
+  }
+
+  const selectedUids = Array.from(checked).map(cb => cb.value);
+  const sharerSnap = await getDoc(getProfileDocRef(currentUser.uid));
+  const sharerData = sharerSnap.exists() ? sharerSnap.data() : {};
+  const displayName = sharerData.displayName || currentUser?.email?.split('@')[0] || 'Unknown';
+
+  try {
+    await Promise.all(selectedUids.map(fUid =>
+      addDoc(collection(db, "shared_plans"), {
+        sharedBy: currentUser.uid,
+        sharedByDisplayName: displayName,
+        sharedWith: fUid,
+        planId: plan.id,
+        contentType: 'plan',
+        content: {
+          name: plan.name,
+          type: plan.type,
+          structure: plan.structure
+        },
+        status: 'pending',
+        createdAt: serverTimestamp()
+      })
+    ));
+    modal.classList.add('hidden');
+    showFeedback(`Plan shared with ${selectedUids.length} friend${selectedUids.length > 1 ? 's' : ''}!`, 'emerald');
+    haptic(HAPTIC.confirm);
+  } catch (err) {
+    console.error('Share plan failed', err.code, err.message);
+    feedback.textContent = 'Failed to share: ' + err.message;
+  }
+}
+
+function listenToSharedPlans(uid) {
+  const q = query(
+    collection(db, "shared_plans"),
+    where("sharedWith", "==", uid)
+  );
+  unsubscribeSharedPlans = onSnapshot(q, (snapshot) => {
+    const plans = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      if (data.status !== 'pending') return;
+      const createdAt = data.createdAt?.toMillis ? data.createdAt.toMillis() : data.createdAt;
+      plans.push({ id: doc.id, ...data, createdAt });
+    });
+    plans.sort((a, b) => b.createdAt - a.createdAt);
+    lastSharedPlans = plans;
+    if (plansFilter === 'shared' || plansFilter === 'favorites') {
+      renderSharedPlansUI();
+    }
+  }, (error) => {
+    console.error('Shared plans stream error', error.code, error.message);
+  });
+}
+
+function renderSharedPlansUI() {
+  const container = document.getElementById('shared-plans-inline');
+  const pagination = document.getElementById('shared-plans-pagination');
+  if (!container) return;
+
+  const filtered = plansFilter === 'favorites'
+    ? lastSharedPlans.filter(s => s.favorite === true)
+    : lastSharedPlans;
+
+  if (!filtered.length) {
+    const msg = plansFilter === 'favorites'
+      ? '<p class="text-xs text-slate-500 italic py-2 text-center">No favorited shared plans yet. Star a shared plan to add it here.</p>'
+      : '<p class="text-xs text-slate-500 italic py-2 text-center">No shared plans yet.</p>';
+    container.innerHTML = msg;
+    if (pagination) pagination.classList.add('hidden');
+    return;
+  }
+
+  const perPage = 3;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
+  sharedPlansPage = Math.min(sharedPlansPage, totalPages);
+  const start = (sharedPlansPage - 1) * perPage;
+  const pageItems = filtered.slice(start, start + perPage);
+
+  container.innerHTML = pageItems.map(share => renderSharedPlanCard(share)).join('');
+
+  if (pagination) {
+    const currentEl = document.getElementById('current-shared-plans-page');
+    const totalEl = document.getElementById('total-shared-plans-pages');
+    const prevBtn = document.getElementById('prev-shared-plans-page-btn');
+    const nextBtn = document.getElementById('next-shared-plans-page-btn');
+    if (currentEl) currentEl.textContent = sharedPlansPage;
+    if (totalEl) totalEl.textContent = totalPages;
+    if (prevBtn) prevBtn.disabled = sharedPlansPage <= 1;
+    if (nextBtn) nextBtn.disabled = sharedPlansPage >= totalPages;
+    pagination.classList.toggle('hidden', totalPages <= 1);
+  }
+}
+
+function renderSharedPlanCard(share) {
+  const type = share.content?.type || 'AMRAP';
+  const badgeClass = type.toLowerCase();
+  const dateStr = share.createdAt ? new Date(share.createdAt).toLocaleDateString() : '';
+  const movements = share.content?.structure?.movements || [];
+  const movementsHtml = movements.map(m =>
+    `<span class="movement-chip">${escapeHtml(m.exerciseId)} \u00D7 ${m.reps}${m.weight ? ' @ ' + m.weight + 'kg' : ''}</span>`
+  ).join('');
+
+  const emomMinutes = share.content?.structure?.minutes || [];
+  const emomHtml = emomMinutes.map((m, idx) => {
+    const mov = m.movements?.[0];
+    if (!mov) return '';
+    return `<span class="movement-chip">${idx + 1}: ${escapeHtml(mov.exerciseId)} \u00D7 ${mov.reps}${mov.weight ? ' @ ' + mov.weight + 'kg' : ''}</span>`;
+  }).join('');
+
+  const isFav = share.favorite === true;
+  const starIcon = isFav ? '\u2605' : '\u2606';
+  const starClass = isFav ? 'text-yellow-400' : 'text-slate-500';
+
+  return `
+<div class="structured-card p-4 rounded-2xl mb-3 shadow-2xl shadow-slate-950/60 transition-all duration-200" style="background-color: var(--slate-900);">
+    <div class="flex justify-between items-start mb-2">
+      <div>
+        <span class="workout-type-badge ${badgeClass}">${escapeHtml(type)}</span>
+        <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm mt-1">${escapeHtml(share.content?.name || '')}</h4>
+        <p class="text-slate-500 text-[10px] font-mono mt-0.5">Shared by ${escapeHtml(share.sharedByDisplayName || 'Unknown')} &middot; ${dateStr}</p>
+      </div>
+      <button type="button" onclick="toggleFavorite('${share.id}')" class="text-lg leading-none ${starClass} hover:text-yellow-400 transition-colors p-1" title="Favorite">${starIcon}</button>
+    </div>
+    <div class="flex flex-wrap gap-1.5 mt-2 mb-3">
+      ${type === 'EMOM' ? emomHtml : movementsHtml}
+    </div>
+    <div class="flex gap-2">
+      <button type="button" onclick="loadSharedPlan('${share.id}')" class="btn-core is-primary btn-size-row">Load</button>
+      <button type="button" onclick="dismissSharedPlan('${share.id}')" class="btn-core is-ghost btn-size-row">Dismiss</button>
+    </div>
+</div>`;
+}
+
+function changeSharedPlansPage(direction) {
+  const totalPages = Math.max(1, Math.ceil(lastSharedPlans.length / 3));
+  if (direction === 'prev' && sharedPlansPage > 1) {
+    sharedPlansPage--;
+  } else if (direction === 'next' && sharedPlansPage < totalPages) {
+    sharedPlansPage++;
+  }
+  renderSharedPlansUI();
+}
+
+async function saveSharedPlanToMyPlans(shareId) {
+  if (!currentUser) return;
+  const share = lastSharedPlans.find(s => s.id === shareId);
+  if (!share) return;
+
+  const planDoc = {
+    userId: currentUser.uid,
+    name: share.content?.name || 'Shared Plan',
+    type: share.content?.type || 'AMRAP',
+    structure: share.content?.structure || {},
+    status: 'active',
+    createdAt: serverTimestamp()
+  };
+
+  try {
+    await addDoc(collection(db, "workout_plans"), planDoc);
+    await updateDoc(doc(db, "shared_plans", shareId), { status: 'saved' });
+    showFeedback('Plan saved to your collection!', 'emerald');
+    haptic(HAPTIC.confirm);
+  } catch (err) {
+    console.error('Save shared plan failed', err.code, err.message);
+    showFeedback('Failed to save plan: ' + err.message, 'red');
+  }
+}
+
+async function dismissSharedPlan(shareId) {
+  if (!currentUser) return;
+  if (!confirm('Dismiss this shared plan?')) return;
+  try {
+    await updateDoc(doc(db, "shared_plans", shareId), { status: 'dismissed' });
+    haptic(HAPTIC.confirm);
+  } catch (err) {
+    console.error('Dismiss shared plan failed', err.code, err.message);
+    alert('Failed to dismiss: ' + err.message);
+  }
+}
+
+async function toggleFavorite(shareId) {
+  if (!currentUser) return;
+  const share = lastSharedPlans.find(s => s.id === shareId);
+  if (!share) return;
+  const newVal = !(share.favorite === true);
+  try {
+    await updateDoc(doc(db, "shared_plans", shareId), { favorite: newVal });
+    haptic(HAPTIC.tap);
+  } catch (err) {
+    console.error('Toggle favorite failed', err.code, err.message);
+  }
+}
+
+function loadSharedPlan(shareId) {
+  const share = lastSharedPlans.find(s => s.id === shareId);
+  if (!share) return;
+  const plan = share.content;
+  if (!plan) return;
+
+  switchWorkoutMode('workout');
+
+  const typeSelect = document.getElementById('workout-type');
+  if (typeSelect) typeSelect.value = plan.type;
+  handleWorkoutTypeChange();
+
+  const structure = plan.structure || {};
+
+  switch (plan.type) {
+    case 'AMRAP': populateAmrapForm(structure); break;
+    case 'EMOM': populateEmomForm(structure); break;
+    case 'FOR_TIME': populateForTimeForm(structure); break;
+    case 'INTERVAL': populateIntervalForm(structure); break;
+  }
+
+  const recordCard = document.getElementById('record-training-card');
+  if (recordCard) recordCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  showFeedback(`Plan "${plan.name}" loaded!`, 'emerald', `${plan.type.toLowerCase()}Feedback`);
   haptic(HAPTIC.tap);
 }
 
@@ -4144,6 +4482,22 @@ const nextPlansBtn = document.getElementById('next-plans-page-btn');
 if (prevPlansBtn) prevPlansBtn.addEventListener('click', () => changePlansPage('prev'));
 if (nextPlansBtn) nextPlansBtn.addEventListener('click', () => changePlansPage('next'));
 
+// Share Modal
+const shareSendBtn = document.getElementById('share-plan-send');
+const shareCancelBtn = document.getElementById('share-plan-cancel');
+if (shareSendBtn) shareSendBtn.addEventListener('click', () => shareWithFriends());
+if (shareCancelBtn) shareCancelBtn.addEventListener('click', () => {
+  document.getElementById('share-plan-modal').classList.add('hidden');
+  document.getElementById('share-plan-feedback').textContent = '';
+  sharePlanId = null;
+});
+
+// Shared Plans Pagination
+const prevSharedPlansBtn = document.getElementById('prev-shared-plans-page-btn');
+const nextSharedPlansBtn = document.getElementById('next-shared-plans-page-btn');
+if (prevSharedPlansBtn) prevSharedPlansBtn.addEventListener('click', () => changeSharedPlansPage('prev'));
+if (nextSharedPlansBtn) nextSharedPlansBtn.addEventListener('click', () => changeSharedPlansPage('next'));
+
 // Initial movement row
 if (document.getElementById('movement-list')) {
   addMovementRow();
@@ -4347,6 +4701,13 @@ async function renderActiveFriendsList() {
     const friendResults = await Promise.allSettled(
       userFriendsList.map(fUid => getProfileDocument(fUid))
     );
+
+    friendDisplayCache = {};
+    friendResults.forEach((result, i) => {
+      if (result.status === 'fulfilled' && result.value.exists()) {
+        friendDisplayCache[userFriendsList[i]] = result.value.data();
+      }
+    });
 
     const perPage = 3;
     const totalPages = Math.max(1, Math.ceil(userFriendsList.length / perPage));
@@ -4700,6 +5061,13 @@ window.saveIntervalPlan = saveIntervalPlan;
 window.loadPlan = loadPlan;
 window.redoWorkout = redoWorkout;
 window.deletePlan = deletePlan;
+window.openShareModal = openShareModal;
+window.saveSharedPlanToMyPlans = saveSharedPlanToMyPlans;
+window.dismissSharedPlan = dismissSharedPlan;
+window.switchPlansFilter = switchPlansFilter;
+window.toggleSelectAllFriends = toggleSelectAllFriends;
+window.toggleFavorite = toggleFavorite;
+window.loadSharedPlan = loadSharedPlan;
 window.toggleWeightMode = toggleWeightMode;
 window.updatePillActive = updatePillActive;
 window.switchVolumePeriod = switchVolumePeriod;
