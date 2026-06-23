@@ -227,6 +227,7 @@ let friendDisplayCache = {}; // uid -> profile data snapshot
 let friendsPage = 1;         // Pagination for friends list
 let leaderboardUnsubscribe = null; //
 let leaderboardCache = [];
+let leaderboardShowAll = false;
 
 // Extract pending friend request from URL before any auth redirect clears it
 const pendingFriendUid = new URLSearchParams(window.location.search).get('addFriend');
@@ -4903,16 +4904,50 @@ function switchLeaderboardScope(scope) {
 }
 
 /**
+ * Build a single leaderboard row HTML
+ */
+function buildLeaderboardRow(profile, rank, isMe, isFriend) {
+  const rawScore = currentFormula === 'dots' ? profile.dotsScore : (profile.sinclairScore || 0);
+  const displayScore = formatDotsScore(rawScore);
+  const badgeBaseClasses = 'inline-flex items-center justify-center rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider w-20';
+  const actionCell = isMe
+    ? `<span class="${badgeBaseClasses} bg-slate-700/60 text-slate-400">You</span>`
+    : isFriend
+      ? `<span class="${badgeBaseClasses} bg-emerald-500/10 text-emerald-300">Friend</span>`
+      : `<button type="button" class="${badgeBaseClasses} border border-slate-700 bg-slate-900 text-slate-200 transition hover:bg-slate-800" 
+      onclick="addFriendFromLeaderboard('${profile.uid}')">
+      + Add
+      </button>`;
+
+  return `
+    <tr class="border-b border-slate-800/60 ${isMe ? 'bg-emerald-500/10 font-bold' : ''}">
+      <td class="py-3 font-mono text-slate-500">#${rank}</td>
+      <td class="py-3 flex items-center gap-2">
+        <span class="${isMe ? 'text-emerald-400' : 'text-slate-200'}">${getDisplayName(profile, profile.uid)}</span>
+      </td>
+      <td class="py-3 text-right font-mono font-bold text-emerald-400">${displayScore.toFixed(2)}</td>
+      <td class="py-3 text-right">${actionCell}</td>
+    </tr>`;
+}
+
+/**
+ * Toggle leaderboard between compact and show-all modes
+ */
+function toggleLeaderboardExpand() {
+  leaderboardShowAll = !leaderboardShowAll;
+  renderLeaderboardView();
+}
+
+/**
  * Re-render leaderboard table from cached data applying current scope, formula, and friends list
  */
 function renderLeaderboardView() {
   const rowsContainer = document.getElementById('leaderboardRows');
+  const expandBtn = document.getElementById('leaderboard-expand-btn');
   if (!rowsContainer) return;
   const currentUser = auth.currentUser;
 
-  let html = '';
-  let rankCounter = 1;
-
+  const filtered = [];
   leaderboardCache.forEach(profile => {
     const isMe = currentUser && profile.uid === currentUser.uid;
     const isFriend = userFriendsList.includes(profile.uid);
@@ -4921,31 +4956,48 @@ function renderLeaderboardView() {
       return;
     }
 
-    const rawScore = currentFormula === 'dots' ? profile.dotsScore : (profile.sinclairScore || 0);
-    const displayScore = formatDotsScore(rawScore);
-
-    const badgeBaseClasses = 'inline-flex items-center justify-center rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider w-20';
-    const actionCell = isMe
-      ? `<span class="${badgeBaseClasses} bg-slate-700/60 text-slate-400">You</span>`
-      : isFriend
-        ? `<span class="${badgeBaseClasses} bg-emerald-500/10 text-emerald-300">Friend</span>`
-        : `<button type="button" class="${badgeBaseClasses} border border-slate-700 bg-slate-900 text-slate-200 transition hover:bg-slate-800" 
-        onclick="addFriendFromLeaderboard('${profile.uid}')">
-        + Add
-        </button>`;
-
-    html += `
-      <tr class="border-b border-slate-800/60 ${isMe ? 'bg-emerald-500/10 font-bold' : ''}">
-        <td class="py-3 font-mono text-slate-500">#${rankCounter++}</td>
-        <td class="py-3 flex items-center gap-2">
-          <span class="${isMe ? 'text-emerald-400' : 'text-slate-200'}">${getDisplayName(profile, profile.uid)}</span>
-        </td>
-        <td class="py-3 text-right font-mono font-bold text-emerald-400">${displayScore.toFixed(2)}</td>
-        <td class="py-3 text-right">${actionCell}</td>
-      </tr>`;
+    filtered.push({ profile, isMe, isFriend });
   });
 
-  rowsContainer.innerHTML = html || `<tr><td colspan="4" class="py-4 text-center text-xs text-slate-500 italic">No network entries visible in this grid scope.</td></tr>`;
+  if (!leaderboardShowAll && filtered.length > 0) {
+    const meIdx = filtered.findIndex(f => f.isMe);
+    let sliceStart, sliceEnd;
+
+    if (meIdx === -1) {
+      sliceStart = 0;
+      sliceEnd = 1;
+    } else {
+      sliceStart = Math.max(0, meIdx - 1);
+      sliceEnd = Math.min(filtered.length, meIdx + 2);
+    }
+
+    const subset = filtered.slice(sliceStart, sliceEnd);
+    let html = '';
+    subset.forEach((f, i) => {
+      html += buildLeaderboardRow(f.profile, sliceStart + i + 1, f.isMe, f.isFriend);
+    });
+    rowsContainer.innerHTML = html;
+
+    if (expandBtn) {
+      expandBtn.classList.toggle('hidden', filtered.length <= subset.length);
+      expandBtn.textContent = 'Show All';
+    }
+  } else {
+    let html = '';
+    filtered.forEach((f, i) => {
+      html += buildLeaderboardRow(f.profile, i + 1, f.isMe, f.isFriend);
+    });
+    rowsContainer.innerHTML = html || `<tr><td colspan="4" class="py-4 text-center text-xs text-slate-500 italic">No network entries visible in this grid scope.</td></tr>`;
+
+    if (expandBtn) {
+      expandBtn.classList.toggle('hidden', filtered.length <= 3 || !leaderboardShowAll);
+      if (leaderboardShowAll) {
+        expandBtn.textContent = 'Show Compact';
+      } else {
+        expandBtn.textContent = 'Show All';
+      }
+    }
+  }
 }
 
 /**
@@ -5221,6 +5273,7 @@ window.addFriendFromLeaderboard = addFriendFromLeaderboard;
 window.removeFriend = removeFriend;
 window.switchLeaderboardScope = switchLeaderboardScope;
 window.switchLeaderboardFormula = switchLeaderboardFormula;
+window.toggleLeaderboardExpand = toggleLeaderboardExpand;
 window.showQRCode = showQRCode;
 window.handleCalcRemove = handleCalcRemove;
 window.switchCalcMode = switchCalcMode;
