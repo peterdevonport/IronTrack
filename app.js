@@ -3310,7 +3310,7 @@ async function openShareModal(planId) {
   sharePlanId = planId;
   feedback.textContent = '';
 
-  switchShareMode('friends');
+  switchShareMode('qr');
   document.getElementById('share-qr-display').innerHTML = '';
   document.getElementById('share-select-all-container').classList.add('hidden');
   if (!userFriendsList.length) {
