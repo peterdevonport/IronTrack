@@ -3423,7 +3423,8 @@ async function shareByQR() {
       createdAt: serverTimestamp()
     });
 
-    const qrUrl = window.location.origin + '/?claimPlan=' + docRef.id;
+    const base = window.location.pathname.replace(/\/?[^\/]*$/, '/');
+    const qrUrl = window.location.origin + base + '?claimPlan=' + docRef.id;
     qrDisplay.innerHTML = '';
     const qrConfig = {
       type: "canvas",
