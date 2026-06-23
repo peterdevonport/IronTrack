@@ -5153,6 +5153,18 @@ async function processClaimedPlan(claimId) {
             return;
         }
 
+        const existing = await getDocs(query(
+            collection(db, "shared_plans"),
+            where("sharedWith", "==", currentUser.uid),
+            where("planId", "==", data.planId),
+            where("shareMethod", "==", "qr_claimed")
+        ));
+        if (!existing.empty) {
+            showToast('Plan already claimed!', 'yellow');
+            switchPlansFilter('shared');
+            return;
+        }
+
         const planSnap = await getDoc(doc(db, "workout_plans", data.planId));
         if (!planSnap.exists()) {
             console.error("Source plan not found.");

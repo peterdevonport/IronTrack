@@ -16,6 +16,15 @@
         { "fieldPath": "shareMethod", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "shared_plans",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "sharedWith", "order": "ASCENDING" },
+        { "fieldPath": "planId", "order": "ASCENDING" },
+        { "fieldPath": "shareMethod", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
