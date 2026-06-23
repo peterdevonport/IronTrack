@@ -5177,6 +5177,7 @@ async function processClaimedPlan(claimId) {
         });
 
         showToast('Plan imported from QR code!', 'emerald');
+        switchPlansFilter('shared');
     } catch (err) {
         console.error("Claim plan failed:", err);
         showToast('Failed to import plan from QR.', 'red');
