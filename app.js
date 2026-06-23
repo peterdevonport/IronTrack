@@ -3414,14 +3414,27 @@ async function shareByQR() {
   const displayName = sharerData.displayName || currentUser?.email?.split('@')[0] || 'Unknown';
 
   try {
-    const docRef = await addDoc(collection(db, "shared_plans"), {
-      sharedBy: currentUser.uid,
-      sharedByDisplayName: displayName,
-      sharedWith: '__qr__',
-      shareMethod: 'qr',
-      planId: plan.id,
-      createdAt: serverTimestamp()
-    });
+    const existing = await getDocs(query(
+      collection(db, "shared_plans"),
+      where("sharedBy", "==", currentUser.uid),
+      where("planId", "==", plan.id),
+      where("shareMethod", "==", "qr")
+    ));
+
+    let docRef;
+    if (!existing.empty) {
+      docRef = existing.docs[0].ref;
+      await updateDoc(docRef, { createdAt: serverTimestamp() });
+    } else {
+      docRef = await addDoc(collection(db, "shared_plans"), {
+        sharedBy: currentUser.uid,
+        sharedByDisplayName: displayName,
+        sharedWith: '__qr__',
+        shareMethod: 'qr',
+        planId: plan.id,
+        createdAt: serverTimestamp()
+      });
+    }
 
     const base = window.location.pathname.replace(/\/?[^\/]*$/, '/');
     const qrUrl = window.location.origin + base + '?claimPlan=' + docRef.id;
