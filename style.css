@@ -477,3 +477,40 @@ details.surface-card[open] summary::after {
 #vh-total {
   font-family: monospace;
 }
+
+/* ==========================================
+   MODAL OVERLAY
+   ========================================== */
+#profile-modal {
+  transition: opacity 0.2s ease;
+}
+#profile-modal.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+#profile-modal:not(.hidden) {
+  opacity: 1;
+}
+#profile-modal .surface-card > div:first-child {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--slate-700) transparent;
+}
+#profile-modal .surface-card > div:first-child::-webkit-scrollbar {
+  width: 6px;
+}
+#profile-modal .surface-card > div:first-child::-webkit-scrollbar-button {
+  width: 0;
+  height: 0;
+  display: none;
+}
+#profile-modal .surface-card > div:first-child::-webkit-scrollbar-track {
+  background: transparent;
+}
+#profile-modal .surface-card > div:first-child::-webkit-scrollbar-thumb {
+  background: var(--slate-700);
+  border-radius: 9999px;
+}
+#profile-modal .surface-card > div:first-child::-webkit-scrollbar-thumb:hover {
+  background: var(--slate-500);
+}

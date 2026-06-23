@@ -125,6 +125,8 @@ function getEffectiveLoad(workout) {
 const loginView = document.getElementById('login-view');
 const appView = document.getElementById('app-view');
 const authBtn = document.getElementById('auth-btn');
+const profileBtn = document.getElementById('profile-btn');
+const profileModal = document.getElementById('profile-modal');
 const emailInput = document.getElementById('auth-email');
 const passwordInput = document.getElementById('auth-password');
 const loginBtn = document.getElementById('email-login-btn');
@@ -237,6 +239,7 @@ onAuthStateChanged(auth, async (user) => {
         loginView.classList.add('hidden');
         appView.classList.remove('hidden');
         authBtn.innerText = "Sign Out";
+        if (profileBtn) profileBtn.classList.remove('hidden');
         window.__irontrackAuthState = 'signed-in';
         userSignupTs = new Date(user.metadata.creationTime).getTime() || 0;
         
@@ -287,6 +290,8 @@ onAuthStateChanged(auth, async (user) => {
         appView.classList.add('hidden');
         onboardingView.classList.add('hidden');
         pendingOnboarding1RMs = [];
+        if (profileBtn) profileBtn.classList.add('hidden');
+        if (profileModal) profileModal.classList.add('hidden');
         authBtn.innerText = "Sign In";
         greeting.innerText = "Analytics Dashboard";
         document.getElementById('workout-list').innerHTML = '';
@@ -5251,3 +5256,35 @@ window.updatePillActive = updatePillActive;
 window.switchVolumePeriod = switchVolumePeriod;
 window.shiftVolumePeriod = shiftVolumePeriod;
 window.onVolumeFilterChange = onVolumeFilterChange;
+
+// Profile Modal
+const modalClose = document.getElementById('profile-modal-close');
+const modalBackdrop = document.getElementById('profile-modal-backdrop');
+
+function openProfileModal() {
+  profileModal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeProfileModal() {
+  profileModal.classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+if (profileBtn && profileModal) {
+  profileBtn.addEventListener('click', openProfileModal);
+}
+
+if (modalClose) {
+  modalClose.addEventListener('click', closeProfileModal);
+}
+
+if (modalBackdrop) {
+  modalBackdrop.addEventListener('click', closeProfileModal);
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && profileModal && !profileModal.classList.contains('hidden')) {
+    closeProfileModal();
+  }
+});
