@@ -3472,6 +3472,7 @@ function listenToSharedPlans(uid) {
     const plans = [];
     snapshot.forEach((doc) => {
       const data = doc.data();
+      if (data.status === 'dismissed') return;
       const createdAt = data.createdAt?.toMillis ? data.createdAt.toMillis() : data.createdAt;
       plans.push({ id: doc.id, ...data, createdAt });
     });
