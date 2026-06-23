@@ -1,64 +1,40 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    match /profiles/{uid} {
-      allow read:   if request.auth != null;
-      allow create: if request.auth != null && request.auth.uid == uid;
-      allow update: if request.auth != null && request.auth.uid == uid;
-      allow delete: if false;
+    match /profiles/{userId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update, delete: if request.auth != null && request.auth.uid == userId;
     }
-
-    match /workouts/{workout} {
-      allow read:   if request.auth != null && request.auth.uid == resource.data.userId;
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-      allow update: if request.auth != null && request.auth.uid == resource.data.userId;
-      allow delete: if false;
+    match /workouts/{document=**} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if request.auth != null && request.resource.data.userId == request.auth.uid;
     }
-
-    match /workout_plans/{plan} {
-      allow read:   if request.auth != null && request.auth.uid == resource.data.userId;
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-      allow update: if request.auth != null && request.auth.uid == resource.data.userId;
-      allow delete: if false;
-    }
-
     match /structured_workouts/{doc} {
-      allow read:   if request.auth != null && request.auth.uid == resource.data.userId;
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-      allow update: if request.auth != null && request.auth.uid == resource.data.userId;
-      allow delete: if false;
-    }
-
-    match /personal_records/{record} {
-      allow read:   if request.auth != null && request.auth.uid == resource.data.userId;
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-      allow update: if request.auth != null && request.auth.uid == resource.data.userId;
-      allow delete: if false;
-    }
-
-    match /volume_history/{entry} {
-      allow read:   if request.auth != null && request.auth.uid == resource.data.userId;
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-      allow update: if request.auth != null && request.auth.uid == resource.data.userId;
-      allow delete: if false;
-    }
-
+  		allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+  		allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+		}
+    match /daily_activity/{docId} {
+  		allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
+		}
+    match /workout_plans/{planId} {
+  		allow get: if request.auth != null;
+  		allow list: if request.auth != null && request.auth.uid == resource.data.userId;
+  		allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+  		allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+		}
     match /shared_plans/{plan} {
       allow read:   if request.auth != null && (
         request.auth.uid == resource.data.sharedWith ||
         resource.data.shareMethod == 'qr'
       );
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.sharedBy;
-      allow update: if request.auth != null && (
-        request.auth.uid == resource.data.sharedWith ||
-        (resource.data.shareMethod == 'qr' &&
-         resource.data.status == 'pending' &&
-         request.resource.data.status == 'claimed' &&
-         request.resource.data.claimedBy == request.auth.uid)
+      allow create: if request.auth != null && (
+        request.auth.uid == request.resource.data.sharedBy ||
+        (request.resource.data.shareMethod == 'qr_claimed' &&
+         request.auth.uid == request.resource.data.sharedWith)
       );
+      allow update: if request.auth != null && request.auth.uid == resource.data.sharedWith;
       allow delete: if false;
     }
-
-  }
+	}
 }

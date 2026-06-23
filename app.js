@@ -3420,13 +3420,6 @@ async function shareByQR() {
       sharedWith: '__qr__',
       shareMethod: 'qr',
       planId: plan.id,
-      contentType: 'plan',
-      content: {
-        name: plan.name,
-        type: plan.type,
-        structure: plan.structure
-      },
-      status: 'pending',
       createdAt: serverTimestamp()
     });
 
@@ -5149,8 +5142,8 @@ async function processClaimedPlan(claimId) {
         }
 
         const data = shareSnap.data();
-        if (data.shareMethod !== 'qr' || data.status !== 'pending') {
-            console.error("Invalid or already claimed plan.");
+        if (data.shareMethod !== 'qr') {
+            console.error("Invalid share method.");
             return;
         }
 
@@ -5159,6 +5152,13 @@ async function processClaimedPlan(claimId) {
             return;
         }
 
+        const planSnap = await getDoc(doc(db, "workout_plans", data.planId));
+        if (!planSnap.exists()) {
+            console.error("Source plan not found.");
+            return;
+        }
+
+        const plan = planSnap.data();
         await addDoc(collection(db, "shared_plans"), {
             sharedBy: data.sharedBy,
             sharedByDisplayName: data.sharedByDisplayName,
@@ -5166,11 +5166,15 @@ async function processClaimedPlan(claimId) {
             shareMethod: 'qr_claimed',
             planId: data.planId,
             contentType: 'plan',
-            content: data.content,
+            content: {
+                name: plan.name,
+                type: plan.type,
+                structure: plan.structure
+            },
             status: 'active',
             createdAt: serverTimestamp()
         });
-        await updateDoc(doc(db, "shared_plans", claimId), { status: 'claimed', claimedBy: currentUser.uid });
+
         showToast('Plan imported from QR code!', 'emerald');
     } catch (err) {
         console.error("Claim plan failed:", err);
