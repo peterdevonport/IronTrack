@@ -715,45 +715,6 @@
               </form>
             </div>
 
-            <div id="plan-name-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80" style="backdrop-filter: blur(4px);">
-              <div class="surface-card w-full max-w-sm mx-4 space-y-4">
-                <p class="form-label text-base">Name Your Plan</p>
-                <input type="text" id="plan-name-input" class="input-core" placeholder="e.g. Monday Push Day" />
-                <div class="flex gap-2">
-                  <button type="button" id="plan-name-cancel" class="btn-core is-ghost btn-size-input">Cancel</button>
-                  <button type="button" id="plan-name-save" class="btn-core is-primary btn-size-input">Save Plan</button>
-                </div>
-                <p id="plan-name-feedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
-              </div>
-            </div>
-
-            <div id="share-plan-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80" style="backdrop-filter: blur(4px);">
-              <div class="surface-card w-full max-w-sm mx-4 space-y-4">
-                <p class="form-label text-base">Share Plan</p>
-                <div class="flex gap-2 mb-2">
-                  <button type="button" id="share-mode-friends" class="btn-core is-primary btn-size-row" onclick="switchShareMode('friends')">Friends</button>
-                  <button type="button" id="share-mode-qr" class="btn-core is-ghost btn-size-row" onclick="switchShareMode('qr')">QR Code</button>
-                </div>
-                <div id="share-friends-section">
-                  <p class="text-xs text-slate-400">Select friends to share this plan with:</p>
-                  <div id="share-select-all-container" class="hidden mb-1">
-                    <label class="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-800 cursor-pointer">
-                      <input type="checkbox" id="share-select-all" onchange="toggleSelectAllFriends()" />
-                      <span class="text-sm text-slate-300 font-medium">Select All</span>
-                    </label>
-                  </div>
-                  <div id="share-friend-list" class="max-h-48 overflow-y-auto space-y-2 border border-slate-800 rounded-lg p-2 mb-3">
-                  </div>
-                  <button type="button" id="share-plan-send" class="btn-core is-primary btn-size-input w-full"><i data-lucide="share-2" size="18"></i> Send</button>
-                </div>
-                <div id="share-qr-section" class="hidden flex flex-col items-center gap-3">
-                  <p class="text-xs text-slate-400 text-center">Share this QR code. Friend scans with their camera to import this plan.</p>
-                  <div id="share-qr-display" class="flex items-center justify-center rounded-xl"></div>
-                </div>
-                <p id="share-plan-feedback" class="text-xs text-slate-500 font-medium text-center"></p>
-                <button type="button" id="share-plan-cancel" class="btn-core is-ghost btn-size-input w-full"><i data-lucide="circle-x" size="18"></i> Close</button>
-              </div>
-            </div>
           </section>
 
           <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1">
@@ -794,6 +755,46 @@
             </div>
           </section>
 
+        </div>
+      </div>
+
+      <div id="plan-name-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80" style="backdrop-filter: blur(4px);">
+        <div class="surface-card w-full max-w-sm mx-4 space-y-4">
+          <p class="form-label text-base">Name Your Plan</p>
+          <input type="text" id="plan-name-input" class="input-core" placeholder="e.g. Monday Push Day" />
+          <div class="flex gap-2">
+            <button type="button" id="plan-name-cancel" class="btn-core is-ghost btn-size-input">Cancel</button>
+            <button type="button" id="plan-name-save" class="btn-core is-primary btn-size-input">Save Plan</button>
+          </div>
+          <p id="plan-name-feedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
+        </div>
+      </div>
+
+      <div id="share-plan-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80" style="backdrop-filter: blur(4px);">
+        <div class="surface-card w-full max-w-sm mx-4 space-y-4">
+          <p class="form-label text-base">Share Plan</p>
+          <div class="flex gap-2 mb-2">
+            <button type="button" id="share-mode-friends" class="btn-core is-primary btn-size-row" onclick="switchShareMode('friends')">Friends</button>
+            <button type="button" id="share-mode-qr" class="btn-core is-ghost btn-size-row" onclick="switchShareMode('qr')">QR Code</button>
+          </div>
+          <div id="share-friends-section">
+            <p class="text-xs text-slate-400">Select friends to share this plan with:</p>
+            <div id="share-select-all-container" class="hidden mb-1">
+              <label class="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-800 cursor-pointer">
+                <input type="checkbox" id="share-select-all" onchange="toggleSelectAllFriends()" />
+                <span class="text-sm text-slate-300 font-medium">Select All</span>
+              </label>
+            </div>
+            <div id="share-friend-list" class="max-h-48 overflow-y-auto space-y-2 border border-slate-800 rounded-lg p-2 mb-3">
+            </div>
+            <button type="button" id="share-plan-send" class="btn-core is-primary btn-size-input w-full"><i data-lucide="share-2" size="18"></i> Send</button>
+          </div>
+          <div id="share-qr-section" class="hidden flex flex-col items-center gap-3">
+            <p class="text-xs text-slate-400 text-center">Share this QR code. Friend scans with their camera to import this plan.</p>
+            <div id="share-qr-display" class="flex items-center justify-center rounded-xl"></div>
+          </div>
+          <p id="share-plan-feedback" class="text-xs text-slate-500 font-medium text-center"></p>
+          <button type="button" id="share-plan-cancel" class="btn-core is-ghost btn-size-input w-full"><i data-lucide="circle-x" size="18"></i> Close</button>
         </div>
       </div>
 

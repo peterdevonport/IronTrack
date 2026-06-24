@@ -3171,7 +3171,7 @@ function renderStructuredWorkoutCard(sw) {
     </div>
     <div class="flex flex-wrap gap-1.5 mt-2 structured-movements${hasMovements ? ' hidden' : ''}">
       ${movementsHtml}
-      ${hasMovements ? `<div class="mt-3 w-full flex justify-end gap-2">
+      ${hasMovements ? `<div class="flex gap-2 mt-3 w-full">
         <button type="button" onclick="redoWorkout('${sw.id}')" class="btn-core is-secondary btn-size-row"><i data-lucide="upload" size="18"></i></button>
         <button type="button" onclick="openShareModal('${sw.id}', true)" class="btn-core is-secondary btn-size-row"><i data-lucide="share-2" size="18"></i></button>
         <button type="button" onclick="deleteStructuredWorkout('${sw.id}')" class="btn-core is-ghost btn-size-row hover:!text-rose-400 hover:!border-rose-400"><i data-lucide="trash-2" size="18"></i></button>
@@ -3429,6 +3429,7 @@ function loadPlan(planId) {
   const plan = lastWorkoutPlans.find(p => p.id === planId);
   if (!plan) return;
 
+  switchTab('training');
   switchWorkoutMode('workout');
 
   const typeSelect = document.getElementById('workout-type');
@@ -3455,6 +3456,7 @@ function redoWorkout(workoutId) {
   const sw = lastStructuredWorkouts.find(w => w.id === workoutId);
   if (!sw) return;
 
+  switchTab('training');
   switchWorkoutMode('workout');
 
   const typeSelect = document.getElementById('workout-type');
@@ -5193,7 +5195,7 @@ function buildLeaderboardRow(profile, rank, isMe, isFriend) {
   return `
     <tr class="border-b border-slate-800/60 align-middle ${isMe ? 'bg-emerald-500/10 font-bold' : ''}">
       <td class="py-3 font-mono text-slate-500 align-middle">#${rank}</td>
-      <td class="py-3 flex items-center gap-2 align-middle">
+      <td class="py-3 align-middle">
         <span class="${isMe ? 'text-emerald-400' : 'text-slate-200'}">${getDisplayName(profile, profile.uid)}</span>
       </td>
       <td class="py-3 text-right font-mono font-bold text-emerald-400 align-middle">${displayScore.toFixed(2)}</td>
