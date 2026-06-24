@@ -3171,7 +3171,7 @@ function renderStructuredWorkoutCard(sw) {
     </div>
     <div class="flex flex-wrap gap-1.5 mt-2 structured-movements${hasMovements ? ' hidden' : ''}">
       ${movementsHtml}
-      ${hasMovements ? `<div class="mt-3 w-full flex justify-end"><button type="button" onclick="redoWorkout('${sw.id}')" class="btn-core is-secondary btn-size-row"><i data-lucide="upload" size="14"></i> Load</button></div>` : ''}
+      ${hasMovements ? `<div class="mt-3 w-full flex justify-end"><button type="button" onclick="redoWorkout('${sw.id}')" class="btn-core is-secondary btn-size-row"><i data-lucide="upload" size="14"></i></button></div>` : ''}
     </div>
 </div>
   `;
@@ -3389,9 +3389,9 @@ function renderPlanCard(plan) {
     <div class="flex flex-wrap gap-1.5 mt-2 structured-movements${hasMovements ? ' hidden' : ''}">
       ${movementsHtml}
       ${hasMovements ? `<div class="flex gap-2 mt-3 w-full">
-        <button type="button" onclick="loadPlan('${plan.id}')" class="btn-core is-secondary btn-size-row"><i data-lucide="upload" size="14"></i> Load</button>
-        <button type="button" onclick="openShareModal('${plan.id}')" class="btn-core is-secondary btn-size-row"><i data-lucide="share-2" size="14"></i> Share</button>
-        <button type="button" onclick="deletePlan('${plan.id}')" class="btn-core is-ghost btn-size-row"><i data-lucide="trash-2" size="14"></i> Delete</button>
+        <button type="button" onclick="loadPlan('${plan.id}')" class="btn-core is-secondary btn-size-row"><i data-lucide="upload" size="14"></i></button>
+        <button type="button" onclick="openShareModal('${plan.id}')" class="btn-core is-secondary btn-size-row"><i data-lucide="share-2" size="14"></i></button>
+        <button type="button" onclick="deletePlan('${plan.id}')" class="btn-core is-ghost btn-size-row"><i data-lucide="trash-2" size="14"></i></button>
       </div>` : ''}
     </div>
 </div>`;
@@ -3764,8 +3764,8 @@ function renderSharedPlanCard(share) {
     <div class="flex flex-wrap gap-1.5 mt-2 structured-movements${hasMovements ? ' hidden' : ''}">
       ${displayMovements}
       ${hasMovements ? `<div class="flex gap-2 mt-3 w-full">
-        <button type="button" onclick="loadSharedPlan('${share.id}')" class="btn-core is-primary btn-size-row"><i data-lucide="upload" size="14"></i> Load</button>
-        <button type="button" onclick="dismissSharedPlan('${share.id}')" class="btn-core is-ghost btn-size-row">Dismiss</button>
+        <button type="button" onclick="loadSharedPlan('${share.id}')" class="btn-core is-primary btn-size-row"><i data-lucide="upload" size="14"></i></button>
+        <button type="button" onclick="dismissSharedPlan('${share.id}')" class="btn-core is-ghost btn-size-row"><i data-lucide="trash-2" size="14"></i></button>
       </div>` : ''}
     </div>
 </div>`;
@@ -5077,7 +5077,7 @@ async function renderActiveFriendsList() {
             <div class="flex items-center gap-2">
               <button type="button" onclick="removeFriend('${fUid}')" 
               class="items-center justify-center rounded-full px-2 py-0.5 btn-core is-ghost text-xs ">
-              Remove
+              <i data-lucide="user-minus" size="14"></i>
               </button>
             </div>
           </div>`;
@@ -5091,6 +5091,7 @@ async function renderActiveFriendsList() {
     });
 
     container.innerHTML = html || `<p class="text-xs text-slate-500 italic">No valid allies found for the linked Cyber-Tags.</p>`;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 
     if (pagination) {
       const currentEl = document.getElementById('current-friends-page');
@@ -5145,12 +5146,12 @@ function buildLeaderboardRow(profile, rank, isMe, isFriend) {
   const displayScore = formatDotsScore(rawScore);
   const badgeBaseClasses = 'inline-flex items-center justify-center rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider w-20';
   const actionCell = isMe
-    ? `<span class="${badgeBaseClasses} bg-slate-700/60 text-slate-400">You</span>`
+    ? ''
     : isFriend
-      ? `<span class="${badgeBaseClasses} bg-emerald-500/10 text-emerald-300">Friend</span>`
+      ? ''
       : `<button type="button" class="${badgeBaseClasses} border border-slate-700 bg-slate-900 text-slate-200 transition hover:bg-slate-800" 
       onclick="addFriendFromLeaderboard('${profile.uid}')">
-      <i data-lucide="user-plus" size="14"></i> Add
+      <i data-lucide="user-plus" size="14"></i>
       </button>`;
 
   return `
