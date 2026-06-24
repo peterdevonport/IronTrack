@@ -3391,7 +3391,7 @@ function renderPlanCard(plan) {
       ${hasMovements ? `<div class="flex gap-2 mt-3 w-full">
         <button type="button" onclick="loadPlan('${plan.id}')" class="btn-core is-secondary btn-size-row"><i data-lucide="upload" size="18"></i></button>
         <button type="button" onclick="openShareModal('${plan.id}')" class="btn-core is-secondary btn-size-row"><i data-lucide="share-2" size="18"></i></button>
-        <button type="button" onclick="deletePlan('${plan.id}')" class="btn-core is-ghost btn-size-row"><i data-lucide="trash-2" size="18"></i></button>
+        <button type="button" onclick="deletePlan('${plan.id}')" class="btn-core is-ghost btn-size-row hover:text-rose-400 hover:border-rose-400"><i data-lucide="trash-2" size="18"></i></button>
       </div>` : ''}
     </div>
 </div>`;
@@ -3765,7 +3765,7 @@ function renderSharedPlanCard(share) {
       ${displayMovements}
       ${hasMovements ? `<div class="flex gap-2 mt-3 w-full">
         <button type="button" onclick="loadSharedPlan('${share.id}')" class="btn-core is-primary btn-size-row"><i data-lucide="upload" size="18"></i></button>
-        <button type="button" onclick="dismissSharedPlan('${share.id}')" class="btn-core is-ghost btn-size-row"><i data-lucide="trash-2" size="18"></i></button>
+        <button type="button" onclick="dismissSharedPlan('${share.id}')" class="btn-core is-ghost btn-size-row hover:text-rose-400 hover:border-rose-400"><i data-lucide="trash-2" size="18"></i></button>
       </div>` : ''}
     </div>
 </div>`;
@@ -5148,7 +5148,10 @@ function buildLeaderboardRow(profile, rank, isMe, isFriend) {
   const actionCell = isMe
     ? ''
     : isFriend
-      ? ''
+      ? `<button type="button" class="${badgeBaseClasses} border border-slate-700 bg-slate-900 text-slate-200 transition hover:bg-rose-500/10 hover:text-rose-400 hover:border-rose-400/30" 
+      onclick="removeFriend('${profile.uid}')">
+      <i data-lucide="user-minus" size="18"></i>
+      </button>`
       : `<button type="button" class="${badgeBaseClasses} border border-slate-700 bg-slate-900 text-slate-200 transition hover:bg-slate-800" 
       onclick="addFriendFromLeaderboard('${profile.uid}')">
       <i data-lucide="user-plus" size="18"></i>
