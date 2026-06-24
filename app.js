@@ -3172,8 +3172,8 @@ function renderStructuredWorkoutCard(sw) {
     <div class="flex flex-wrap gap-1.5 mt-2 structured-movements${hasMovements ? ' hidden' : ''}">
       ${movementsHtml}
       ${hasMovements ? `<div class="flex gap-2 mt-3 w-full">
-        <button type="button" onclick="redoWorkout('${sw.id}')" class="btn-core is-secondary btn-card-action"><i data-lucide="upload" size="18"></i><span>Load</span></button>
-        <button type="button" onclick="openShareModal('${sw.id}', true)" class="btn-core is-secondary btn-card-action"><i data-lucide="share-2" size="18"></i><span>Share</span></button>
+        <button type="button" onclick="redoWorkout('${sw.id}')" class="btn-core is-ghost btn-card-action"><i data-lucide="upload" size="18"></i><span>Load</span></button>
+        <button type="button" onclick="openShareModal('${sw.id}', true)" class="btn-core is-ghost btn-card-action"><i data-lucide="share-2" size="18"></i><span>Share</span></button>
         <button type="button" onclick="deleteStructuredWorkout('${sw.id}')" class="btn-core is-ghost btn-card-action hover:!text-rose-400 hover:!border-rose-400"><i data-lucide="trash-2" size="18"></i><span>Delete</span></button>
       </div>` : ''}
     </div>
@@ -3393,8 +3393,8 @@ function renderPlanCard(plan) {
     <div class="flex flex-wrap gap-1.5 mt-2 structured-movements${hasMovements ? ' hidden' : ''}">
       ${movementsHtml}
       ${hasMovements ? `<div class="flex gap-2 mt-3 w-full">
-        <button type="button" onclick="loadPlan('${plan.id}')" class="btn-core is-secondary btn-card-action"><i data-lucide="upload" size="18"></i><span>Load</span></button>
-        <button type="button" onclick="openShareModal('${plan.id}')" class="btn-core is-secondary btn-card-action"><i data-lucide="share-2" size="18"></i><span>Share</span></button>
+        <button type="button" onclick="loadPlan('${plan.id}')" class="btn-core is-ghost btn-card-action"><i data-lucide="upload" size="18"></i><span>Load</span></button>
+        <button type="button" onclick="openShareModal('${plan.id}')" class="btn-core is-ghost btn-card-action"><i data-lucide="share-2" size="18"></i><span>Share</span></button>
         <button type="button" onclick="deletePlan('${plan.id}')" class="btn-core is-ghost btn-card-action hover:!text-rose-400 hover:!border-rose-400"><i data-lucide="trash-2" size="18"></i><span>Delete</span></button>
       </div>` : ''}
     </div>
