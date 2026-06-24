@@ -166,6 +166,8 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   line-height: 1;
+  flex: 1;
+  min-width: 0;
 }         
 
 .btn-size-input { 
