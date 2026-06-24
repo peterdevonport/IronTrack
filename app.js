@@ -3799,7 +3799,7 @@ function renderSharedPlanCard(share) {
     <div class="flex flex-wrap gap-1.5 mt-2 structured-movements${hasMovements ? ' hidden' : ''}">
       ${displayMovements}
       ${hasMovements ? `<div class="flex gap-2 mt-3 w-full">
-        <button type="button" onclick="loadSharedPlan('${share.id}')" class="btn-core is-primary btn-card-action"><i data-lucide="upload" size="18"></i><span>Load</span></button>
+        <button type="button" onclick="loadSharedPlan('${share.id}')" class="btn-core is-ghost btn-card-action"><i data-lucide="upload" size="18"></i><span>Load</span></button>
         <button type="button" onclick="dismissSharedPlan('${share.id}')" class="btn-core is-ghost btn-card-action hover:!text-rose-400 hover:!border-rose-400"><i data-lucide="trash-2" size="18"></i><span>Dismiss</span></button>
       </div>` : ''}
     </div>
