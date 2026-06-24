@@ -15,6 +15,12 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+// Initialize Lucide icons
+if (typeof lucide !== 'undefined' && lucide.createIcons) {
+  lucide.createIcons();
+}
+
 window.__irontrackAppLoaded = true;
 window.__irontrackAuthState = 'pending';
 window.__irontrackWorkoutCount = 0;
@@ -124,6 +130,7 @@ function getEffectiveLoad(workout) {
 // UI Selectors
 const loginView = document.getElementById('login-view');
 const appView = document.getElementById('app-view');
+const bottomNav = document.getElementById('bottom-nav');
 const authBtn = document.getElementById('auth-btn');
 const profileBtn = document.getElementById('profile-btn');
 const profileModal = document.getElementById('profile-modal');
@@ -231,6 +238,30 @@ let leaderboardUnsubscribe = null; //
 let leaderboardCache = [];
 let leaderboardShowAll = false;
 
+// Bottom Navigation Tab Switching
+let currentTab = 'dashboard';
+const tabContents = document.querySelectorAll('.tab-content');
+const navTabs = document.querySelectorAll('.nav-tab');
+
+function switchTab(tabName) {
+  if (tabName === 'profile') {
+    openProfileModal();
+    return;
+  }
+  tabContents.forEach(el => el.classList.remove('active'));
+  const target = document.getElementById('tab-' + tabName);
+  if (target) target.classList.add('active');
+  navTabs.forEach(el => el.classList.remove('active'));
+  const btn = document.querySelector('.nav-tab[data-tab="' + tabName + '"]');
+  if (btn) btn.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  currentTab = tabName;
+}
+
+navTabs.forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+
 // Extract pending friend request from URL before any auth redirect clears it
 const pendingFriendUid = new URLSearchParams(window.location.search).get('addFriend');
 const pendingClaimPlanId = new URLSearchParams(window.location.search).get('claimPlan');
@@ -241,6 +272,8 @@ onAuthStateChanged(auth, async (user) => {
     if (user) {
         loginView.classList.add('hidden');
         appView.classList.remove('hidden');
+        if (bottomNav) bottomNav.classList.remove('hidden');
+        switchTab('dashboard');
         authBtn.innerText = "Sign Out";
         if (profileBtn) profileBtn.classList.remove('hidden');
         window.__irontrackAuthState = 'signed-in';
@@ -257,6 +290,7 @@ onAuthStateChanged(auth, async (user) => {
         if (!userBiometrics.onboardingComplete) {
             loginView.classList.add('hidden');
             appView.classList.add('hidden');
+            if (bottomNav) bottomNav.classList.add('hidden');
             showOnboarding();
             return;
         }
@@ -291,6 +325,7 @@ onAuthStateChanged(auth, async (user) => {
         if (leaderboardUnsubscribe) { leaderboardUnsubscribe(); leaderboardUnsubscribe = null; }
         loginView.classList.remove('hidden');
         appView.classList.add('hidden');
+        if (bottomNav) bottomNav.classList.add('hidden');
         onboardingView.classList.add('hidden');
         pendingOnboarding1RMs = [];
         if (profileBtn) profileBtn.classList.add('hidden');

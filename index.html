@@ -18,10 +18,11 @@
   <meta name="theme-color" content="#27dd33" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#272a36" media="(prefers-color-scheme: dark)">
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4" defer></script>
+  <script src="https://unpkg.com/lucide@latest" defer></script>
 </head>
 
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
-  <div class="max-w-md lg:max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+  <div class="max-w-md lg:max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 flex flex-col min-h-screen space-y-6">
     <header class="flex justify-between items-center pt-4">
       <div id="header">
         <h1 class="text-3xl font-black tracking-tight text-emerald-400">
@@ -33,10 +34,7 @@
       </div>
       <div class="flex items-center gap-2">
         <button id="profile-btn" class="btn-core is-secondary btn-size-header-util cursor-pointer hidden" title="Profile &amp; Social">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-            <circle cx="12" cy="7" r="4"/>
-          </svg>
+          <i data-lucide="user" size="18"></i>
         </button>
       </div>
     </header>
@@ -61,16 +59,8 @@
             <div class="relative">
               <input type="password" id="auth-password" placeholder="••••••••" required class="input-core pr-10" />
               <button id="toggle-password-btn" type="button" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" tabindex="-1">
-                <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                  <circle cx="12" cy="12" r="3"/>
-                </svg>
-                <svg id="eye-off-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden">
-                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
-                  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
-                  <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/>
-                  <line x1="1" y1="1" x2="23" y2="23"/>
-                </svg>
+                <i data-lucide="eye" id="eye-icon" size="18"></i>
+                <i data-lucide="eye-off" id="eye-off-icon" size="18" class="hidden"></i>
               </button>
             </div>
           </div>
@@ -188,12 +178,11 @@
       <p id="onboarding-feedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
     </section>
 
-    <main id="app-view" class="hidden space-y-6">
+    <main id="app-view" class="hidden flex-1">
 
-
-      <details class="surface-card" open>
-        <summary class="section-heading cursor-pointer select-none">Dashboard</summary>
-        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6 mt-4">
+      <div class="surface-card tab-content active" id="tab-dashboard">
+        <h2 class="section-heading mb-4">Dashboard</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
 
           <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1" id="consistency-section">
             <h2 class="section-heading">Training Calendar</h2>
@@ -274,11 +263,11 @@
           </section>
 
         </div>
-      </details>
+      </div>
 
-      <details class="surface-card" open>
-        <summary class="section-heading cursor-pointer select-none">Performance</summary>
-        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6 mt-4">
+      <div class="surface-card tab-content" id="tab-performance">
+        <h2 class="section-heading mb-4">Performance</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
 
           <div class="bg-slate-950 rounded-xl p-4 grid grid-cols-2 content-start items-start lg:col-span-1">
             <p class="section-heading">DOTS</p>
@@ -409,11 +398,11 @@
           </section>
 
         </div>
-      </details>
+      </div>
 
-      <details class="surface-card" open>
-        <summary class="section-heading cursor-pointer select-none">Training</summary>
-        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6 mt-4">
+      <div class="surface-card tab-content" id="tab-training">
+        <h2 class="section-heading mb-4">Training</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
 
           <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1" id="record-training-card">
             <h2 class="section-heading">Record Training</h2>
@@ -805,70 +794,70 @@
             </div>
           </section>
 
-          <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1">
-            <h2 class="section-heading">Calculators</h2>
-            <p class="text-description mb-4">Estimate working weights from %1RM or RPE.</p>
-
-            <div class="mb-4">
-              <label class="form-label">Select Lift</label>
-              <select id="calc-lift-select" class="dropdown-core">
-                <option value="" disabled selected>Select lift...</option>
-              </select>
-            </div>
-
-            <p class="text-xs text-slate-400 mb-3">Est. 1RM: <span id="calc-one-rm-display" class="text-emerald-400 font-bold font-mono">—</span></p>
-
-            <div class="flex gap-1 p-0.5 w-fit rounded-xl bg-slate-800/60 mb-4">
-              <button id="calc-mode-pct" type="button" class="btn-core is-primary btn-size-row" onclick="switchCalcMode('pct')">%1RM</button>
-              <button id="calc-mode-rpe" type="button" class="btn-core is-ghost btn-size-row" onclick="switchCalcMode('rpe')">RPE</button>
-            </div>
-
-            <div id="calc-pct-inputs">
-              <label class="form-label">% of 1RM</label>
-              <div class="flex gap-2 items-center mb-3">
-                <input type="number" id="calc-pct-input" placeholder="Enter %" min="0" max="1000" step="0.5" class="input-core flex-1" />
-              </div>
-            </div>
-
-            <div id="calc-rpe-inputs" class="hidden">
-              <div class="grid grid-cols-2 gap-3 mb-3">
-                <div>
-                  <label class="form-label">Reps</label>
-                  <input type="number" id="calc-rpe-reps" placeholder="5" min="1" max="10" step="1" class="input-core" />
-                </div>
-                <div>
-                  <label class="form-label">RPE</label>
-                  <input type="number" id="calc-rpe-select" placeholder="1–10" min="1" max="10" step="1" class="input-core" />
-                </div>
-              </div>
-            </div>
-
-            <div id="calc-preview-box" class="bg-slate-950 rounded-xl p-4 text-center space-y-2">
-              <p class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Recommended Weight</p>
-              <p id="calc-preview-weight" class="text-3xl font-black font-mono text-emerald-400">—</p>
-              <p id="calc-preview-detail" class="text-xs text-slate-400"></p>
-              <button type="button" id="calc-add-btn" class="btn-core is-primary btn-size-input w-full cursor-pointer" disabled>Add to Working Weights</button>
-            </div>
-
-            <div class="mt-4">
-              <div class="flex justify-between px-1 mb-2">
-                <span class="text-slate-500 font-bold uppercase text-[10px] tracking-wider">Source</span>
-                <span class="text-emerald-400 font-bold uppercase text-[10px] tracking-wider">Weight</span>
-              </div>
-              <div id="calc-entries-list">
-                <p class="text-xs text-slate-500 italic py-2 text-center">Select a lift with data to get started.</p>
-              </div>
-            </div>
-
-            <button id="calc-clear-btn" class="btn-core is-secondary btn-size-input mt-3">Clear All</button>
-          </section>
-
         </div>
-      </details>
+      </div>
 
-      <details class="surface-card" open>
-        <summary class="section-heading cursor-pointer select-none">History</summary>
-        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6 mt-4">
+      <div class="surface-card tab-content" id="tab-calculator">
+        <h2 class="section-heading mb-4">Calculators</h2>
+        <p class="text-description mb-4">Estimate working weights from %1RM or RPE.</p>
+
+        <div class="mb-4">
+          <label class="form-label">Select Lift</label>
+          <select id="calc-lift-select" class="dropdown-core">
+            <option value="" disabled selected>Select lift...</option>
+          </select>
+        </div>
+
+        <p class="text-xs text-slate-400 mb-3">Est. 1RM: <span id="calc-one-rm-display" class="text-emerald-400 font-bold font-mono">—</span></p>
+
+        <div class="flex gap-1 p-0.5 w-fit rounded-xl bg-slate-800/60 mb-4">
+          <button id="calc-mode-pct" type="button" class="btn-core is-primary btn-size-row" onclick="switchCalcMode('pct')">%1RM</button>
+          <button id="calc-mode-rpe" type="button" class="btn-core is-ghost btn-size-row" onclick="switchCalcMode('rpe')">RPE</button>
+        </div>
+
+        <div id="calc-pct-inputs">
+          <label class="form-label">% of 1RM</label>
+          <div class="flex gap-2 items-center mb-3">
+            <input type="number" id="calc-pct-input" placeholder="Enter %" min="0" max="1000" step="0.5" class="input-core flex-1" />
+          </div>
+        </div>
+
+        <div id="calc-rpe-inputs" class="hidden">
+          <div class="grid grid-cols-2 gap-3 mb-3">
+            <div>
+              <label class="form-label">Reps</label>
+              <input type="number" id="calc-rpe-reps" placeholder="5" min="1" max="10" step="1" class="input-core" />
+            </div>
+            <div>
+              <label class="form-label">RPE</label>
+              <input type="number" id="calc-rpe-select" placeholder="1–10" min="1" max="10" step="1" class="input-core" />
+            </div>
+          </div>
+        </div>
+
+        <div id="calc-preview-box" class="bg-slate-950 rounded-xl p-4 text-center space-y-2">
+          <p class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Recommended Weight</p>
+          <p id="calc-preview-weight" class="text-3xl font-black font-mono text-emerald-400">—</p>
+          <p id="calc-preview-detail" class="text-xs text-slate-400"></p>
+          <button type="button" id="calc-add-btn" class="btn-core is-primary btn-size-input w-full cursor-pointer" disabled>Add to Working Weights</button>
+        </div>
+
+        <div class="mt-4">
+          <div class="flex justify-between px-1 mb-2">
+            <span class="text-slate-500 font-bold uppercase text-[10px] tracking-wider">Source</span>
+            <span class="text-emerald-400 font-bold uppercase text-[10px] tracking-wider">Weight</span>
+          </div>
+          <div id="calc-entries-list">
+            <p class="text-xs text-slate-500 italic py-2 text-center">Select a lift with data to get started.</p>
+          </div>
+        </div>
+
+        <button id="calc-clear-btn" class="btn-core is-secondary btn-size-input mt-3">Clear All</button>
+      </div>
+
+      <div class="surface-card tab-content" id="tab-history">
+        <h2 class="section-heading mb-4">History</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
 
           <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1">
             <h2 class="section-heading">Exercise Log</h2>
@@ -980,7 +969,7 @@
           </section>
 
         </div>
-      </details>
+      </div>
 
       <!-- Profile Modal Overlay -->
       <div id="profile-modal" class="fixed inset-0 z-50 hidden">
@@ -990,10 +979,7 @@
             <div class="flex items-center justify-between px-6 pt-6 pb-2">
               <h2 class="text-lg font-bold text-slate-200">Your Profile</h2>
               <button id="profile-modal-close" class="text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" type="button">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"/>
-                  <line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
+                <i data-lucide="x" size="20"></i>
               </button>
             </div>
             <div id="profile-modal-scroll" class="px-6 pb-6 space-y-6 max-h-[65vh] overflow-y-auto">
@@ -1006,7 +992,7 @@
                 <div class="relative">
                   <input type="email" id="profile-email" readonly disabled class="input-core opacity-60 pr-10" />
                   <span class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none p-1 leading-none">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <i data-lucide="lock" size="16"></i>
                   </span>
                 </div>
               </div>
@@ -1019,22 +1005,22 @@
                   <div class="relative">
                     <input type="password" id="cp-current" placeholder="Current password" class="input-core pr-10" />
                     <button type="button" class="toggle-pw-btn absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" tabindex="-1" data-target="cp-current">
-                      <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                      <svg class="eye-off-icon hidden" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                      <i data-lucide="eye" class="eye-icon" size="18"></i>
+                      <i data-lucide="eye-off" class="eye-off-icon hidden" size="18"></i>
                     </button>
                   </div>
                   <div class="relative">
                     <input type="password" id="cp-new" placeholder="New password (min 6 chars)" class="input-core pr-10" />
                     <button type="button" class="toggle-pw-btn absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" tabindex="-1" data-target="cp-new">
-                      <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                      <svg class="eye-off-icon hidden" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                      <i data-lucide="eye" class="eye-icon" size="18"></i>
+                      <i data-lucide="eye-off" class="eye-off-icon hidden" size="18"></i>
                     </button>
                   </div>
                   <div class="relative">
                     <input type="password" id="cp-confirm" placeholder="Confirm new password" class="input-core pr-10" />
                     <button type="button" class="toggle-pw-btn absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" tabindex="-1" data-target="cp-confirm">
-                      <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                      <svg class="eye-off-icon hidden" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                      <i data-lucide="eye" class="eye-icon" size="18"></i>
+                      <i data-lucide="eye-off" class="eye-off-icon hidden" size="18"></i>
                     </button>
                   </div>
                   <div class="grid grid-cols-2 gap-3">
@@ -1141,6 +1127,35 @@
       </div>
     </div>
     </main>
+
+    <nav id="bottom-nav" class="hidden">
+      <div class="bottom-nav-inner">
+        <button class="nav-tab active" data-tab="dashboard" title="Dashboard">
+            <i data-lucide="layout-dashboard"></i>
+            <span>Dash</span>
+          </button>
+          <button class="nav-tab" data-tab="performance" title="Performance">
+            <i data-lucide="trending-up"></i>
+            <span>Perf.</span>
+          </button>
+          <button class="nav-tab" data-tab="training" title="Training">
+            <i data-lucide="dumbbell"></i>
+            <span>Train</span>
+          </button>
+          <button class="nav-tab" data-tab="calculator" title="Calculator">
+            <i data-lucide="calculator"></i>
+            <span>Calc</span>
+          </button>
+          <button class="nav-tab" data-tab="history" title="History">
+            <i data-lucide="history"></i>
+            <span>History</span>
+          </button>
+          <button class="nav-tab" data-tab="profile" title="Profile">
+            <i data-lucide="user"></i>
+            <span>Profile</span>
+          </button>
+      </div>
+    </nav>
 
   </div>
 
