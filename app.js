@@ -3322,22 +3322,31 @@ function renderPlanCard(plan) {
     }).join('');
   }
 
+  const hasMovements = movementsHtml.trim().length > 0;
+  const isFav = plan.favorite === true;
+  const starIcon = isFav ? '\u2605' : '\u2606';
+  const starClass = isFav ? 'text-yellow-400' : 'text-slate-500';
+
   return `
 <div class="structured-card p-4 rounded-2xl mb-3 shadow-2xl shadow-slate-950/60 transition-all duration-200" style="background-color: var(--slate-900);">
-    <div class="flex justify-between items-start mb-2">
+    <div class="flex justify-between items-start mb-2${hasMovements ? ' structured-header-clickable' : ''}"${hasMovements ? ` onclick="toggleWorkoutCard(this)"` : ''}>
       <div>
-        <span class="workout-type-badge ${badgeClass}">${escapeHtml(type)}</span>
-        <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm mt-1">${escapeHtml(plan.name)}</h4>
+        <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm">${escapeHtml(plan.name)}</h4>
         <p class="text-slate-500 text-[10px] font-mono mt-0.5">${dateStr}</p>
+        <span class="workout-type-badge ${badgeClass}">${escapeHtml(type)}</span>
+      </div>
+      <div class="flex items-center gap-2">
+        ${hasMovements ? '<span class="toggle-arrow">\u25BE</span>' : ''}
+        <button type="button" onclick="event.stopPropagation();togglePlanFavorite('${plan.id}')" class="text-lg leading-none ${starClass} hover:text-yellow-400 transition-colors p-1" title="Favorite">${starIcon}</button>
       </div>
     </div>
-    <div class="flex flex-wrap gap-1.5 mt-2 mb-3">
+    <div class="flex flex-wrap gap-1.5 mt-2 structured-movements${hasMovements ? ' hidden' : ''}">
       ${movementsHtml}
-    </div>
-    <div class="flex gap-2">
-      <button type="button" onclick="loadPlan('${plan.id}')" class="btn-core is-secondary btn-size-row">Load</button>
-      <button type="button" onclick="openShareModal('${plan.id}')" class="btn-core is-secondary btn-size-row">Share</button>
-      <button type="button" onclick="deletePlan('${plan.id}')" class="btn-core is-ghost btn-size-row">Delete</button>
+      ${hasMovements ? `<div class="flex gap-2 mt-3 w-full">
+        <button type="button" onclick="loadPlan('${plan.id}')" class="btn-core is-secondary btn-size-row">Load</button>
+        <button type="button" onclick="openShareModal('${plan.id}')" class="btn-core is-secondary btn-size-row">Share</button>
+        <button type="button" onclick="deletePlan('${plan.id}')" class="btn-core is-ghost btn-size-row">Delete</button>
+      </div>` : ''}
     </div>
 </div>`;
 }
@@ -3622,13 +3631,23 @@ function renderSharedPlansUI() {
   const pagination = document.getElementById('shared-plans-pagination');
   if (!container) return;
 
-  const filtered = plansFilter === 'favorites'
-    ? lastSharedPlans.filter(s => s.favorite === true)
-    : lastSharedPlans;
+  let items = [];
+  if (plansFilter === 'favorites') {
+    const favoritedOwn = lastWorkoutPlans.filter(p => p.favorite === true).map(p => ({ type: 'own', plan: p }));
+    const favoritedShared = lastSharedPlans.filter(s => s.favorite === true).map(s => ({ type: 'shared', share: s }));
+    items = [...favoritedOwn, ...favoritedShared];
+    items.sort((a, b) => {
+      const aDate = a.type === 'own' ? a.plan.createdAt : a.share.createdAt;
+      const bDate = b.type === 'own' ? b.plan.createdAt : b.share.createdAt;
+      return (bDate || 0) - (aDate || 0);
+    });
+  } else {
+    items = lastSharedPlans.map(s => ({ type: 'shared', share: s }));
+  }
 
-  if (!filtered.length) {
+  if (!items.length) {
     const msg = plansFilter === 'favorites'
-      ? '<p class="text-xs text-slate-500 italic py-2 text-center">No favorited shared plans yet. Star a shared plan to add it here.</p>'
+      ? '<p class="text-xs text-slate-500 italic py-2 text-center">No favorited plans yet. Star a plan to add it here.</p>'
       : '<p class="text-xs text-slate-500 italic py-2 text-center">No shared plans yet.</p>';
     container.innerHTML = msg;
     if (pagination) pagination.classList.add('hidden');
@@ -3636,12 +3655,14 @@ function renderSharedPlansUI() {
   }
 
   const perPage = 3;
-  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
+  const totalPages = Math.max(1, Math.ceil(items.length / perPage));
   sharedPlansPage = Math.min(sharedPlansPage, totalPages);
   const start = (sharedPlansPage - 1) * perPage;
-  const pageItems = filtered.slice(start, start + perPage);
+  const pageItems = items.slice(start, start + perPage);
 
-  container.innerHTML = pageItems.map(share => renderSharedPlanCard(share)).join('');
+  container.innerHTML = pageItems.map(item => {
+    return item.type === 'own' ? renderPlanCard(item.plan) : renderSharedPlanCard(item.share);
+  }).join('');
 
   if (pagination) {
     const currentEl = document.getElementById('current-shared-plans-page');
@@ -3676,22 +3697,28 @@ function renderSharedPlanCard(share) {
   const starIcon = isFav ? '\u2605' : '\u2606';
   const starClass = isFav ? 'text-yellow-400' : 'text-slate-500';
 
+  const displayMovements = type === 'EMOM' ? emomHtml : movementsHtml;
+  const hasMovements = displayMovements.trim().length > 0;
+
   return `
 <div class="structured-card p-4 rounded-2xl mb-3 shadow-2xl shadow-slate-950/60 transition-all duration-200" style="background-color: var(--slate-900);">
-    <div class="flex justify-between items-start mb-2">
+    <div class="flex justify-between items-start mb-2${hasMovements ? ' structured-header-clickable' : ''}"${hasMovements ? ` onclick="toggleWorkoutCard(this)"` : ''}>
       <div>
-        <span class="workout-type-badge ${badgeClass}">${escapeHtml(type)}</span>
-        <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm mt-1">${escapeHtml(share.content?.name || '')}</h4>
+        <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm">${escapeHtml(share.content?.name || '')}</h4>
         <p class="text-slate-500 text-[10px] font-mono mt-0.5">Shared by ${escapeHtml(share.sharedByDisplayName || 'Unknown')} &middot; ${dateStr}</p>
+        <span class="workout-type-badge ${badgeClass}">${escapeHtml(type)}</span>
       </div>
-      <button type="button" onclick="toggleFavorite('${share.id}')" class="text-lg leading-none ${starClass} hover:text-yellow-400 transition-colors p-1" title="Favorite">${starIcon}</button>
+      <div class="flex items-center gap-2">
+        ${hasMovements ? '<span class="toggle-arrow">\u25BE</span>' : ''}
+        <button type="button" onclick="event.stopPropagation();toggleFavorite('${share.id}')" class="text-lg leading-none ${starClass} hover:text-yellow-400 transition-colors p-1" title="Favorite">${starIcon}</button>
+      </div>
     </div>
-    <div class="flex flex-wrap gap-1.5 mt-2 mb-3">
-      ${type === 'EMOM' ? emomHtml : movementsHtml}
-    </div>
-    <div class="flex gap-2">
-      <button type="button" onclick="loadSharedPlan('${share.id}')" class="btn-core is-primary btn-size-row">Load</button>
-      <button type="button" onclick="dismissSharedPlan('${share.id}')" class="btn-core is-ghost btn-size-row">Dismiss</button>
+    <div class="flex flex-wrap gap-1.5 mt-2 structured-movements${hasMovements ? ' hidden' : ''}">
+      ${displayMovements}
+      ${hasMovements ? `<div class="flex gap-2 mt-3 w-full">
+        <button type="button" onclick="loadSharedPlan('${share.id}')" class="btn-core is-primary btn-size-row">Load</button>
+        <button type="button" onclick="dismissSharedPlan('${share.id}')" class="btn-core is-ghost btn-size-row">Dismiss</button>
+      </div>` : ''}
     </div>
 </div>`;
 }
@@ -3753,6 +3780,19 @@ async function toggleFavorite(shareId) {
     haptic(HAPTIC.tap);
   } catch (err) {
     console.error('Toggle favorite failed', err.code, err.message);
+  }
+}
+
+async function togglePlanFavorite(planId) {
+  if (!currentUser) return;
+  const plan = lastWorkoutPlans.find(p => p.id === planId);
+  if (!plan) return;
+  const newVal = !(plan.favorite === true);
+  try {
+    await updateDoc(doc(db, "workout_plans", planId), { favorite: newVal });
+    haptic(HAPTIC.tap);
+  } catch (err) {
+    console.error('Toggle plan favorite failed', err.code, err.message);
   }
 }
 
@@ -5428,6 +5468,7 @@ window.dismissSharedPlan = dismissSharedPlan;
 window.switchPlansFilter = switchPlansFilter;
 window.toggleSelectAllFriends = toggleSelectAllFriends;
 window.toggleFavorite = toggleFavorite;
+window.togglePlanFavorite = togglePlanFavorite;
 window.loadSharedPlan = loadSharedPlan;
 window.switchShareMode = switchShareMode;
 window.shareByQR = shareByQR;
