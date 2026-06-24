@@ -503,7 +503,7 @@
                       <div class="w-20">
                         <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
                       </div>
-                      <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none">X</button>
+                      <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none"><i data-lucide="circle-minus" size="14"></i></button>
                     </div>
                   </div>
                 </div>
@@ -566,7 +566,7 @@
                       <div class="w-20">
                         <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
                       </div>
-                      <button type="button" onclick="removeMinuteSlot(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none">X</button>
+                      <button type="button" onclick="removeMinuteSlot(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none"><i data-lucide="circle-minus" size="14"></i></button>
                     </div>
                   </div>
                   <p id="emom-summary" class="text-xs text-slate-400 mt-1 hidden">
@@ -617,7 +617,7 @@
                       <div class="w-20">
                         <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
                       </div>
-                      <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none">X</button>
+                      <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none"><i data-lucide="circle-minus" size="14"></i></button>
                     </div>
                   </div>
                 </div>
@@ -689,7 +689,7 @@
                       <div class="w-20">
                         <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
                       </div>
-                      <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none">X</button>
+                      <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none"><i data-lucide="circle-minus" size="14"></i></button>
                     </div>
                   </div>
                 </div>
@@ -744,14 +744,14 @@
                   </div>
                   <div id="share-friend-list" class="max-h-48 overflow-y-auto space-y-2 border border-slate-800 rounded-lg p-2 mb-3">
                   </div>
-                  <button type="button" id="share-plan-send" class="btn-core is-primary btn-size-input w-full">Send</button>
+                  <button type="button" id="share-plan-send" class="btn-core is-primary btn-size-input w-full"><i data-lucide="share-2" size="16"></i> Send</button>
                 </div>
                 <div id="share-qr-section" class="hidden flex flex-col items-center gap-3">
                   <p class="text-xs text-slate-400 text-center">Share this QR code. Friend scans with their camera to import this plan.</p>
                   <div id="share-qr-display" class="flex items-center justify-center rounded-xl"></div>
                 </div>
                 <p id="share-plan-feedback" class="text-xs text-slate-500 font-medium text-center"></p>
-                <button type="button" id="share-plan-cancel" class="btn-core is-ghost btn-size-input w-full">Close</button>
+                <button type="button" id="share-plan-cancel" class="btn-core is-ghost btn-size-input w-full"><i data-lucide="circle-x" size="16"></i> Close</button>
               </div>
             </div>
           </section>
@@ -979,7 +979,7 @@
             <div class="flex items-center justify-between px-6 pt-6 pb-2">
               <h2 class="text-lg font-bold text-slate-200">Your Profile</h2>
               <button id="profile-modal-close" class="text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" type="button">
-                <i data-lucide="x" size="20"></i>
+                <i data-lucide="circle-x" size="20"></i>
               </button>
             </div>
             <div id="profile-modal-scroll" class="px-6 pb-6 space-y-6 max-h-[65vh] overflow-y-auto">
@@ -1031,7 +1031,7 @@
                 </div>
 
                 <button type="button" id="delete-account-btn" class="btn-core is-ghost btn-size-input w-full text-rose-400 border-rose-400/30 hover:bg-rose-500/10">
-                  Delete Account
+                  <i data-lucide="trash-2" size="16"></i> Delete Account
                 </button>
                 <button id="auth-btn" class="btn-core is-ghost btn-size-input w-full">
                   Sign Out
@@ -1096,7 +1096,7 @@
                   <div class="flex gap-2">
                     <input type="text" id="friendUidInput" placeholder="Paste friend's Cyber-Tag here..." class="input-core" />
                     <button id="btnAddFriend" class="btn-core is-primary btn-size-side" onclick="handleAddFriend()">
-                      Add
+                      <i data-lucide="user-plus" size="16"></i> Add
                     </button>
                   </div>
 

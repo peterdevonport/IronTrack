@@ -548,7 +548,7 @@ function renderOnboarding1RMList() {
             <div class="flex items-center justify-between bg-slate-800 rounded-xl px-3 py-2">
                 <span class="text-sm text-slate-200 font-medium">${escapeHtml(item.exercise)}</span>
                 <span class="text-sm text-emerald-400 font-mono font-bold">${item.weight} kg${repLabel}</span>
-                <button type="button" class="text-rose-400 hover:text-rose-300 text-xs font-bold cursor-pointer bg-transparent border-none" data-index="${index}">Remove</button>
+                <button type="button" class="text-rose-400 hover:text-rose-300 text-xs font-bold cursor-pointer bg-transparent border-none" data-index="${index}"><i data-lucide="circle-minus" size="14"></i></button>
             </div>`;
     });
     onboardingList.innerHTML = html;
@@ -561,6 +561,7 @@ function renderOnboarding1RMList() {
             renderOnboarding1RMList();
         });
     });
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function addOnboarding1RM() {
@@ -1219,12 +1220,13 @@ function renderCalcEntries(exercise, oneRM) {
             <span class="text-slate-200 font-mono text-sm">${escapeHtml(source)}</span>
             <div class="flex items-center gap-2">
                 <span class="text-slate-200 font-mono text-sm">${weight} kg</span>
-                <button onclick="handleCalcRemove(this)" data-index="${idx}" class="text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer">−</button>
+                <button onclick="handleCalcRemove(this)" data-index="${idx}" class="text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"><i data-lucide="circle-minus" size="14"></i></button>
             </div>
         </div>`;
     });
 
     entriesList.innerHTML = html;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function debounce(fn, wait) {
@@ -1679,7 +1681,7 @@ function addMovementRow(containerId, exerciseName) {
       <select class="movement-exercise dropdown-core flex-1" onchange="handleMovementExerciseChange(this)">
         <option value="">Select exercise...</option>
       </select>
-      <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none shrink-0">X</button>
+      <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none shrink-0"><i data-lucide="circle-minus" size="14"></i></button>
     </div>
     <div class="flex gap-2 items-center flex-wrap">
       <div class="w-16 shrink-0">
@@ -1705,6 +1707,7 @@ function addMovementRow(containerId, exerciseName) {
     const sel = row.querySelector('.movement-exercise');
     if (sel) { sel.value = exerciseName; handleMovementExerciseChange(sel); }
   }
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function removeMovementRow(btn) {
@@ -2054,7 +2057,7 @@ function addMinuteSlot(exerciseName) {
       <select class="movement-exercise dropdown-core flex-1" onchange="handleMovementExerciseChange(this)">
         <option value="">Select exercise...</option>
       </select>
-      <button type="button" onclick="removeMinuteSlot(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none shrink-0">X</button>
+      <button type="button" onclick="removeMinuteSlot(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none shrink-0"><i data-lucide="circle-minus" size="14"></i></button>
     </div>
     <div class="flex gap-2 items-center flex-wrap">
       <div class="w-16 shrink-0">
@@ -2083,6 +2086,7 @@ function addMinuteSlot(exerciseName) {
   updateEmomSummary();
   updateEmomDurationDisplay();
   updateEmomScorePreview();
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function removeMinuteSlot(btn) {
@@ -3167,7 +3171,7 @@ function renderStructuredWorkoutCard(sw) {
     </div>
     <div class="flex flex-wrap gap-1.5 mt-2 structured-movements${hasMovements ? ' hidden' : ''}">
       ${movementsHtml}
-      ${hasMovements ? `<div class="mt-3 w-full flex justify-end"><button type="button" onclick="redoWorkout('${sw.id}')" class="btn-core is-secondary btn-size-row">Load</button></div>` : ''}
+      ${hasMovements ? `<div class="mt-3 w-full flex justify-end"><button type="button" onclick="redoWorkout('${sw.id}')" class="btn-core is-secondary btn-size-row"><i data-lucide="upload" size="14"></i> Load</button></div>` : ''}
     </div>
 </div>
   `;
@@ -3202,6 +3206,7 @@ function renderStructuredWorkoutHistory() {
   const pageItems = workouts.slice(start, start + perPage);
 
   container.innerHTML = pageItems.map(renderStructuredWorkoutCard).join('');
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 
   if (pagination) {
     const currentEl = document.getElementById('current-structured-page');
@@ -3274,6 +3279,7 @@ function renderPlansUI() {
   const pageItems = lastWorkoutPlans.slice(start, start + perPage);
 
   container.innerHTML = pageItems.map(plan => renderPlanCard(plan)).join('');
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 
   if (pagination) {
     const currentEl = document.getElementById('current-plans-page');
@@ -3383,9 +3389,9 @@ function renderPlanCard(plan) {
     <div class="flex flex-wrap gap-1.5 mt-2 structured-movements${hasMovements ? ' hidden' : ''}">
       ${movementsHtml}
       ${hasMovements ? `<div class="flex gap-2 mt-3 w-full">
-        <button type="button" onclick="loadPlan('${plan.id}')" class="btn-core is-secondary btn-size-row">Load</button>
-        <button type="button" onclick="openShareModal('${plan.id}')" class="btn-core is-secondary btn-size-row">Share</button>
-        <button type="button" onclick="deletePlan('${plan.id}')" class="btn-core is-ghost btn-size-row">Delete</button>
+        <button type="button" onclick="loadPlan('${plan.id}')" class="btn-core is-secondary btn-size-row"><i data-lucide="upload" size="14"></i> Load</button>
+        <button type="button" onclick="openShareModal('${plan.id}')" class="btn-core is-secondary btn-size-row"><i data-lucide="share-2" size="14"></i> Share</button>
+        <button type="button" onclick="deletePlan('${plan.id}')" class="btn-core is-ghost btn-size-row"><i data-lucide="trash-2" size="14"></i> Delete</button>
       </div>` : ''}
     </div>
 </div>`;
@@ -3704,6 +3710,7 @@ function renderSharedPlansUI() {
   container.innerHTML = pageItems.map(item => {
     return item.type === 'own' ? renderPlanCard(item.plan) : item.type === 'shared' ? renderSharedPlanCard(item.share) : renderStructuredWorkoutCard(item.structured);
   }).join('');
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 
   if (pagination) {
     const currentEl = document.getElementById('current-shared-plans-page');
@@ -3757,7 +3764,7 @@ function renderSharedPlanCard(share) {
     <div class="flex flex-wrap gap-1.5 mt-2 structured-movements${hasMovements ? ' hidden' : ''}">
       ${displayMovements}
       ${hasMovements ? `<div class="flex gap-2 mt-3 w-full">
-        <button type="button" onclick="loadSharedPlan('${share.id}')" class="btn-core is-primary btn-size-row">Load</button>
+        <button type="button" onclick="loadSharedPlan('${share.id}')" class="btn-core is-primary btn-size-row"><i data-lucide="upload" size="14"></i> Load</button>
         <button type="button" onclick="dismissSharedPlan('${share.id}')" class="btn-core is-ghost btn-size-row">Dismiss</button>
       </div>` : ''}
     </div>
@@ -5143,7 +5150,7 @@ function buildLeaderboardRow(profile, rank, isMe, isFriend) {
       ? `<span class="${badgeBaseClasses} bg-emerald-500/10 text-emerald-300">Friend</span>`
       : `<button type="button" class="${badgeBaseClasses} border border-slate-700 bg-slate-900 text-slate-200 transition hover:bg-slate-800" 
       onclick="addFriendFromLeaderboard('${profile.uid}')">
-      + Add
+      <i data-lucide="user-plus" size="14"></i> Add
       </button>`;
 
   return `
@@ -5204,6 +5211,7 @@ function renderLeaderboardView() {
       html += buildLeaderboardRow(f.profile, sliceStart + i + 1, f.isMe, f.isFriend);
     });
     rowsContainer.innerHTML = html;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 
     if (expandBtn) {
       expandBtn.classList.toggle('hidden', filtered.length <= subset.length);
@@ -5215,6 +5223,7 @@ function renderLeaderboardView() {
       html += buildLeaderboardRow(f.profile, i + 1, f.isMe, f.isFriend);
     });
     rowsContainer.innerHTML = html || `<tr><td colspan="4" class="py-4 text-center text-xs text-slate-500 italic">No network entries visible in this grid scope.</td></tr>`;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 
     if (expandBtn) {
       expandBtn.classList.toggle('hidden', filtered.length <= 3 || !leaderboardShowAll);
