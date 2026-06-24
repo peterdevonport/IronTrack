@@ -3171,7 +3171,11 @@ function renderStructuredWorkoutCard(sw) {
     </div>
     <div class="flex flex-wrap gap-1.5 mt-2 structured-movements${hasMovements ? ' hidden' : ''}">
       ${movementsHtml}
-      ${hasMovements ? `<div class="mt-3 w-full flex justify-end"><button type="button" onclick="redoWorkout('${sw.id}')" class="btn-core is-secondary btn-size-row"><i data-lucide="upload" size="18"></i></button></div>` : ''}
+      ${hasMovements ? `<div class="mt-3 w-full flex justify-end gap-2">
+        <button type="button" onclick="redoWorkout('${sw.id}')" class="btn-core is-secondary btn-size-row"><i data-lucide="upload" size="18"></i></button>
+        <button type="button" onclick="openShareModal('${sw.id}', true)" class="btn-core is-secondary btn-size-row"><i data-lucide="share-2" size="18"></i></button>
+        <button type="button" onclick="deleteStructuredWorkout('${sw.id}')" class="btn-core is-ghost btn-size-row hover:!text-rose-400 hover:!border-rose-400"><i data-lucide="trash-2" size="18"></i></button>
+      </div>` : ''}
     </div>
 </div>
   `;
@@ -3391,7 +3395,7 @@ function renderPlanCard(plan) {
       ${hasMovements ? `<div class="flex gap-2 mt-3 w-full">
         <button type="button" onclick="loadPlan('${plan.id}')" class="btn-core is-secondary btn-size-row"><i data-lucide="upload" size="18"></i></button>
         <button type="button" onclick="openShareModal('${plan.id}')" class="btn-core is-secondary btn-size-row"><i data-lucide="share-2" size="18"></i></button>
-        <button type="button" onclick="deletePlan('${plan.id}')" class="btn-core is-ghost btn-size-row hover:text-rose-400 hover:border-rose-400"><i data-lucide="trash-2" size="18"></i></button>
+        <button type="button" onclick="deletePlan('${plan.id}')" class="btn-core is-ghost btn-size-row hover:!text-rose-400 hover:!border-rose-400"><i data-lucide="trash-2" size="18"></i></button>
       </div>` : ''}
     </div>
 </div>`;
@@ -3406,6 +3410,18 @@ async function deletePlan(planId) {
   } catch (err) {
     console.error('Delete plan failed', err.code, err.message);
     alert('Failed to delete plan: ' + err.message);
+  }
+}
+
+async function deleteStructuredWorkout(workoutId) {
+  if (!currentUser) return;
+  if (!confirm('Delete this workout log?')) return;
+  try {
+    await deleteDoc(doc(db, "structured_workouts", workoutId));
+    haptic(HAPTIC.confirm);
+  } catch (err) {
+    console.error('Delete workout failed', err.code, err.message);
+    alert('Failed to delete workout: ' + err.message);
   }
 }
 
@@ -3463,6 +3479,7 @@ function redoWorkout(workoutId) {
 // ── Share Plan with Friend ──
 
 let sharePlanId = null;
+let shareIsWorkout = false;
 let shareMode = 'friends'; // 'friends' | 'qr'
 
 function switchShareMode(mode) {
@@ -3487,13 +3504,14 @@ function switchShareMode(mode) {
   }
 }
 
-async function openShareModal(planId) {
+async function openShareModal(planId, isWorkout = false) {
   const modal = document.getElementById('share-plan-modal');
   const list = document.getElementById('share-friend-list');
   const feedback = document.getElementById('share-plan-feedback');
   if (!modal || !list) return;
 
   sharePlanId = planId;
+  shareIsWorkout = isWorkout;
   feedback.textContent = '';
 
   switchShareMode('qr');
@@ -3547,10 +3565,29 @@ async function shareWithFriends() {
     return;
   }
 
-  const plan = lastWorkoutPlans.find(p => p.id === sharePlanId);
-  if (!plan) {
-    feedback.textContent = 'Plan not found.';
-    return;
+  let content;
+  if (shareIsWorkout) {
+    const workout = lastStructuredWorkouts.find(w => w.id === sharePlanId);
+    if (!workout) {
+      feedback.textContent = 'Workout not found.';
+      return;
+    }
+    content = {
+      name: workout.name,
+      type: workout.type,
+      structure: workout.structure
+    };
+  } else {
+    const plan = lastWorkoutPlans.find(p => p.id === sharePlanId);
+    if (!plan) {
+      feedback.textContent = 'Plan not found.';
+      return;
+    }
+    content = {
+      name: plan.name,
+      type: plan.type,
+      structure: plan.structure
+    };
   }
 
   const selectedUids = Array.from(checked).map(cb => cb.value);
@@ -3564,19 +3601,15 @@ async function shareWithFriends() {
         sharedBy: currentUser.uid,
         sharedByDisplayName: displayName,
         sharedWith: fUid,
-        planId: plan.id,
-        contentType: 'plan',
-        content: {
-          name: plan.name,
-          type: plan.type,
-          structure: plan.structure
-        },
+        planId: sharePlanId,
+        contentType: shareIsWorkout ? 'workout' : 'plan',
+        content,
         status: 'pending',
         createdAt: serverTimestamp()
       })
     ));
     modal.classList.add('hidden');
-    showFeedback(`Plan shared with ${selectedUids.length} friend${selectedUids.length > 1 ? 's' : ''}!`, 'emerald');
+    showFeedback(`Shared with ${selectedUids.length} friend${selectedUids.length > 1 ? 's' : ''}!`, 'emerald');
     haptic(HAPTIC.confirm);
   } catch (err) {
     console.error('Share plan failed', err.code, err.message);
@@ -3765,7 +3798,7 @@ function renderSharedPlanCard(share) {
       ${displayMovements}
       ${hasMovements ? `<div class="flex gap-2 mt-3 w-full">
         <button type="button" onclick="loadSharedPlan('${share.id}')" class="btn-core is-primary btn-size-row"><i data-lucide="upload" size="18"></i></button>
-        <button type="button" onclick="dismissSharedPlan('${share.id}')" class="btn-core is-ghost btn-size-row hover:text-rose-400 hover:border-rose-400"><i data-lucide="trash-2" size="18"></i></button>
+        <button type="button" onclick="dismissSharedPlan('${share.id}')" class="btn-core is-ghost btn-size-row hover:!text-rose-400 hover:!border-rose-400"><i data-lucide="trash-2" size="18"></i></button>
       </div>` : ''}
     </div>
 </div>`;
@@ -5076,7 +5109,7 @@ async function renderActiveFriendsList() {
             <span class="font-medium text-slate-300 truncate max-w-[120px]">${getDisplayName(data, fUid)}</span>
             <div class="flex items-center gap-2">
               <button type="button" onclick="removeFriend('${fUid}')" 
-              class="items-center justify-center rounded-full px-2 py-0.5 btn-core is-ghost text-xs ">
+              class="items-center justify-center rounded-full px-2 py-0.5 btn-core is-ghost text-xs hover:!text-rose-400 hover:!border-rose-400">
               <i data-lucide="user-minus" size="18"></i>
               </button>
             </div>
@@ -5144,7 +5177,7 @@ function switchLeaderboardScope(scope) {
 function buildLeaderboardRow(profile, rank, isMe, isFriend) {
   const rawScore = currentFormula === 'dots' ? profile.dotsScore : (profile.sinclairScore || 0);
   const displayScore = formatDotsScore(rawScore);
-  const badgeBaseClasses = 'inline-flex items-center justify-center rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider w-20';
+  const badgeBaseClasses = 'inline-flex items-center justify-center rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider';
   const actionCell = isMe
     ? ''
     : isFriend
@@ -5158,13 +5191,13 @@ function buildLeaderboardRow(profile, rank, isMe, isFriend) {
       </button>`;
 
   return `
-    <tr class="border-b border-slate-800/60 ${isMe ? 'bg-emerald-500/10 font-bold' : ''}">
-      <td class="py-3 font-mono text-slate-500">#${rank}</td>
-      <td class="py-3 flex items-center gap-2">
+    <tr class="border-b border-slate-800/60 align-middle ${isMe ? 'bg-emerald-500/10 font-bold' : ''}">
+      <td class="py-3 font-mono text-slate-500 align-middle">#${rank}</td>
+      <td class="py-3 flex items-center gap-2 align-middle">
         <span class="${isMe ? 'text-emerald-400' : 'text-slate-200'}">${getDisplayName(profile, profile.uid)}</span>
       </td>
-      <td class="py-3 text-right font-mono font-bold text-emerald-400">${displayScore.toFixed(2)}</td>
-      <td class="py-3 text-right">${actionCell}</td>
+      <td class="py-3 text-right font-mono font-bold text-emerald-400 align-middle">${displayScore.toFixed(2)}</td>
+      <td class="py-3 text-right align-middle">${actionCell}</td>
     </tr>`;
 }
 
@@ -5537,6 +5570,7 @@ window.loadPlan = loadPlan;
 window.toggleWorkoutCard = toggleWorkoutCard;
 window.redoWorkout = redoWorkout;
 window.deletePlan = deletePlan;
+window.deleteStructuredWorkout = deleteStructuredWorkout;
 window.openShareModal = openShareModal;
 window.saveSharedPlanToMyPlans = saveSharedPlanToMyPlans;
 window.dismissSharedPlan = dismissSharedPlan;
