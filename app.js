@@ -548,7 +548,7 @@ function renderOnboarding1RMList() {
             <div class="flex items-center justify-between bg-slate-800 rounded-xl px-3 py-2">
                 <span class="text-sm text-slate-200 font-medium">${escapeHtml(item.exercise)}</span>
                 <span class="text-sm text-emerald-400 font-mono font-bold">${item.weight} kg${repLabel}</span>
-                <button type="button" class="text-rose-400 hover:text-rose-300 text-xs font-bold cursor-pointer bg-transparent border-none" data-index="${index}"><i data-lucide="circle-minus" size="14"></i></button>
+                <button type="button" class="text-rose-400 hover:text-rose-300 text-xs font-bold cursor-pointer bg-transparent border-none" data-index="${index}"><i data-lucide="circle-minus" size="18"></i></button>
             </div>`;
     });
     onboardingList.innerHTML = html;
@@ -1220,7 +1220,7 @@ function renderCalcEntries(exercise, oneRM) {
             <span class="text-slate-200 font-mono text-sm">${escapeHtml(source)}</span>
             <div class="flex items-center gap-2">
                 <span class="text-slate-200 font-mono text-sm">${weight} kg</span>
-                <button onclick="handleCalcRemove(this)" data-index="${idx}" class="text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"><i data-lucide="circle-minus" size="14"></i></button>
+                <button onclick="handleCalcRemove(this)" data-index="${idx}" class="text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"><i data-lucide="circle-minus" size="18"></i></button>
             </div>
         </div>`;
     });
@@ -1681,7 +1681,7 @@ function addMovementRow(containerId, exerciseName) {
       <select class="movement-exercise dropdown-core flex-1" onchange="handleMovementExerciseChange(this)">
         <option value="">Select exercise...</option>
       </select>
-      <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none shrink-0"><i data-lucide="circle-minus" size="14"></i></button>
+      <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none shrink-0"><i data-lucide="circle-minus" size="18"></i></button>
     </div>
     <div class="flex gap-2 items-center flex-wrap">
       <div class="w-16 shrink-0">
@@ -2057,7 +2057,7 @@ function addMinuteSlot(exerciseName) {
       <select class="movement-exercise dropdown-core flex-1" onchange="handleMovementExerciseChange(this)">
         <option value="">Select exercise...</option>
       </select>
-      <button type="button" onclick="removeMinuteSlot(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none shrink-0"><i data-lucide="circle-minus" size="14"></i></button>
+      <button type="button" onclick="removeMinuteSlot(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none shrink-0"><i data-lucide="circle-minus" size="18"></i></button>
     </div>
     <div class="flex gap-2 items-center flex-wrap">
       <div class="w-16 shrink-0">
@@ -3171,7 +3171,7 @@ function renderStructuredWorkoutCard(sw) {
     </div>
     <div class="flex flex-wrap gap-1.5 mt-2 structured-movements${hasMovements ? ' hidden' : ''}">
       ${movementsHtml}
-      ${hasMovements ? `<div class="mt-3 w-full flex justify-end"><button type="button" onclick="redoWorkout('${sw.id}')" class="btn-core is-secondary btn-size-row"><i data-lucide="upload" size="14"></i></button></div>` : ''}
+      ${hasMovements ? `<div class="mt-3 w-full flex justify-end"><button type="button" onclick="redoWorkout('${sw.id}')" class="btn-core is-secondary btn-size-row"><i data-lucide="upload" size="18"></i></button></div>` : ''}
     </div>
 </div>
   `;
@@ -3389,9 +3389,9 @@ function renderPlanCard(plan) {
     <div class="flex flex-wrap gap-1.5 mt-2 structured-movements${hasMovements ? ' hidden' : ''}">
       ${movementsHtml}
       ${hasMovements ? `<div class="flex gap-2 mt-3 w-full">
-        <button type="button" onclick="loadPlan('${plan.id}')" class="btn-core is-secondary btn-size-row"><i data-lucide="upload" size="14"></i></button>
-        <button type="button" onclick="openShareModal('${plan.id}')" class="btn-core is-secondary btn-size-row"><i data-lucide="share-2" size="14"></i></button>
-        <button type="button" onclick="deletePlan('${plan.id}')" class="btn-core is-ghost btn-size-row"><i data-lucide="trash-2" size="14"></i></button>
+        <button type="button" onclick="loadPlan('${plan.id}')" class="btn-core is-secondary btn-size-row"><i data-lucide="upload" size="18"></i></button>
+        <button type="button" onclick="openShareModal('${plan.id}')" class="btn-core is-secondary btn-size-row"><i data-lucide="share-2" size="18"></i></button>
+        <button type="button" onclick="deletePlan('${plan.id}')" class="btn-core is-ghost btn-size-row"><i data-lucide="trash-2" size="18"></i></button>
       </div>` : ''}
     </div>
 </div>`;
@@ -3764,8 +3764,8 @@ function renderSharedPlanCard(share) {
     <div class="flex flex-wrap gap-1.5 mt-2 structured-movements${hasMovements ? ' hidden' : ''}">
       ${displayMovements}
       ${hasMovements ? `<div class="flex gap-2 mt-3 w-full">
-        <button type="button" onclick="loadSharedPlan('${share.id}')" class="btn-core is-primary btn-size-row"><i data-lucide="upload" size="14"></i></button>
-        <button type="button" onclick="dismissSharedPlan('${share.id}')" class="btn-core is-ghost btn-size-row"><i data-lucide="trash-2" size="14"></i></button>
+        <button type="button" onclick="loadSharedPlan('${share.id}')" class="btn-core is-primary btn-size-row"><i data-lucide="upload" size="18"></i></button>
+        <button type="button" onclick="dismissSharedPlan('${share.id}')" class="btn-core is-ghost btn-size-row"><i data-lucide="trash-2" size="18"></i></button>
       </div>` : ''}
     </div>
 </div>`;
@@ -5077,7 +5077,7 @@ async function renderActiveFriendsList() {
             <div class="flex items-center gap-2">
               <button type="button" onclick="removeFriend('${fUid}')" 
               class="items-center justify-center rounded-full px-2 py-0.5 btn-core is-ghost text-xs ">
-              <i data-lucide="user-minus" size="14"></i>
+              <i data-lucide="user-minus" size="18"></i>
               </button>
             </div>
           </div>`;
@@ -5151,7 +5151,7 @@ function buildLeaderboardRow(profile, rank, isMe, isFriend) {
       ? ''
       : `<button type="button" class="${badgeBaseClasses} border border-slate-700 bg-slate-900 text-slate-200 transition hover:bg-slate-800" 
       onclick="addFriendFromLeaderboard('${profile.uid}')">
-      <i data-lucide="user-plus" size="14"></i>
+      <i data-lucide="user-plus" size="18"></i>
       </button>`;
 
   return `
