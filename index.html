@@ -195,7 +195,92 @@
 
 
       <details class="surface-card" open>
-        <summary class="section-heading cursor-pointer select-none">Records</summary>
+        <summary class="section-heading cursor-pointer select-none">Dashboard</summary>
+        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6 mt-4">
+
+          <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1" id="consistency-section">
+            <h2 class="section-heading">Training Calendar</h2>
+            <p class="text-description">Your training over time.</p>
+
+            <div class="mt-4">
+              <div class="flex justify-between items-center mb-2">
+                <button id="cal-prev-month" type="button" class="btn-core is-secondary btn-size-row" onclick="changeCalendarNav(-1)">&lt;</button>
+                <span id="cal-month-label" class="text-sm font-bold text-slate-200"></span>
+                <button id="cal-next-month" type="button" class="btn-core is-secondary btn-size-row" onclick="changeCalendarNav(1)">&gt;</button>
+              </div>
+              <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
+              </div>
+              <div id="calendar-grid" class="grid grid-cols-7 gap-1"></div>
+              <div class="mt-2 text-center">
+                <button id="cal-toggle-view" type="button" class="btn-core is-ghost btn-size-row" onclick="toggleCalendarView()">Show Full Month</button>
+              </div>
+            </div>
+
+            <div id="cal-day-detail" class="hidden mt-3 p-3 bg-slate-950 rounded-xl space-y-2">
+              <div class="flex justify-between items-center">
+                <p id="cal-day-detail-date" class="text-xs font-bold text-slate-300"></p>
+                <button id="cal-day-detail-close" type="button" class="btn-core is-secondary btn-size-row text-[10px]" onclick="closeCalendarDayDetail()">Close</button>
+              </div>
+              <div id="cal-day-workouts" class="space-y-1.5 max-h-48 overflow-y-auto"></div>
+            </div>
+          </section>
+
+          <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1" id="challenges-section">
+            <h2 class="section-heading">Consistency Challenges</h2>
+            <p class="text-description">Training day targets.</p>
+
+            <div class="grid grid-cols-2 gap-4 mt-4">
+              <div class="bg-slate-950 rounded-xl p-3" id="consistency-7day-card">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Last 7 Days</p>
+                <div class="text-xs font-black text-emerald-400 mb-0.5" id="consistency-7day">0 / 7</div>
+                <div class="mt-1.5 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                  <div id="consistency-7day-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" style="width: 0%"></div>
+                </div>
+                <p class="text-[10px] text-amber-400 font-bold hidden" id="consistency-7day-streak"></p>
+              </div>
+              <div class="bg-slate-950 rounded-xl p-3" id="consistency-28day-card">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Last 28 Days</p>
+                <div class="text-xs font-black text-emerald-400 mb-0.5" id="consistency-28day">0 / 30</div>
+                <div class="mt-1.5 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                  <div id="consistency-28day-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" style="width: 0%"></div>
+                </div>
+                <p class="text-[10px] text-amber-400 font-bold hidden" id="consistency-28day-streak"></p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4" id="challenge-cards">
+              <div class="bg-slate-950 rounded-xl p-3" id="challenge-monthly">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">This Month</p>
+                <div class="text-xs font-black text-emerald-400 mb-0.5" id="challenge-monthly-progress">0 / 14</div>
+                <div class="mt-1.5 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                  <div id="challenge-monthly-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" style="width: 0%"></div>
+                </div>
+                <p class="text-[10px] text-amber-400 font-bold hidden" id="challenge-monthly-streak"></p>
+              </div>
+              <div class="bg-slate-950 rounded-xl p-3" id="challenge-yearly">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">This Year</p>
+                <div class="text-xs font-black text-emerald-400 mb-0.5" id="challenge-yearly-progress">0 / 150</div>
+                <div class="mt-1.5 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                  <div id="challenge-yearly-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" style="width: 0%"></div>
+                </div>
+                <p class="text-[10px] text-amber-400 font-bold hidden" id="challenge-yearly-streak"></p>
+              </div>
+              <div class="bg-slate-950 rounded-xl p-3 sm:col-span-2" id="challenge-lifetime">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Lifetime</p>
+                <div class="text-xs font-black text-emerald-400 mb-0.5" id="challenge-lifetime-progress">0 / 3000</div>
+                <div class="mt-1.5 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                  <div id="challenge-lifetime-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </details>
+
+      <details class="surface-card" open>
+        <summary class="section-heading cursor-pointer select-none">Performance</summary>
         <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6 mt-4">
 
           <div class="bg-slate-950 rounded-xl p-4 grid grid-cols-2 content-start items-start lg:col-span-1">
@@ -244,60 +329,10 @@
             </div>
           </div>
 
-          <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1">
-            <h2 class="section-heading text-emerald-400">Your Records</h2>
-            <p class="text-description mb-4">Your maximum lifts tracked across logged exercises.</p>
-
-            <details class="mb-4">
-              <summary class="text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer select-none">
-                Log a New Record
-              </summary>
-              <div class="mt-3 space-y-1">
-                <div>
-                  <label class="form-label">Exercise</label>
-                  <select id="pb-log-exercise" class="dropdown-core">
-                    <option value="" disabled selected>Select exercise...</option>
-                  </select>
-                </div>
-                <div class="flex gap-2">
-                  <div class="flex-1"><label class="form-label">Reps</label></div>
-                  <div class="w-4 shrink-0"></div>
-                  <div class="flex-1"><label class="form-label">Weight</label></div>
-                  <div class="shrink-0"><label class="form-label">&nbsp;</label></div>
-                </div>
-                <div class="flex gap-2 items-center">
-                  <div class="flex-1">
-                    <input type="number" id="pb-log-reps" value="1" min="1" step="1" class="input-core w-full" />
-                  </div>
-                  <span class="text-slate-400 font-mono font-bold text-sm w-4 text-center shrink-0">@</span>
-                  <div class="flex-1">
-                    <input type="number" id="pb-log-weight" placeholder="kg" min="0" step="any" class="input-core w-full" />
-                  </div>
-                  <button type="button" id="pb-log-btn" class="btn-core is-secondary whitespace-nowrap cursor-pointer shrink-0 px-3 py-2">Log it</button>
-                </div>
-              <p id="pb-log-feedback" class="text-xs text-slate-500 font-medium h-4 mt-2"></p>
-            </details>
-
-            <div class="grid grid-cols-3 gap-y-3 gap-x-4 text-sm mt-4">
-              <span class="text-slate-500 font-bold uppercase text-[10px]">Lift</span>
-              <span class="text-emerald-400 font-bold uppercase text-[10px] text-right">Est. 1RM</span>
-              <span class="text-purple-400 font-bold uppercase text-[10px] text-right">Personal Best</span>
-
-              <div id="registry-table-body" class="col-span-3 grid grid-cols-3 gap-y-3 gap-x-4"></div>
-              <div id="records-pagination" class="hidden col-span-3 flex items-center justify-between gap-3 mt-2">
-                <button id="prev-records-page-btn" class="btn-core is-secondary btn-size-input" type="button">Previous</button>
-                <p class="text-xs text-slate-400 text-center min-w-[120px]">
-                  Page <span id="current-records-page">1</span> of <span id="total-records-pages">1</span>
-                </p>
-                <button id="next-records-page-btn" class="btn-core is-secondary btn-size-input" type="button">Next</button>
-              </div>
-            </div>
-          </section>
-
           <section class="bg-slate-950 rounded-xl p-4 gap-2 lg:col-span-1">
             <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-4">
               <div>
-                <h2 class="section-heading">IronTrack Standings</h2>
+                <h2 class="section-heading">Leaderboard</h2>
                 <p id="leaderboard-desc" class="text-description">Pound-for-pound DOTS standings live.</p>
               </div>
             </div>
@@ -341,43 +376,47 @@
             </div>
           </section>
 
+          <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1" id="volume-history-section">
+            <h2 class="section-heading">Volume</h2>
+            <p class="text-description mb-4">Track your training volume over time.</p>
+
+            <div class="flex flex-wrap items-end justify-between gap-3 mb-4">
+              <div class="inline-flex gap-1 p-0.5 rounded-xl bg-slate-800/60">
+                <button id="vh-period-daily" type="button" class="btn-core is-primary btn-size-row" onclick="switchVolumePeriod('daily')">Daily</button>
+                <button id="vh-period-weekly" type="button" class="btn-core is-ghost btn-size-row" onclick="switchVolumePeriod('weekly')">Weekly</button>
+                <button id="vh-period-monthly" type="button" class="btn-core is-ghost btn-size-row" onclick="switchVolumePeriod('monthly')">Monthly</button>
+                <button id="vh-period-yearly" type="button" class="btn-core is-ghost btn-size-row" onclick="switchVolumePeriod('yearly')">Yearly</button>
+              </div>
+              <div class="flex gap-1">
+                <button id="vh-prev" type="button" class="btn-core is-secondary btn-size-row" onclick="shiftVolumePeriod(-1)">&lt;</button>
+                <button id="vh-next" type="button" class="btn-core is-secondary btn-size-row" onclick="shiftVolumePeriod(1)">&gt;</button>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <select id="vh-filter" class="dropdown-core" onchange="onVolumeFilterChange()">
+                <option value="All">All Exercises</option>
+              </select>
+            </div>
+
+            <p id="vh-range-label" class="text-xs text-slate-400 font-mono mb-3"></p>
+
+            <div id="vh-bars-container" class="flex items-end gap-1.5">
+              <p class="text-xs text-slate-500 italic py-8 text-center w-full">Computing volume history...</p>
+            </div>
+
+            <div class="flex justify-between text-sm font-mono mt-3">
+              <span id="vh-avg" class="text-slate-400 font-bold"></span>
+              <span id="vh-total" class="text-emerald-400 font-bold"></span>
+            </div>
+          </section>
+
         </div>
       </details>
 
       <details class="surface-card" open>
         <summary class="section-heading cursor-pointer select-none">Training</summary>
         <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6 mt-4">
-
-          <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1" id="challenges-section">
-            <h2 class="section-heading">Consistency Challenges</h2>
-            <p class="text-description">Training day targets.</p>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4" id="challenge-cards">
-              <div class="bg-slate-950 rounded-xl p-3" id="challenge-monthly">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Monthly</p>
-                <div class="text-xs font-black text-emerald-400 mb-0.5" id="challenge-monthly-progress">0 / 14</div>
-                <div class="mt-1.5 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                  <div id="challenge-monthly-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" style="width: 0%"></div>
-                </div>
-                <p class="text-[10px] text-amber-400 font-bold hidden" id="challenge-monthly-streak"></p>
-              </div>
-              <div class="bg-slate-950 rounded-xl p-3" id="challenge-yearly">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Yearly</p>
-                <div class="text-xs font-black text-emerald-400 mb-0.5" id="challenge-yearly-progress">0 / 150</div>
-                <div class="mt-1.5 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                  <div id="challenge-yearly-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" style="width: 0%"></div>
-                </div>
-                <p class="text-[10px] text-amber-400 font-bold hidden" id="challenge-yearly-streak"></p>
-              </div>
-              <div class="bg-slate-950 rounded-xl p-3 sm:col-span-2" id="challenge-lifetime">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Lifetime</p>
-                <div class="text-xs font-black text-emerald-400 mb-0.5" id="challenge-lifetime-progress">0 / 3000</div>
-                <div class="mt-1.5 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                  <div id="challenge-lifetime-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" style="width: 0%"></div>
-                </div>
-              </div>
-            </div>
-          </section>
 
           <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1" id="record-training-card">
             <h2 class="section-heading">Record Training</h2>
@@ -834,44 +873,8 @@
         <summary class="section-heading cursor-pointer select-none">History</summary>
         <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6 mt-4">
 
-          <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1" id="consistency-section">
-            <h2 class="section-heading">Training Calendar</h2>
-            <p class="text-description">Your training over time.</p>
-
-            <div class="grid grid-cols-2 gap-4 mt-4">
-              <div class="bg-slate-950 rounded-xl p-3 text-center">
-                <div class="text-2xl font-black text-emerald-400" id="consistency-7day">0 / 7</div>
-                <p class="text-[10px] text-slate-400 uppercase tracking-wider mt-1">7-Day</p>
-              </div>
-              <div class="bg-slate-950 rounded-xl p-3 text-center">
-                <div class="text-2xl font-black text-emerald-400" id="consistency-30day">0 / 30</div>
-                <p class="text-[10px] text-slate-400 uppercase tracking-wider mt-1">30-Day</p>
-              </div>
-            </div>
-
-            <div class="mt-4">
-              <div class="flex justify-between items-center mb-2">
-                <button id="cal-prev-month" type="button" class="btn-core is-secondary btn-size-row" onclick="changeCalendarMonth(-1)">&lt;</button>
-                <span id="cal-month-label" class="text-sm font-bold text-slate-200"></span>
-                <button id="cal-next-month" type="button" class="btn-core is-secondary btn-size-row" onclick="changeCalendarMonth(1)">&gt;</button>
-              </div>
-              <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
-              </div>
-              <div id="calendar-grid" class="grid grid-cols-7 gap-1"></div>
-            </div>
-
-            <div id="cal-day-detail" class="hidden mt-3 p-3 bg-slate-950 rounded-xl space-y-2">
-              <div class="flex justify-between items-center">
-                <p id="cal-day-detail-date" class="text-xs font-bold text-slate-300"></p>
-                <button id="cal-day-detail-close" type="button" class="btn-core is-secondary btn-size-row text-[10px]" onclick="closeCalendarDayDetail()">Close</button>
-              </div>
-              <div id="cal-day-workouts" class="space-y-1.5 max-h-48 overflow-y-auto"></div>
-            </div>
-          </section>
-
           <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1">
-            <h2 class="section-heading">Training Log</h2>
+            <h2 class="section-heading">Exercise Log</h2>
             <p class="text-description">
               Track your progress over time.
             </p>
@@ -911,7 +914,7 @@
           <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1">
             <h2 class="section-heading">Structured Workouts</h2>
             <p class="text-description mb-4">
-              Your completed AMRAP workouts and scores.
+              Your completed workouts and scores.
             </p>
             <div id="structured-workout-list" class="space-y-3">
               <p class="text-xs text-slate-500 italic py-2 text-center">No structured workouts logged yet.</p>
@@ -929,38 +932,53 @@
             </div>
           </section>
 
-          <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1" id="volume-history-section">
-            <h2 class="section-heading">Volume History</h2>
-            <p class="text-description mb-4">Track your training volume over time.</p>
+          <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1">
+            <h2 class="section-heading text-emerald-400">PBs and 1RMs</h2>
+            <p class="text-description mb-4">Your maximum lifts tracked across logged exercises.</p>
 
-            <div class="flex flex-wrap items-end justify-between gap-3 mb-4">
-              <div class="inline-flex gap-1 p-0.5 rounded-xl bg-slate-800/60">
-                <button id="vh-period-daily" type="button" class="btn-core is-primary btn-size-row" onclick="switchVolumePeriod('daily')">Daily</button>
-                <button id="vh-period-weekly" type="button" class="btn-core is-ghost btn-size-row" onclick="switchVolumePeriod('weekly')">Weekly</button>
-                <button id="vh-period-monthly" type="button" class="btn-core is-ghost btn-size-row" onclick="switchVolumePeriod('monthly')">Monthly</button>
-                <button id="vh-period-yearly" type="button" class="btn-core is-ghost btn-size-row" onclick="switchVolumePeriod('yearly')">Yearly</button>
+            <details class="mb-4">
+              <summary class="text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer select-none">
+                Log a New Record
+              </summary>
+              <div class="mt-3 space-y-1">
+                <div>
+                  <label class="form-label">Exercise</label>
+                  <select id="pb-log-exercise" class="dropdown-core">
+                    <option value="" disabled selected>Select exercise...</option>
+                  </select>
+                </div>
+                <div class="flex gap-2">
+                  <div class="flex-1"><label class="form-label">Reps</label></div>
+                  <div class="w-4 shrink-0"></div>
+                  <div class="flex-1"><label class="form-label">Weight</label></div>
+                  <div class="shrink-0"><label class="form-label">&nbsp;</label></div>
+                </div>
+                <div class="flex gap-2 items-center">
+                  <div class="flex-1">
+                    <input type="number" id="pb-log-reps" value="1" min="1" step="1" class="input-core w-full" />
+                  </div>
+                  <span class="text-slate-400 font-mono font-bold text-sm w-4 text-center shrink-0">@</span>
+                  <div class="flex-1">
+                    <input type="number" id="pb-log-weight" placeholder="kg" min="0" step="any" class="input-core w-full" />
+                  </div>
+                  <button type="button" id="pb-log-btn" class="btn-core is-secondary whitespace-nowrap cursor-pointer shrink-0 px-3 py-2">Log it</button>
+                </div>
+              <p id="pb-log-feedback" class="text-xs text-slate-500 font-medium h-4 mt-2"></p>
+            </details>
+
+            <div class="grid grid-cols-3 gap-y-3 gap-x-4 text-sm mt-4">
+              <span class="text-slate-500 font-bold uppercase text-[10px]">Lift</span>
+              <span class="text-emerald-400 font-bold uppercase text-[10px] text-right">Est. 1RM</span>
+              <span class="text-purple-400 font-bold uppercase text-[10px] text-right">Personal Best</span>
+
+              <div id="registry-table-body" class="col-span-3 grid grid-cols-3 gap-y-3 gap-x-4"></div>
+              <div id="records-pagination" class="hidden col-span-3 flex items-center justify-between gap-3 mt-2">
+                <button id="prev-records-page-btn" class="btn-core is-secondary btn-size-input" type="button">Previous</button>
+                <p class="text-xs text-slate-400 text-center min-w-[120px]">
+                  Page <span id="current-records-page">1</span> of <span id="total-records-pages">1</span>
+                </p>
+                <button id="next-records-page-btn" class="btn-core is-secondary btn-size-input" type="button">Next</button>
               </div>
-              <div class="flex gap-1">
-                <button id="vh-prev" type="button" class="btn-core is-secondary btn-size-row" onclick="shiftVolumePeriod(-1)">&lt;</button>
-                <button id="vh-next" type="button" class="btn-core is-secondary btn-size-row" onclick="shiftVolumePeriod(1)">&gt;</button>
-              </div>
-            </div>
-
-            <div class="mb-3">
-              <select id="vh-filter" class="dropdown-core" onchange="onVolumeFilterChange()">
-                <option value="All">All Exercises</option>
-              </select>
-            </div>
-
-            <p id="vh-range-label" class="text-xs text-slate-400 font-mono mb-3"></p>
-
-            <div id="vh-bars-container" class="flex items-end gap-1.5">
-              <p class="text-xs text-slate-500 italic py-8 text-center w-full">Computing volume history...</p>
-            </div>
-
-            <div class="flex justify-between text-sm font-mono mt-3">
-              <span id="vh-avg" class="text-slate-400 font-bold"></span>
-              <span id="vh-total" class="text-emerald-400 font-bold"></span>
             </div>
           </section>
 

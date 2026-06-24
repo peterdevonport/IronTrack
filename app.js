@@ -195,6 +195,8 @@ let cachedMaxLoadByExercise = {};
 let cachedMax1RMByExercise = {};
 let calendarMonth = new Date();
 let calendarSelectedDate = null;
+let calendarCompact = true;
+let calendarWeekOffset = 0;
 let calcEntriesByLift = {};
 let currentPage = 1;
 let recordsCurrentPage = 1;
@@ -326,6 +328,8 @@ onAuthStateChanged(auth, async (user) => {
         window.__irontrackActiveDates = undefined;
         calendarMonth = new Date();
         calendarSelectedDate = null;
+        calendarCompact = true;
+        calendarWeekOffset = 0;
         window.__irontrackAuthState = 'signed-out';
     }
 });
@@ -2592,6 +2596,9 @@ function renderConsistencyUI() {
     renderCalendar();
     updateConsistencyMetrics();
     renderChallengeCards();
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    selectCalendarDay(todayStr);
 }
 
 function calculateChallengeProgress() {
@@ -2746,53 +2753,97 @@ async function updateChallengeStreaks(monthlyDone, yearlyDone) {
     }
 }
 
+function getMonday(date) {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    d.setDate(d.getDate() + diff);
+    d.setHours(0, 0, 0, 0);
+    return d;
+}
+
 function renderCalendar() {
     const grid = document.getElementById('calendar-grid');
     const label = document.getElementById('cal-month-label');
     if (!grid || !label) return;
-    
-    const year = calendarMonth.getFullYear();
-    const month = calendarMonth.getMonth();
-    
+
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    label.textContent = `${monthNames[month]} ${year}`;
-    
-    const firstDay = new Date(year, month, 1);
-    let startDay = firstDay.getDay() - 1;
-    if (startDay < 0) startDay = 6;
-    
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const shortMonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    const activeDates = window.__irontrackActiveDates || new Set();
     const today = new Date();
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    
-    const activeDates = window.__irontrackActiveDates || new Set();
-    
+
     let html = '';
-    
-    for (let i = 0; i < startDay; i++) {
-        html += '<div class="cal-day cal-day-empty"></div>';
+
+    if (calendarCompact) {
+        const monday = getMonday(today);
+        monday.setDate(monday.getDate() + calendarWeekOffset * 7);
+        const sunday = new Date(monday);
+        sunday.setDate(sunday.getDate() + 6);
+
+        if (monday.getMonth() === sunday.getMonth() && monday.getFullYear() === sunday.getFullYear()) {
+            label.textContent = `${shortMonthNames[monday.getMonth()]} ${monday.getDate()} – ${sunday.getDate()}, ${sunday.getFullYear()}`;
+        } else {
+            label.textContent = `${shortMonthNames[monday.getMonth()]} ${monday.getDate()} – ${shortMonthNames[sunday.getMonth()]} ${sunday.getDate()}, ${sunday.getFullYear()}`;
+        }
+
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(monday);
+            date.setDate(monday.getDate() + i);
+            const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            const isActive = activeDates.has(dateStr);
+            const isToday = dateStr === todayStr;
+            const isSelected = calendarSelectedDate === dateStr;
+            const isThisMonth = date.getMonth() === calendarMonth.getMonth() && date.getFullYear() === calendarMonth.getFullYear();
+
+            if (isThisMonth) {
+                let cls = 'cal-day';
+                if (isActive) cls += ' cal-day-active';
+                if (isToday) cls += ' cal-day-today';
+                if (isSelected) cls += ' cal-day-selected';
+                html += `<div class="${cls}" onclick="selectCalendarDay('${dateStr}')" data-date="${dateStr}">${date.getDate()}</div>`;
+            } else {
+                html += `<div class="cal-day cal-day-other-month">${date.getDate()}</div>`;
+            }
+        }
+    } else {
+        const year = calendarMonth.getFullYear();
+        const month = calendarMonth.getMonth();
+
+        label.textContent = `${monthNames[month]} ${year}`;
+
+        const firstDay = new Date(year, month, 1);
+        let startDay = firstDay.getDay() - 1;
+        if (startDay < 0) startDay = 6;
+
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        for (let i = 0; i < startDay; i++) {
+            html += '<div class="cal-day cal-day-empty"></div>';
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const isActive = activeDates.has(dateStr);
+            const isToday = dateStr === todayStr;
+            const isSelected = calendarSelectedDate === dateStr;
+
+            let cls = 'cal-day';
+            if (isActive) cls += ' cal-day-active';
+            if (isToday) cls += ' cal-day-today';
+            if (isSelected) cls += ' cal-day-selected';
+
+            html += `<div class="${cls}" onclick="selectCalendarDay('${dateStr}')" data-date="${dateStr}">${day}</div>`;
+        }
+
+        const totalCells = startDay + daysInMonth;
+        const remainingCells = (7 - (totalCells % 7)) % 7;
+        for (let i = 0; i < remainingCells; i++) {
+            html += '<div class="cal-day cal-day-empty"></div>';
+        }
     }
-    
-    for (let day = 1; day <= daysInMonth; day++) {
-        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        const isActive = activeDates.has(dateStr);
-        const isToday = dateStr === todayStr;
-        const isSelected = calendarSelectedDate === dateStr;
-        
-        let cls = 'cal-day';
-        if (isActive) cls += ' cal-day-active';
-        if (isToday) cls += ' cal-day-today';
-        if (isSelected) cls += ' cal-day-selected';
-        
-        html += `<div class="${cls}" onclick="selectCalendarDay('${dateStr}')" data-date="${dateStr}">${day}</div>`;
-    }
-    
-    const totalCells = startDay + daysInMonth;
-    const remaining = (7 - (totalCells % 7)) % 7;
-    for (let i = 0; i < remaining; i++) {
-        html += '<div class="cal-day cal-day-empty"></div>';
-    }
-    
+
     grid.innerHTML = html;
 }
 
@@ -2811,11 +2862,50 @@ function updateConsistencyMetrics() {
         return count;
     }
     
-    const el7 = document.getElementById('consistency-7day');
-    const el30 = document.getElementById('consistency-30day');
+    function countConsecutiveDays() {
+        let streak = 0;
+        for (let i = 0; ; i++) {
+            const d = new Date(today);
+            d.setDate(d.getDate() - i);
+            const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            if (activeDates.has(dateStr)) streak++;
+            else break;
+        }
+        return streak;
+    }
     
-    if (el7) el7.textContent = `${countActiveDays(7)} / 7`;
-    if (el30) el30.textContent = `${countActiveDays(30)} / 30`;
+    const el7 = document.getElementById('consistency-7day');
+    const el28 = document.getElementById('consistency-28day');
+    const bar7 = document.getElementById('consistency-7day-bar');
+    const bar28 = document.getElementById('consistency-28day-bar');
+    const streak7 = document.getElementById('consistency-7day-streak');
+    const streak28 = document.getElementById('consistency-28day-streak');
+    
+    const d7 = countActiveDays(7);
+    const d28 = countActiveDays(28);
+    
+    if (el7) el7.textContent = `${d7} / 7`;
+    if (el28) el28.textContent = `${d28} / 28`;
+    if (bar7) bar7.style.width = `${Math.min(100, (d7 / 7) * 100)}%`;
+    if (bar28) bar28.style.width = `${Math.min(100, (d28 / 28) * 100)}%`;
+    
+    const streak = countConsecutiveDays();
+    if (streak7) {
+        if (streak > 1) {
+            streak7.textContent = `\u{1F525} ${streak}-day streak`;
+            streak7.classList.remove('hidden');
+        } else {
+            streak7.classList.add('hidden');
+        }
+    }
+    if (streak28) {
+        if (streak > 1) {
+            streak28.textContent = `\u{1F525} ${streak}-day streak`;
+            streak28.classList.remove('hidden');
+        } else {
+            streak28.classList.add('hidden');
+        }
+    }
 }
 
 function getWorkoutsForDate(dateStr) {
@@ -2886,8 +2976,31 @@ function selectCalendarDay(dateStr) {
     }).join('');
 }
 
-function changeCalendarMonth(delta) {
-    calendarMonth.setMonth(calendarMonth.getMonth() + delta);
+function changeCalendarNav(delta) {
+    if (calendarCompact) {
+        calendarWeekOffset += delta;
+        const monday = getMonday(new Date());
+        monday.setDate(monday.getDate() + calendarWeekOffset * 7);
+        calendarMonth = new Date(monday);
+    } else {
+        calendarMonth.setMonth(calendarMonth.getMonth() + delta);
+    }
+    renderCalendar();
+}
+
+function toggleCalendarView() {
+    calendarCompact = !calendarCompact;
+    if (calendarCompact) {
+        calendarWeekOffset = 0;
+        const monday = getMonday(new Date());
+        calendarMonth = new Date(monday);
+    } else {
+        const monday = getMonday(new Date());
+        monday.setDate(monday.getDate() + calendarWeekOffset * 7);
+        calendarMonth = new Date(monday);
+    }
+    const btn = document.getElementById('cal-toggle-view');
+    if (btn) btn.textContent = calendarCompact ? 'Show Full Month' : 'Show Current Week';
     renderCalendar();
 }
 
@@ -2995,27 +3108,39 @@ function renderStructuredWorkoutCard(sw) {
 
   const dateStr = new Date(sw.timestamp).toLocaleDateString();
 
+  const hasMovements = movementsHtml.trim().length > 0;
+
   return `
 <div class="structured-card p-4 rounded-2xl mb-3 shadow-2xl shadow-slate-950/60 transition-all duration-200" style="background-color: var(--slate-900);">
-    <div class="flex justify-between items-start mb-2">
+    <div class="flex justify-between items-start mb-2${hasMovements ? ' structured-header-clickable' : ''}"${hasMovements ? ` onclick="toggleWorkoutCard(this)"` : ''}>
       <div>
-        <span class="workout-type-badge ${badgeClass}">${escapeHtml(type)}</span>
-        <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm mt-1">${escapeHtml(sw.name)}</h4>
+        <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm">${escapeHtml(sw.name)}</h4>
         <p class="text-slate-500 text-[10px] font-mono mt-0.5">${dateStr} · ${durationLabel}</p>
+        <span class="workout-type-badge ${badgeClass}">${escapeHtml(type)}</span>
       </div>
-      <div class="text-right">
-        <div class="score-display">${escapeHtml(sw.scoreDisplay || '—')}</div>
-        <p class="text-slate-500 text-[10px] font-mono mt-0.5">${scoreLabel}</p>
+      <div class="flex items-center gap-3">
+        <div class="text-right">
+          <div class="score-display">${escapeHtml(sw.scoreDisplay || '—')}</div>
+          <p class="text-slate-500 text-[10px] font-mono mt-0.5">${scoreLabel}</p>
+        </div>
+        ${hasMovements ? '<span class="toggle-arrow">▾</span>' : ''}
       </div>
     </div>
-    <div class="flex flex-wrap gap-1.5 mt-2">
+    <div class="flex flex-wrap gap-1.5 mt-2 structured-movements${hasMovements ? ' hidden' : ''}">
       ${movementsHtml}
-    </div>
-    <div class="mt-3 flex justify-end">
-      <button type="button" onclick="redoWorkout('${sw.id}')" class="btn-core is-secondary btn-size-row">Load</button>
+      ${hasMovements ? `<div class="mt-3 w-full flex justify-end"><button type="button" onclick="redoWorkout('${sw.id}')" class="btn-core is-secondary btn-size-row">Load</button></div>` : ''}
     </div>
 </div>
   `;
+}
+
+function toggleWorkoutCard(headerEl) {
+    const card = headerEl.closest('.structured-card');
+    const movements = card.querySelector('.structured-movements');
+    const arrow = card.querySelector('.toggle-arrow');
+    if (!movements || !arrow) return;
+    movements.classList.toggle('hidden');
+    arrow.classList.toggle('rotated');
 }
 
 function renderStructuredWorkoutHistory() {
@@ -5286,13 +5411,15 @@ window.addMinuteSlot = addMinuteSlot;
 window.removeMinuteSlot = removeMinuteSlot;
 window.toggleForTimeDnf = toggleForTimeDnf;
 window.selectCalendarDay = selectCalendarDay;
-window.changeCalendarMonth = changeCalendarMonth;
+window.changeCalendarNav = changeCalendarNav;
+window.toggleCalendarView = toggleCalendarView;
 window.closeCalendarDayDetail = closeCalendarDayDetail;
 window.saveAmrapPlan = saveAmrapPlan;
 window.saveEmomPlan = saveEmomPlan;
 window.saveForTimePlan = saveForTimePlan;
 window.saveIntervalPlan = saveIntervalPlan;
 window.loadPlan = loadPlan;
+window.toggleWorkoutCard = toggleWorkoutCard;
 window.redoWorkout = redoWorkout;
 window.deletePlan = deletePlan;
 window.openShareModal = openShareModal;
