@@ -3109,6 +3109,9 @@ function renderStructuredWorkoutCard(sw) {
   const dateStr = new Date(sw.timestamp).toLocaleDateString();
 
   const hasMovements = movementsHtml.trim().length > 0;
+  const isFav = sw.favorite === true;
+  const starIcon = isFav ? '\u2605' : '\u2606';
+  const starClass = isFav ? 'text-yellow-400' : 'text-slate-500';
 
   return `
 <div class="structured-card p-4 rounded-2xl mb-3 shadow-2xl shadow-slate-950/60 transition-all duration-200" style="background-color: var(--slate-900);">
@@ -3118,12 +3121,13 @@ function renderStructuredWorkoutCard(sw) {
         <p class="text-slate-500 text-[10px] font-mono mt-0.5">${dateStr} · ${durationLabel}</p>
         <span class="workout-type-badge ${badgeClass}">${escapeHtml(type)}</span>
       </div>
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2">
         <div class="text-right">
           <div class="score-display">${escapeHtml(sw.scoreDisplay || '—')}</div>
           <p class="text-slate-500 text-[10px] font-mono mt-0.5">${scoreLabel}</p>
         </div>
-        ${hasMovements ? '<span class="toggle-arrow">▾</span>' : ''}
+        ${hasMovements ? '<span class="toggle-arrow">\u25BE</span>' : ''}
+        <button type="button" onclick="event.stopPropagation();toggleStructuredFavorite('${sw.id}')" class="text-lg leading-none ${starClass} hover:text-yellow-400 transition-colors p-1" title="Favorite">${starIcon}</button>
       </div>
     </div>
     <div class="flex flex-wrap gap-1.5 mt-2 structured-movements${hasMovements ? ' hidden' : ''}">
@@ -3211,6 +3215,7 @@ function listenToPlans(uid) {
     plans.sort((a, b) => b.createdAt - a.createdAt);
     lastWorkoutPlans = plans;
     renderPlansUI();
+    if (plansFilter === 'favorites') renderSharedPlansUI();
   }, (error) => {
     console.error('Plans stream error', error.code, error.message);
   });
@@ -3635,10 +3640,11 @@ function renderSharedPlansUI() {
   if (plansFilter === 'favorites') {
     const favoritedOwn = lastWorkoutPlans.filter(p => p.favorite === true).map(p => ({ type: 'own', plan: p }));
     const favoritedShared = lastSharedPlans.filter(s => s.favorite === true).map(s => ({ type: 'shared', share: s }));
-    items = [...favoritedOwn, ...favoritedShared];
+    const favoritedStructured = lastStructuredWorkouts.filter(w => w.favorite === true).map(w => ({ type: 'structured', structured: w }));
+    items = [...favoritedOwn, ...favoritedShared, ...favoritedStructured];
     items.sort((a, b) => {
-      const aDate = a.type === 'own' ? a.plan.createdAt : a.share.createdAt;
-      const bDate = b.type === 'own' ? b.plan.createdAt : b.share.createdAt;
+      const aDate = a.type === 'own' ? a.plan.createdAt : a.type === 'shared' ? a.share.createdAt : a.structured.timestamp;
+      const bDate = b.type === 'own' ? b.plan.createdAt : b.type === 'shared' ? b.share.createdAt : b.structured.timestamp;
       return (bDate || 0) - (aDate || 0);
     });
   } else {
@@ -3661,7 +3667,7 @@ function renderSharedPlansUI() {
   const pageItems = items.slice(start, start + perPage);
 
   container.innerHTML = pageItems.map(item => {
-    return item.type === 'own' ? renderPlanCard(item.plan) : renderSharedPlanCard(item.share);
+    return item.type === 'own' ? renderPlanCard(item.plan) : item.type === 'shared' ? renderSharedPlanCard(item.share) : renderStructuredWorkoutCard(item.structured);
   }).join('');
 
   if (pagination) {
@@ -3775,10 +3781,12 @@ async function toggleFavorite(shareId) {
   const share = lastSharedPlans.find(s => s.id === shareId);
   if (!share) return;
   const newVal = !(share.favorite === true);
+  share.favorite = newVal;
   try {
     await updateDoc(doc(db, "shared_plans", shareId), { favorite: newVal });
     haptic(HAPTIC.tap);
   } catch (err) {
+    share.favorite = !newVal;
     console.error('Toggle favorite failed', err.code, err.message);
   }
 }
@@ -3788,11 +3796,30 @@ async function togglePlanFavorite(planId) {
   const plan = lastWorkoutPlans.find(p => p.id === planId);
   if (!plan) return;
   const newVal = !(plan.favorite === true);
+  plan.favorite = newVal;
   try {
     await updateDoc(doc(db, "workout_plans", planId), { favorite: newVal });
     haptic(HAPTIC.tap);
+    if (plansFilter === 'favorites') renderSharedPlansUI();
   } catch (err) {
+    plan.favorite = !newVal;
     console.error('Toggle plan favorite failed', err.code, err.message);
+  }
+}
+
+async function toggleStructuredFavorite(swId) {
+  if (!currentUser) return;
+  const sw = lastStructuredWorkouts.find(w => w.id === swId);
+  if (!sw) return;
+  const newVal = !(sw.favorite === true);
+  sw.favorite = newVal;
+  try {
+    await updateDoc(doc(db, "structured_workouts", swId), { favorite: newVal });
+    haptic(HAPTIC.tap);
+    renderSharedPlansUI();
+  } catch (err) {
+    sw.favorite = !newVal;
+    console.error('Toggle structured favorite failed', err.code, err.message);
   }
 }
 
@@ -5469,6 +5496,7 @@ window.switchPlansFilter = switchPlansFilter;
 window.toggleSelectAllFriends = toggleSelectAllFriends;
 window.toggleFavorite = toggleFavorite;
 window.togglePlanFavorite = togglePlanFavorite;
+window.toggleStructuredFavorite = toggleStructuredFavorite;
 window.loadSharedPlan = loadSharedPlan;
 window.switchShareMode = switchShareMode;
 window.shareByQR = shareByQR;
