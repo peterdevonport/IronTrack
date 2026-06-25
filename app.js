@@ -1862,8 +1862,13 @@ function updateAmrapScorePreview() {
 }
 
 function formatScore_ROUNDS_AND_REPS(rounds, additionalReps) {
-  if (rounds === 0 && additionalReps === 0) return '—';
-  return `${rounds} + ${additionalReps}`;
+  // Convert to string and trim whitespace, or default to empty string if null/undefined
+  const r = String(rounds ?? '').trim();
+  const a = String(additionalReps ?? '').trim();
+
+  if ((r === '0' || r === '') && (a === '0' || a === '')) return '—';
+  
+  return `${r}+${a}`;
 }
 
 async function submitAmrapWorkout(e) {
@@ -3164,8 +3169,7 @@ function renderStructuredWorkoutCard(sw) {
           <p class="text-xs text-slate-400">${dateStr}</p>
         </div>
         <div class="flex items-center gap-1">
-          <div class="score-display">${escapeHtml(sw.scoreDisplay || '—')}</div>
-          <p class="text-[10px] text-slate-500 uppercase tracking-wider font-medium">${scoreLabel}</p>
+          <div class="score-display">${escapeHtml((sw.scoreDisplay || '—').replace(/\s+/g, ''))}</div>          
         </div>
       </div>
 
