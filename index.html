@@ -205,9 +205,9 @@
             <div id="cal-day-detail" class="hidden mt-3 p-3 bg-slate-950 rounded-xl space-y-2">
               <div class="flex justify-between items-center">
                 <p id="cal-day-detail-date" class="text-xs font-bold text-slate-300"></p>
-                <button id="cal-day-detail-close" type="button" class="btn-core is-secondary btn-size-row text-[10px]" onclick="closeCalendarDayDetail()">Close</button>
+                <button id="cal-day-detail-close" type="button" class="text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" onclick="closeCalendarDayDetail()"><i data-lucide="circle-x" size="18"></i></button>
               </div>
-              <div id="cal-day-workouts" class="space-y-1.5 max-h-48 overflow-y-auto"></div>
+              <div id="cal-day-workouts" class="space-y-1.5 max-h-48 overflow-y-auto pr-1.5"></div>
             </div>
           </section>
 
@@ -734,9 +734,9 @@
           <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1">
             <h2 class="section-heading">Saved Plans</h2>
             <p class="text-description mb-4">Your saved workout templates.</p>
-            <div class="flex gap-2 mb-3">
+            <div class="grid grid-cols-3 gap-2 mb-3">
               <button type="button" id="plans-filter-mine" class="btn-core is-primary btn-size-row" onclick="switchPlansFilter('mine')">My Plans</button>
-              <button type="button" id="plans-filter-shared" class="btn-core is-ghost btn-size-row" onclick="switchPlansFilter('shared')">Shared with Me</button>
+              <button type="button" id="plans-filter-shared" class="btn-core is-ghost btn-size-row" onclick="switchPlansFilter('shared')">Shared</button>
               <button type="button" id="plans-filter-favorites" class="btn-core is-ghost btn-size-row" onclick="switchPlansFilter('favorites')">Favorites</button>
             </div>
             <div id="saved-plans-inline" class="space-y-2">
@@ -816,7 +816,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6 min-w-0">
 
           <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1">
-            <p class="section-heading">Lift &amp; Input</p>
+            <p class="section-heading">My Scaling</p>
 
             <div class="mb-4">
               <label class="form-label">Select Lift</label>
@@ -827,9 +827,9 @@
 
             <p class="text-xs text-slate-400 mb-3">Est. 1RM: <span id="calc-one-rm-display" class="text-emerald-400 font-bold font-mono">—</span></p>
 
-            <div class="flex gap-1 p-0.5 w-fit rounded-xl bg-slate-950 mb-4">
-              <button id="calc-mode-pct" type="button" class="btn-core is-primary btn-size-row" onclick="switchCalcMode('pct')">%1RM</button>
-              <button id="calc-mode-rpe" type="button" class="btn-core is-ghost btn-size-row" onclick="switchCalcMode('rpe')">RPE</button>
+            <div class="grid grid-cols-2 gap-1 p-0.5 w-full rounded-xl bg-slate-950 mb-4">
+              <button type="button" id="calc-mode-pct" class="btn-core is-primary btn-size-row" onclick="switchCalcMode('pct')">%1RM</button>
+              <button type="button" id="calc-mode-rpe" class="btn-core is-ghost btn-size-row" onclick="switchCalcMode('rpe')">RPE</button>
             </div>
 
             <div id="calc-pct-inputs">

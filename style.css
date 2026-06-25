@@ -160,10 +160,12 @@ body {
 .btn-size-chip {
   width: 4rem; 
   padding: 0.5rem 0rem; /* py-2 fixed width */
+  min-height: 2.75rem;
 }   
 
 .btn-size-row { 
   padding: 0.8125rem; /* icon-only: ~44x44px touch target */
+  min-height: 2.75rem;
 }
 
 .btn-card-action {
