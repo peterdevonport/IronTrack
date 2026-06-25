@@ -110,11 +110,22 @@ body {
 .btn-core.is-ghost {
   color: var(--slate-400);
   background-color: transparent;
-  border-color: var(--slate-600); /* ‹-- Elegant dark slate border in base state */
+  border-color: var(--slate-600);
 }
 .btn-core.is-ghost:hover:not(:disabled) {
   color: var(--emerald-400);
   border-color: var(--emerald-400);
+}
+
+/* --- Primary Ghost (Brand outline, no fill) --- */
+.btn-core.is-primary-ghost {
+  color: var(--emerald-400);
+  background-color: transparent;
+  border-color: var(--emerald-400);
+}
+.btn-core.is-primary-ghost:hover:not(:disabled) {
+  background-color: var(--emerald-400);
+  color: #000000;
 }
 
 /* ==========================================
