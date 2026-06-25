@@ -3172,18 +3172,24 @@ function renderStructuredWorkoutCard(sw) {
     </div>
     <div class="flex flex-wrap gap-1.5 mt-2 structured-movements${hasMovements ? ' hidden' : ''}">
       ${movementsHtml}
-      ${hasMovements ? `<div class="flex gap-2 items-center mt-4 w-full">
+      ${hasMovements ? `<div class="flex gap-2 items-center mt-2 w-full">
         
-        <button type="button" onclick="redoWorkout('${sw.id}')" class="flex-1 flex items-center justify-center p-3 rounded-xl bg-slate-800/40 text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-all duration-200" title="Load">
-          <i data-lucide="upload" size="18"></i>
+        <button type="button" onclick="redoWorkout('${sw.id}')" class="flex-1 flex items-center justify-center py-2.5 h-11 bg-transparent group" title="Load">
+          <div class="w-full p-2 flex items-center justify-center rounded-lg bg-slate-800/40 text-slate-400 group-hover:text-slate-100 group-hover:bg-slate-800 transition-all duration-200">
+            <i data-lucide="upload" class="w-4.5 h-4.5"></i>
+          </div>
         </button>
         
-        <button type="button" onclick="openShareModal('${sw.id}', true)" class="flex-1 flex items-center justify-center p-3 rounded-xl bg-slate-800/40 text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-all duration-200" title="Share">
-          <i data-lucide="share-2" size="18"></i>
+        <button type="button" onclick="openShareModal('${sw.id}', true)" class="flex-1 flex items-center justify-center py-2.5 h-11 bg-transparent group" title="Share">
+          <div class="w-full p-2 flex items-center justify-center rounded-lg bg-slate-800/40 text-slate-400 group-hover:text-slate-100 group-hover:bg-slate-800 transition-all duration-200">
+            <i data-lucide="share-2" class="w-4.5 h-4.5"></i>
+          </div>
         </button>
         
-        <button type="button" onclick="deleteStructuredWorkout('${sw.id}')" class="flex-1 flex items-center justify-center p-3 rounded-xl bg-slate-800/40 text-slate-400 hover:text-rose-400 hover:bg-rose-950/30 transition-all duration-200" title="Delete">
-          <i data-lucide="trash-2" size="18"></i>
+        <button type="button" onclick="deleteStructuredWorkout('${sw.id}')" class="flex-1 flex items-center justify-center py-2.5 h-11 bg-transparent group" title="Delete">
+          <div class="w-full p-2 flex items-center justify-center rounded-lg bg-slate-800/40 text-slate-400 group-hover:text-rose-400 group-hover:bg-rose-950/30 transition-all duration-200">
+            <i data-lucide="trash-2" class="w-4.5 h-4.5"></i>
+          </div>
         </button>
 
       </div>` : ''}
