@@ -28,7 +28,7 @@
 
 /* --- Base Body Fallbacks --- */
 body {
-  background-color: var(--slate-900);
+  background-color: var(--slate-800);
 }
 
 /* --- Card Utilities --- */
