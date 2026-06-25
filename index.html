@@ -421,11 +421,11 @@
           <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1" id="record-training-card">
             <h2 class="section-heading">Record Training</h2>
             <p class="text-description mb-4">Keep track of your training</p>
-            <div class="flex gap-1 p-0.5 w-fit rounded-xl bg-slate-950 mb-4">
-              <button id="tab-log-set" type="button" class="btn-core is-primary btn-size-row" onclick="switchWorkoutMode('set')">
+            <div class="grid grid-cols-2 gap-1 p-0.5 w-full rounded-xl bg-slate-950 mb-4">
+              <button type="button" id="tab-log-set" class="btn-core is-primary btn-size-row" onclick="switchWorkoutMode('set')">
                 Sets
               </button>
-              <button id="tab-log-workout" type="button" class="btn-core is-ghost btn-size-row" onclick="switchWorkoutMode('workout')">
+              <button type="button" id="tab-log-workout" class="btn-core is-ghost btn-size-row" onclick="switchWorkoutMode('workout')">
                 Workouts
               </button>
             </div>
@@ -885,23 +885,17 @@
             <h2 class="section-heading">Volume</h2>
             <p class="text-description mb-4">Track your training volume over time.</p>
 
-            <div class="flex flex-wrap items-end justify-between gap-3 mb-4">
-              <div class="inline-flex gap-1 p-0.5 rounded-xl bg-slate-950">
-                <button id="vh-period-daily" type="button" class="btn-core is-primary btn-size-row" onclick="switchVolumePeriod('daily')">Daily</button>
-                <button id="vh-period-weekly" type="button" class="btn-core is-ghost btn-size-row" onclick="switchVolumePeriod('weekly')">Weekly</button>
-                <button id="vh-period-monthly" type="button" class="btn-core is-ghost btn-size-row" onclick="switchVolumePeriod('monthly')">Monthly</button>
-                <button id="vh-period-yearly" type="button" class="btn-core is-ghost btn-size-row" onclick="switchVolumePeriod('yearly')">Yearly</button>
-              </div>
-              <div class="flex gap-1">
-                <button id="vh-prev" type="button" class="btn-core is-secondary btn-size-row" onclick="shiftVolumePeriod(-1)">&lt;</button>
-                <button id="vh-next" type="button" class="btn-core is-secondary btn-size-row" onclick="shiftVolumePeriod(1)">&gt;</button>
-              </div>
-            </div>
-
             <div class="mb-3">
               <select id="vh-filter" class="dropdown-core" onchange="onVolumeFilterChange()">
                 <option value="All">All Exercises</option>
               </select>
+            </div>
+
+            <div class="grid grid-cols-4 gap-1 p-0.5 rounded-xl bg-slate-950 mb-4">
+              <button type="button" id="vh-period-daily" class="btn-core is-primary btn-size-row" onclick="switchVolumePeriod('daily')">Daily</button>
+              <button type="button" id="vh-period-weekly" class="btn-core is-ghost btn-size-row" onclick="switchVolumePeriod('weekly')">Weekly</button>
+              <button type="button" id="vh-period-monthly" class="btn-core is-ghost btn-size-row" onclick="switchVolumePeriod('monthly')">Monthly</button>
+              <button type="button" id="vh-period-yearly" class="btn-core is-ghost btn-size-row" onclick="switchVolumePeriod('yearly')">Yearly</button>
             </div>
 
             <p id="vh-range-label" class="text-xs text-slate-400 font-mono mb-3"></p>
@@ -913,6 +907,11 @@
             <div class="flex justify-between text-sm font-mono mt-3">
               <span id="vh-avg" class="text-slate-400 font-bold"></span>
               <span id="vh-total" class="text-emerald-400 font-bold"></span>
+            </div>
+
+            <div class="w-full flex justify-between gap-1 mt-4">
+              <button type="button" id="vh-prev" class="btn-core is-secondary btn-size-row" onclick="shiftVolumePeriod(-1)">&lt;</button>
+              <button type="button" id="vh-next" class="btn-core is-secondary btn-size-row" onclick="shiftVolumePeriod(1)">&gt;</button>
             </div>
           </section>
 

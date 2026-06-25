@@ -154,6 +154,15 @@ body {
   border-color: var(--emerald-500);
 }
 
+/* Favorite star buttons in saved/shared plan cards */
+.btn-fav-star {
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* ==========================================
    GEOMETRIC SCALE CONTROLS (Sizing)
    ========================================== */
@@ -166,6 +175,7 @@ body {
 .btn-size-row { 
   padding: 0.8125rem; /* icon-only: ~44x44px touch target */
   min-height: 2.75rem;
+  min-width: 2.75rem;
 }
 
 .btn-card-action {
@@ -317,13 +327,9 @@ body {
   cursor: pointer;
 }
 .structured-card .toggle-arrow {
-  transition: transform 0.2s ease;
   font-size: 1.25rem;
   color: var(--slate-400);
   user-select: none;
-}
-.structured-card .toggle-arrow.rotated {
-  transform: rotate(180deg);
 }
 .structured-card .pr-badge {
   background-color: rgba(168, 85, 247, 0.15);

@@ -3111,7 +3111,7 @@ function renderStructuredWorkoutCard(sw) {
     if (intSec && intSec !== 60) {
       durationLabel += ` · ${intSec}s interval`;
     }
-    scoreLabel = 'rounds completed';
+    scoreLabel = 'rounds';
   } else if (type === 'FOR_TIME') {
     const movements = sw.structure?.movements || [];
     movementsHtml = movements.map(m => {
@@ -3150,35 +3150,73 @@ function renderStructuredWorkoutCard(sw) {
   const hasMovements = movementsHtml.trim().length > 0;
   const isFav = sw.favorite === true;
   const starIcon = isFav ? '\u2605' : '\u2606';
-  const starClass = isFav ? 'text-yellow-400' : 'text-slate-500';
+  const starClass = isFav ? 'text-amber-400' : 'text-slate-500';
 
   return `
-<div class="structured-card p-4 rounded-2xl mb-3 shadow-2xl shadow-slate-950/60 transition-all duration-200" style="background-color: var(--slate-900);">
-    <div class="flex justify-between items-start mb-2${hasMovements ? ' structured-header-clickable' : ''}"${hasMovements ? ` onclick="toggleWorkoutCard(this)"` : ''}>
-      <div>
+<div class="structured-card p-4 pt-2 rounded-2xl mb-3 shadow-2xl shadow-slate-950/60 transition-all duration-200" style="background-color: var(--slate-900);" data-workout-id="${sw.id}">
+    <div class="${hasMovements ? 'structured-header-clickable' : ''}"${hasMovements ? ` onclick="toggleWorkoutCard(this)"` : ''}>
+      <div class="flex justify-between items-center">
         <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm">${escapeHtml(sw.name)}</h4>
-        <p class="text-slate-500 text-[10px] font-mono mt-0.5">${dateStr} · ${durationLabel}</p>
-        <span class="workout-type-badge ${badgeClass}">${escapeHtml(type)}</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <div class="text-right">
-          <div class="score-display">${escapeHtml(sw.scoreDisplay || '—')}</div>
-          <p class="text-slate-500 text-[10px] font-mono mt-0.5">${scoreLabel}</p>
+        <button type="button" data-fav-id="${sw.id}" onclick="event.stopPropagation(); toggleStructuredFavorite('${sw.id}')" class="${starClass} hover:scale-110 transition-transform text-2xl leading-none btn-fav-star" title="Favorite">${starIcon}</button>        ${hasMovements ? '<div class="flex justify-end mt-2"><button type="button" class="toggle-arrow p-1 rounded-full bg-slate-800 text-slate-400 hover:text-slate-100 transition-colors" onclick="event.stopPropagation(); toggleWorkoutCard(this.closest(\'.structured-header-clickable\'))"><i data-lucide="chevron-down" size="20"></i></button></div>' : ''}      </div>
+      <div class="flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <span class="workout-type-badge self-start ${badgeClass}">${escapeHtml(type)}</span>
+          <p class="text-xs text-slate-400">${dateStr}</p>
         </div>
-        ${hasMovements ? '<span class="toggle-arrow">\u25BE</span>' : ''}
-        <button type="button" onclick="event.stopPropagation();toggleStructuredFavorite('${sw.id}')" class="text-lg leading-none ${starClass} hover:text-yellow-400 transition-colors p-1" title="Favorite">${starIcon}</button>
+        <div class="flex items-center gap-1">
+          <div class="score-display">${escapeHtml(sw.scoreDisplay || '—')}</div>
+          <p class="text-[10px] text-slate-500 uppercase tracking-wider font-medium">${scoreLabel}</p>
+        </div>
       </div>
+
     </div>
     <div class="flex flex-wrap gap-1.5 mt-2 structured-movements${hasMovements ? ' hidden' : ''}">
       ${movementsHtml}
-      ${hasMovements ? `<div class="flex gap-2 mt-3 w-full">
-        <button type="button" onclick="redoWorkout('${sw.id}')" class="btn-core is-ghost btn-card-action"><i data-lucide="upload" size="18"></i><span>Load</span></button>
-        <button type="button" onclick="openShareModal('${sw.id}', true)" class="btn-core is-ghost btn-card-action"><i data-lucide="share-2" size="18"></i><span>Share</span></button>
-        <button type="button" onclick="deleteStructuredWorkout('${sw.id}')" class="btn-core is-ghost btn-card-action hover:!text-rose-400 hover:!border-rose-400"><i data-lucide="trash-2" size="18"></i><span>Delete</span></button>
+      ${hasMovements ? `<div class="flex gap-2 items-center mt-4 w-full">
+        
+        <button type="button" onclick="redoWorkout('${sw.id}')" class="flex-1 flex items-center justify-center p-3 rounded-xl bg-slate-800/40 text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-all duration-200" title="Load">
+          <i data-lucide="upload" size="18"></i>
+        </button>
+        
+        <button type="button" onclick="openShareModal('${sw.id}', true)" class="flex-1 flex items-center justify-center p-3 rounded-xl bg-slate-800/40 text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-all duration-200" title="Share">
+          <i data-lucide="share-2" size="18"></i>
+        </button>
+        
+        <button type="button" onclick="deleteStructuredWorkout('${sw.id}')" class="flex-1 flex items-center justify-center p-3 rounded-xl bg-slate-800/40 text-slate-400 hover:text-rose-400 hover:bg-rose-950/30 transition-all duration-200" title="Delete">
+          <i data-lucide="trash-2" size="18"></i>
+        </button>
+
       </div>` : ''}
     </div>
 </div>
   `;
+}
+
+function saveExpandedCardIds() {
+  const ids = [];
+  document.querySelectorAll('.structured-card').forEach(card => {
+    const id = card.getAttribute('data-workout-id');
+    if (!id) return;
+    const movements = card.querySelector('.structured-movements');
+    if (movements && !movements.classList.contains('hidden')) {
+      ids.push(id);
+    }
+  });
+  return ids;
+}
+
+function restoreExpandedCardIds(ids) {
+  if (!ids || !ids.length) return;
+  ids.forEach(id => {
+    const card = document.querySelector(`[data-workout-id="${id}"]`);
+    if (!card) return;
+    const movements = card.querySelector('.structured-movements');
+    const arrow = card.querySelector('.toggle-arrow');
+    if (movements) movements.classList.remove('hidden');
+    if (arrow) {
+      arrow.innerHTML = '<i data-lucide="chevron-up" size="20"></i>';
+    }
+  });
 }
 
 function toggleWorkoutCard(headerEl) {
@@ -3186,14 +3224,19 @@ function toggleWorkoutCard(headerEl) {
     const movements = card.querySelector('.structured-movements');
     const arrow = card.querySelector('.toggle-arrow');
     if (!movements || !arrow) return;
+    const isExpanded = !movements.classList.contains('hidden');
     movements.classList.toggle('hidden');
-    arrow.classList.toggle('rotated');
+    const iconName = isExpanded ? 'chevron-down' : 'chevron-up';
+    arrow.innerHTML = `<i data-lucide="${iconName}" size="20"></i>`;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function renderStructuredWorkoutHistory() {
   const container = document.getElementById('structured-workout-list');
   const pagination = document.getElementById('structured-pagination');
   if (!container) return;
+
+  const expandedIds = saveExpandedCardIds();
 
   const workouts = lastStructuredWorkouts;
 
@@ -3210,6 +3253,7 @@ function renderStructuredWorkoutHistory() {
   const pageItems = workouts.slice(start, start + perPage);
 
   container.innerHTML = pageItems.map(renderStructuredWorkoutCard).join('');
+  restoreExpandedCardIds(expandedIds);
   if (typeof lucide !== 'undefined') lucide.createIcons();
 
   if (pagination) {
@@ -3270,6 +3314,8 @@ function renderPlansUI() {
   const pagination = document.getElementById('plans-pagination');
   if (!container) return;
 
+  const expandedIds = saveExpandedCardIds();
+
   if (!lastWorkoutPlans.length) {
     container.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">No saved plans yet.</p>';
     if (pagination) pagination.classList.add('hidden');
@@ -3283,6 +3329,7 @@ function renderPlansUI() {
   const pageItems = lastWorkoutPlans.slice(start, start + perPage);
 
   container.innerHTML = pageItems.map(plan => renderPlanCard(plan)).join('');
+  restoreExpandedCardIds(expandedIds);
   if (typeof lucide !== 'undefined') lucide.createIcons();
 
   if (pagination) {
@@ -3375,24 +3422,42 @@ function renderPlanCard(plan) {
   const hasMovements = movementsHtml.trim().length > 0;
   const isFav = plan.favorite === true;
   const starIcon = isFav ? '\u2605' : '\u2606';
-  const starClass = isFav ? 'text-yellow-400' : 'text-slate-500';
+  const starClass = isFav ? 'text-amber-400' : 'text-slate-500';
 
-  return `
-<div class="structured-card p-4 rounded-2xl mb-3 shadow-2xl shadow-slate-950/60 transition-all duration-200" style="background-color: var(--slate-900);">
-    <div class="flex justify-between items-start mb-2${hasMovements ? ' structured-header-clickable' : ''}"${hasMovements ? ` onclick="toggleWorkoutCard(this)"` : ''}>
-      <div>
-        <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm">${escapeHtml(plan.name)}</h4>
-        <p class="text-slate-500 text-[10px] font-mono mt-0.5">${dateStr}</p>
-        <span class="workout-type-badge ${badgeClass}">${escapeHtml(type)}</span>
+  return `<div class="structured-card p-4 rounded-2xl mb-3 shadow-2xl shadow-slate-950/60 transition-all duration-200" style="background-color: var(--slate-900);" data-workout-id="${plan.id}">
+    
+    <div class="${hasMovements ? 'structured-header-clickable cursor-pointer' : ''}"${hasMovements ? ` onclick="toggleWorkoutCard(this)"` : ''}>
+      
+      <div class="flex justify-between items-center mb-2">
+        
+        <div class="flex items-center gap-2">
+          <button type="button" data-fav-id="${plan.id}" onclick="event.stopPropagation(); togglePlanFavorite('${plan.id}')" class="inline-flex items-center justify-center ${starClass} hover:scale-110 transition-transform text-2xl leading-none btn-fav-star" title="Favorite">${starIcon}</button>
+          
+          <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm">${escapeHtml(plan.name)}</h4>
+        </div>
+        
+        ${hasMovements ? `
+        <button type="button" class="inline-flex items-center justify-center toggle-arrow p-1 rounded-full bg-slate-800 text-slate-400 hover:text-slate-100 transition-colors h-9 w-9" onclick="toggleWorkoutCard(this)">
+          <i data-lucide="chevron-down" size="20"></i>
+        </button>
+        ` : ''}
       </div>
-      <div class="flex items-center gap-2">
-        ${hasMovements ? '<span class="toggle-arrow">\u25BE</span>' : ''}
-        <button type="button" onclick="event.stopPropagation();togglePlanFavorite('${plan.id}')" class="text-lg leading-none ${starClass} hover:text-yellow-400 transition-colors p-1" title="Favorite">${starIcon}</button>
+
+      <div class="flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <span class="workout-type-badge emom ${badgeClass}">${escapeHtml(type)}</span>
+          <p class="text-xs text-slate-400">${dateStr}</p>
+        </div>
+        
+        <div></div>
       </div>
+      
     </div>
+
     <div class="flex flex-wrap gap-1.5 mt-2 structured-movements${hasMovements ? ' hidden' : ''}">
       ${movementsHtml}
-      ${hasMovements ? `<div class="flex gap-2 mt-3 w-full">
+      ${hasMovements ? `
+      <div class="flex gap-2 mt-3 w-full">
         <button type="button" onclick="loadPlan('${plan.id}')" class="btn-core is-ghost btn-card-action"><i data-lucide="upload" size="18"></i><span>Load</span></button>
         <button type="button" onclick="openShareModal('${plan.id}')" class="btn-core is-ghost btn-card-action"><i data-lucide="share-2" size="18"></i><span>Share</span></button>
         <button type="button" onclick="deletePlan('${plan.id}')" class="btn-core is-ghost btn-card-action hover:!text-rose-400 hover:!border-rose-400"><i data-lucide="trash-2" size="18"></i><span>Delete</span></button>
@@ -3712,6 +3777,8 @@ function renderSharedPlansUI() {
   const pagination = document.getElementById('shared-plans-pagination');
   if (!container) return;
 
+  const expandedIds = saveExpandedCardIds();
+
   let items = [];
   if (plansFilter === 'favorites') {
     const favoritedOwn = lastWorkoutPlans.filter(p => p.favorite === true).map(p => ({ type: 'own', plan: p }));
@@ -3745,6 +3812,7 @@ function renderSharedPlansUI() {
   container.innerHTML = pageItems.map(item => {
     return item.type === 'own' ? renderPlanCard(item.plan) : item.type === 'shared' ? renderSharedPlanCard(item.share) : renderStructuredWorkoutCard(item.structured);
   }).join('');
+  restoreExpandedCardIds(expandedIds);
   if (typeof lucide !== 'undefined') lucide.createIcons();
 
   if (pagination) {
@@ -3778,22 +3846,24 @@ function renderSharedPlanCard(share) {
 
   const isFav = share.favorite === true;
   const starIcon = isFav ? '\u2605' : '\u2606';
-  const starClass = isFav ? 'text-yellow-400' : 'text-slate-500';
+  const starClass = isFav ? 'text-amber-400' : 'text-slate-500';
 
   const displayMovements = type === 'EMOM' ? emomHtml : movementsHtml;
   const hasMovements = displayMovements.trim().length > 0;
 
   return `
-<div class="structured-card p-4 rounded-2xl mb-3 shadow-2xl shadow-slate-950/60 transition-all duration-200" style="background-color: var(--slate-900);">
-    <div class="flex justify-between items-start mb-2${hasMovements ? ' structured-header-clickable' : ''}"${hasMovements ? ` onclick="toggleWorkoutCard(this)"` : ''}>
-      <div>
+<div class="structured-card p-4 rounded-2xl mb-3 shadow-2xl shadow-slate-950/60 transition-all duration-200" style="background-color: var(--slate-900);" data-workout-id="${share.id}">
+    <div class="flex justify-between items-start">
+      <div class="flex flex-col gap-1 ${hasMovements ? 'structured-header-clickable' : ''}"${hasMovements ? ` onclick="toggleWorkoutCard(this)"` : ''}>
         <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm">${escapeHtml(share.content?.name || '')}</h4>
-        <p class="text-slate-500 text-[10px] font-mono mt-0.5">Shared by ${escapeHtml(share.sharedByDisplayName || 'Unknown')} &middot; ${dateStr}</p>
-        <span class="workout-type-badge ${badgeClass}">${escapeHtml(type)}</span>
+        <p class="text-xs text-slate-400">Shared by ${escapeHtml(share.sharedByDisplayName || 'Unknown')} &middot; ${dateStr}</p>
+        <span class="workout-type-badge self-start ${badgeClass}">${escapeHtml(type)}</span>
       </div>
-      <div class="flex items-center gap-2">
-        ${hasMovements ? '<span class="toggle-arrow">\u25BE</span>' : ''}
-        <button type="button" onclick="event.stopPropagation();toggleFavorite('${share.id}')" class="text-lg leading-none ${starClass} hover:text-yellow-400 transition-colors p-1" title="Favorite">${starIcon}</button>
+      <div class="flex flex-col items-end gap-1 shrink-0">
+        <div class="flex items-center gap-3">
+          <button type="button" data-fav-id="${share.id}" onclick="toggleFavorite('${share.id}')" class="${starClass} hover:scale-110 transition-transform text-2xl leading-none btn-fav-star" title="Favorite">${starIcon}</button>
+          ${hasMovements ? '<button type="button" class="toggle-arrow p-1 rounded-full bg-slate-800 text-slate-400 hover:text-slate-100 transition-colors" onclick="toggleWorkoutCard(this)"><i data-lucide="chevron-down" size="20"></i></button>' : ''}
+        </div>
       </div>
     </div>
     <div class="flex flex-wrap gap-1.5 mt-2 structured-movements${hasMovements ? ' hidden' : ''}">
@@ -3853,17 +3923,26 @@ async function dismissSharedPlan(shareId) {
   }
 }
 
+function updateStarIcon(id, isFav) {
+  const btn = document.querySelector(`[data-fav-id="${id}"]`);
+  if (!btn) return;
+  btn.textContent = isFav ? '\u2605' : '\u2606';
+  btn.className = `${isFav ? 'text-amber-400' : 'text-slate-500'} hover:scale-110 transition-transform text-2xl leading-none btn-fav-star`;
+}
+
 async function toggleFavorite(shareId) {
   if (!currentUser) return;
   const share = lastSharedPlans.find(s => s.id === shareId);
   if (!share) return;
   const newVal = !(share.favorite === true);
   share.favorite = newVal;
+  updateStarIcon(shareId, newVal);
   try {
     await updateDoc(doc(db, "shared_plans", shareId), { favorite: newVal });
     haptic(HAPTIC.tap);
   } catch (err) {
     share.favorite = !newVal;
+    updateStarIcon(shareId, !newVal);
     console.error('Toggle favorite failed', err.code, err.message);
   }
 }
@@ -3874,12 +3953,13 @@ async function togglePlanFavorite(planId) {
   if (!plan) return;
   const newVal = !(plan.favorite === true);
   plan.favorite = newVal;
+  updateStarIcon(planId, newVal);
   try {
     await updateDoc(doc(db, "workout_plans", planId), { favorite: newVal });
     haptic(HAPTIC.tap);
-    if (plansFilter === 'favorites') renderSharedPlansUI();
   } catch (err) {
     plan.favorite = !newVal;
+    updateStarIcon(planId, !newVal);
     console.error('Toggle plan favorite failed', err.code, err.message);
   }
 }
@@ -3890,12 +3970,13 @@ async function toggleStructuredFavorite(swId) {
   if (!sw) return;
   const newVal = !(sw.favorite === true);
   sw.favorite = newVal;
+  updateStarIcon(swId, newVal);
   try {
     await updateDoc(doc(db, "structured_workouts", swId), { favorite: newVal });
     haptic(HAPTIC.tap);
-    renderSharedPlansUI();
   } catch (err) {
     sw.favorite = !newVal;
+    updateStarIcon(swId, !newVal);
     console.error('Toggle structured favorite failed', err.code, err.message);
   }
 }
