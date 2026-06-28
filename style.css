@@ -161,6 +161,15 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  font-size: 1.5rem;
+}
+
+/* Bookmark button in structured cards */
+.btn-fav-bookmark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
 }
 
 /* ==========================================
