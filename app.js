@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential, updatePassword, deleteUser } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, where, onSnapshot, deleteDoc, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, serverTimestamp, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, query, where, onSnapshot, deleteDoc, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, serverTimestamp, orderBy, limit, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // Integrated Unique Firebase App Configuration
 const firebaseConfig = {
@@ -209,6 +209,7 @@ let currentPage = 1;
 let recordsCurrentPage = 1;
 let urlParamsProcessed = false; // Add this flag
 let pendingPlannedWorkout = null;
+let workoutMovements = [];
 
 let paginatedWorkouts = [];
 let lastWorkouts = [];
@@ -633,7 +634,6 @@ async function saveOnboarding() {
         document.getElementById('profile-weight').value = bodyweight;
 
         // Create synthetic workout entries for each 1RM
-        const now = Date.now();
         for (const item of pendingOnboarding1RMs) {
             const logEntry = {
                 userId: currentUser.uid,
@@ -644,7 +644,7 @@ async function saveOnboarding() {
                 externalLoad: 0,
                 estimatedLoad: item.weight,
                 totalVolume: item.weight * item.reps,
-                timestamp: now,
+    timestamp: Timestamp.now(),
                 source: 'onboarding',
                 isInitialMax: true
             };
@@ -697,7 +697,7 @@ async function logPB() {
             externalLoad: 0,
             estimatedLoad: weight,
             totalVolume: weight * reps,
-            timestamp: Date.now(),
+            timestamp: Timestamp.now(),
             source: 'pb-log',
             isInitialMax: false
         };
@@ -959,6 +959,7 @@ function listenToDataStream(uid) {
         // Data already sorted desc by Firestore
         window.__irontrackWorkoutCount = workouts.length;
         lastWorkouts = workouts;
+        window.__lastWorkouts = lastWorkouts;
         // Align signup reference to earliest workout for volume history
         if (workouts.length > 0) {
           const earliestTs = Math.min(...workouts.map(w => w.timestamp));
@@ -1606,220 +1607,10 @@ function populateMovementDropdowns() {
   });
 }
 
-function handleMovementExerciseChange(selectEl) {
-  const row = selectEl.closest('.movement-row, .minute-row');
-  if (!row) return;
-  const weightInput = row.querySelector('.movement-weight');
-  const pill = row.querySelector('.wms-pill');
-  const calcSpan = row.querySelector('.movement-calc');
-  const exercise = selectEl.value;
-  const loadFactor = LOAD_FACTORS[exercise];
-
-  if (loadFactor !== undefined) {
-    weightInput.value = '';
-    weightInput.disabled = true;
-    weightInput.placeholder = 'BW';
-    if (pill) { pill.classList.add('hidden'); pill.dataset.mode = 'absolute'; }
-    if (calcSpan) calcSpan.classList.add('hidden');
-  } else {
-    weightInput.disabled = false;
-    const mode = pill?.dataset?.mode || 'absolute';
-    weightInput.placeholder = mode === 'pct' ? '%' : (mode === 'rpe' ? 'RPE' : 'Load');
-    if (pill) pill.classList.remove('hidden');
-    if (calcSpan) {
-      if (mode === 'pct' || mode === 'rpe') {
-        calcSpan.classList.remove('hidden');
-        updateRowCalcDisplay(row);
-      } else {
-        calcSpan.classList.add('hidden');
-      }
-    }
-  }
-}
-
-function addMovementRow(containerId, exerciseName) {
-  if (!containerId) containerId = 'movement-list';
-  const container = document.getElementById(containerId);
-  if (!container) return;
-  // Clear initial static HTML placeholder on first call for this container
-  if (!container.dataset.wmsBootstrapped) {
-    container.innerHTML = '';
-    container.dataset.wmsBootstrapped = 'true';
-  }
-  const row = document.createElement('div');
-  row.className = 'movement-row flex flex-col gap-1.5';
-  row.innerHTML = `
-    <div class="w-full flex gap-2 items-center">
-      <select class="movement-exercise dropdown-core flex-1" onchange="handleMovementExerciseChange(this)">
-        <option value="">Select exercise...</option>
-      </select>
-      <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none shrink-0"><i data-lucide="circle-minus" size="18"></i></button>
-    </div>
-    <div class="flex gap-2 items-center flex-wrap">
-      <div class="w-16 shrink-0">
-        <input type="number" class="movement-reps input-core" placeholder="Reps" min="1" step="1" />
-      </div>
-      <span class="text-slate-500 text-xs font-mono shrink-0">@</span>
-      <div class="w-20 shrink-0">
-        <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
-      </div>
-      <div class="wms-pill shrink-0" data-mode="absolute">
-        <button type="button" class="wms-pill-btn is-active" data-mode="absolute" onclick="toggleWeightMode(this)">kg</button>
-        <button type="button" class="wms-pill-btn" data-mode="pct" onclick="toggleWeightMode(this)">%</button>
-        <button type="button" class="wms-pill-btn" data-mode="rpe" onclick="toggleWeightMode(this)">RPE</button>
-      </div>
-      <div class="w-16 shrink-0 flex items-center justify-center">
-        <span class="movement-calc text-emerald-400 font-mono text-xs hidden">\u2192</span>
-      </div>
-    </div>
-  `;
-  container.appendChild(row);
-  populateMovementDropdowns();
-  if (exerciseName) {
-    const sel = row.querySelector('.movement-exercise');
-    if (sel) { sel.value = exerciseName; handleMovementExerciseChange(sel); }
-  }
-  if (typeof lucide !== 'undefined') lucide.createIcons();
-}
-
-function removeMovementRow(btn) {
-  const row = btn.closest('.movement-row');
-  if (row) row.remove();
-  const container = btn.closest('#movement-list, #fortime-movement-list, #interval-movement-list');
-  if (container?.id === 'movement-list') updateAmrapScorePreview();
-}
-
 function updatePillActive(pill, mode) {
   pill.querySelectorAll('.wms-pill-btn').forEach(btn => {
     btn.classList.toggle('is-active', btn.dataset.mode === mode);
   });
-}
-
-function toggleWeightMode(el) {
-  const pill = el.closest('.wms-pill');
-  if (!pill) return;
-  const row = pill.closest('.movement-row, .minute-row');
-  if (!row) return;
-  const newMode = el.dataset.mode;
-  pill.dataset.mode = newMode;
-  updatePillActive(pill, newMode);
-
-  const weightInput = row.querySelector('.movement-weight');
-  if (weightInput) {
-    weightInput.placeholder = newMode === 'pct' ? '%' : (newMode === 'rpe' ? 'RPE' : 'Load');
-    if (newMode === 'rpe') {
-      weightInput.min = 1;
-      weightInput.max = 10;
-      weightInput.step = 0.5;
-    } else {
-      weightInput.min = 0;
-      weightInput.step = 'any';
-      weightInput.removeAttribute('max');
-    }
-  }
-
-  const calcSpan = row.querySelector('.movement-calc');
-  if (!calcSpan) return;
-  if (newMode === 'pct' || newMode === 'rpe') {
-    calcSpan.classList.remove('hidden');
-    updateRowCalcDisplay(row);
-  } else {
-    calcSpan.classList.add('hidden');
-  }
-}
-
-function updateRowCalcDisplay(row) {
-  const exercise = row.querySelector('.movement-exercise')?.value;
-  const weightInput = row.querySelector('.movement-weight');
-  const calcSpan = row.querySelector('.movement-calc');
-  const pill = row.querySelector('.wms-pill');
-  if (!weightInput || !calcSpan || !pill) return;
-
-  const mode = pill.dataset.mode;
-  const oneRM = exercise ? (activeRecords[exercise] || 0) : 0;
-
-  if (!exercise) {
-    calcSpan.textContent = '\u2192';
-    calcSpan.className = 'movement-calc text-slate-500 font-mono text-xs';
-    return;
-  }
-
-  if (mode === 'pct') {
-    const pct = parseFloat(weightInput.value);
-    if (isNaN(pct) || pct <= 0 || oneRM <= 0) {
-      calcSpan.textContent = oneRM > 0 ? '\u2192' : 'No 1RM';
-      calcSpan.className = 'movement-calc font-mono text-xs ' + (oneRM > 0 ? 'text-emerald-400' : 'text-rose-400');
-      return;
-    }
-    const calculated = Math.round(oneRM * pct / 100);
-    calcSpan.textContent = '\u2192 ' + calculated + ' kg';
-    calcSpan.className = 'movement-calc text-emerald-400 font-mono text-xs';
-  } else if (mode === 'rpe') {
-    const rpe = parseFloat(weightInput.value);
-    const reps = parseInt(row.querySelector('.movement-reps')?.value, 10);
-    if (isNaN(rpe) || rpe < 1 || rpe > 10 || isNaN(reps) || reps < 1 || oneRM <= 0) {
-      if (oneRM <= 0) {
-        calcSpan.textContent = 'No 1RM';
-        calcSpan.className = 'movement-calc font-mono text-xs text-rose-400';
-      } else if (isNaN(rpe) || rpe < 1 || rpe > 10) {
-        calcSpan.textContent = '\u2192';
-        calcSpan.className = 'movement-calc font-mono text-xs text-slate-500';
-      } else {
-        calcSpan.textContent = '\u2192';
-        calcSpan.className = 'movement-calc font-mono text-xs text-emerald-400';
-      }
-      return;
-    }
-    const rir = 10 - rpe;
-    const totalRepsPossible = reps + rir;
-    const targetWeight = Math.round(oneRM / (1 + totalRepsPossible / 30));
-    calcSpan.textContent = '\u2192 ' + targetWeight + ' kg';
-    calcSpan.className = 'movement-calc text-emerald-400 font-mono text-xs';
-  }
-}
-
-function getMovementData(containerSelector) {
-  const movements = [];
-  let error = null;
-  document.querySelectorAll(containerSelector).forEach(row => {
-    const exercise = row.querySelector('.movement-exercise')?.value;
-    const reps = parseInt(row.querySelector('.movement-reps')?.value, 10);
-    const weightInput = row.querySelector('.movement-weight');
-    const pill = row.querySelector('.wms-pill');
-    const weightMode = pill?.dataset?.mode || 'absolute';
-
-    let rawWeight = parseFloat(weightInput?.value) || 0;
-    let pct = null;
-    let rpe = null;
-
-    if (!exercise) { error = 'Select an exercise for all movements.'; return; }
-    if (!reps || reps < 1) { error = 'Enter reps for all movements.'; return; }
-
-    if (weightMode === 'pct') {
-      pct = rawWeight;
-      const oneRM = activeRecords[exercise] || 0;
-      rawWeight = oneRM > 0 ? Math.round(oneRM * rawWeight / 100) : rawWeight;
-    } else if (weightMode === 'rpe') {
-      rpe = rawWeight;
-      const oneRM = activeRecords[exercise] || 0;
-      if (oneRM > 0 && rpe >= 1 && rpe <= 10) {
-        const rir = 10 - rpe;
-        const totalRepsPossible = reps + rir;
-        rawWeight = Math.round(oneRM / (1 + totalRepsPossible / 30));
-      }
-    }
-
-    const exInfo = getExerciseInfo(exercise);
-    const loadFactor = LOAD_FACTORS[exercise];
-    if (!loadFactor && exInfo.category !== 'cardio' && (!rawWeight || rawWeight <= 0)) { error = `Enter a load for ${exercise}.`; return; }
-
-    const movement = { exerciseId: exercise, reps, weight: rawWeight, weightMode };
-    if (pct !== null) movement.pct = pct;
-    if (rpe !== null) movement.rpe = rpe;
-    movements.push(movement);
-  });
-  if (error) throw new Error(error);
-  return movements;
 }
 
 function updateAmrapScorePreview() {
@@ -1903,7 +1694,7 @@ async function submitAmrapWorkout(e) {
   }
 }
 
-async function writeStructuredLogEntry({ workoutId, movement, sets, totalReps, extraFields = {}, now = Date.now() }) {
+async function writeStructuredLogEntry({ workoutId, movement, sets, totalReps, extraFields = {} }) {
   const bw = userBiometrics.bodyweight || 0;
   const loadFactor = LOAD_FACTORS[movement.exerciseId];
   let estimatedLoad = 0;
@@ -1919,6 +1710,8 @@ async function writeStructuredLogEntry({ workoutId, movement, sets, totalReps, e
 
   const totalVolume = estimatedLoad * totalReps;
 
+  console.log(`[contrib] writeStructuredLogEntry: exercise=${movement.exerciseId}, sets=${sets}, reps=${movement.reps}, totalReps=${totalReps}, weight=${weight}, estimatedLoad=${estimatedLoad}, totalVolume=${totalVolume}, source=structured`);
+
   const logEntry = {
     userId: currentUser.uid,
     exercise: movement.exerciseId,
@@ -1928,18 +1721,24 @@ async function writeStructuredLogEntry({ workoutId, movement, sets, totalReps, e
     externalLoad: 0,
     estimatedLoad,
     totalVolume,
-    timestamp: now,
+    timestamp: Timestamp.now(),
     source: 'structured',
     workoutId,
     ...extraFields,
     totalWorkReps: totalReps
   };
 
-  await addDoc(collection(db, "workouts"), logEntry);
+  try {
+    const docRef = await addDoc(collection(db, "workouts"), logEntry);
+    console.log(`[contrib] addDoc SUCCESS: exercise=${movement.exerciseId}, docId=${docRef.id}, totalVolume=${totalVolume}`);
+  } catch (err) {
+    console.error(`[contrib] addDoc FAILED: exercise=${movement.exerciseId}, code=${err.code}, message=${err.message}`);
+    throw err;
+  }
 }
 
 async function generateAmrapContributions(workoutId, movements, roundsCompleted, additionalReps) {
-  const now = Date.now();
+  console.log(`[contrib] generateAmrapContributions: workoutId=${workoutId}, movements=${movements.length}, rounds=${roundsCompleted}, addReps=${additionalReps}`);
 
   for (const movement of movements) {
     if (getExerciseInfo(movement.exerciseId).category === 'cardio') continue;
@@ -1947,7 +1746,7 @@ async function generateAmrapContributions(workoutId, movements, roundsCompleted,
     if (totalRepsPerMovement <= 0) continue;
 
     await writeStructuredLogEntry({
-      workoutId, movement, now,
+      workoutId, movement,
       sets: roundsCompleted,
       totalReps: totalRepsPerMovement,
       extraFields: { additionalReps }
@@ -1959,31 +1758,59 @@ async function generateAmrapContributions(workoutId, movements, roundsCompleted,
 
 function handleWorkoutTypeChange() {
   const type = document.getElementById('workout-type')?.value;
-  const amrapForm = document.getElementById('amrap-form');
-  const emomForm = document.getElementById('emom-form');
-  const forTimeForm = document.getElementById('for-time-form');
-  const intervalForm = document.getElementById('interval-form');
   const desc = document.getElementById('workout-type-desc');
-  if (!amrapForm || !emomForm || !forTimeForm || !intervalForm || !desc) return;
+  if (!desc) return;
 
-  [amrapForm, emomForm, forTimeForm, intervalForm].forEach(f => f.classList.add('hidden'));
+  // Clear movements on type switch
+  workoutMovements = [];
+  const movementsList = document.getElementById('plan-movements-list');
+  if (movementsList) movementsList.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">Add movements above.</p>';
+  const slots = document.getElementById('emom-minute-slots');
+  if (slots) slots.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">Add a movement to create the first slot.</p>';
+
+  // Hide all metadata sections
+  ['amrap-fields', 'emom-fields', 'fortime-fields', 'interval-fields'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('hidden');
+  });
+
+  const movementsSection = document.getElementById('plan-movements-section');
+  const emomSlotsArea = document.getElementById('emom-minute-slots-area');
 
   if (type === 'EMOM') {
-    emomForm.classList.remove('hidden');
+    document.getElementById('emom-fields').classList.remove('hidden');
     desc.textContent = 'Record an EMOM (Every Minute On the Minute) workout.';
+    if (movementsSection) movementsSection.classList.add('hidden');
+    if (emomSlotsArea) emomSlotsArea.classList.remove('hidden');
     switchEmomMode(emomMode);
     updateEmomSummary(); updateEmomDurationDisplay();
   } else if (type === 'FOR_TIME') {
-    forTimeForm.classList.remove('hidden');
+    document.getElementById('fortime-fields').classList.remove('hidden');
     desc.textContent = 'Record a For Time workout — complete the rounds as fast as possible.';
+    if (movementsSection) movementsSection.classList.remove('hidden');
+    if (emomSlotsArea) emomSlotsArea.classList.add('hidden');
   } else if (type === 'INTERVAL') {
-    intervalForm.classList.remove('hidden');
+    document.getElementById('interval-fields').classList.remove('hidden');
     desc.textContent = 'Record an Interval workout — work/rest rounds.';
+    if (movementsSection) movementsSection.classList.remove('hidden');
+    if (emomSlotsArea) emomSlotsArea.classList.add('hidden');
   } else {
-    amrapForm.classList.remove('hidden');
+    document.getElementById('amrap-fields').classList.remove('hidden');
     desc.textContent = 'Record a structured AMRAP workout.';
+    if (movementsSection) movementsSection.classList.remove('hidden');
+    if (emomSlotsArea) emomSlotsArea.classList.add('hidden');
   }
   populateMovementDropdowns();
+  // Also populate the plan exercise dropdown
+  const planExercise = document.getElementById('plan-exercise');
+  if (planExercise) {
+    const currentVal = planExercise.value;
+    const groups = ['barbell', 'dumbbell', 'kettlebell', 'cardio', 'bodyweight'];
+    planExercise.innerHTML = buildExerciseOptionsHtml(groups, '<option value="">Select exercise...</option>');
+    if (currentVal && Array.from(planExercise.options).some(o => o.value === currentVal)) {
+      planExercise.value = currentVal;
+    }
+  }
 }
 
 function switchEmomMode(mode) {
@@ -1991,7 +1818,6 @@ function switchEmomMode(mode) {
   const btnSeq = document.getElementById('emom-mode-seq');
   const btnByRound = document.getElementById('emom-mode-by-round');
   const heading = document.getElementById('emom-slot-heading');
-  const addBtn = document.getElementById('emom-add-slot-btn');
   const roundsField = document.getElementById('emom-rounds-field');
   const roundsInput = document.getElementById('emom-rounds');
   if (btnSeq && btnByRound) {
@@ -2004,7 +1830,6 @@ function switchEmomMode(mode) {
     }
   }
   if (heading) heading.textContent = mode === 'sequence' ? 'Sequence' : 'Round Schedule';
-  if (addBtn) addBtn.textContent = mode === 'sequence' ? '+ Add Interval' : '+ Add Round';
   if (roundsField) roundsField.classList.toggle('hidden', mode === 'by_round');
   if (roundsInput) roundsInput.required = mode !== 'by_round';
   document.querySelectorAll('#emom-minute-slots .minute-label').forEach((el, i) => {
@@ -2015,55 +1840,311 @@ function switchEmomMode(mode) {
   updateEmomScorePreview();
 }
 
-function addMinuteSlot(exerciseName) {
+function addPlanMinuteSlot(data) {
   const container = document.getElementById('emom-minute-slots');
   if (!container) return;
-  if (!container.dataset.wmsBootstrapped) {
+  if (!container.dataset.planBootstrapped) {
     container.innerHTML = '';
-    container.dataset.wmsBootstrapped = 'true';
+    container.dataset.planBootstrapped = 'true';
   }
   const count = container.children.length + 1;
   const label = emomMode === 'sequence' ? `#${count}` : `Round ${count}`;
   const row = document.createElement('div');
-  row.className = 'minute-row flex flex-col gap-1.5';
-  row.innerHTML = `
-    <div class="w-full">
-      <span class="minute-label text-xs text-slate-500 font-mono">${label}</span>
-    </div>
-    <div class="w-full flex gap-2 items-center">
-      <select class="movement-exercise dropdown-core flex-1" onchange="handleMovementExerciseChange(this)">
-        <option value="">Select exercise...</option>
-      </select>
-      <button type="button" onclick="removeMinuteSlot(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none shrink-0"><i data-lucide="circle-minus" size="18"></i></button>
-    </div>
-    <div class="flex gap-2 items-center flex-wrap">
-      <div class="w-16 shrink-0">
-        <input type="number" class="movement-reps input-core" placeholder="Reps" min="1" step="1" />
-      </div>
-      <span class="text-slate-500 text-xs font-mono shrink-0">@</span>
-      <div class="w-20 shrink-0">
-        <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
-      </div>
-      <div class="wms-pill shrink-0" data-mode="absolute">
-        <button type="button" class="wms-pill-btn is-active" data-mode="absolute" onclick="toggleWeightMode(this)">kg</button>
-        <button type="button" class="wms-pill-btn" data-mode="pct" onclick="toggleWeightMode(this)">%</button>
-        <button type="button" class="wms-pill-btn" data-mode="rpe" onclick="toggleWeightMode(this)">RPE</button>
-      </div>
-      <div class="w-16 shrink-0 flex items-center justify-center">
-        <span class="movement-calc text-emerald-400 font-mono text-xs hidden">\u2192</span>
-      </div>
-    </div>
-  `;
-  container.appendChild(row);
-  populateMovementDropdowns();
-  if (exerciseName) {
-    const sel = row.querySelector('.movement-exercise');
-    if (sel) { sel.value = exerciseName; handleMovementExerciseChange(sel); }
+  row.className = 'minute-row flex gap-2 items-center py-1.5 px-2 rounded-lg hover:bg-slate-800/40';
+
+  if (data) {
+    const oneRM = activeRecords[data.exerciseId] || 0;
+    let weightDisplay = data.weight;
+    let source;
+    if (data.weightMode === 'pct' && data.pct) {
+      weightDisplay = oneRM > 0 ? Math.round(oneRM * data.pct / 100) : data.weight;
+      source = `${data.exerciseId} \u00D7 ${data.reps} @ ${weightDisplay} kg (${data.pct}%)`;
+    } else if (data.weightMode === 'rpe' && data.rpe) {
+      const rir = 10 - data.rpe;
+      const totalRepsPossible = data.reps + rir;
+      weightDisplay = oneRM > 0 ? Math.round(oneRM / (1 + totalRepsPossible / 30)) : data.weight;
+      source = `${data.exerciseId} \u00D7 ${data.reps} @ ${weightDisplay} kg (RPE ${data.rpe})`;
+    } else {
+      source = `${data.exerciseId} \u00D7 ${data.reps} @ ${data.weight} kg`;
+    }
+
+    row.innerHTML = `
+      <span class="minute-label text-xs text-slate-500 font-mono w-12 shrink-0">${label}</span>
+      <span class="text-slate-200 font-mono text-sm flex-1">${source}</span>
+      <button onclick="removeMinuteSlot(this)" class="text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer shrink-0"><i data-lucide="circle-minus" size="18"></i></button>
+    `;
+    row.dataset.exerciseId = data.exerciseId;
+    row.dataset.reps = data.reps;
+    row.dataset.weight = data.weight;
+    row.dataset.weightMode = data.weightMode;
+    if (data.pct) row.dataset.pct = data.pct;
+    if (data.rpe) row.dataset.rpe = data.rpe;
+  } else {
+    row.innerHTML = `
+      <span class="minute-label text-xs text-slate-500 font-mono w-12 shrink-0">${label}</span>
+      <span class="text-slate-500 font-mono text-sm flex-1 italic">(empty)</span>
+      <button onclick="removeMinuteSlot(this)" class="text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer shrink-0"><i data-lucide="circle-minus" size="18"></i></button>
+    `;
   }
+
+  container.appendChild(row);
   updateEmomSummary();
   updateEmomDurationDisplay();
   updateEmomScorePreview();
   if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+// ─── Unified Plan Functions ─────────────────────────────────────────────────
+
+function handlePlanExerciseChange() {
+  const exercise = document.getElementById('plan-exercise')?.value;
+  const oneRmDisplay = document.getElementById('plan-one-rm-display');
+  const oneRM = exercise ? (activeRecords[exercise] || 0) : 0;
+  if (oneRmDisplay) oneRmDisplay.textContent = oneRM > 0 ? `${Math.round(oneRM)} kg` : '\u2014';
+  updatePlanCalcPreview();
+}
+
+function togglePlanWms(el) {
+  const pill = document.getElementById('plan-wms-pill');
+  if (!pill) return;
+  const mode = el.dataset.mode;
+  pill.dataset.mode = mode;
+  updatePillActive(pill, mode);
+
+  const weightInput = document.getElementById('plan-weight');
+  if (weightInput) {
+    weightInput.placeholder = mode === 'pct' ? '%' : (mode === 'rpe' ? 'RPE' : 'Load');
+    if (mode === 'rpe') {
+      weightInput.min = 1; weightInput.max = 10; weightInput.step = 0.5;
+    } else {
+      weightInput.min = 0; weightInput.step = 'any'; weightInput.removeAttribute('max');
+    }
+  }
+
+  const calcSpan = document.getElementById('plan-calc-weight');
+  if (calcSpan) {
+    if (mode === 'pct' || mode === 'rpe') {
+      calcSpan.classList.remove('hidden');
+    } else {
+      calcSpan.classList.add('hidden');
+    }
+    updatePlanCalcPreview();
+  }
+}
+
+function updatePlanCalcPreview() {
+  const exercise = document.getElementById('plan-exercise')?.value;
+  const reps = parseInt(document.getElementById('plan-reps')?.value, 10);
+  const weightInput = document.getElementById('plan-weight');
+  const calcSpan = document.getElementById('plan-calc-weight');
+  const addBtn = document.getElementById('plan-add-btn');
+  const pill = document.getElementById('plan-wms-pill');
+  if (!weightInput || !calcSpan || !pill || !addBtn) return;
+
+  const mode = pill.dataset.mode;
+  const oneRM = exercise ? (activeRecords[exercise] || 0) : 0;
+
+  if (!exercise || oneRM <= 0) {
+    calcSpan.textContent = oneRM > 0 ? '\u2192' : 'No 1RM';
+    calcSpan.className = 'font-mono text-xs ' + (oneRM > 0 ? 'text-emerald-400' : 'text-rose-400');
+    addBtn.disabled = true;
+    return;
+  }
+
+  let valid = false;
+  if (mode === 'pct') {
+    const pct = parseFloat(weightInput.value);
+    if (!isNaN(pct) && pct > 0) {
+      const calculated = Math.round(oneRM * pct / 100);
+      calcSpan.textContent = '\u2192 ' + calculated + ' kg';
+      calcSpan.className = 'text-emerald-400 font-mono text-xs';
+      valid = true;
+    } else {
+      calcSpan.textContent = '\u2192';
+      calcSpan.className = 'text-emerald-400 font-mono text-xs';
+    }
+  } else if (mode === 'rpe') {
+    const rpe = parseFloat(weightInput.value);
+    if (!isNaN(rpe) && rpe >= 1 && rpe <= 10 && reps && reps >= 1) {
+      const rir = 10 - rpe;
+      const totalRepsPossible = reps + rir;
+      const targetWeight = Math.round(oneRM / (1 + totalRepsPossible / 30));
+      calcSpan.textContent = '\u2192 ' + targetWeight + ' kg';
+      calcSpan.className = 'text-emerald-400 font-mono text-xs';
+      valid = true;
+    } else {
+      calcSpan.textContent = '\u2192';
+      calcSpan.className = 'text-emerald-400 font-mono text-xs';
+    }
+  } else {
+    const kg = parseFloat(weightInput.value);
+    if (kg > 0) {
+      calcSpan.textContent = '\u2192 ' + kg + ' kg';
+      calcSpan.className = 'text-emerald-400 font-mono text-xs';
+      valid = true;
+    } else {
+      calcSpan.textContent = '\u2192';
+      calcSpan.className = 'text-emerald-400 font-mono text-xs';
+    }
+  }
+  addBtn.disabled = !valid;
+}
+
+function handlePlanAdd() {
+  const exercise = document.getElementById('plan-exercise')?.value;
+  const reps = parseInt(document.getElementById('plan-reps')?.value, 10);
+  const weightInput = document.getElementById('plan-weight');
+  const pill = document.getElementById('plan-wms-pill');
+  if (!exercise || !reps || reps < 1 || !weightInput || !pill) return;
+
+  const weightMode = pill.dataset.mode;
+  const rawWeight = parseFloat(weightInput.value) || 0;
+  let pct = null, rpe = null;
+
+  if (weightMode === 'pct') {
+    pct = rawWeight;
+  } else if (weightMode === 'rpe') {
+    rpe = rawWeight;
+    if (rpe < 1 || rpe > 10) return;
+  } else if (weightMode === 'absolute' && rawWeight <= 0) {
+    return;
+  }
+
+  const movement = { exerciseId: exercise, reps, weight: rawWeight, weightMode, pct, rpe };
+  const type = document.getElementById('workout-type')?.value;
+
+  if (type === 'EMOM') {
+    addPlanMinuteSlot(movement);
+  } else {
+    workoutMovements.push(movement);
+    renderPlanMovements();
+  }
+
+  haptic(HAPTIC.confirm);
+}
+
+function renderPlanMovements() {
+  const list = document.getElementById('plan-movements-list');
+  if (!list) return;
+
+  if (workoutMovements.length === 0) {
+    list.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">Add movements above.</p>';
+    return;
+  }
+
+  let html = '';
+  workoutMovements.forEach(m => {
+    const oneRM = activeRecords[m.exerciseId] || 0;
+    let source, weight;
+    if (m.weightMode === 'pct' && m.pct) {
+      weight = oneRM > 0 ? Math.round(oneRM * m.pct / 100) : m.weight;
+      source = `${m.exerciseId} ${m.reps} reps @ ${m.pct}%`;
+    } else if (m.weightMode === 'rpe' && m.rpe) {
+      const rir = 10 - m.rpe;
+      const pct1RM = 100 / (1 + (m.reps + rir) / 30);
+      weight = oneRM > 0 ? Math.round(oneRM * pct1RM / 100) : m.weight;
+      source = `${m.exerciseId} ${m.reps} reps @ RPE ${m.rpe}`;
+    } else {
+      weight = m.weight;
+      source = `${m.exerciseId} ${m.reps} reps @ ${m.weight} kg`;
+    }
+    html += `
+    <div class="flex justify-between items-center py-1.5 px-1 rounded-lg hover:bg-slate-800/40">
+      <span class="text-slate-200 font-mono text-sm">${escapeHtml(source)}</span>
+      <span class="text-slate-200 font-mono text-sm">${Math.round(weight)} kg</span>
+    </div>`;
+  });
+
+  list.innerHTML = html;
+}
+
+function populatePlanMovements(movements) {
+  workoutMovements = (movements || []).map(m => ({
+    exerciseId: m.exerciseId || m.movement,
+    reps: parseInt(m.reps, 10) || 0,
+    weight: parseFloat(m.kg || m.weight) || 0,
+    weightMode: m.weightMode || 'absolute',
+    pct: m.pct || null,
+    rpe: m.rpe || null
+  }));
+  renderPlanMovements();
+}
+
+async function savePlan() {
+  if (!currentUser) return alert('Please sign in first.');
+  const type = document.getElementById('workout-type')?.value;
+  if (!type) return showFeedback('Select a workout type first.', 'rose', 'planFeedback');
+
+  let structure;
+  try {
+    structure = capturePlanStructure(type);
+  } catch (err) {
+    return showFeedback(err.message, 'rose', 'planFeedback');
+  }
+
+  if (type === 'AMRAP') {
+    const durationMin = parseInt(document.getElementById('amrap-duration')?.value, 10);
+    if (!durationMin || durationMin < 1) return showFeedback('Enter a valid duration.', 'rose', 'planFeedback');
+  } else if (type === 'EMOM') {
+    const intervalMin = parseInt(document.getElementById('emom-interval-min')?.value, 10) || 0;
+    const intervalSec = parseInt(document.getElementById('emom-interval-sec')?.value, 10) || 0;
+    const intervalSeconds = intervalMin * 60 + intervalSec;
+    const rounds = parseInt(document.getElementById('emom-rounds')?.value, 10) || 0;
+    if (intervalSeconds < 1) return showFeedback('Enter a valid interval.', 'rose', 'planFeedback');
+    if (rounds < 1) return showFeedback('Enter a valid number of rounds.', 'rose', 'planFeedback');
+  } else if (type === 'FOR_TIME') {
+    const rounds = parseInt(document.getElementById('fortime-rounds')?.value, 10);
+    if (!rounds || rounds < 1) return showFeedback('Enter a valid round count.', 'rose', 'planFeedback');
+  } else if (type === 'INTERVAL') {
+    const rounds = parseInt(document.getElementById('interval-rounds')?.value, 10);
+    if (!rounds || rounds < 1) return showFeedback('Enter a valid round count.', 'rose', 'planFeedback');
+  }
+
+  let autoName;
+  if (type === 'AMRAP') {
+    const d = parseInt(document.getElementById('amrap-duration')?.value, 10) || 0;
+    autoName = `${d} Min AMRAP`;
+  } else if (type === 'EMOM') {
+    const intervalMin = parseInt(document.getElementById('emom-interval-min')?.value, 10) || 0;
+    const intervalSec = parseInt(document.getElementById('emom-interval-sec')?.value, 10) || 0;
+    const intervalSeconds = intervalMin * 60 + intervalSec;
+    const rounds = emomMode === 'by_round' ? (document.querySelectorAll('#emom-minute-slots .minute-row').length) : (parseInt(document.getElementById('emom-rounds')?.value, 10) || 0);
+    const durationSeconds = rounds * intervalSeconds;
+    let intervalLabel;
+    if (intervalSeconds === 60) intervalLabel = 'EMOM';
+    else if (intervalSeconds === 120) intervalLabel = 'E2MOM';
+    else if (intervalSeconds === 180) intervalLabel = 'E3MOM';
+    else if (intervalMin > 0 && intervalSec === 0) intervalLabel = `E${intervalMin}MOM`;
+    else if (intervalMin > 0) intervalLabel = `Every ${intervalMin}:${String(intervalSec).padStart(2, '0')}`;
+    else intervalLabel = `Every :${String(intervalSec).padStart(2, '0')}`;
+    const prefix = durationSeconds % 60 === 0 ? `${durationSeconds / 60} Min ` : '';
+    autoName = `${prefix}${intervalLabel} \u00D7 ${rounds} rounds`;
+  } else if (type === 'FOR_TIME') {
+    const timeCap = parseInt(document.getElementById('fortime-cap')?.value, 10) || 0;
+    autoName = timeCap ? `${timeCap} Min For Time` : 'For Time';
+  } else {
+    autoName = 'Interval Workout';
+  }
+
+  const name = await showPlanNameModal(autoName);
+  if (!name) return;
+
+  const planDoc = {
+    userId: currentUser.uid,
+    name: name.trim() || autoName,
+    type,
+    structure,
+    status: 'active',
+    createdAt: Date.now()
+  };
+
+  addDoc(collection(db, "workout_plans"), planDoc).then(() => {
+    showFeedback('Plan saved!', 'emerald', 'planFeedback');
+    haptic(HAPTIC.confirm);
+  }).catch(err => {
+    console.error('Save plan failed', err.code, err.message);
+    showFeedback('Failed to save plan: ' + err.message, 'rose', 'planFeedback');
+  });
 }
 
 function removeMinuteSlot(btn) {
@@ -2145,38 +2226,17 @@ function getEmomMovementData() {
   const minutes = [];
   let error = null;
   document.querySelectorAll('#emom-minute-slots .minute-row').forEach(row => {
-    const exercise = row.querySelector('.movement-exercise')?.value;
-    const reps = parseInt(row.querySelector('.movement-reps')?.value, 10);
-    const weightInput = row.querySelector('.movement-weight');
-    const pill = row.querySelector('.wms-pill');
-    const weightMode = pill?.dataset?.mode || 'absolute';
+    const exercise = row.dataset.exerciseId;
+    const reps = parseInt(row.dataset.reps, 10);
+    const weight = parseFloat(row.dataset.weight) || 0;
+    const weightMode = row.dataset.weightMode || 'absolute';
+    const pct = row.dataset.pct ? parseFloat(row.dataset.pct) : null;
+    const rpe = row.dataset.rpe ? parseFloat(row.dataset.rpe) : null;
 
-    let rawWeight = parseFloat(weightInput?.value) || 0;
-    let pct = null;
-    let rpe = null;
-
-    if (!exercise) { error = 'Select an exercise for all intervals.'; return; }
+    if (!exercise || exercise === 'undefined') { error = 'Select an exercise for all intervals.'; return; }
     if (!reps || reps < 1) { error = 'Enter reps for all intervals.'; return; }
 
-    if (weightMode === 'pct') {
-      pct = rawWeight;
-      const oneRM = activeRecords[exercise] || 0;
-      rawWeight = oneRM > 0 ? Math.round(oneRM * rawWeight / 100) : rawWeight;
-    } else if (weightMode === 'rpe') {
-      rpe = rawWeight;
-      const oneRM = activeRecords[exercise] || 0;
-      if (oneRM > 0 && rpe >= 1 && rpe <= 10) {
-        const rir = 10 - rpe;
-        const totalRepsPossible = reps + rir;
-        rawWeight = Math.round(oneRM / (1 + totalRepsPossible / 30));
-      }
-    }
-
-    const exInfo = getExerciseInfo(exercise);
-    const loadFactor = LOAD_FACTORS[exercise];
-    if (!loadFactor && exInfo.category !== 'cardio' && (!rawWeight || rawWeight <= 0)) { error = `Enter a load for ${exercise}.`; return; }
-
-    const movement = { exerciseId: exercise, reps, weight: rawWeight, weightMode };
+    const movement = { exerciseId: exercise, reps, weight, weightMode };
     if (pct !== null) movement.pct = pct;
     if (rpe !== null) movement.rpe = rpe;
     minutes.push({ movements: [movement] });
@@ -2293,9 +2353,9 @@ async function submitEmomWorkout(e) {
 }
 
 async function generateEmomContributions(workoutId, minutes, minutesCompleted, mode) {
-  const now = Date.now();
   const numMinutes = minutes.length;
   const isByRound = mode === 'by_round';
+  console.log(`[contrib] generateEmomContributions: workoutId=${workoutId}, minutes=${numMinutes}, completed=${minutesCompleted}, mode=${mode}`);
 
   if (numMinutes === 0 || minutesCompleted <= 0) return;
 
@@ -2318,7 +2378,7 @@ async function generateEmomContributions(workoutId, minutes, minutesCompleted, m
     const totalRepsPerMovement = movement.reps * performedTimes;
 
     await writeStructuredLogEntry({
-      workoutId, movement, now,
+      workoutId, movement,
       sets: performedTimes,
       totalReps: totalRepsPerMovement,
       extraFields: { minuteIndex: i }
@@ -2434,7 +2494,7 @@ async function submitForTimeWorkout(e) {
 }
 
 async function generateForTimeContributions(workoutId, movements, rounds, remainingReps = 0) {
-  const now = Date.now();
+  console.log(`[contrib] generateForTimeContributions: workoutId=${workoutId}, movements=${movements.length}, rounds=${rounds}, remainingReps=${remainingReps}`);
   const repsPerRound = movements.reduce((sum, m) => sum + (m.reps || 0), 0);
   const totalPlanned = repsPerRound * rounds;
   const totalCompleted = Math.max(0, totalPlanned - remainingReps);
@@ -2455,7 +2515,7 @@ async function generateForTimeContributions(workoutId, movements, rounds, remain
     if (displayPartialReps > 0) extraFields.partialReps = displayPartialReps;
 
     await writeStructuredLogEntry({
-      workoutId, movement, now,
+      workoutId, movement,
       sets: effectiveSets,
       totalReps: performedReps,
       extraFields
@@ -2544,7 +2604,7 @@ async function submitIntervalWorkout(e) {
 }
 
 async function generateIntervalContributions(workoutId, movements, roundsCompleted, partialReps = 0) {
-  const now = Date.now();
+  console.log(`[contrib] generateIntervalContributions: workoutId=${workoutId}, movements=${movements.length}, rounds=${roundsCompleted}, partialReps=${partialReps}`);
   let remainingPartial = partialReps;
 
   for (let i = 0; i < movements.length; i++) {
@@ -2562,7 +2622,7 @@ async function generateIntervalContributions(workoutId, movements, roundsComplet
     if (displayPartialReps > 0) extraFields.partialReps = displayPartialReps;
 
     await writeStructuredLogEntry({
-      workoutId, movement, now,
+      workoutId, movement,
       sets: effectiveSets,
       totalReps: totalRepsPerMovement,
       extraFields
@@ -2966,13 +3026,14 @@ function selectCalendarDay(dateStr) {
     workoutsContainer.innerHTML = items.map(item => {
         if (item.type) {
             const badgeClass = (item.type || '').toLowerCase();
+            const descLine = buildWorkoutSummaryLine(item.type, item.structure || {});
             return `
 <div class="bg-slate-900 border border-slate-700 rounded-xl p-2.5">
     <div class="flex justify-between items-center">
         <span class="workout-type-badge ${badgeClass}">${escapeHtml(item.type)}</span>
         <span class="text-emerald-400 font-bold font-mono text-xs">${escapeHtml(item.scoreDisplay || '—')}</span>
     </div>
-    <p class="text-xs text-slate-300 font-bold mt-1">${escapeHtml(item.name || '')}</p>
+    ${descLine ? `<p class="text-[10px] text-slate-400 font-mono mt-1">${escapeHtml(descLine)}</p>` : ''}
 </div>`;
         } else {
             const load = getEffectiveLoad(item);
@@ -3077,6 +3138,7 @@ function formatCardDate(ts) {
 function renderStructuredWorkoutCard(sw) {
   const type = sw.type || 'AMRAP';
   const badgeClass = type.toLowerCase();
+  const descLine = buildWorkoutSummaryLine(type, sw.structure || {});
   let durationLabel = '';
   let scoreLabel = '';
   let movementsHtml = '';
@@ -3157,6 +3219,7 @@ function renderStructuredWorkoutCard(sw) {
         ` : ''}
 
         <span class="workout-type-badge self-start ${badgeClass}">${escapeHtml(type)}</span>
+        ${descLine ? `<span class="text-xs text-slate-400 font-mono mt-0.5">${escapeHtml(descLine)}</span>` : ''}
       </div>
 
       <div class="flex flex-col justify-between items-end shrink-0">
@@ -3390,6 +3453,7 @@ function changePlansPage(direction) {
 function renderPlanCard(plan) {
   const type = plan.type || 'AMRAP';
   const badgeClass = type.toLowerCase();
+  const descLine = buildWorkoutSummaryLine(type, plan.structure || {});
 
   function formatLoad(m) {
     if (m.weightMode === 'rpe' && m.rpe) {
@@ -3438,6 +3502,7 @@ function renderPlanCard(plan) {
         ` : ''}
 
         <span class="workout-type-badge self-start ${badgeClass}">${escapeHtml(type)}</span>
+        ${descLine ? `<span class="text-xs text-slate-400 font-mono mt-0.5">${escapeHtml(descLine)}</span>` : ''}
       </div>
 
       <div class="flex flex-col justify-between items-end shrink-0">
@@ -3509,7 +3574,7 @@ function loadPlan(planId) {
   const planCard = document.getElementById('plan-workout-card');
   if (planCard) planCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  showFeedback(`Plan "${plan.name}" loaded!`, 'emerald', `${plan.type.toLowerCase()}Feedback`);
+  showFeedback(`Plan "${plan.name}" loaded!`, 'emerald', 'planFeedback');
   haptic(HAPTIC.tap);
 }
 
@@ -3534,7 +3599,7 @@ function redoWorkout(workoutId) {
   const planCard = document.getElementById('plan-workout-card');
   if (planCard) planCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  showFeedback(`Workout "${sw.name}" loaded for redo!`, 'emerald', `${sw.type.toLowerCase()}Feedback`);
+  showFeedback(`Workout "${sw.name}" loaded for redo!`, 'emerald', 'planFeedback');
   haptic(HAPTIC.tap);
 }
 
@@ -3602,14 +3667,46 @@ function buildWorkoutDescription(workout) {
   return lines.join('<br>');
 }
 
+function buildWorkoutSummaryLine(type, structure) {
+  switch (type) {
+    case 'AMRAP': {
+      const mins = Math.round((structure.durationSeconds || 0) / 60);
+      return `${mins}:00`;
+    }
+    case 'EMOM': {
+      const rounds = structure.rounds || 0;
+      const intervalSec = structure.intervalSeconds || 0;
+      if (intervalSec === 60) return `\u00D7 ${rounds} rounds`;
+      const mins = Math.floor(intervalSec / 60);
+      const secs = intervalSec % 60;
+      return `Every ${mins}:${String(secs).padStart(2, '0')} \u00B7 ${rounds} rounds`;
+    }
+    case 'FOR_TIME': {
+      const cap = structure.durationMinutes;
+      const rounds = structure.rounds;
+      const parts = [];
+      if (cap) parts.push(`${cap} min cap`);
+      if (rounds) parts.push(`${rounds} rounds`);
+      return parts.join(' \u00B7 ');
+    }
+    case 'INTERVAL': {
+      const ws = structure.workSeconds || 0;
+      const rs = structure.restSeconds || 0;
+      const wrk = `${Math.floor(ws / 60)}:${(ws % 60).toString().padStart(2, '0')}`;
+      const rst = `${Math.floor(rs / 60)}:${(rs % 60).toString().padStart(2, '0')}`;
+      const rds = structure.rounds || 0;
+      return `Work ${wrk} \u00B7 Rest ${rst} \u00B7 ${rds} rounds`;
+    }
+    default: return '';
+  }
+}
+
 function doWorkout() {
   const type = document.getElementById('workout-type').value;
   if (!type) { showFeedback('Select a workout type first', 'rose', 'planFeedback'); return; }
 
   const resultId = WORKOUT_TYPE_TO_RESULT_ID[type];
   if (!resultId) { showFeedback('Unknown workout type.', 'rose', 'planFeedback'); return; }
-
-  switchTab('training');
 
   let structure;
   try {
@@ -3619,6 +3716,16 @@ function doWorkout() {
     showFeedback(err.message, 'rose', 'log-workout-feedback');
     return;
   }
+
+  const hasMovements = type === 'EMOM'
+    ? (structure.minutes && structure.minutes.length > 0)
+    : (structure.movements && structure.movements.length > 0);
+  if (!hasMovements) {
+    showFeedback('Add at least one movement before starting the workout.', 'rose', 'planFeedback');
+    return;
+  }
+
+  switchTab('training');
 
   pendingPlannedWorkout = {
     id: 'pending_' + Date.now(),
@@ -3661,7 +3768,7 @@ async function submitPendingWorkout() {
   if (!pendingPlannedWorkout) return showFeedback('No planned workout to log.', 'rose', 'log-workout-feedback');
 
   const { type, name, structure } = pendingPlannedWorkout;
-  const now = Date.now();
+  const now = Timestamp.now();
   let workoutDoc;
 
   try {
@@ -3683,6 +3790,7 @@ async function submitPendingWorkout() {
           timestamp: now
         };
         const docRef = await addDoc(collection(db, "structured_workouts"), workoutDoc);
+        console.log(`[submitPending] AMRAP: movements=${structure.movements?.length}, rounds=${roundsCompleted}, addReps=${additionalReps}`);
         await generateAmrapContributions(docRef.id, structure.movements, roundsCompleted, additionalReps);
         break;
       }
@@ -3702,6 +3810,7 @@ async function submitPendingWorkout() {
           timestamp: now
         };
         const docRef = await addDoc(collection(db, "structured_workouts"), workoutDoc);
+        console.log(`[submitPending] EMOM: minutes=${structure.minutes?.length}, completed=${roundsCompleted}, mode=${structure.mode}`);
         await generateEmomContributions(docRef.id, structure.minutes, roundsCompleted, structure.mode);
         break;
       }
@@ -3725,6 +3834,7 @@ async function submitPendingWorkout() {
           timestamp: now
         };
         const docRef = await addDoc(collection(db, "structured_workouts"), workoutDoc);
+        console.log(`[submitPending] FOR_TIME: movements=${structure.movements?.length}, rounds=${structure.rounds}, remainingReps=${remainingReps}`);
         await generateForTimeContributions(docRef.id, structure.movements, structure.rounds, remainingReps);
         break;
       }
@@ -3745,6 +3855,7 @@ async function submitPendingWorkout() {
           timestamp: now
         };
         const docRef = await addDoc(collection(db, "structured_workouts"), workoutDoc);
+        console.log(`[submitPending] INTERVAL: movements=${structure.movements?.length}, rounds=${roundsCompleted}, partialReps=${partialReps}`);
         await generateIntervalContributions(docRef.id, structure.movements, roundsCompleted, partialReps);
         break;
       }
@@ -3776,19 +3887,24 @@ async function submitPendingWorkout() {
 }
 
 function capturePlanStructure(type) {
-  const getMovements = (selector) => {
-    const rows = document.querySelectorAll(selector || '#movement-list .movement-row');
-    return Array.from(rows).map(r => ({
-      movement: r.querySelector('.movement-exercise')?.value || '',
-      reps: r.querySelector('.movement-reps')?.value || '',
-      kg: r.querySelector('.movement-weight')?.value || ''
-    })).filter(m => m.movement);
+  const getMovementsFromWorkout = () => {
+    return workoutMovements.map(m => ({
+      movement: m.exerciseId,
+      reps: m.reps,
+      kg: m.weight,
+      weightMode: m.weightMode,
+      pct: m.pct,
+      rpe: m.rpe,
+      exerciseId: m.exerciseId,
+      weight: m.weight
+    }));
   };
 
   switch (type) {
     case 'AMRAP': {
       const durationMin = parseInt(document.getElementById('amrap-duration')?.value, 10) || 0;
-      return { durationSeconds: durationMin * 60, movements: getMovements() };
+      const movements = getMovementsFromWorkout();
+      return { durationSeconds: durationMin * 60, movements };
     }
     case 'EMOM': {
       const intervalMin = parseInt(document.getElementById('emom-interval-min')?.value, 10) || 0;
@@ -3803,14 +3919,14 @@ function capturePlanStructure(type) {
     case 'FOR_TIME': {
       const timeCap = parseInt(document.getElementById('fortime-cap')?.value, 10) || 0;
       const rounds = parseInt(document.getElementById('fortime-rounds')?.value, 10) || 0;
-      const movements = getMovements('#fortime-movement-list .movement-row');
+      const movements = getMovementsFromWorkout();
       return { durationMinutes: timeCap || null, movements, rounds };
     }
     case 'INTERVAL': {
       const rounds = parseInt(document.getElementById('interval-rounds')?.value, 10) || 0;
       const workMin = parseInt(document.getElementById('interval-work-min')?.value, 10) || 0;
       const restMin = parseInt(document.getElementById('interval-rest-min')?.value, 10) || 0;
-      const movements = getMovements('#interval-movement-list .movement-row');
+      const movements = getMovementsFromWorkout();
       return { rounds, workSeconds: workMin * 60, restSeconds: restMin * 60, movements };
     }
     default: return {};
@@ -4103,7 +4219,9 @@ function renderSharedPlansUI() {
 function renderSharedPlanCard(share) {
   const type = share.content?.type || 'AMRAP';
   const badgeClass = type.toLowerCase();
-  const movements = share.content?.structure?.movements || [];
+  const structure = share.content?.structure || {};
+  const descLine = buildWorkoutSummaryLine(type, structure);
+  const movements = structure.movements || [];
   const movementsHtml = movements.map(m =>
     `<span class="movement-chip">${escapeHtml(m.exerciseId)} \u00D7 ${m.reps}${m.weight ? ' @ ' + m.weight + 'kg' : ''}</span>`
   ).join('');
@@ -4142,6 +4260,7 @@ function renderSharedPlanCard(share) {
         ` : ''}
 
         <span class="workout-type-badge self-start ${badgeClass}">${escapeHtml(type)}</span>
+        ${descLine ? `<span class="text-xs text-slate-400 font-mono mt-0.5">${escapeHtml(descLine)}</span>` : ''}
       </div>
 
       <div class="flex flex-col justify-between items-end shrink-0">
@@ -4293,7 +4412,7 @@ function loadSharedPlan(shareId) {
   const planCard = document.getElementById('plan-workout-card');
   if (planCard) planCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  showFeedback(`Plan "${plan.name}" loaded!`, 'emerald', `${plan.type.toLowerCase()}Feedback`);
+  showFeedback(`Plan "${plan.name}" loaded!`, 'emerald', 'planFeedback');
   haptic(HAPTIC.tap);
 }
 
@@ -4301,41 +4420,7 @@ function populateAmrapForm(structure) {
   if (structure.durationSeconds) {
     document.getElementById('amrap-duration').value = Math.round(structure.durationSeconds / 60);
   }
-  const list = document.getElementById('movement-list');
-  if (list) list.innerHTML = '';
-  (structure.movements || []).forEach(m => addMovementRow('movement-list', m.exerciseId));
-  setTimeout(() => {
-    document.querySelectorAll('#movement-list .movement-row').forEach((row, i) => {
-      const mov = structure.movements[i];
-      if (!mov) return;
-      const repsInput = row.querySelector('.movement-reps');
-      const weightInput = row.querySelector('.movement-weight');
-      const pill = row.querySelector('.wms-pill');
-      const calcSpan = row.querySelector('.movement-calc');
-      if (repsInput) repsInput.value = mov.reps;
-
-      const setMode = (mode, value, placeholder) => {
-        if (pill) { pill.dataset.mode = mode; updatePillActive(pill, mode); }
-        if (weightInput) { weightInput.value = value; weightInput.placeholder = placeholder; }
-        if (calcSpan) {
-          if (mode === 'pct' || mode === 'rpe') {
-            calcSpan.classList.remove('hidden');
-            updateRowCalcDisplay(row);
-          } else {
-            calcSpan.classList.add('hidden');
-          }
-        }
-      };
-
-      if (mov.weightMode === 'rpe' && mov.rpe) {
-        setMode('rpe', mov.rpe, 'RPE');
-      } else if (mov.weightMode === 'pct' && mov.pct) {
-        setMode('pct', mov.pct, '%');
-      } else {
-        setMode('absolute', mov.weight || '', 'Load');
-      }
-    });
-  }, 0);
+  populatePlanMovements(structure.movements || []);
 }
 
 function populateEmomForm(structure) {
@@ -4351,43 +4436,25 @@ function populateEmomForm(structure) {
     document.getElementById('emom-rounds').value = structure.rounds;
   }
   const slots = document.getElementById('emom-minute-slots');
-  if (slots) slots.innerHTML = '';
+  if (slots) {
+    slots.innerHTML = '';
+    delete slots.dataset.planBootstrapped;
+  }
   (structure.minutes || []).forEach(m => {
     const mov = m.movements?.[0];
-    addMinuteSlot(mov?.exerciseId);
+    if (mov) {
+      addPlanMinuteSlot({
+        exerciseId: mov.exerciseId || mov.movement,
+        reps: parseInt(mov.reps, 10) || 0,
+        weight: parseFloat(mov.weight || mov.kg) || 0,
+        weightMode: mov.weightMode || 'absolute',
+        pct: mov.pct || null,
+        rpe: mov.rpe || null
+      });
+    } else {
+      addPlanMinuteSlot();
+    }
   });
-  setTimeout(() => {
-    document.querySelectorAll('#emom-minute-slots .minute-row').forEach((row, i) => {
-      const mov = structure.minutes?.[i]?.movements?.[0];
-      if (!mov) return;
-      const repsInput = row.querySelector('.movement-reps');
-      const weightInput = row.querySelector('.movement-weight');
-      const pill = row.querySelector('.wms-pill');
-      const calcSpan = row.querySelector('.movement-calc');
-      if (repsInput) repsInput.value = mov.reps;
-
-      const setMode = (mode, value, placeholder) => {
-        if (pill) { pill.dataset.mode = mode; updatePillActive(pill, mode); }
-        if (weightInput) { weightInput.value = value; weightInput.placeholder = placeholder; }
-        if (calcSpan) {
-          if (mode === 'pct' || mode === 'rpe') {
-            calcSpan.classList.remove('hidden');
-            updateRowCalcDisplay(row);
-          } else {
-            calcSpan.classList.add('hidden');
-          }
-        }
-      };
-
-      if (mov.weightMode === 'rpe' && mov.rpe) {
-        setMode('rpe', mov.rpe, 'RPE');
-      } else if (mov.weightMode === 'pct' && mov.pct) {
-        setMode('pct', mov.pct, '%');
-      } else {
-        setMode('absolute', mov.weight || '', 'Load');
-      }
-    });
-  }, 0);
 }
 
 function populateForTimeForm(structure) {
@@ -4400,41 +4467,7 @@ function populateForTimeForm(structure) {
   // Reset DNF state
   const dnfCheck = document.getElementById('fortime-dnf');
   if (dnfCheck) { dnfCheck.checked = false; toggleForTimeDnf(); }
-  const list = document.getElementById('fortime-movement-list');
-  if (list) list.innerHTML = '';
-  (structure.movements || []).forEach(m => addMovementRow('fortime-movement-list', m.exerciseId));
-  setTimeout(() => {
-    document.querySelectorAll('#fortime-movement-list .movement-row').forEach((row, i) => {
-      const mov = structure.movements[i];
-      if (!mov) return;
-      const repsInput = row.querySelector('.movement-reps');
-      const weightInput = row.querySelector('.movement-weight');
-      const pill = row.querySelector('.wms-pill');
-      const calcSpan = row.querySelector('.movement-calc');
-      if (repsInput) repsInput.value = mov.reps;
-
-      const setMode = (mode, value, placeholder) => {
-        if (pill) { pill.dataset.mode = mode; updatePillActive(pill, mode); }
-        if (weightInput) { weightInput.value = value; weightInput.placeholder = placeholder; }
-        if (calcSpan) {
-          if (mode === 'pct' || mode === 'rpe') {
-            calcSpan.classList.remove('hidden');
-            updateRowCalcDisplay(row);
-          } else {
-            calcSpan.classList.add('hidden');
-          }
-        }
-      };
-
-      if (mov.weightMode === 'rpe' && mov.rpe) {
-        setMode('rpe', mov.rpe, 'RPE');
-      } else if (mov.weightMode === 'pct' && mov.pct) {
-        setMode('pct', mov.pct, '%');
-      } else {
-        setMode('absolute', mov.weight || '', 'Load');
-      }
-    });
-  }, 0);
+  populatePlanMovements(structure.movements || []);
 }
 
 function populateIntervalForm(structure) {
@@ -4447,41 +4480,7 @@ function populateIntervalForm(structure) {
   if (structure.restSeconds) {
     document.getElementById('interval-rest-min').value = Math.round(structure.restSeconds / 60);
   }
-  const list = document.getElementById('interval-movement-list');
-  if (list) list.innerHTML = '';
-  (structure.movements || []).forEach(m => addMovementRow('interval-movement-list', m.exerciseId));
-  setTimeout(() => {
-    document.querySelectorAll('#interval-movement-list .movement-row').forEach((row, i) => {
-      const mov = structure.movements[i];
-      if (!mov) return;
-      const repsInput = row.querySelector('.movement-reps');
-      const weightInput = row.querySelector('.movement-weight');
-      const pill = row.querySelector('.wms-pill');
-      const calcSpan = row.querySelector('.movement-calc');
-      if (repsInput) repsInput.value = mov.reps;
-
-      const setMode = (mode, value, placeholder) => {
-        if (pill) { pill.dataset.mode = mode; updatePillActive(pill, mode); }
-        if (weightInput) { weightInput.value = value; weightInput.placeholder = placeholder; }
-        if (calcSpan) {
-          if (mode === 'pct' || mode === 'rpe') {
-            calcSpan.classList.remove('hidden');
-            updateRowCalcDisplay(row);
-          } else {
-            calcSpan.classList.add('hidden');
-          }
-        }
-      };
-
-      if (mov.weightMode === 'rpe' && mov.rpe) {
-        setMode('rpe', mov.rpe, 'RPE');
-      } else if (mov.weightMode === 'pct' && mov.pct) {
-        setMode('pct', mov.pct, '%');
-      } else {
-        setMode('absolute', mov.weight || '', 'Load');
-      }
-    });
-  }, 0);
+  populatePlanMovements(structure.movements || []);
 }
 
 // Plan name modal — replaces prompt() with themed overlay
@@ -4536,161 +4535,6 @@ function showPlanNameModal(defaultName) {
     saveBtn.addEventListener('click', onSave);
     cancelBtn.addEventListener('click', onCancel);
     input.addEventListener('keydown', onKey);
-  });
-}
-
-async function saveAmrapPlan() {
-  if (!currentUser) return alert('Please sign in first.');
-  const durationMin = parseInt(document.getElementById('amrap-duration').value, 10);
-  let movements;
-  try {
-    movements = getMovementData('#movement-list .movement-row');
-  } catch (err) {
-    return showFeedback(err.message, 'red', 'amrapFeedback');
-  }
-  if (!durationMin || durationMin < 1) return showFeedback('Enter a valid duration.', 'red', 'amrapFeedback');
-  if (movements.length === 0) return showFeedback('Add at least one movement.', 'red', 'amrapFeedback');
-
-  const autoName = `${durationMin} Min AMRAP`;
-  const name = await showPlanNameModal(autoName);
-  if (!name) return;
-
-  const planDoc = {
-    userId: currentUser.uid,
-    name: name.trim() || autoName,
-    type: 'AMRAP',
-    structure: { durationSeconds: durationMin * 60, movements },
-    status: 'active',
-    createdAt: Date.now()
-  };
-
-  addDoc(collection(db, "workout_plans"), planDoc).then(() => {
-    showFeedback('AMRAP plan saved!', 'emerald', 'amrapFeedback');
-    haptic(HAPTIC.confirm);
-  }).catch(err => {
-    console.error('Save plan failed', err.code, err.message);
-    showFeedback('Failed to save plan: ' + err.message, 'red', 'amrapFeedback');
-  });
-}
-
-async function saveEmomPlan() {
-  if (!currentUser) return alert('Please sign in first.');
-  const intervalMin = parseInt(document.getElementById('emom-interval-min').value, 10) || 0;
-  const intervalSec = parseInt(document.getElementById('emom-interval-sec').value, 10) || 0;
-  const intervalSeconds = intervalMin * 60 + intervalSec;
-  let minutes;
-  try {
-    minutes = getEmomMovementData();
-  } catch (err) {
-    return showFeedback(err.message, 'red', 'emomFeedback');
-  }
-  const rounds = emomMode === 'by_round' ? minutes.length : parseInt(document.getElementById('emom-rounds').value, 10);
-  if (!rounds || rounds < 1) return showFeedback('Enter a valid number of rounds.', 'red', 'emomFeedback');
-  if (intervalSeconds < 1) return showFeedback('Enter a valid interval.', 'red', 'emomFeedback');
-  if (minutes.length === 0) return showFeedback('Add at least one interval slot.', 'red', 'emomFeedback');
-
-  const durationSeconds = rounds * intervalSeconds;
-  const durationMinutes = Math.floor(durationSeconds / 60);
-  let intervalLabel;
-  if (intervalSeconds === 60) { intervalLabel = 'EMOM'; }
-  else if (intervalSeconds === 120) { intervalLabel = 'E2MOM'; }
-  else if (intervalSeconds === 180) { intervalLabel = 'E3MOM'; }
-  else if (intervalMin > 0 && intervalSec === 0) { intervalLabel = `E${intervalMin}MOM`; }
-  else if (intervalMin > 0) { intervalLabel = `Every ${intervalMin}:${String(intervalSec).padStart(2, '0')}`; }
-  else { intervalLabel = `Every :${String(intervalSec).padStart(2, '0')}`; }
-  const prefix = durationSeconds % 60 === 0 ? `${durationSeconds / 60} Min ` : '';
-  const autoName = `${prefix}${intervalLabel} \u00D7 ${rounds} rounds`;
-  const name = await showPlanNameModal(autoName);
-  if (!name) return;
-
-  const planDoc = {
-    userId: currentUser.uid,
-    name: name.trim() || autoName,
-    type: 'EMOM',
-    structure: { mode: emomMode, rounds, durationMinutes, intervalSeconds, minutes },
-    status: 'active',
-    createdAt: Date.now()
-  };
-
-  addDoc(collection(db, "workout_plans"), planDoc).then(() => {
-    showFeedback('EMOM plan saved!', 'emerald', 'emomFeedback');
-    haptic(HAPTIC.confirm);
-  }).catch(err => {
-    console.error('Save plan failed', err.code, err.message);
-    showFeedback('Failed to save plan: ' + err.message, 'red', 'emomFeedback');
-  });
-}
-
-async function saveForTimePlan() {
-  if (!currentUser) return alert('Please sign in first.');
-  const timeCap = parseInt(document.getElementById('fortime-cap').value, 10) || 0;
-  const rounds = parseInt(document.getElementById('fortime-rounds').value, 10);
-  let movements;
-  try {
-    movements = getMovementData('#fortime-movement-list .movement-row');
-  } catch (err) {
-    return showFeedback(err.message, 'red', 'fortimeFeedback');
-  }
-  if (!rounds || rounds < 1) return showFeedback('Enter a valid round count.', 'red', 'fortimeFeedback');
-  if (movements.length === 0) return showFeedback('Add at least one movement.', 'red', 'fortimeFeedback');
-
-  const autoName = timeCap ? `${timeCap} Min For Time` : 'For Time';
-  const name = await showPlanNameModal(autoName);
-  if (!name) return;
-
-  const planDoc = {
-    userId: currentUser.uid,
-    name: name.trim() || autoName,
-    type: 'FOR_TIME',
-    structure: { durationMinutes: timeCap || null, movements, rounds },
-    status: 'active',
-    createdAt: Date.now()
-  };
-
-  addDoc(collection(db, "workout_plans"), planDoc).then(() => {
-    showFeedback('For Time plan saved!', 'emerald', 'fortimeFeedback');
-    haptic(HAPTIC.confirm);
-  }).catch(err => {
-    console.error('Save plan failed', err.code, err.message);
-    showFeedback('Failed to save plan: ' + err.message, 'red', 'fortimeFeedback');
-  });
-}
-
-async function saveIntervalPlan() {
-  if (!currentUser) return alert('Please sign in first.');
-  const rounds = parseInt(document.getElementById('interval-rounds').value, 10);
-  const workMin = parseInt(document.getElementById('interval-work-min').value, 10) || 0;
-  const restMin = parseInt(document.getElementById('interval-rest-min').value, 10) || 0;
-  let movements;
-  try {
-    movements = getMovementData('#interval-movement-list .movement-row');
-  } catch (err) {
-    return showFeedback(err.message, 'red', 'intervalFeedback');
-  }
-  if (!rounds || rounds < 1) return showFeedback('Enter a valid round count.', 'red', 'intervalFeedback');
-  if (movements.length === 0) return showFeedback('Add at least one movement.', 'red', 'intervalFeedback');
-
-  const workSeconds = workMin * 60;
-  const restSeconds = restMin * 60;
-  const autoName = `${workMin}:${restMin} \u00D7 ${rounds} INTERVAL`;
-  const name = await showPlanNameModal(autoName);
-  if (!name) return;
-
-  const planDoc = {
-    userId: currentUser.uid,
-    name: name.trim() || autoName,
-    type: 'INTERVAL',
-    structure: { rounds, workSeconds, restSeconds, movements },
-    status: 'active',
-    createdAt: Date.now()
-  };
-
-  addDoc(collection(db, "workout_plans"), planDoc).then(() => {
-    showFeedback('Interval plan saved!', 'emerald', 'intervalFeedback');
-    haptic(HAPTIC.confirm);
-  }).catch(err => {
-    console.error('Save plan failed', err.code, err.message);
-    showFeedback('Failed to save plan: ' + err.message, 'red', 'intervalFeedback');
   });
 }
 
@@ -5071,7 +4915,7 @@ workoutForm.addEventListener('submit', async (e) => {
         externalLoad,
         estimatedLoad,
         totalVolume,
-        timestamp: Date.now()
+        timestamp: Timestamp.now()
     };
 
     try {
@@ -5122,7 +4966,7 @@ if (fortimeCapReps) fortimeCapReps.addEventListener('input', updateForTimeScoreP
 
 // Initial movement row for FOR_TIME
 if (document.getElementById('fortime-movement-list')) {
-    addMovementRow('fortime-movement-list');
+    // Removed - uses unified Add Movement form
   }
 
   // INTERVAL Score Preview
@@ -5133,7 +4977,7 @@ if (intervalPartial) intervalPartial.addEventListener('input', updateIntervalSco
 
 // Initial movement row for INTERVAL
 if (document.getElementById('interval-movement-list')) {
-    addMovementRow('interval-movement-list');
+    // Removed - uses unified Add Movement form
   }
 
   // EMOM mode toggle
@@ -5154,33 +4998,18 @@ if (emomMinuteSlots) {
 
 // Initial minute row for EMOM
 if (document.getElementById('emom-minute-slots')) {
-  addMinuteSlot();
+  // Removed - slots created via Add Movement form
 }
 
-// Real-time calc recalculation on weight input change/blur in pct/rpe mode
+// Real-time calc recalculation for the unified plan form
 document.addEventListener('input', (e) => {
   const input = e.target;
-  if (input.classList.contains('movement-weight')) {
-    const row = input.closest('.movement-row, .minute-row');
-    if (!row) return;
-    const pill = row.querySelector('.wms-pill');
-    if (pill?.dataset?.mode === 'pct' || pill?.dataset?.mode === 'rpe') {
-      updateRowCalcDisplay(row);
-    }
+  if (input.id === 'plan-weight' || input.id === 'plan-reps') {
+    updatePlanCalcPreview();
   }
 });
 
-document.addEventListener('blur', (e) => {
-  const input = e.target;
-  if (input.classList.contains('movement-weight')) {
-    const row = input.closest('.movement-row, .minute-row');
-    if (!row) return;
-    const pill = row.querySelector('.wms-pill');
-    if (pill?.dataset?.mode === 'pct' || pill?.dataset?.mode === 'rpe') {
-      updateRowCalcDisplay(row);
-    }
-  }
-});
+populateMovementDropdowns();
 
 // Structured Workout Pagination
 const prevStructuredBtn = document.getElementById('prev-structured-page-btn');
@@ -5219,7 +5048,7 @@ if (nextSharedPlansBtn) nextSharedPlansBtn.addEventListener('click', () => chang
 
 // Initial movement row
 if (document.getElementById('movement-list')) {
-  addMovementRow();
+  // Removed - uses unified Add Movement form
 }
 
 // leaderboard
@@ -5897,21 +5726,19 @@ window.toggleLeaderboardExpand = toggleLeaderboardExpand;
 window.showQRCode = showQRCode;
 window.handleCalcRemove = handleCalcRemove;
 window.switchCalcMode = switchCalcMode;
-window.addMovementRow = addMovementRow;
-window.removeMovementRow = removeMovementRow;
-window.handleMovementExerciseChange = handleMovementExerciseChange;
+// addMovementRow and removeMovementRow removed - using unified Add Movement form
+window.handlePlanExerciseChange = handlePlanExerciseChange;
 window.handleWorkoutTypeChange = handleWorkoutTypeChange;
-window.addMinuteSlot = addMinuteSlot;
+window.addPlanMinuteSlot = addPlanMinuteSlot;
 window.removeMinuteSlot = removeMinuteSlot;
+window.handlePlanAdd = handlePlanAdd;
+window.togglePlanWms = togglePlanWms;
 window.toggleForTimeDnf = toggleForTimeDnf;
 window.selectCalendarDay = selectCalendarDay;
 window.changeCalendarNav = changeCalendarNav;
 window.toggleCalendarView = toggleCalendarView;
 window.closeCalendarDayDetail = closeCalendarDayDetail;
-window.saveAmrapPlan = saveAmrapPlan;
-window.saveEmomPlan = saveEmomPlan;
-window.saveForTimePlan = saveForTimePlan;
-window.saveIntervalPlan = saveIntervalPlan;
+window.savePlan = savePlan;
 window.loadPlan = loadPlan;
 window.toggleWorkoutCard = toggleWorkoutCard;
 window.redoWorkout = redoWorkout;
@@ -5930,7 +5757,6 @@ window.submitPendingWorkout = submitPendingWorkout;
 window.loadSharedPlan = loadSharedPlan;
 window.switchShareMode = switchShareMode;
 window.shareByQR = shareByQR;
-window.toggleWeightMode = toggleWeightMode;
 window.updatePillActive = updatePillActive;
 window.switchVolumePeriod = switchVolumePeriod;
 window.shiftVolumePeriod = shiftVolumePeriod;

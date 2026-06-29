@@ -456,61 +456,6 @@
       <div class="tab-content bg-slate-800 w-full" id="tab-training">
         <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6 min-w-0">
 
-          <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1" id="record-training-card">
-            <h2 class="section-heading">Log a Lift</h2>
-            <p class="text-description mb-4">Log your sets and reps</p>
-
-            <form id="workout-form" class="space-y-4">
-              <div>
-                <label class="form-label">Exercise Name</label>
-                <select id="exercise" class="dropdown-core">
-                  <option value="" disabled selected>Select exercise...</option>
-                </select>
-              </div>
-
-              <div class="grid grid-cols-3 gap-3">
-                <div>
-                  <label class="form-label">Sets</label>
-                  <input type="number" id="sets" value="1" min="1" required
-                    class="input-core w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-center text-slate-100 focus:outline-none focus:border-emerald-400 transition" />
-                </div>
-                <div>
-                  <label class="form-label">Reps</label>
-                  <input type="number" id="reps" value="1" min="1" required
-                    class="input-core w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-center text-slate-100 focus:outline-none focus:border-emerald-400 transition" />
-                </div>
-                <div id="weight-field">
-                  <label class="form-label" id="weight-label">Weight (kg)</label>
-                  <input type="number" id="weight" placeholder="60" min="0" step="any" required
-                    class="input-core w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-center text-slate-100 focus:outline-none focus:border-emerald-400 transition" />
-                </div>
-              </div>
-
-              <div id="bw-extras" class="hidden space-y-4">
-                <div class="grid grid-cols-2 gap-3">
-                  <div>
-                    <label class="form-label">External Load (kg)</label>
-                    <input type="number" id="external-load" placeholder="0" min="0" step="any" class="input-core" />
-                  </div>
-                  <div>
-                    <label class="form-label" id="est-load-label">Est. Load / Rep</label>
-                    <div id="estimated-load-display" class="input-core bg-slate-800/50 text-emerald-400 font-bold flex items-center justify-center min-h-[42px]">—</div>
-                  </div>
-                </div>
-                <p id="lf-disclaimer" class="text-[10px] text-slate-500 italic leading-relaxed hidden">Load factors derived from biomechanical research where available and coaching estimates otherwise.</p>
-              </div>
-
-              <button type="submit" class="btn-core is-primary btn-size-input">
-                Log Sets
-              </button>
-
-              <p id="workoutFeedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
-            </form>
-
-          </section>
-
-
-
           <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1" id="log-workout-card">
             <h2 class="section-heading">Log Workout</h2>
             <span id="log-workout-type-badge" class="workout-type-badge hidden"></span>
@@ -601,6 +546,59 @@
             <p id="log-workout-feedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
           </section>
 
+          <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1" id="record-training-card">
+            <h2 class="section-heading">Log a Lift</h2>
+            <p class="text-description mb-4">Log your sets and reps</p>
+
+            <form id="workout-form" class="space-y-4">
+              <div>
+                <label class="form-label">Exercise Name</label>
+                <select id="exercise" class="dropdown-core">
+                  <option value="" disabled selected>Select exercise...</option>
+                </select>
+              </div>
+
+              <div class="grid grid-cols-3 gap-3">
+                <div>
+                  <label class="form-label">Sets</label>
+                  <input type="number" id="sets" value="1" min="1" required
+                    class="input-core w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-center text-slate-100 focus:outline-none focus:border-emerald-400 transition" />
+                </div>
+                <div>
+                  <label class="form-label">Reps</label>
+                  <input type="number" id="reps" value="1" min="1" required
+                    class="input-core w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-center text-slate-100 focus:outline-none focus:border-emerald-400 transition" />
+                </div>
+                <div id="weight-field">
+                  <label class="form-label" id="weight-label">Weight (kg)</label>
+                  <input type="number" id="weight" placeholder="60" min="0" step="any" required
+                    class="input-core w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-center text-slate-100 focus:outline-none focus:border-emerald-400 transition" />
+                </div>
+              </div>
+
+              <div id="bw-extras" class="hidden space-y-4">
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="form-label">External Load (kg)</label>
+                    <input type="number" id="external-load" placeholder="0" min="0" step="any" class="input-core" />
+                  </div>
+                  <div>
+                    <label class="form-label" id="est-load-label">Est. Load / Rep</label>
+                    <div id="estimated-load-display" class="input-core bg-slate-800/50 text-emerald-400 font-bold flex items-center justify-center min-h-[42px]">—</div>
+                  </div>
+                </div>
+                <p id="lf-disclaimer" class="text-[10px] text-slate-500 italic leading-relaxed hidden">Load factors derived from biomechanical research where available and coaching estimates otherwise.</p>
+              </div>
+
+              <button type="submit" class="btn-core is-primary btn-size-input">
+                Log Sets
+              </button>
+
+              <p id="workoutFeedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
+            </form>
+
+          </section>
+
         </div>
       </div>
 
@@ -647,7 +645,7 @@
       <div class="tab-content bg-slate-800 w-full" id="tab-calculator">
         <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6 min-w-0">
 
-          <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1">
+          <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1 hidden">
             <p class="section-heading">My Scaling</p>
 
             <div class="mb-4">
@@ -693,7 +691,7 @@
             </div>
           </section>
 
-          <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1">
+          <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1 hidden">
             <p class="section-heading">Working Weights</p>
 
             <div class="flex justify-between px-1 mb-2 mt-4">
@@ -710,183 +708,141 @@
           <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1" id="plan-workout-card">
             <h2 class="section-heading">Plan a Workout</h2>
             <p class="text-description mb-4">Design and log structured workouts.</p>
-            <div id="log-workout-section">
-              <div id="workout-type-selector" class="mb-4">
-                <label class="form-label">Workout Type</label>
-                <select id="workout-type" class="dropdown-core" onchange="handleWorkoutTypeChange()">
-                  <option value="AMRAP">AMRAP</option>
-                  <option value="EMOM">EMOM</option>
-                  <option value="FOR_TIME">For Time</option>
-                  <option value="INTERVAL">Interval</option>
+
+            <div id="workout-type-selector" class="mb-4">
+              <label class="form-label">Workout Type</label>
+              <select id="workout-type" class="dropdown-core" onchange="handleWorkoutTypeChange()">
+                <option value="AMRAP">AMRAP</option>
+                <option value="EMOM">EMOM</option>
+                <option value="FOR_TIME">For Time</option>
+                <option value="INTERVAL">Interval</option>
+              </select>
+            </div>
+
+            <p id="workout-type-desc" class="text-description">
+              Record a structured AMRAP workout.
+            </p>
+
+            <!-- AMRAP metadata -->
+            <div id="amrap-fields">
+              <label class="form-label">Duration (minutes)</label>
+              <input type="number" id="amrap-duration" placeholder="12" min="1" step="1" class="input-core" />
+            </div>
+
+            <!-- EMOM metadata -->
+            <div id="emom-fields" class="hidden">
+              <div class="inline-flex gap-1 p-0.5 w-fit rounded-xl bg-slate-950 mb-4">
+                <button id="emom-mode-seq" type="button" class="btn-core is-primary btn-size-row" onclick="switchEmomMode('sequence')">Sequence</button>
+                <button id="emom-mode-by-round" type="button" class="btn-core is-ghost btn-size-row" onclick="switchEmomMode('by_round')">By Round</button>
+              </div>
+              <div class="mb-4">
+                <label class="form-label">Interval</label>
+                <div class="flex gap-2 items-center">
+                  <input type="number" id="emom-interval-min" placeholder="1" min="0" step="1" class="input-core w-20" />
+                  <span class="text-slate-400 text-xs">min</span>
+                  <input type="number" id="emom-interval-sec" placeholder="00" min="0" max="59" step="1" class="input-core w-20" />
+                  <span class="text-slate-400 text-xs">sec</span>
+                </div>
+              </div>
+              <div id="emom-rounds-field" class="mb-4">
+                <label class="form-label">Rounds</label>
+                <input type="number" id="emom-rounds" placeholder="10" min="1" step="1" class="input-core" />
+                <p class="text-xs text-slate-400 mt-1">Duration: <span id="emom-duration-display">—</span></p>
+              </div>
+            </div>
+
+            <!-- FOR_TIME metadata -->
+            <div id="fortime-fields" class="hidden">
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="form-label">Time Cap (minutes)</label>
+                  <input type="number" id="fortime-cap" placeholder="12" min="1" step="1" class="input-core" />
+                </div>
+                <div>
+                  <label class="form-label">Rounds</label>
+                  <input type="number" id="fortime-rounds" placeholder="3" min="1" step="1" class="input-core" />
+                </div>
+              </div>
+            </div>
+
+            <!-- INTERVAL metadata -->
+            <div id="interval-fields" class="hidden">
+              <div class="grid grid-cols-3 gap-3">
+                <div>
+                  <label class="form-label">Rounds</label>
+                  <input type="number" id="interval-rounds" placeholder="5" min="1" step="1" class="input-core" />
+                </div>
+                <div>
+                  <label class="form-label">Work (min)</label>
+                  <input type="number" id="interval-work-min" placeholder="2" min="0" step="1" class="input-core" />
+                </div>
+                <div>
+                  <label class="form-label">Rest (min)</label>
+                  <input type="number" id="interval-rest-min" placeholder="1" min="0" step="1" class="input-core" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Unified Add Movement form -->
+            <div id="plan-add-movement" class="bg-slate-900 rounded-lg p-3 space-y-3 mb-4 mt-4">
+              <p class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Add Movement</p>
+              <div>
+                <select id="plan-exercise" class="movement-exercise dropdown-core w-full" onchange="handlePlanExerciseChange()">
+                  <option value="">Select exercise...</option>
                 </select>
               </div>
-
-              <p id="workout-type-desc" class="text-description">
-                Record a structured AMRAP workout.
-              </p>
-
-              <form id="amrap-form" class="space-y-4">
-                <div>
-                  <label class="form-label">Duration (minutes)</label>
-                  <input type="number" id="amrap-duration" placeholder="12" min="1" step="1" class="input-core" required />
+              <p class="text-xs text-slate-400">Est. 1RM: <span id="plan-one-rm-display" class="text-emerald-400 font-bold font-mono">—</span></p>
+              <div class="flex gap-2 items-center flex-wrap">
+                <div class="w-16 shrink-0">
+                  <input type="number" id="plan-reps" placeholder="Reps" min="1" step="1" class="input-core w-full" />
                 </div>
-                <div>
-                  <div class="flex justify-between items-center mb-2">
-                    <label class="form-label">Movements</label>
-                    <button type="button" onclick="addMovementRow()" class="btn-core is-secondary btn-size-row">+ Add</button>
-                  </div>
-                  <div id="movement-list" class="space-y-2">
-                    <div class="movement-row flex gap-2 items-end">
-                      <div class="flex-1">
-                        <select class="movement-exercise dropdown-core" onchange="handleMovementExerciseChange(this)">
-                          <option value="">Select exercise...</option>
-                        </select>
-                      </div>
-                      <div class="w-16">
-                        <input type="number" class="movement-reps input-core" placeholder="Reps" min="1" step="1" />
-                      </div>
-                      <div class="w-20">
-                        <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
-                      </div>
-                      <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none"><i data-lucide="circle-minus" size="18"></i></button>
-                    </div>
-                  </div>
+                <span class="text-slate-500 text-xs font-mono shrink-0">@</span>
+                <div class="w-20 shrink-0">
+                  <input type="number" id="plan-weight" placeholder="Load" min="0" step="any" class="input-core w-full" />
                 </div>
-                <button type="button" onclick="doWorkout()" class="btn-core is-primary btn-size-input">Do Workout</button>
-                <button type="button" onclick="saveAmrapPlan()" class="btn-core is-secondary btn-size-input">Save for Later</button>
-                <p id="amrapFeedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
-              </form>
-
-              <form id="emom-form" class="space-y-4 hidden">
-                <div class="inline-flex gap-1 p-0.5 w-fit rounded-xl bg-slate-950">
-                  <button id="emom-mode-seq" type="button" class="btn-core is-primary btn-size-row" onclick="switchEmomMode('sequence')">Sequence</button>
-                  <button id="emom-mode-by-round" type="button" class="btn-core is-ghost btn-size-row" onclick="switchEmomMode('by_round')">By Round</button>
+                <div class="wms-pill shrink-0" id="plan-wms-pill" data-mode="absolute">
+                  <button type="button" class="wms-pill-btn is-active" data-mode="absolute" onclick="togglePlanWms(this)">kg</button>
+                  <button type="button" class="wms-pill-btn" data-mode="pct" onclick="togglePlanWms(this)">%</button>
+                  <button type="button" class="wms-pill-btn" data-mode="rpe" onclick="togglePlanWms(this)">RPE</button>
                 </div>
-                <div>
-                  <label class="form-label">Interval</label>
-                  <div class="flex gap-2 items-center">
-                    <input type="number" id="emom-interval-min" placeholder="1" min="0" step="1" class="input-core w-20" />
-                    <span class="text-slate-400 text-xs">min</span>
-                    <input type="number" id="emom-interval-sec" placeholder="00" min="0" max="59" step="1" class="input-core w-20" />
-                    <span class="text-slate-400 text-xs">sec</span>
-                  </div>
+                <div class="w-16 shrink-0 flex items-center justify-center">
+                  <span id="plan-calc-weight" class="text-emerald-400 font-mono text-xs hidden">→</span>
                 </div>
-                <div id="emom-rounds-field">
-                  <label class="form-label">Rounds</label>
-                  <input type="number" id="emom-rounds" placeholder="10" min="1" step="1" class="input-core" required />
-                  <p class="text-xs text-slate-400 mt-1">Duration: <span id="emom-duration-display">—</span></p>
-                </div>
-                <div>
-                  <div class="flex justify-between items-center mb-2">
-                    <label class="form-label" id="emom-slot-heading">Sequence</label>
-                    <button type="button" id="emom-add-slot-btn" onclick="addMinuteSlot()" class="btn-core is-secondary btn-size-row">+ Add Interval</button>
-                  </div>
-                  <div id="emom-minute-slots" class="space-y-2">
-                    <div class="minute-row flex gap-2 items-end">
-                      <div class="flex-1">
-                        <span class="minute-label text-xs text-slate-500 font-mono mr-1 inline-block w-24">#1</span>
-                        <select class="movement-exercise dropdown-core w-[calc(100%-7rem)] inline-block" onchange="handleMovementExerciseChange(this)">
-                          <option value="">Select exercise...</option>
-                        </select>
-                      </div>
-                      <div class="w-16">
-                        <input type="number" class="movement-reps input-core" placeholder="Reps" min="1" step="1" />
-                      </div>
-                      <div class="w-20">
-                        <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
-                      </div>
-                      <button type="button" onclick="removeMinuteSlot(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none"><i data-lucide="circle-minus" size="18"></i></button>
-                    </div>
-                  </div>
-                  <p id="emom-summary" class="text-xs text-slate-400 mt-1 hidden">
-                    <span id="emom-summary-text"></span>
-                  </p>
-                </div>
-                <button type="button" onclick="doWorkout()" class="btn-core is-primary btn-size-input">Do Workout</button>
-                <button type="button" onclick="saveEmomPlan()" class="btn-core is-secondary btn-size-input">Save for Later</button>
-                <p id="emomFeedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
-              </form>
-
-              <form id="for-time-form" class="space-y-4 hidden">
-                <div class="grid grid-cols-2 gap-3">
-                  <div>
-                    <label class="form-label">Time Cap (minutes)</label>
-                    <input type="number" id="fortime-cap" placeholder="12" min="1" step="1" class="input-core" />
-                  </div>
-                  <div>
-                    <label class="form-label">Rounds</label>
-                    <input type="number" id="fortime-rounds" placeholder="3" min="1" step="1" class="input-core" required />
-                  </div>
-                </div>
-                <div>
-                  <div class="flex justify-between items-center mb-2">
-                    <label class="form-label">Movements</label>
-                    <button type="button" onclick="addMovementRow('fortime-movement-list')" class="btn-core is-secondary btn-size-row">+ Add</button>
-                  </div>
-                  <div id="fortime-movement-list" class="space-y-2">
-                    <div class="movement-row flex gap-2 items-end">
-                      <div class="flex-1">
-                        <select class="movement-exercise dropdown-core" onchange="handleMovementExerciseChange(this)">
-                          <option value="">Select exercise...</option>
-                        </select>
-                      </div>
-                      <div class="w-16">
-                        <input type="number" class="movement-reps input-core" placeholder="Reps" min="1" step="1" />
-                      </div>
-                      <div class="w-20">
-                        <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
-                      </div>
-                      <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none"><i data-lucide="circle-minus" size="18"></i></button>
-                    </div>
-                  </div>
-                </div>
-                <button type="button" onclick="doWorkout()" class="btn-core is-primary btn-size-input">Do Workout</button>
-                <button type="button" onclick="saveForTimePlan()" class="btn-core is-secondary btn-size-input">Save for Later</button>
-                <p id="fortimeFeedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
-              </form>
-
-              <form id="interval-form" class="space-y-4 hidden">
-                <div class="grid grid-cols-3 gap-3">
-                  <div>
-                    <label class="form-label">Rounds</label>
-                    <input type="number" id="interval-rounds" placeholder="5" min="1" step="1" class="input-core" required />
-                  </div>
-                  <div>
-                    <label class="form-label">Work (min)</label>
-                    <input type="number" id="interval-work-min" placeholder="2" min="0" step="1" class="input-core" required />
-                  </div>
-                  <div>
-                    <label class="form-label">Rest (min)</label>
-                    <input type="number" id="interval-rest-min" placeholder="1" min="0" step="1" class="input-core" required />
-                  </div>
-                </div>
-                <div>
-                  <div class="flex justify-between items-center mb-2">
-                    <label class="form-label">Movements (per round)</label>
-                    <button type="button" onclick="addMovementRow('interval-movement-list')" class="btn-core is-secondary btn-size-row">+ Add</button>
-                  </div>
-                  <div id="interval-movement-list" class="space-y-2">
-                    <div class="movement-row flex gap-2 items-end">
-                      <div class="flex-1">
-                        <select class="movement-exercise dropdown-core" onchange="handleMovementExerciseChange(this)">
-                          <option value="">Select exercise...</option>
-                        </select>
-                      </div>
-                      <div class="w-16">
-                        <input type="number" class="movement-reps input-core" placeholder="Reps" min="1" step="1" />
-                      </div>
-                      <div class="w-20">
-                        <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
-                      </div>
-                      <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none"><i data-lucide="circle-minus" size="18"></i></button>
-                    </div>
-                  </div>
-                </div>
-                <button type="button" onclick="doWorkout()" class="btn-core is-primary btn-size-input">Do Workout</button>
-                <button type="button" onclick="saveIntervalPlan()" class="btn-core is-secondary btn-size-input">Save for Later</button>
-                <p id="intervalFeedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
-              </form>
+              </div>
+              <button type="button" id="plan-add-btn" class="btn-core is-primary-ghost btn-size-input w-full" onclick="handlePlanAdd()" disabled>Add to Workout</button>
             </div>
+
+            <!-- Movements table (hidden for EMOM) -->
+            <div id="plan-movements-section" class="mb-4">
+              <p class="section-heading">Movements</p>
+              <div class="flex justify-between px-1 mb-2 mt-4">
+                <span class="text-slate-500 font-bold uppercase text-[10px] tracking-wider">Movement</span>
+                <span class="text-emerald-400 font-bold uppercase text-[10px] tracking-wider">Weight</span>
+              </div>
+              <div id="plan-movements-list">
+                <p class="text-xs text-slate-500 italic py-2 text-center">Add movements above.</p>
+              </div>
+            </div>
+
+            <!-- EMOM minute slots (only for EMOM) -->
+            <div id="emom-minute-slots-area" class="mb-4 hidden">
+              <div class="flex mb-2">
+                <p class="text-xs text-slate-500 font-semibold" id="emom-slot-heading">Sequence</p>
+              </div>
+              <div id="emom-minute-slots" class="space-y-2">
+                <p class="text-xs text-slate-500 italic py-2 text-center">Add a movement to create the first slot.</p>
+              </div>
+              <p id="emom-summary" class="text-xs text-slate-400 mt-1 hidden">
+                <span id="emom-summary-text"></span>
+              </p>
+            </div>
+
+            <!-- Shared action buttons -->
+            <div class="flex gap-2">
+              <button type="button" onclick="doWorkout()" class="btn-core is-primary btn-size-input flex-1">Do Workout</button>
+              <button type="button" onclick="savePlan()" class="btn-core is-secondary btn-size-input flex-1">Save for Later</button>
+            </div>
+            <p id="planFeedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
           </section>
 
         </div>
@@ -1158,7 +1114,7 @@
       <div class="bottom-nav-inner">
         <button class="nav-tab active" data-tab="dashboard" title="Workouts">
             <i data-lucide="layout-dashboard" size="18"></i>
-            <span>Workouts</span>
+            <span>Dash</span>
           </button>
           <button class="nav-tab" data-tab="calculator" title="Plan">
             <i data-lucide="clipboard-pen-line" size="18"></i>
