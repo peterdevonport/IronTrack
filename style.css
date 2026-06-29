@@ -315,6 +315,37 @@ body {
   color: #f472b6;
   border: 1px solid rgba(244, 114, 182, 0.3);
 }
+
+.workout-type-badge {
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  display: inline-block;
+  text-transform: uppercase;
+}
+.workout-type-badge.amrap {
+  background-color: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+.workout-type-badge.emom {
+  background-color: rgba(34, 211, 238, 0.15);
+  color: #67e8f9;
+  border: 1px solid rgba(34, 211, 238, 0.3);
+}
+.workout-type-badge.for_time {
+  background-color: rgba(251, 146, 60, 0.15);
+  color: #fb923c;
+  border: 1px solid rgba(251, 146, 60, 0.3);
+}
+.workout-type-badge.interval {
+  background-color: rgba(244, 114, 182, 0.15);
+  color: #f472b6;
+  border: 1px solid rgba(244, 114, 182, 0.3);
+}
+
 .structured-card .score-display {
   font-size: 1.25rem;
   font-weight: 800;

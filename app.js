@@ -208,6 +208,7 @@ let calcEntriesByLift = {};
 let currentPage = 1;
 let recordsCurrentPage = 1;
 let urlParamsProcessed = false; // Add this flag
+let pendingPlannedWorkout = null;
 
 let paginatedWorkouts = [];
 let lastWorkouts = [];
@@ -1038,15 +1039,13 @@ function update1RMRegistryUI() {
 
 function updateCalcCard() {
     const select = document.getElementById('calc-lift-select');
-    const entriesList = document.getElementById('calc-entries-list');
     const oneRmDisplay = document.getElementById('calc-one-rm-display');
-    const previewBox = document.getElementById('calc-preview-box');
-    if (!select || !entriesList) return;
+    if (!select) return;
 
     const exercise = select.value;
     if (!exercise) {
         if (oneRmDisplay) oneRmDisplay.textContent = '—';
-        entriesList.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">Select a lift to begin.</p>';
+        renderCalcEntries();
         return;
     }
 
@@ -1055,7 +1054,7 @@ function updateCalcCard() {
         oneRmDisplay.textContent = oneRM > 0 ? `${Math.round(oneRM)} kg` : '—';
     }
 
-    renderCalcEntries(exercise, oneRM);
+    renderCalcEntries();
     updateCalcPreview();
 }
 
@@ -1168,59 +1167,59 @@ function handleCalcAdd() {
         rpeSelect.value = '';
     }
 
-    renderCalcEntries(exercise, oneRM);
+    renderCalcEntries();
     updateCalcPreview();
     haptic(HAPTIC.confirm);
 }
 
 function handleCalcRemove(btnEl) {
-    const select = document.getElementById('calc-lift-select');
-    if (!select || !btnEl) return;
-    const exercise = select.value;
+    if (!btnEl) return;
+    const exercise = btnEl.dataset.exercise;
     const idx = parseInt(btnEl.dataset.index, 10);
     if (!calcEntriesByLift[exercise] || isNaN(idx) || idx < 0 || idx >= calcEntriesByLift[exercise].length) return;
     calcEntriesByLift[exercise].splice(idx, 1);
-    const oneRM = activeRecords[exercise] || 0;
-    renderCalcEntries(exercise, oneRM);
+    renderCalcEntries();
 }
 
 function handleCalcClear() {
-    const select = document.getElementById('calc-lift-select');
-    if (!select) return;
-    const exercise = select.value;
-    calcEntriesByLift[exercise] = [];
-    const oneRM = activeRecords[exercise] || 0;
-    renderCalcEntries(exercise, oneRM);
+    calcEntriesByLift = {};
+    renderCalcEntries();
 }
 
-function renderCalcEntries(exercise, oneRM) {
+function renderCalcEntries() {
     const entriesList = document.getElementById('calc-entries-list');
     if (!entriesList) return;
 
-    const entries = calcEntriesByLift[exercise] || [];
+    let allEntries = [];
+    for (const [exercise, entries] of Object.entries(calcEntriesByLift)) {
+        entries.forEach((entry, idx) => {
+            allEntries.push({ ...entry, exercise, idx });
+        });
+    }
 
-    if (entries.length === 0) {
+    if (allEntries.length === 0) {
         entriesList.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">Enter values above and click Add to save working weights.</p>';
         return;
     }
 
     let html = '';
-    entries.forEach((entry, idx) => {
+    allEntries.forEach(entry => {
+        const oneRM = activeRecords[entry.exercise] || 0;
         let source, weight;
         if (entry.type === 'pct') {
             weight = Math.round(oneRM * entry.pct / 100);
-            source = `${entry.pct}%`;
+            source = `${entry.exercise} ${entry.pct}%`;
         } else {
             const rir = 10 - entry.rpe;
             weight = Math.round(oneRM * (100 / (1 + (entry.reps + rir) / 30)) / 100);
-            source = `${entry.reps} reps @ RPE ${entry.rpe}`;
+            source = `${entry.exercise} ${entry.reps} reps @ RPE ${entry.rpe}`;
         }
         html += `
         <div class="flex justify-between items-center py-1.5 px-1 rounded-lg hover:bg-slate-800/40">
             <span class="text-slate-200 font-mono text-sm">${escapeHtml(source)}</span>
             <div class="flex items-center gap-2">
                 <span class="text-slate-200 font-mono text-sm">${weight} kg</span>
-                <button onclick="handleCalcRemove(this)" data-index="${idx}" class="text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"><i data-lucide="circle-minus" size="18"></i></button>
+                <button onclick="handleCalcRemove(this)" data-exercise="${escapeHtml(entry.exercise)}" data-index="${entry.idx}" class="text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"><i data-lucide="circle-minus" size="18"></i></button>
             </div>
         </div>`;
     });
@@ -1593,34 +1592,7 @@ function getRankingTier(score, system, gender) {
 // STRUCTURED WORKOUT SYSTEM
 // ==========================================
 
-let workoutMode = 'set';
 let emomMode = 'sequence';
-
-function switchWorkoutMode(mode) {
-  workoutMode = mode;
-  const tabSet = document.getElementById('tab-log-set');
-  const tabWorkout = document.getElementById('tab-log-workout');
-  const setSection = document.getElementById('log-set-section');
-  const workoutSection = document.getElementById('log-workout-section');
-  const workoutFormEl = document.getElementById('workout-form');
-  if (!tabSet || !tabWorkout || !setSection || !workoutSection) return;
-
-  if (mode === 'set') {
-    tabSet.className = 'btn-core is-primary btn-size-row';
-    tabWorkout.className = 'btn-core is-ghost btn-size-row';
-    setSection.classList.remove('hidden');
-    if (workoutFormEl) workoutFormEl.classList.remove('hidden');
-    workoutSection.classList.add('hidden');
-  } else {
-    tabSet.className = 'btn-core is-ghost btn-size-row';
-    tabWorkout.className = 'btn-core is-primary btn-size-row';
-    setSection.classList.add('hidden');
-    if (workoutFormEl) workoutFormEl.classList.add('hidden');
-    workoutSection.classList.remove('hidden');
-    populateMovementDropdowns();
-    handleWorkoutTypeChange();
-  }
-}
 
 function populateMovementDropdowns() {
   document.querySelectorAll('.movement-exercise').forEach(sel => {
@@ -3519,8 +3491,7 @@ function loadPlan(planId) {
   const plan = lastWorkoutPlans.find(p => p.id === planId);
   if (!plan) return;
 
-  switchTab('training');
-  switchWorkoutMode('workout');
+  switchTab('calculator');
 
   const typeSelect = document.getElementById('workout-type');
   if (typeSelect) typeSelect.value = plan.type;
@@ -3535,8 +3506,8 @@ function loadPlan(planId) {
     case 'INTERVAL': populateIntervalForm(structure); break;
   }
 
-  const recordCard = document.getElementById('record-training-card');
-  if (recordCard) recordCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const planCard = document.getElementById('plan-workout-card');
+  if (planCard) planCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   showFeedback(`Plan "${plan.name}" loaded!`, 'emerald', `${plan.type.toLowerCase()}Feedback`);
   haptic(HAPTIC.tap);
@@ -3546,8 +3517,7 @@ function redoWorkout(workoutId) {
   const sw = lastStructuredWorkouts.find(w => w.id === workoutId);
   if (!sw) return;
 
-  switchTab('training');
-  switchWorkoutMode('workout');
+  switchTab('calculator');
 
   const typeSelect = document.getElementById('workout-type');
   if (typeSelect) typeSelect.value = sw.type;
@@ -3561,14 +3531,291 @@ function redoWorkout(workoutId) {
     case 'INTERVAL': populateIntervalForm(structure); break;
   }
 
-  const recordCard = document.getElementById('record-training-card');
-  if (recordCard) recordCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const planCard = document.getElementById('plan-workout-card');
+  if (planCard) planCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   showFeedback(`Workout "${sw.name}" loaded for redo!`, 'emerald', `${sw.type.toLowerCase()}Feedback`);
   haptic(HAPTIC.tap);
 }
 
-// ── Share Plan with Friend ──
+const WORKOUT_TYPE_TO_RESULT_ID = {
+  AMRAP: 'amrap',
+  EMOM: 'emom',
+  FOR_TIME: 'fortime',
+  INTERVAL: 'interval'
+};
+
+function buildWorkoutDescription(workout) {
+  const { type, structure } = workout;
+  const lines = [];
+
+  switch (type) {
+    case 'AMRAP': {
+      const mins = Math.round((structure.durationSeconds || 0) / 60);
+      lines.push(`${mins}:00`);
+      (structure.movements || []).forEach(m =>
+        lines.push(`\u2022 ${m.reps || '?'} ${m.movement}${m.kg ? ' @ ' + m.kg + ' KG' : ''}`)
+      );
+      break;
+    }
+    case 'EMOM': {
+      const totalSec = structure.intervalSeconds || 0;
+      const mins = Math.floor(totalSec / 60);
+      const secs = totalSec % 60;
+      const isStandardEmom = totalSec === 60;
+      if (!isStandardEmom) {
+        lines.push(`Every ${mins}:${String(secs).padStart(2, '0')} min \u00D7 ${structure.rounds || 0} rounds`);
+      } else {
+        lines.push(`\u00D7 ${structure.rounds || 0} rounds`);
+      }
+      (structure.minutes || []).forEach((m, i) => {
+        const mov = m.movements?.[0];
+        if (mov) lines.push(`Round ${i + 1}: ${mov.reps || '?'} ${mov.exerciseId || ''}${mov.weight ? ' @ ' + mov.weight + ' KG' : ''}`);
+      });
+      break;
+    }
+    case 'FOR_TIME': {
+      const parts = [];
+      if (structure.durationMinutes) parts.push(`${structure.durationMinutes}:00 cap`);
+      parts.push(`${structure.rounds || 0} rounds`);
+      lines.push(parts.join(' \u00B7 '));
+      const uniqueMovements = structure.movements || [];
+      if (uniqueMovements.length) {
+        lines.push('Each round:');
+        uniqueMovements.forEach(m =>
+          lines.push(`  ${m.reps || '?'} ${m.movement}${m.kg ? ' @ ' + m.kg + ' KG' : ''}`)
+        );
+      }
+      break;
+    }
+    case 'INTERVAL': {
+      const wMin = Math.floor((structure.workSeconds || 0) / 60);
+      const rMin = Math.floor((structure.restSeconds || 0) / 60);
+      lines.push(`Work ${wMin}:00 \u00B7 Rest ${rMin}:00 \u00B7 ${structure.rounds || 0} rounds`);
+      (structure.movements || []).forEach(m =>
+        lines.push(`  ${m.reps || '?'} ${m.movement}${m.kg ? ' @ ' + m.kg + ' KG' : ''}`)
+      );
+      break;
+    }
+  }
+
+  return lines.join('<br>');
+}
+
+function doWorkout() {
+  const type = document.getElementById('workout-type').value;
+  if (!type) { showFeedback('Select a workout type first', 'rose', 'planFeedback'); return; }
+
+  const resultId = WORKOUT_TYPE_TO_RESULT_ID[type];
+  if (!resultId) { showFeedback('Unknown workout type.', 'rose', 'planFeedback'); return; }
+
+  switchTab('training');
+
+  let structure;
+  try {
+    structure = capturePlanStructure(type);
+  } catch (err) {
+    console.error('capturePlanStructure error:', err);
+    showFeedback(err.message, 'rose', 'log-workout-feedback');
+    return;
+  }
+
+  pendingPlannedWorkout = {
+    id: 'pending_' + Date.now(),
+    type: type,
+    name: type === 'FOR_TIME' ? 'For Time' : type + ' Workout',
+    timestamp: new Date().toISOString(),
+    structure
+  };
+
+  const placeholder = document.getElementById('log-workout-placeholder');
+  if (placeholder) placeholder.classList.add('hidden');
+
+  const badge = document.getElementById('log-workout-type-badge');
+  if (badge) {
+    badge.textContent = type;
+    badge.className = 'workout-type-badge self-start ' + type.toLowerCase();
+    badge.classList.remove('hidden');
+  }
+
+  const desc = document.getElementById('workout-description');
+  if (desc) {
+    desc.classList.remove('hidden');
+    desc.innerHTML = buildWorkoutDescription(pendingPlannedWorkout);
+  }
+
+  document.querySelectorAll('[id^="log-result-"]').forEach(el => el.classList.add('hidden'));
+  const resultEl = document.getElementById('log-result-' + resultId);
+  if (resultEl) resultEl.classList.remove('hidden');
+
+  const btn = document.getElementById('log-workout-btn');
+  if (btn) btn.disabled = false;
+
+  const fb = document.getElementById('log-workout-feedback');
+  if (fb) fb.textContent = '';
+  haptic(HAPTIC.tap);
+}
+
+async function submitPendingWorkout() {
+  if (!currentUser) return alert('Please sign in first.');
+  if (!pendingPlannedWorkout) return showFeedback('No planned workout to log.', 'rose', 'log-workout-feedback');
+
+  const { type, name, structure } = pendingPlannedWorkout;
+  const now = Date.now();
+  let workoutDoc;
+
+  try {
+    switch (type) {
+      case 'AMRAP': {
+        const roundsCompleted = parseInt(document.getElementById('amrap-rounds').value, 10);
+        const additionalReps = parseInt(document.getElementById('amrap-additional-reps').value, 10) || 0;
+        if (roundsCompleted < 0) return showFeedback('Enter rounds completed.', 'rose', 'log-workout-feedback');
+
+        workoutDoc = {
+          userId: currentUser.uid,
+          name,
+          type: 'AMRAP',
+          structure,
+          result: { roundsCompleted, additionalReps },
+          scoreDisplay: formatScore_ROUNDS_AND_REPS(roundsCompleted, additionalReps),
+          scoreType: 'ROUNDS_AND_REPS',
+          scoreValue: roundsCompleted * 1000 + additionalReps,
+          timestamp: now
+        };
+        const docRef = await addDoc(collection(db, "structured_workouts"), workoutDoc);
+        await generateAmrapContributions(docRef.id, structure.movements, roundsCompleted, additionalReps);
+        break;
+      }
+      case 'EMOM': {
+        const roundsCompleted = parseInt(document.getElementById('emom-rounds-completed').value, 10);
+        if (roundsCompleted < 0) return showFeedback('Enter rounds completed.', 'rose', 'log-workout-feedback');
+
+        workoutDoc = {
+          userId: currentUser.uid,
+          name,
+          type: 'EMOM',
+          structure,
+          result: { roundsCompleted },
+          scoreDisplay: formatScore_COMPLETED_MINUTES(roundsCompleted, structure.rounds),
+          scoreType: 'COMPLETED_MINUTES',
+          scoreValue: roundsCompleted,
+          timestamp: now
+        };
+        const docRef = await addDoc(collection(db, "structured_workouts"), workoutDoc);
+        await generateEmomContributions(docRef.id, structure.minutes, roundsCompleted, structure.mode);
+        break;
+      }
+      case 'FOR_TIME': {
+        const dnf = document.getElementById('fortime-dnf').checked;
+        const remainingReps = dnf ? (parseInt(document.getElementById('fortime-cap-reps').value, 10) || 0) : 0;
+        const resultMins = dnf ? 0 : (parseInt(document.getElementById('fortime-minutes').value, 10) || 0);
+        const resultSecs = dnf ? 0 : (parseInt(document.getElementById('fortime-seconds').value, 10) || 0);
+        const timeSeconds = dnf ? 0 : resultMins * 60 + resultSecs;
+        if (resultSecs > 59) return showFeedback('Seconds must be 0–59.', 'rose', 'log-workout-feedback');
+
+        workoutDoc = {
+          userId: currentUser.uid,
+          name,
+          type: 'FOR_TIME',
+          structure,
+          result: { timeSeconds, completed: !dnf, ...(dnf && { remainingReps }) },
+          scoreDisplay: dnf ? `Cap ${remainingReps}` : formatScore_TIME_SECONDS(timeSeconds),
+          scoreType: 'TIME_SECONDS',
+          scoreValue: dnf ? remainingReps : timeSeconds,
+          timestamp: now
+        };
+        const docRef = await addDoc(collection(db, "structured_workouts"), workoutDoc);
+        await generateForTimeContributions(docRef.id, structure.movements, structure.rounds, remainingReps);
+        break;
+      }
+      case 'INTERVAL': {
+        const roundsCompleted = parseInt(document.getElementById('interval-rounds-completed').value, 10);
+        const partialReps = parseInt(document.getElementById('interval-partial-reps').value, 10) || 0;
+        if (roundsCompleted < 0) return showFeedback('Enter rounds completed.', 'rose', 'log-workout-feedback');
+
+        workoutDoc = {
+          userId: currentUser.uid,
+          name,
+          type: 'INTERVAL',
+          structure,
+          result: { roundsCompleted, partialReps, completed: roundsCompleted >= structure.rounds },
+          scoreDisplay: formatScore_ROUNDS_AND_REPS(roundsCompleted, partialReps),
+          scoreType: 'ROUNDS_AND_REPS',
+          scoreValue: roundsCompleted * 1000 + partialReps,
+          timestamp: now
+        };
+        const docRef = await addDoc(collection(db, "structured_workouts"), workoutDoc);
+        await generateIntervalContributions(docRef.id, structure.movements, roundsCompleted, partialReps);
+        break;
+      }
+      default:
+        return showFeedback('Unknown workout type.', 'rose', 'log-workout-feedback');
+    }
+
+    // reset
+    pendingPlannedWorkout = null;
+    const pwBadge = document.getElementById('log-workout-type-badge');
+    if (pwBadge) pwBadge.classList.add('hidden');
+    const pwPlaceholder = document.getElementById('log-workout-placeholder');
+    if (pwPlaceholder) pwPlaceholder.classList.remove('hidden');
+    const pwDesc = document.getElementById('workout-description');
+    if (pwDesc) pwDesc.classList.add('hidden');
+    document.querySelectorAll('[id^="log-result-"]').forEach(el => el.classList.add('hidden'));
+    const pwBtn = document.getElementById('log-workout-btn');
+    if (pwBtn) pwBtn.disabled = true;
+    showFeedback('Workout logged!', 'emerald', 'log-workout-feedback');
+    haptic(HAPTIC.confirm);
+  } catch (err) {
+    console.error('Log pending workout failed', err.code, err.message);
+    if (err.code === 'permission-denied') {
+      showFeedback('Save blocked by Firestore rules.', 'rose', 'log-workout-feedback');
+    } else {
+      alert('Failed to log workout: ' + err.message);
+    }
+  }
+}
+
+function capturePlanStructure(type) {
+  const getMovements = (selector) => {
+    const rows = document.querySelectorAll(selector || '#movement-list .movement-row');
+    return Array.from(rows).map(r => ({
+      movement: r.querySelector('.movement-exercise')?.value || '',
+      reps: r.querySelector('.movement-reps')?.value || '',
+      kg: r.querySelector('.movement-weight')?.value || ''
+    })).filter(m => m.movement);
+  };
+
+  switch (type) {
+    case 'AMRAP': {
+      const durationMin = parseInt(document.getElementById('amrap-duration')?.value, 10) || 0;
+      return { durationSeconds: durationMin * 60, movements: getMovements() };
+    }
+    case 'EMOM': {
+      const intervalMin = parseInt(document.getElementById('emom-interval-min')?.value, 10) || 0;
+      const intervalSec = parseInt(document.getElementById('emom-interval-sec')?.value, 10) || 0;
+      const intervalSeconds = intervalMin * 60 + intervalSec;
+      let minutes;
+      try { minutes = getEmomMovementData(); } catch (_) { minutes = []; }
+      const rounds = emomMode === 'by_round' ? minutes.length : parseInt(document.getElementById('emom-rounds')?.value, 10) || 0;
+      const durationSeconds = rounds * intervalSeconds;
+      return { mode: emomMode, rounds, durationMinutes: Math.floor(durationSeconds / 60), intervalSeconds, minutes };
+    }
+    case 'FOR_TIME': {
+      const timeCap = parseInt(document.getElementById('fortime-cap')?.value, 10) || 0;
+      const rounds = parseInt(document.getElementById('fortime-rounds')?.value, 10) || 0;
+      const movements = getMovements('#fortime-movement-list .movement-row');
+      return { durationMinutes: timeCap || null, movements, rounds };
+    }
+    case 'INTERVAL': {
+      const rounds = parseInt(document.getElementById('interval-rounds')?.value, 10) || 0;
+      const workMin = parseInt(document.getElementById('interval-work-min')?.value, 10) || 0;
+      const restMin = parseInt(document.getElementById('interval-rest-min')?.value, 10) || 0;
+      const movements = getMovements('#interval-movement-list .movement-row');
+      return { rounds, workSeconds: workMin * 60, restSeconds: restMin * 60, movements };
+    }
+    default: return {};
+  }
+}
 
 let sharePlanId = null;
 let shareIsWorkout = false;
@@ -4028,7 +4275,7 @@ function loadSharedPlan(shareId) {
   const plan = share.content;
   if (!plan) return;
 
-  switchWorkoutMode('workout');
+  switchTab('calculator');
 
   const typeSelect = document.getElementById('workout-type');
   if (typeSelect) typeSelect.value = plan.type;
@@ -4043,8 +4290,8 @@ function loadSharedPlan(shareId) {
     case 'INTERVAL': populateIntervalForm(structure); break;
   }
 
-  const recordCard = document.getElementById('record-training-card');
-  if (recordCard) recordCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const planCard = document.getElementById('plan-workout-card');
+  if (planCard) planCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   showFeedback(`Plan "${plan.name}" loaded!`, 'emerald', `${plan.type.toLowerCase()}Feedback`);
   haptic(HAPTIC.tap);
@@ -4847,23 +5094,11 @@ workoutForm.addEventListener('submit', async (e) => {
     }
 });
 
-// AMRAP Form Submit
-const amrapForm = document.getElementById('amrap-form');
-if (amrapForm) {
-  amrapForm.addEventListener('submit', submitAmrapWorkout);
-}
-
 // AMRAP Score Preview
 const amrapRounds = document.getElementById('amrap-rounds');
 const amrapAdditional = document.getElementById('amrap-additional-reps');
 if (amrapRounds) amrapRounds.addEventListener('input', updateAmrapScorePreview);
 if (amrapAdditional) amrapAdditional.addEventListener('input', updateAmrapScorePreview);
-
-// EMOM Form Submit
-const emomForm = document.getElementById('emom-form');
-if (emomForm) {
-  emomForm.addEventListener('submit', submitEmomWorkout);
-}
 
 // EMOM Score Preview
 const emomRoundsCompleted = document.getElementById('emom-rounds-completed');
@@ -4874,12 +5109,6 @@ if (emomRoundsCompleted) emomRoundsCompleted.addEventListener('input', updateEmo
 if (emomRounds) emomRounds.addEventListener('input', () => { updateEmomScorePreview(); updateEmomSummary(); updateEmomDurationDisplay(); });
 if (emomIntervalMin) emomIntervalMin.addEventListener('input', () => { updateEmomSummary(); updateEmomDurationDisplay(); });
 if (emomIntervalSec) emomIntervalSec.addEventListener('input', () => { updateEmomSummary(); updateEmomDurationDisplay(); });
-
-// FOR_TIME Form Submit
-const forTimeForm = document.getElementById('for-time-form');
-if (forTimeForm) {
-  forTimeForm.addEventListener('submit', submitForTimeWorkout);
-}
 
 // FOR_TIME Score Preview
 const fortimeMinutes = document.getElementById('fortime-minutes');
@@ -4896,13 +5125,7 @@ if (document.getElementById('fortime-movement-list')) {
     addMovementRow('fortime-movement-list');
   }
 
-  // INTERVAL Form Submit
-const intervalForm = document.getElementById('interval-form');
-if (intervalForm) {
-  intervalForm.addEventListener('submit', submitIntervalWorkout);
-}
-
-// INTERVAL Score Preview
+  // INTERVAL Score Preview
 const intervalRounds = document.getElementById('interval-rounds-completed');
 const intervalPartial = document.getElementById('interval-partial-reps');
 if (intervalRounds) intervalRounds.addEventListener('input', updateIntervalScorePreview);
@@ -5674,7 +5897,6 @@ window.toggleLeaderboardExpand = toggleLeaderboardExpand;
 window.showQRCode = showQRCode;
 window.handleCalcRemove = handleCalcRemove;
 window.switchCalcMode = switchCalcMode;
-window.switchWorkoutMode = switchWorkoutMode;
 window.addMovementRow = addMovementRow;
 window.removeMovementRow = removeMovementRow;
 window.handleMovementExerciseChange = handleMovementExerciseChange;
@@ -5703,6 +5925,8 @@ window.toggleSelectAllFriends = toggleSelectAllFriends;
 window.toggleFavorite = toggleFavorite;
 window.togglePlanFavorite = togglePlanFavorite;
 window.toggleStructuredFavorite = toggleStructuredFavorite;
+window.doWorkout = doWorkout;
+window.submitPendingWorkout = submitPendingWorkout;
 window.loadSharedPlan = loadSharedPlan;
 window.switchShareMode = switchShareMode;
 window.shareByQR = shareByQR;

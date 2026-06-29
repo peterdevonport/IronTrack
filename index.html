@@ -261,6 +261,44 @@
             </div>
           </section>
 
+          <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1">
+            <h2 class="section-heading">Saved Plans</h2>
+            <p class="text-description mb-4">Your saved workout templates.</p>
+            <div class="grid grid-cols-3 gap-2 mb-3">
+              <button type="button" id="plans-filter-mine" class="btn-core is-primary btn-size-row" onclick="switchPlansFilter('mine')">My Plans</button>
+              <button type="button" id="plans-filter-shared" class="btn-core is-ghost btn-size-row" onclick="switchPlansFilter('shared')">Shared</button>
+              <button type="button" id="plans-filter-favorites" class="btn-core is-ghost btn-size-row" onclick="switchPlansFilter('favorites')">Favorites</button>
+            </div>
+            <div id="saved-plans-inline" class="space-y-2">
+              <p class="text-xs text-slate-500 italic py-2 text-center">No saved plans yet.</p>
+            </div>
+            <div id="plans-pagination" class="hidden mt-4 flex items-center justify-between gap-3">
+              <button id="prev-plans-page-btn" class="btn-core is-secondary btn-size-input" type="button">
+                Previous
+              </button>
+              <p class="text-xs text-slate-400 text-center min-w-[120px]">
+                Page <span id="current-plans-page">1</span> of <span id="total-plans-pages">1</span>
+              </p>
+              <button id="next-plans-page-btn" class="btn-core is-secondary btn-size-input" type="button">
+                Next
+              </button>
+            </div>
+            <div id="shared-plans-inline" class="space-y-2 hidden">
+              <p class="text-xs text-slate-500 italic py-2 text-center">No shared plans yet.</p>
+            </div>
+            <div id="shared-plans-pagination" class="hidden mt-4 flex items-center justify-between gap-3">
+              <button id="prev-shared-plans-page-btn" class="btn-core is-secondary btn-size-input" type="button">
+                Previous
+              </button>
+              <p class="text-xs text-slate-400 text-center min-w-[120px]">
+                Page <span id="current-shared-plans-page">1</span> of <span id="total-shared-plans-pages">1</span>
+              </p>
+              <button id="next-shared-plans-page-btn" class="btn-core is-secondary btn-size-input" type="button">
+                Next
+              </button>
+            </div>
+          </section>
+
         </div>
       </div>
 
@@ -419,18 +457,8 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6 min-w-0">
 
           <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1" id="record-training-card">
-            <h2 class="section-heading">Record Training</h2>
-            <p class="text-description mb-4">Keep track of your training</p>
-            <div class="grid grid-cols-2 gap-1 p-0.5 w-full rounded-xl bg-slate-950 mb-4">
-              <button type="button" id="tab-log-set" class="btn-core is-primary btn-size-row" onclick="switchWorkoutMode('set')">
-                Sets
-              </button>
-              <button type="button" id="tab-log-workout" class="btn-core is-ghost btn-size-row" onclick="switchWorkoutMode('workout')">
-                Workouts
-              </button>
-            </div>
-
-            <div id="log-set-section"></div>
+            <h2 class="section-heading">Log a Lift</h2>
+            <p class="text-description mb-4">Log your sets and reps</p>
 
             <form id="workout-form" class="space-y-4">
               <div>
@@ -479,294 +507,98 @@
               <p id="workoutFeedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
             </form>
 
-            <div id="log-workout-section" class="hidden">
-              <div id="workout-type-selector" class="mb-4">
-                <label class="form-label">Workout Type</label>
-                <select id="workout-type" class="dropdown-core" onchange="handleWorkoutTypeChange()">
-                  <option value="AMRAP">AMRAP</option>
-                  <option value="EMOM">EMOM</option>
-                  <option value="FOR_TIME">For Time</option>
-                  <option value="INTERVAL">Interval</option>
-                </select>
-              </div>
-
-              <p id="workout-type-desc" class="text-description">
-                Record a structured AMRAP workout.
-              </p>
-
-              <form id="amrap-form" class="space-y-4">
-                <div>
-                  <label class="form-label">Duration (minutes)</label>
-                  <input type="number" id="amrap-duration" placeholder="12" min="1" step="1" class="input-core" required />
-                </div>
-                <div>
-                  <div class="flex justify-between items-center mb-2">
-                    <label class="form-label">Movements</label>
-                    <button type="button" onclick="addMovementRow()" class="btn-core is-secondary btn-size-row">+ Add</button>
-                  </div>
-                  <div id="movement-list" class="space-y-2">
-                    <div class="movement-row flex gap-2 items-end">
-                      <div class="flex-1">
-                        <select class="movement-exercise dropdown-core" onchange="handleMovementExerciseChange(this)">
-                          <option value="">Select exercise...</option>
-                        </select>
-                      </div>
-                      <div class="w-16">
-                        <input type="number" class="movement-reps input-core" placeholder="Reps" min="1" step="1" />
-                      </div>
-                      <div class="w-20">
-                        <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
-                      </div>
-                      <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none"><i data-lucide="circle-minus" size="18"></i></button>
-                    </div>
-                  </div>
-                </div>
-                <button type="button" onclick="saveAmrapPlan()" class="btn-core is-secondary btn-size-input">Save for Later</button>
-                <div class="border-t border-slate-800 pt-4">
-                  <h3 class="form-label mb-2">Result</h3>
-                  <div class="grid grid-cols-2 gap-3">
-                    <div>
-                      <label class="form-label">Rounds Completed</label>
-                      <input type="number" id="amrap-rounds" placeholder="8" min="0" step="1" class="input-core" required />
-                    </div>
-                    <div>
-                      <label class="form-label">Additional Reps</label>
-                      <input type="number" id="amrap-additional-reps" placeholder="23" min="0" step="1" class="input-core" />
-                    </div>
-                  </div>
-                  <p class="text-xs text-slate-400 mt-2">
-                    Score: <span id="amrap-score-preview" class="text-emerald-400 font-bold font-mono">—</span>
-                  </p>
-                </div>
-                <button type="submit" class="btn-core is-primary btn-size-input">Log Workout</button>
-                <p id="amrapFeedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
-              </form>
-
-              <form id="emom-form" class="space-y-4 hidden">
-                <div class="inline-flex gap-1 p-0.5 w-fit rounded-xl bg-slate-950">
-                  <button id="emom-mode-seq" type="button" class="btn-core is-primary btn-size-row" onclick="switchEmomMode('sequence')">Sequence</button>
-                  <button id="emom-mode-by-round" type="button" class="btn-core is-ghost btn-size-row" onclick="switchEmomMode('by_round')">By Round</button>
-                </div>
-                <div>
-                  <label class="form-label">Interval</label>
-                  <div class="flex gap-2 items-center">
-                    <input type="number" id="emom-interval-min" placeholder="1" min="0" step="1" class="input-core w-20" />
-                    <span class="text-slate-400 text-xs">min</span>
-                    <input type="number" id="emom-interval-sec" placeholder="00" min="0" max="59" step="1" class="input-core w-20" />
-                    <span class="text-slate-400 text-xs">sec</span>
-                  </div>
-                </div>
-                <div id="emom-rounds-field">
-                  <label class="form-label">Rounds</label>
-                  <input type="number" id="emom-rounds" placeholder="10" min="1" step="1" class="input-core" required />
-                  <p class="text-xs text-slate-400 mt-1">Duration: <span id="emom-duration-display">—</span></p>
-                </div>
-                <div>
-                  <div class="flex justify-between items-center mb-2">
-                    <label class="form-label" id="emom-slot-heading">Sequence</label>
-                    <button type="button" id="emom-add-slot-btn" onclick="addMinuteSlot()" class="btn-core is-secondary btn-size-row">+ Add Interval</button>
-                  </div>
-                  <div id="emom-minute-slots" class="space-y-2">
-                    <div class="minute-row flex gap-2 items-end">
-                      <div class="flex-1">
-                        <span class="minute-label text-xs text-slate-500 font-mono mr-1 inline-block w-24">#1</span>
-                        <select class="movement-exercise dropdown-core w-[calc(100%-7rem)] inline-block" onchange="handleMovementExerciseChange(this)">
-                          <option value="">Select exercise...</option>
-                        </select>
-                      </div>
-                      <div class="w-16">
-                        <input type="number" class="movement-reps input-core" placeholder="Reps" min="1" step="1" />
-                      </div>
-                      <div class="w-20">
-                        <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
-                      </div>
-                      <button type="button" onclick="removeMinuteSlot(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none"><i data-lucide="circle-minus" size="18"></i></button>
-                    </div>
-                  </div>
-                  <p id="emom-summary" class="text-xs text-slate-400 mt-1 hidden">
-                    <span id="emom-summary-text"></span>
-                  </p>
-                </div>
-                <button type="button" onclick="saveEmomPlan()" class="btn-core is-secondary btn-size-input">Save for Later</button>
-                <div class="border-t border-slate-800 pt-4">
-                  <h3 class="form-label mb-2">Result</h3>
-                  <div>
-                    <label class="form-label">Rounds Completed</label>
-                    <input type="number" id="emom-rounds-completed" placeholder="11" min="0" step="1" class="input-core" required />
-                  </div>
-                  <p class="text-xs text-slate-400 mt-2">
-                    Score: <span id="emom-score-preview" class="text-emerald-400 font-bold font-mono">—</span>
-                  </p>
-                </div>
-                <button type="submit" class="btn-core is-primary btn-size-input">Log Workout</button>
-                <p id="emomFeedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
-              </form>
-
-              <form id="for-time-form" class="space-y-4 hidden">
-                <div class="grid grid-cols-2 gap-3">
-                  <div>
-                    <label class="form-label">Time Cap (minutes)</label>
-                    <input type="number" id="fortime-cap" placeholder="12" min="1" step="1" class="input-core" />
-                  </div>
-                  <div>
-                    <label class="form-label">Rounds</label>
-                    <input type="number" id="fortime-rounds" placeholder="3" min="1" step="1" class="input-core" required />
-                  </div>
-                </div>
-                <div>
-                  <div class="flex justify-between items-center mb-2">
-                    <label class="form-label">Movements</label>
-                    <button type="button" onclick="addMovementRow('fortime-movement-list')" class="btn-core is-secondary btn-size-row">+ Add</button>
-                  </div>
-                  <div id="fortime-movement-list" class="space-y-2">
-                    <div class="movement-row flex gap-2 items-end">
-                      <div class="flex-1">
-                        <select class="movement-exercise dropdown-core" onchange="handleMovementExerciseChange(this)">
-                          <option value="">Select exercise...</option>
-                        </select>
-                      </div>
-                      <div class="w-16">
-                        <input type="number" class="movement-reps input-core" placeholder="Reps" min="1" step="1" />
-                      </div>
-                      <div class="w-20">
-                        <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
-                      </div>
-                      <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none"><i data-lucide="circle-minus" size="18"></i></button>
-                    </div>
-                  </div>
-                </div>
-                <button type="button" onclick="saveForTimePlan()" class="btn-core is-secondary btn-size-input">Save for Later</button>
-                <div class="border-t border-slate-800 pt-4">
-                  <h3 class="form-label mb-2">Result</h3>
-                  <div class="flex gap-3 items-end">
-                    <div id="fortime-time-inputs">
-                      <div class="flex gap-3">
-                        <div>
-                          <label class="form-label">Minutes</label>
-                          <input type="number" id="fortime-minutes" placeholder="8" min="0" step="1" class="input-core" required />
-                        </div>
-                        <div>
-                          <label class="form-label">Seconds</label>
-                          <input type="number" id="fortime-seconds" placeholder="30" min="0" max="59" step="1" class="input-core" required />
-                        </div>
-                      </div>
-                    </div>
-                    <div id="fortime-cap-reps-container" class="hidden">
-                      <label class="form-label">Remaining Reps</label>
-                      <input type="number" id="fortime-cap-reps" placeholder="45" min="0" step="1" class="input-core" />
-                    </div>
-                    <div class="flex items-center pb-2">
-                      <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" id="fortime-dnf" onchange="toggleForTimeDnf()" class="w-4 h-4 rounded border-slate-600 bg-slate-800 accent-emerald-500" />
-                        <span class="text-xs text-slate-400">DNF</span>
-                      </label>
-                    </div>
-                  </div>
-                  <p class="text-xs text-slate-400 mt-2">
-                    Score: <span id="fortime-score-preview" class="text-emerald-400 font-bold font-mono">—</span>
-                  </p>
-                </div>
-                <button type="submit" class="btn-core is-primary btn-size-input">Log Workout</button>
-                <p id="fortimeFeedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
-              </form>
-
-              <form id="interval-form" class="space-y-4 hidden">
-                <div class="grid grid-cols-3 gap-3">
-                  <div>
-                    <label class="form-label">Rounds</label>
-                    <input type="number" id="interval-rounds" placeholder="5" min="1" step="1" class="input-core" required />
-                  </div>
-                  <div>
-                    <label class="form-label">Work (min)</label>
-                    <input type="number" id="interval-work-min" placeholder="2" min="0" step="1" class="input-core" required />
-                  </div>
-                  <div>
-                    <label class="form-label">Rest (min)</label>
-                    <input type="number" id="interval-rest-min" placeholder="1" min="0" step="1" class="input-core" required />
-                  </div>
-                </div>
-                <div>
-                  <div class="flex justify-between items-center mb-2">
-                    <label class="form-label">Movements (per round)</label>
-                    <button type="button" onclick="addMovementRow('interval-movement-list')" class="btn-core is-secondary btn-size-row">+ Add</button>
-                  </div>
-                  <div id="interval-movement-list" class="space-y-2">
-                    <div class="movement-row flex gap-2 items-end">
-                      <div class="flex-1">
-                        <select class="movement-exercise dropdown-core" onchange="handleMovementExerciseChange(this)">
-                          <option value="">Select exercise...</option>
-                        </select>
-                      </div>
-                      <div class="w-16">
-                        <input type="number" class="movement-reps input-core" placeholder="Reps" min="1" step="1" />
-                      </div>
-                      <div class="w-20">
-                        <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
-                      </div>
-                      <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none"><i data-lucide="circle-minus" size="18"></i></button>
-                    </div>
-                  </div>
-                </div>
-                <button type="button" onclick="saveIntervalPlan()" class="btn-core is-secondary btn-size-input">Save for Later</button>
-                <div class="border-t border-slate-800 pt-4">
-                  <h3 class="form-label mb-2">Result</h3>
-                  <div class="grid grid-cols-2 gap-3">
-                    <div>
-                      <label class="form-label">Rounds Completed</label>
-                      <input type="number" id="interval-rounds-completed" placeholder="4" min="0" step="1" class="input-core" required />
-                    </div>
-                    <div>
-                      <label class="form-label">Partial Reps</label>
-                      <input type="number" id="interval-partial-reps" placeholder="3" min="0" step="1" class="input-core" />
-                    </div>
-                  </div>
-                  <p class="text-xs text-slate-400 mt-2">
-                    Score: <span id="interval-score-preview" class="text-emerald-400 font-bold font-mono">—</span>
-                  </p>
-                </div>
-                <button type="submit" class="btn-core is-primary btn-size-input">Log Workout</button>
-                <p id="intervalFeedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
-              </form>
-            </div>
-
           </section>
 
-          <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1">
-            <h2 class="section-heading">Saved Plans</h2>
-            <p class="text-description mb-4">Your saved workout templates.</p>
-            <div class="grid grid-cols-3 gap-2 mb-3">
-              <button type="button" id="plans-filter-mine" class="btn-core is-primary btn-size-row" onclick="switchPlansFilter('mine')">My Plans</button>
-              <button type="button" id="plans-filter-shared" class="btn-core is-ghost btn-size-row" onclick="switchPlansFilter('shared')">Shared</button>
-              <button type="button" id="plans-filter-favorites" class="btn-core is-ghost btn-size-row" onclick="switchPlansFilter('favorites')">Favorites</button>
+
+
+          <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1" id="log-workout-card">
+            <h2 class="section-heading">Log Workout</h2>
+            <span id="log-workout-type-badge" class="workout-type-badge hidden"></span>
+            <p id="workout-description" class="text-description mb-4 hidden"></p>
+            <p id="log-workout-placeholder" class="text-slate-500 italic text-sm mb-4">Plan or load a workout to continue</p>
+
+            <div id="log-result-amrap" class="hidden">
+              <div class="border-t border-slate-800 pt-4">
+                <h3 class="form-label mb-2">Result</h3>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="form-label">Rounds Completed</label>
+                    <input type="number" id="amrap-rounds" placeholder="8" min="0" step="1" class="input-core" required />
+                  </div>
+                  <div>
+                    <label class="form-label">Additional Reps</label>
+                    <input type="number" id="amrap-additional-reps" placeholder="23" min="0" step="1" class="input-core" />
+                  </div>
+                </div>
+                <p class="text-xs text-slate-400 mt-2">
+                  Score: <span id="amrap-score-preview" class="text-emerald-400 font-bold font-mono">—</span>
+                </p>
+              </div>
             </div>
-            <div id="saved-plans-inline" class="space-y-2">
-              <p class="text-xs text-slate-500 italic py-2 text-center">No saved plans yet.</p>
+
+            <div id="log-result-emom" class="hidden">
+              <div class="border-t border-slate-800 pt-4">
+                <h3 class="form-label mb-2">Result</h3>
+                <div>
+                  <label class="form-label">Rounds Completed</label>
+                  <input type="number" id="emom-rounds-completed" placeholder="11" min="0" step="1" class="input-core" required />
+                </div>
+                <p class="text-xs text-slate-400 mt-2">
+                  Score: <span id="emom-score-preview" class="text-emerald-400 font-bold font-mono">—</span>
+                </p>
+              </div>
             </div>
-            <div id="plans-pagination" class="hidden mt-4 flex items-center justify-between gap-3">
-              <button id="prev-plans-page-btn" class="btn-core is-secondary btn-size-input" type="button">
-                Previous
-              </button>
-              <p class="text-xs text-slate-400 text-center min-w-[120px]">
-                Page <span id="current-plans-page">1</span> of <span id="total-plans-pages">1</span>
-              </p>
-              <button id="next-plans-page-btn" class="btn-core is-secondary btn-size-input" type="button">
-                Next
-              </button>
+
+            <div id="log-result-fortime" class="hidden">
+              <div class="border-t border-slate-800 pt-4">
+                <h3 class="form-label mb-2">Result</h3>
+                <div class="flex items-center mb-2">
+                  <label class="flex items-center gap-2 cursor-pointer min-w-[44px] min-h-[44px] p-3">
+                    <input type="checkbox" id="fortime-dnf" onchange="toggleForTimeDnf()" class="w-4 h-4 rounded border-slate-600 bg-slate-800 accent-emerald-500" />
+                    <span class="text-xs text-slate-400">DNF</span>
+                  </label>
+                </div>
+                <div id="fortime-time-inputs" class="flex gap-3 items-end">
+                  <div>
+                    <label class="form-label">Minutes</label>
+                    <input type="number" id="fortime-minutes" placeholder="8" min="0" step="1" class="input-core" required />
+                  </div>
+                  <div>
+                    <label class="form-label">Seconds</label>
+                    <input type="number" id="fortime-seconds" placeholder="30" min="0" max="59" step="1" class="input-core" required />
+                  </div>
+                </div>
+                <div id="fortime-cap-reps-container" class="hidden mt-2">
+                  <label class="form-label">Remaining Reps</label>
+                  <input type="number" id="fortime-cap-reps" placeholder="45" min="0" step="1" class="input-core" />
+                </div>
+                <p class="text-xs text-slate-400 mt-2">
+                  Score: <span id="fortime-score-preview" class="text-emerald-400 font-bold font-mono">—</span>
+                </p>
+              </div>
             </div>
-            <div id="shared-plans-inline" class="space-y-2 hidden">
-              <p class="text-xs text-slate-500 italic py-2 text-center">No shared plans yet.</p>
+
+            <div id="log-result-interval" class="hidden">
+              <div class="border-t border-slate-800 pt-4">
+                <h3 class="form-label mb-2">Result</h3>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="form-label">Rounds Completed</label>
+                    <input type="number" id="interval-rounds-completed" placeholder="4" min="0" step="1" class="input-core" required />
+                  </div>
+                  <div>
+                    <label class="form-label">Partial Reps</label>
+                    <input type="number" id="interval-partial-reps" placeholder="3" min="0" step="1" class="input-core" />
+                  </div>
+                </div>
+                <p class="text-xs text-slate-400 mt-2">
+                  Score: <span id="interval-score-preview" class="text-emerald-400 font-bold font-mono">—</span>
+                </p>
+              </div>
             </div>
-            <div id="shared-plans-pagination" class="hidden mt-4 flex items-center justify-between gap-3">
-              <button id="prev-shared-plans-page-btn" class="btn-core is-secondary btn-size-input" type="button">
-                Previous
-              </button>
-              <p class="text-xs text-slate-400 text-center min-w-[120px]">
-                Page <span id="current-shared-plans-page">1</span> of <span id="total-shared-plans-pages">1</span>
-              </p>
-              <button id="next-shared-plans-page-btn" class="btn-core is-secondary btn-size-input" type="button">
-                Next
-              </button>
-            </div>
+
+            <button type="button" onclick="submitPendingWorkout()" class="btn-core is-primary btn-size-input" disabled id="log-workout-btn">Log Workout</button>
+            <p id="log-workout-feedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
           </section>
 
         </div>
@@ -873,6 +705,188 @@
             </div>
 
             <button id="calc-clear-btn" class="btn-core is-secondary btn-size-input mt-3">Clear All</button>
+          </section>
+
+          <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1" id="plan-workout-card">
+            <h2 class="section-heading">Plan a Workout</h2>
+            <p class="text-description mb-4">Design and log structured workouts.</p>
+            <div id="log-workout-section">
+              <div id="workout-type-selector" class="mb-4">
+                <label class="form-label">Workout Type</label>
+                <select id="workout-type" class="dropdown-core" onchange="handleWorkoutTypeChange()">
+                  <option value="AMRAP">AMRAP</option>
+                  <option value="EMOM">EMOM</option>
+                  <option value="FOR_TIME">For Time</option>
+                  <option value="INTERVAL">Interval</option>
+                </select>
+              </div>
+
+              <p id="workout-type-desc" class="text-description">
+                Record a structured AMRAP workout.
+              </p>
+
+              <form id="amrap-form" class="space-y-4">
+                <div>
+                  <label class="form-label">Duration (minutes)</label>
+                  <input type="number" id="amrap-duration" placeholder="12" min="1" step="1" class="input-core" required />
+                </div>
+                <div>
+                  <div class="flex justify-between items-center mb-2">
+                    <label class="form-label">Movements</label>
+                    <button type="button" onclick="addMovementRow()" class="btn-core is-secondary btn-size-row">+ Add</button>
+                  </div>
+                  <div id="movement-list" class="space-y-2">
+                    <div class="movement-row flex gap-2 items-end">
+                      <div class="flex-1">
+                        <select class="movement-exercise dropdown-core" onchange="handleMovementExerciseChange(this)">
+                          <option value="">Select exercise...</option>
+                        </select>
+                      </div>
+                      <div class="w-16">
+                        <input type="number" class="movement-reps input-core" placeholder="Reps" min="1" step="1" />
+                      </div>
+                      <div class="w-20">
+                        <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
+                      </div>
+                      <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none"><i data-lucide="circle-minus" size="18"></i></button>
+                    </div>
+                  </div>
+                </div>
+                <button type="button" onclick="doWorkout()" class="btn-core is-primary btn-size-input">Do Workout</button>
+                <button type="button" onclick="saveAmrapPlan()" class="btn-core is-secondary btn-size-input">Save for Later</button>
+                <p id="amrapFeedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
+              </form>
+
+              <form id="emom-form" class="space-y-4 hidden">
+                <div class="inline-flex gap-1 p-0.5 w-fit rounded-xl bg-slate-950">
+                  <button id="emom-mode-seq" type="button" class="btn-core is-primary btn-size-row" onclick="switchEmomMode('sequence')">Sequence</button>
+                  <button id="emom-mode-by-round" type="button" class="btn-core is-ghost btn-size-row" onclick="switchEmomMode('by_round')">By Round</button>
+                </div>
+                <div>
+                  <label class="form-label">Interval</label>
+                  <div class="flex gap-2 items-center">
+                    <input type="number" id="emom-interval-min" placeholder="1" min="0" step="1" class="input-core w-20" />
+                    <span class="text-slate-400 text-xs">min</span>
+                    <input type="number" id="emom-interval-sec" placeholder="00" min="0" max="59" step="1" class="input-core w-20" />
+                    <span class="text-slate-400 text-xs">sec</span>
+                  </div>
+                </div>
+                <div id="emom-rounds-field">
+                  <label class="form-label">Rounds</label>
+                  <input type="number" id="emom-rounds" placeholder="10" min="1" step="1" class="input-core" required />
+                  <p class="text-xs text-slate-400 mt-1">Duration: <span id="emom-duration-display">—</span></p>
+                </div>
+                <div>
+                  <div class="flex justify-between items-center mb-2">
+                    <label class="form-label" id="emom-slot-heading">Sequence</label>
+                    <button type="button" id="emom-add-slot-btn" onclick="addMinuteSlot()" class="btn-core is-secondary btn-size-row">+ Add Interval</button>
+                  </div>
+                  <div id="emom-minute-slots" class="space-y-2">
+                    <div class="minute-row flex gap-2 items-end">
+                      <div class="flex-1">
+                        <span class="minute-label text-xs text-slate-500 font-mono mr-1 inline-block w-24">#1</span>
+                        <select class="movement-exercise dropdown-core w-[calc(100%-7rem)] inline-block" onchange="handleMovementExerciseChange(this)">
+                          <option value="">Select exercise...</option>
+                        </select>
+                      </div>
+                      <div class="w-16">
+                        <input type="number" class="movement-reps input-core" placeholder="Reps" min="1" step="1" />
+                      </div>
+                      <div class="w-20">
+                        <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
+                      </div>
+                      <button type="button" onclick="removeMinuteSlot(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none"><i data-lucide="circle-minus" size="18"></i></button>
+                    </div>
+                  </div>
+                  <p id="emom-summary" class="text-xs text-slate-400 mt-1 hidden">
+                    <span id="emom-summary-text"></span>
+                  </p>
+                </div>
+                <button type="button" onclick="doWorkout()" class="btn-core is-primary btn-size-input">Do Workout</button>
+                <button type="button" onclick="saveEmomPlan()" class="btn-core is-secondary btn-size-input">Save for Later</button>
+                <p id="emomFeedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
+              </form>
+
+              <form id="for-time-form" class="space-y-4 hidden">
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="form-label">Time Cap (minutes)</label>
+                    <input type="number" id="fortime-cap" placeholder="12" min="1" step="1" class="input-core" />
+                  </div>
+                  <div>
+                    <label class="form-label">Rounds</label>
+                    <input type="number" id="fortime-rounds" placeholder="3" min="1" step="1" class="input-core" required />
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between items-center mb-2">
+                    <label class="form-label">Movements</label>
+                    <button type="button" onclick="addMovementRow('fortime-movement-list')" class="btn-core is-secondary btn-size-row">+ Add</button>
+                  </div>
+                  <div id="fortime-movement-list" class="space-y-2">
+                    <div class="movement-row flex gap-2 items-end">
+                      <div class="flex-1">
+                        <select class="movement-exercise dropdown-core" onchange="handleMovementExerciseChange(this)">
+                          <option value="">Select exercise...</option>
+                        </select>
+                      </div>
+                      <div class="w-16">
+                        <input type="number" class="movement-reps input-core" placeholder="Reps" min="1" step="1" />
+                      </div>
+                      <div class="w-20">
+                        <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
+                      </div>
+                      <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none"><i data-lucide="circle-minus" size="18"></i></button>
+                    </div>
+                  </div>
+                </div>
+                <button type="button" onclick="doWorkout()" class="btn-core is-primary btn-size-input">Do Workout</button>
+                <button type="button" onclick="saveForTimePlan()" class="btn-core is-secondary btn-size-input">Save for Later</button>
+                <p id="fortimeFeedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
+              </form>
+
+              <form id="interval-form" class="space-y-4 hidden">
+                <div class="grid grid-cols-3 gap-3">
+                  <div>
+                    <label class="form-label">Rounds</label>
+                    <input type="number" id="interval-rounds" placeholder="5" min="1" step="1" class="input-core" required />
+                  </div>
+                  <div>
+                    <label class="form-label">Work (min)</label>
+                    <input type="number" id="interval-work-min" placeholder="2" min="0" step="1" class="input-core" required />
+                  </div>
+                  <div>
+                    <label class="form-label">Rest (min)</label>
+                    <input type="number" id="interval-rest-min" placeholder="1" min="0" step="1" class="input-core" required />
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between items-center mb-2">
+                    <label class="form-label">Movements (per round)</label>
+                    <button type="button" onclick="addMovementRow('interval-movement-list')" class="btn-core is-secondary btn-size-row">+ Add</button>
+                  </div>
+                  <div id="interval-movement-list" class="space-y-2">
+                    <div class="movement-row flex gap-2 items-end">
+                      <div class="flex-1">
+                        <select class="movement-exercise dropdown-core" onchange="handleMovementExerciseChange(this)">
+                          <option value="">Select exercise...</option>
+                        </select>
+                      </div>
+                      <div class="w-16">
+                        <input type="number" class="movement-reps input-core" placeholder="Reps" min="1" step="1" />
+                      </div>
+                      <div class="w-20">
+                        <input type="number" class="movement-weight input-core" placeholder="Load" min="0" step="any" />
+                      </div>
+                      <button type="button" onclick="removeMovementRow(this)" class="btn-core is-secondary min-w-0 px-1.5 py-1 text-xs leading-none"><i data-lucide="circle-minus" size="18"></i></button>
+                    </div>
+                  </div>
+                </div>
+                <button type="button" onclick="doWorkout()" class="btn-core is-primary btn-size-input">Do Workout</button>
+                <button type="button" onclick="saveIntervalPlan()" class="btn-core is-secondary btn-size-input">Save for Later</button>
+                <p id="intervalFeedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
+              </form>
+            </div>
           </section>
 
         </div>
@@ -1142,21 +1156,21 @@
   <nav id="bottom-nav" class="hidden w-full">
     <div class="max-w-md lg:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="bottom-nav-inner">
-        <button class="nav-tab active" data-tab="dashboard" title="Dashboard">
+        <button class="nav-tab active" data-tab="dashboard" title="Workouts">
             <i data-lucide="layout-dashboard" size="18"></i>
-            <span>Dash</span>
+            <span>Workouts</span>
           </button>
-          <button class="nav-tab" data-tab="performance" title="Performance">
-            <i data-lucide="trending-up" size="18"></i>
-            <span>Perf.</span>
+          <button class="nav-tab" data-tab="calculator" title="Plan">
+            <i data-lucide="clipboard-pen-line" size="18"></i>
+            <span>Plan</span>
           </button>
           <button class="nav-tab" data-tab="training" title="Training">
             <i data-lucide="dumbbell" size="18"></i>
             <span>Train</span>
           </button>
-          <button class="nav-tab" data-tab="calculator" title="Calculator">
-            <i data-lucide="calculator" size="18"></i>
-            <span>Calc</span>
+          <button class="nav-tab" data-tab="performance" title="Performance">
+            <i data-lucide="trending-up" size="18"></i>
+            <span>Perf.</span>
           </button>
           <button class="nav-tab" data-tab="history" title="History">
             <i data-lucide="history" size="18"></i>
