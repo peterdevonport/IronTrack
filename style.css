@@ -532,6 +532,8 @@ details.surface-card[open] summary::after {
 
 .nav-tab svg { width: 18px; height: 18px; }
 
+.plan-movement-remove svg { width: 18px; height: 18px; }
+
 /* Tab Content Show/Hide */
 .tab-content { display: none; }
 

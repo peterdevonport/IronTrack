@@ -2029,33 +2029,45 @@ function renderPlanMovements() {
 
   if (workoutMovements.length === 0) {
     list.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">Add movements above.</p>';
+    const addBtn = document.getElementById('plan-add-btn');
+    if (addBtn) addBtn.disabled = true;
     return;
   }
 
   let html = '';
-  workoutMovements.forEach(m => {
+  workoutMovements.forEach((m, i) => {
     const oneRM = activeRecords[m.exerciseId] || 0;
     let source, weight;
     if (m.weightMode === 'pct' && m.pct) {
       weight = oneRM > 0 ? Math.round(oneRM * m.pct / 100) : m.weight;
-      source = `${m.exerciseId} ${m.reps} reps @ ${m.pct}%`;
+      source = `${m.reps}x ${m.exerciseId} @ ${m.pct}% 1RM (${weight}kg)`;
     } else if (m.weightMode === 'rpe' && m.rpe) {
       const rir = 10 - m.rpe;
       const pct1RM = 100 / (1 + (m.reps + rir) / 30);
       weight = oneRM > 0 ? Math.round(oneRM * pct1RM / 100) : m.weight;
-      source = `${m.exerciseId} ${m.reps} reps @ RPE ${m.rpe}`;
+      source = `${m.reps}x ${m.exerciseId} @ RPE ${m.rpe} (${weight}kg)`;
     } else {
       weight = m.weight;
-      source = `${m.exerciseId} ${m.reps} reps @ ${m.weight} kg`;
+      source = `${m.reps}x ${m.exerciseId} @ ${m.weight}kg`;
     }
     html += `
     <div class="flex justify-between items-center py-1.5 px-1 rounded-lg hover:bg-slate-800/40">
-      <span class="text-slate-200 font-mono text-sm">${escapeHtml(source)}</span>
-      <span class="text-slate-200 font-mono text-sm">${Math.round(weight)} kg</span>
+      <span class="text-slate-200 font-mono text-sm truncate">${escapeHtml(source)}</span>
+      <button type="button" onclick="removePlanMovement(${i})" class="plan-movement-remove shrink-0 hover:!text-rose-400 transition-colors" title="Remove">
+        <i data-lucide="trash-2" size="18"></i>
+      </button>
     </div>`;
   });
 
   list.innerHTML = html;
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function removePlanMovement(index) {
+  if (index < 0 || index >= workoutMovements.length) return;
+  workoutMovements.splice(index, 1);
+  renderPlanMovements();
+  haptic(HAPTIC.tap);
 }
 
 function populatePlanMovements(movements) {
@@ -3714,6 +3726,23 @@ const WORKOUT_TYPE_TO_RESULT_ID = {
   INTERVAL: 'interval'
 };
 
+function formatMovementWeight(m) {
+  const oneRM = activeRecords[m.exerciseId || m.movement] || 0;
+  const reps = parseInt(m.reps, 10) || 1;
+  if (m.weightMode === 'pct' && m.pct) {
+    const computed = oneRM > 0 ? Math.round(oneRM * m.pct / 100) : m.weight;
+    return ` @ ${m.pct}% 1RM (${computed}kg)`;
+  }
+  if (m.weightMode === 'rpe' && m.rpe) {
+    const rir = 10 - m.rpe;
+    const pct1RM = 100 / (1 + (reps + rir) / 30);
+    const computed = oneRM > 0 ? Math.round(oneRM * pct1RM / 100) : m.weight;
+    return ` @ RPE ${m.rpe} (${computed}kg)`;
+  }
+  if (m.weight) return ` @ ${m.weight}kg`;
+  return '';
+}
+
 function buildWorkoutDescription(workout) {
   const { type, structure } = workout;
   const lines = [];
@@ -3723,7 +3752,7 @@ function buildWorkoutDescription(workout) {
       const mins = Math.round((structure.durationSeconds || 0) / 60);
       lines.push(`${mins}:00`);
       (structure.movements || []).forEach(m =>
-        lines.push(`\u2022 ${m.reps || '?'} ${m.movement}${m.kg ? ' @ ' + m.kg + ' KG' : ''}`)
+        lines.push(`\u2022 ${m.reps || '?'}x ${m.movement}${formatMovementWeight(m)}`)
       );
       break;
     }
@@ -3739,7 +3768,7 @@ function buildWorkoutDescription(workout) {
       }
       (structure.minutes || []).forEach((m, i) => {
         const mov = m.movements?.[0];
-        if (mov) lines.push(`Round ${i + 1}: ${mov.reps || '?'} ${mov.exerciseId || ''}${mov.weight ? ' @ ' + mov.weight + ' KG' : ''}`);
+        if (mov) lines.push(`Round ${i + 1}: ${mov.reps || '?'}x ${mov.exerciseId || ''}${formatMovementWeight(mov)}`);
       });
       break;
     }
@@ -3752,7 +3781,7 @@ function buildWorkoutDescription(workout) {
       if (uniqueMovements.length) {
         lines.push('Each round:');
         uniqueMovements.forEach(m =>
-          lines.push(`  ${m.reps || '?'} ${m.movement}${m.kg ? ' @ ' + m.kg + ' KG' : ''}`)
+          lines.push(`  ${m.reps || '?'}x ${m.movement}${formatMovementWeight(m)}`)
         );
       }
       break;
@@ -3762,7 +3791,7 @@ function buildWorkoutDescription(workout) {
       const rMin = Math.floor((structure.restSeconds || 0) / 60);
       lines.push(`Work ${wMin}:00 \u00B7 Rest ${rMin}:00 \u00B7 ${structure.rounds || 0} rounds`);
       (structure.movements || []).forEach(m =>
-        lines.push(`  ${m.reps || '?'} ${m.movement}${m.kg ? ' @ ' + m.kg + ' KG' : ''}`)
+        lines.push(`  ${m.reps || '?'}x ${m.movement}${formatMovementWeight(m)}`)
       );
       break;
     }
@@ -5937,6 +5966,7 @@ window.loadPlan = loadPlan;
 window.toggleWorkoutCard = toggleWorkoutCard;
 window.redoWorkout = redoWorkout;
 window.deletePlan = deletePlan;
+window.removePlanMovement = removePlanMovement;
 window.deleteStructuredWorkout = deleteStructuredWorkout;
 window.openShareModal = openShareModal;
 window.saveSharedPlanToMyPlans = saveSharedPlanToMyPlans;
