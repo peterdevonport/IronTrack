@@ -3341,6 +3341,10 @@ function renderStructuredWorkoutCard(sw) {
       ${hasMovements ? `
       <div class="flex gap-2 mt-2 w-full">
 
+        <button type="button" onclick="event.stopPropagation(); doStructuredWorkout('${sw.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11" title="Do Workout">
+          <i data-lucide="dumbbell" size="18"></i>
+        </button>
+
         <button type="button" onclick="event.stopPropagation(); redoWorkout('${sw.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11" title="Load">
           <i data-lucide="upload" size="18"></i>
         </button>
@@ -3619,6 +3623,7 @@ function renderPlanCard(plan) {
       ${movementsHtml}
       ${hasMovements ? `
       <div class="flex gap-2 mt-3 w-full">
+        <button type="button" onclick="doPlanWorkout('${plan.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11"><i data-lucide="dumbbell" size="18"></i></button>
         <button type="button" onclick="loadPlan('${plan.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11"><i data-lucide="upload" size="18"></i></button>
         <button type="button" onclick="openShareModal('${plan.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11"><i data-lucide="share-2" size="18"></i></button>
         <button type="button" onclick="deletePlan('${plan.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11 hover:!text-rose-400 hover:!border-rose-400"><i data-lucide="trash-2" size="18"></i></button>
@@ -3800,39 +3805,9 @@ function buildWorkoutSummaryLine(type, structure) {
   }
 }
 
-function doWorkout() {
-  const type = document.getElementById('workout-type').value;
-  if (!type) { showFeedback('Select a workout type first', 'rose', 'planFeedback'); return; }
-
-  const resultId = WORKOUT_TYPE_TO_RESULT_ID[type];
-  if (!resultId) { showFeedback('Unknown workout type.', 'rose', 'planFeedback'); return; }
-
-  let structure;
-  try {
-    structure = capturePlanStructure(type);
-  } catch (err) {
-    console.error('capturePlanStructure error:', err);
-    showFeedback(err.message, 'rose', 'log-workout-feedback');
-    return;
-  }
-
-  const hasMovements = type === 'EMOM'
-    ? (structure.minutes && structure.minutes.length > 0)
-    : (structure.movements && structure.movements.length > 0);
-  if (!hasMovements) {
-    showFeedback('Add at least one movement before starting the workout.', 'rose', 'planFeedback');
-    return;
-  }
-
-  switchTab('training');
-
-  pendingPlannedWorkout = {
-    id: 'pending_' + Date.now(),
-    type: type,
-    name: type === 'FOR_TIME' ? 'For Time' : type + ' Workout',
-    timestamp: new Date().toISOString(),
-    structure
-  };
+function setupTrainingTab(w) {
+  const type = w.type;
+  pendingPlannedWorkout = w;
 
   const placeholder = document.getElementById('log-workout-placeholder');
   if (placeholder) placeholder.classList.add('hidden');
@@ -3847,7 +3822,7 @@ function doWorkout() {
   const desc = document.getElementById('workout-description');
   if (desc) {
     desc.classList.remove('hidden');
-    desc.innerHTML = buildWorkoutDescription(pendingPlannedWorkout);
+    desc.innerHTML = buildWorkoutDescription(w);
   }
 
   document.querySelectorAll('[id^="log-result-"]').forEach(el => el.classList.add('hidden'));
@@ -3875,6 +3850,80 @@ function doWorkout() {
   const fb = document.getElementById('log-workout-feedback');
   if (fb) fb.textContent = '';
   haptic(HAPTIC.tap);
+}
+
+function doWorkout() {
+  const type = document.getElementById('workout-type').value;
+  if (!type) { showFeedback('Select a workout type first', 'rose', 'planFeedback'); return; }
+
+  const resultId = WORKOUT_TYPE_TO_RESULT_ID[type];
+  if (!resultId) { showFeedback('Unknown workout type.', 'rose', 'planFeedback'); return; }
+
+  let structure;
+  try {
+    structure = capturePlanStructure(type);
+  } catch (err) {
+    console.error('capturePlanStructure error:', err);
+    showFeedback(err.message, 'rose', 'log-workout-feedback');
+    return;
+  }
+
+  const hasMovements = type === 'EMOM'
+    ? (structure.minutes && structure.minutes.length > 0)
+    : (structure.movements && structure.movements.length > 0);
+  if (!hasMovements) {
+    showFeedback('Add at least one movement before starting the workout.', 'rose', 'planFeedback');
+    return;
+  }
+
+  switchTab('training');
+  setupTrainingTab({
+    id: 'pending_' + Date.now(),
+    type: type,
+    name: type === 'FOR_TIME' ? 'For Time' : type + ' Workout',
+    timestamp: new Date().toISOString(),
+    structure
+  });
+}
+
+function doStructuredWorkout(workoutId) {
+  const sw = lastStructuredWorkouts.find(w => w.id === workoutId);
+  if (!sw) return;
+  switchTab('training');
+  setupTrainingTab({
+    id: 'pending_' + Date.now(),
+    type: sw.type,
+    name: sw.name || (sw.type === 'FOR_TIME' ? 'For Time' : sw.type + ' Workout'),
+    timestamp: new Date().toISOString(),
+    structure: sw.structure || {}
+  });
+}
+
+function doPlanWorkout(planId) {
+  const plan = lastWorkoutPlans.find(p => p.id === planId);
+  if (!plan) return;
+  switchTab('training');
+  setupTrainingTab({
+    id: 'pending_' + Date.now(),
+    type: plan.type,
+    name: plan.name || (plan.type === 'FOR_TIME' ? 'For Time' : plan.type + ' Workout'),
+    timestamp: new Date().toISOString(),
+    structure: plan.structure || {}
+  });
+}
+
+function doSharedPlan(shareId) {
+  const share = lastSharedPlans.find(s => s.id === shareId);
+  if (!share || !share.content) return;
+  const plan = share.content;
+  switchTab('training');
+  setupTrainingTab({
+    id: 'pending_' + Date.now(),
+    type: plan.type,
+    name: plan.name || (plan.type === 'FOR_TIME' ? 'For Time' : plan.type + ' Workout'),
+    timestamp: new Date().toISOString(),
+    structure: plan.structure || {}
+  });
 }
 
 async function submitPendingWorkout() {
@@ -4417,6 +4466,7 @@ function renderSharedPlanCard(share) {
     <div class="flex flex-wrap gap-1.5 mt-3 structured-movements${hasMovements ? ' hidden' : ''}">
       ${displayMovements}
       ${hasMovements ? `<div class="flex gap-2 mt-3 w-full">
+        <button type="button" onclick="doSharedPlan('${share.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11"><i data-lucide="dumbbell" size="18"></i></button>
         <button type="button" onclick="loadSharedPlan('${share.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11"><i data-lucide="upload" size="18"></i></button>
         <button type="button" onclick="dismissSharedPlan('${share.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11 hover:!text-rose-400 hover:!border-rose-400"><i data-lucide="trash-2" size="18"></i></button>
       </div>` : ''}
@@ -5897,6 +5947,9 @@ window.toggleFavorite = toggleFavorite;
 window.togglePlanFavorite = togglePlanFavorite;
 window.toggleStructuredFavorite = toggleStructuredFavorite;
 window.doWorkout = doWorkout;
+window.doStructuredWorkout = doStructuredWorkout;
+window.doPlanWorkout = doPlanWorkout;
+window.doSharedPlan = doSharedPlan;
 window.submitPendingWorkout = submitPendingWorkout;
 window.loadSharedPlan = loadSharedPlan;
 window.switchShareMode = switchShareMode;
