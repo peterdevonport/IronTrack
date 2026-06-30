@@ -2395,11 +2395,14 @@ function toggleForTimeDnf() {
   if (!timeInputs || !capRepsContainer) return;
   timeInputs.classList.toggle('hidden', dnf);
   capRepsContainer.classList.toggle('hidden', !dnf);
-  // Toggle required on time inputs so HTML5 validation doesn't block submit
   ['fortime-minutes', 'fortime-seconds'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.toggleAttribute('required', !dnf);
   });
+  if (dnf) {
+    recalcForTimeRemaining();
+  }
+  updateLogScorePreview();
   updateForTimeScorePreview();
 }
 
@@ -2411,7 +2414,7 @@ function updateForTimeScorePreview() {
   const preview = document.getElementById('fortime-score-preview');
   if (!preview) return;
   if (dnf) {
-    preview.textContent = capReps > 0 ? `Cap ${capReps}` : 'DNF';
+    preview.textContent = `Cap ${capReps || 0}`;
   } else if (mins > 0 || secs > 0) {
     preview.textContent = formatScore_TIME_SECONDS(mins * 60 + secs);
   } else {
@@ -2535,6 +2538,102 @@ function updateIntervalScorePreview() {
   } else {
     preview.textContent = '—';
   }
+}
+
+function getRepsPerRound(type, structure) {
+  if (type === 'EMOM') {
+    const firstMin = structure?.minutes?.[0];
+    if (!firstMin) return 0;
+    return (firstMin.movements || []).reduce((sum, m) => sum + (parseInt(m.reps, 10) || 0), 0);
+  }
+  return (structure?.movements || []).reduce((sum, m) => sum + (parseInt(m.reps, 10) || 0), 0);
+}
+
+function recalcForTimeRemaining() {
+  const type = pendingPlannedWorkout?.type;
+  if (type !== 'FOR_TIME') return;
+  const structure = pendingPlannedWorkout?.structure;
+  if (!structure) return;
+  const roundsCompleted = parseInt(document.getElementById('log-rounds')?.value, 10) || 0;
+  const partialReps = parseInt(document.getElementById('log-partial-reps')?.value, 10) || 0;
+  const prescribed = structure.rounds || 0;
+  const repsPerRound = getRepsPerRound(type, structure);
+  const repsDone = roundsCompleted * repsPerRound + partialReps;
+  const totalReps = prescribed * repsPerRound;
+  const remaining = Math.max(0, totalReps - repsDone);
+  const capReps = document.getElementById('fortime-cap-reps');
+  if (capReps) capReps.value = remaining;
+  updateLogScorePreview();
+  updateForTimeScorePreview();
+}
+
+function logRound() {
+  const input = document.getElementById('log-rounds');
+  if (!input) return;
+  input.value = (parseInt(input.value, 10) || 0) + 1;
+  const partial = document.getElementById('log-partial-reps');
+  if (partial) partial.value = 0;
+  updateLogScorePreview();
+  updateLogWorkoutButtonState();
+  recalcForTimeRemaining();
+  haptic(HAPTIC.tap);
+}
+
+function logRep() {
+  const type = pendingPlannedWorkout?.type;
+  const structure = pendingPlannedWorkout?.structure;
+  const repsPerRound = getRepsPerRound(type, structure);
+  const partial = document.getElementById('log-partial-reps');
+  if (!partial) return;
+  const current = parseInt(partial.value, 10) || 0;
+  if (repsPerRound > 0 && current + 1 >= repsPerRound) {
+    partial.value = 0;
+    const roundInput = document.getElementById('log-rounds');
+    if (roundInput) roundInput.value = (parseInt(roundInput.value, 10) || 0) + 1;
+    updateLogWorkoutButtonState();
+  } else {
+    partial.value = current + 1;
+  }
+  updateLogScorePreview();
+  recalcForTimeRemaining();
+  haptic(HAPTIC.tap);
+}
+
+function updateLogScorePreview() {
+  const rounds = parseInt(document.getElementById('log-rounds')?.value, 10) || 0;
+  const partial = parseInt(document.getElementById('log-partial-reps')?.value, 10) || 0;
+  const type = pendingPlannedWorkout?.type;
+  const structure = pendingPlannedWorkout?.structure;
+  const preview = document.getElementById('log-score-preview');
+  if (!preview) return;
+  if (type === 'FOR_TIME') {
+    const capVal = parseInt(document.getElementById('fortime-cap-reps')?.value, 10);
+    preview.textContent = `Cap ${capVal >= 0 ? capVal : 0}`;
+  } else if (type === 'EMOM') {
+    const total = structure?.rounds || 0;
+    if (rounds > 0 || partial > 0 || total > 0) {
+      preview.textContent = `${formatScore_ROUNDS_AND_REPS(rounds, partial)} / ${total}`;
+    } else {
+      preview.textContent = '—';
+    }
+  } else if (rounds > 0 || partial > 0) {
+    preview.textContent = formatScore_ROUNDS_AND_REPS(rounds, partial);
+  } else {
+    preview.textContent = '—';
+  }
+}
+
+function updateLogWorkoutButtonState() {
+  const rounds = parseInt(document.getElementById('log-rounds')?.value, 10) || 0;
+  const structure = pendingPlannedWorkout?.structure;
+  const goal = structure?.rounds || 5;
+  const met = rounds >= goal;
+  const btn = document.getElementById('log-workout-btn');
+  const roundBtn = document.getElementById('log-round-btn');
+  const repBtn = document.getElementById('log-rep-btn');
+  if (btn) { btn.classList.toggle('is-primary', met); btn.classList.toggle('is-ghost', !met); }
+  if (roundBtn) { roundBtn.classList.toggle('is-secondary', met); roundBtn.classList.toggle('is-primary', !met); }
+  if (repBtn) { repBtn.classList.toggle('is-secondary', met); repBtn.classList.toggle('is-primary-ghost', !met); }
 }
 
 async function submitIntervalWorkout(e) {
@@ -3742,7 +3841,7 @@ function doWorkout() {
   if (badge) {
     badge.textContent = type;
     badge.className = 'workout-type-badge self-start ' + type.toLowerCase();
-    badge.classList.remove('hidden');
+    badge.style.display = '';
   }
 
   const desc = document.getElementById('workout-description');
@@ -3752,11 +3851,26 @@ function doWorkout() {
   }
 
   document.querySelectorAll('[id^="log-result-"]').forEach(el => el.classList.add('hidden'));
-  const resultEl = document.getElementById('log-result-' + resultId);
-  if (resultEl) resultEl.classList.remove('hidden');
+  document.getElementById('log-result')?.classList.remove('hidden');
+  const fortimeEl = document.getElementById('log-result-fortime');
+  if (fortimeEl) fortimeEl.classList.toggle('hidden', type !== 'FOR_TIME');
+  if (type === 'FOR_TIME') {
+    document.getElementById('fortime-dnf') && (document.getElementById('fortime-dnf').checked = false);
+    document.getElementById('fortime-cap-reps-container')?.classList.add('hidden');
+    document.getElementById('fortime-minutes')?.toggleAttribute('required', true);
+    document.getElementById('fortime-seconds')?.toggleAttribute('required', true);
+  }
+
+  const logRounds = document.getElementById('log-rounds');
+  const logPartial = document.getElementById('log-partial-reps');
+  if (logRounds) logRounds.value = '';
+  if (logPartial) logPartial.value = '';
+  recalcForTimeRemaining();
+  updateLogScorePreview();
+  updateLogWorkoutButtonState();
 
   const btn = document.getElementById('log-workout-btn');
-  if (btn) btn.disabled = false;
+  if (btn) { btn.disabled = false; }
 
   const fb = document.getElementById('log-workout-feedback');
   if (fb) fb.textContent = '';
@@ -3774,8 +3888,8 @@ async function submitPendingWorkout() {
   try {
     switch (type) {
       case 'AMRAP': {
-        const roundsCompleted = parseInt(document.getElementById('amrap-rounds').value, 10);
-        const additionalReps = parseInt(document.getElementById('amrap-additional-reps').value, 10) || 0;
+        const roundsCompleted = parseInt(document.getElementById('log-rounds').value, 10);
+        const additionalReps = parseInt(document.getElementById('log-partial-reps').value, 10) || 0;
         if (roundsCompleted < 0) return showFeedback('Enter rounds completed.', 'rose', 'log-workout-feedback');
 
         workoutDoc = {
@@ -3795,7 +3909,7 @@ async function submitPendingWorkout() {
         break;
       }
       case 'EMOM': {
-        const roundsCompleted = parseInt(document.getElementById('emom-rounds-completed').value, 10);
+        const roundsCompleted = parseInt(document.getElementById('log-rounds').value, 10);
         if (roundsCompleted < 0) return showFeedback('Enter rounds completed.', 'rose', 'log-workout-feedback');
 
         workoutDoc = {
@@ -3839,8 +3953,8 @@ async function submitPendingWorkout() {
         break;
       }
       case 'INTERVAL': {
-        const roundsCompleted = parseInt(document.getElementById('interval-rounds-completed').value, 10);
-        const partialReps = parseInt(document.getElementById('interval-partial-reps').value, 10) || 0;
+        const roundsCompleted = parseInt(document.getElementById('log-rounds').value, 10);
+        const partialReps = parseInt(document.getElementById('log-partial-reps').value, 10) || 0;
         if (roundsCompleted < 0) return showFeedback('Enter rounds completed.', 'rose', 'log-workout-feedback');
 
         workoutDoc = {
@@ -3866,14 +3980,41 @@ async function submitPendingWorkout() {
     // reset
     pendingPlannedWorkout = null;
     const pwBadge = document.getElementById('log-workout-type-badge');
-    if (pwBadge) pwBadge.classList.add('hidden');
+    if (pwBadge) { pwBadge.textContent = ''; pwBadge.style.display = 'none'; }
     const pwPlaceholder = document.getElementById('log-workout-placeholder');
     if (pwPlaceholder) pwPlaceholder.classList.remove('hidden');
     const pwDesc = document.getElementById('workout-description');
-    if (pwDesc) pwDesc.classList.add('hidden');
+    if (pwDesc) { pwDesc.classList.add('hidden'); pwDesc.innerHTML = ''; }
     document.querySelectorAll('[id^="log-result-"]').forEach(el => el.classList.add('hidden'));
+    // Clear counter zone
+    const logRoundsReset = document.getElementById('log-rounds');
+    const logPartialReset = document.getElementById('log-partial-reps');
+    if (logRoundsReset) logRoundsReset.value = '';
+    if (logPartialReset) logPartialReset.value = '';
+    const roundBtn = document.getElementById('log-round-btn');
+    const repBtn = document.getElementById('log-rep-btn');
+    if (roundBtn) { roundBtn.classList.remove('is-secondary'); roundBtn.classList.add('is-primary'); }
+    if (repBtn) { repBtn.classList.remove('is-secondary'); repBtn.classList.add('is-primary-ghost'); }
+    const scorePreview = document.getElementById('log-score-preview');
+    if (scorePreview) scorePreview.textContent = '—';
+    // Clear FOR_TIME state
+    const ftDnf = document.getElementById('fortime-dnf');
+    if (ftDnf) ftDnf.checked = false;
+    const ftMins = document.getElementById('fortime-minutes');
+    const ftSecs = document.getElementById('fortime-seconds');
+    const ftCap = document.getElementById('fortime-cap-reps');
+    if (ftMins) { ftMins.value = ''; ftMins.toggleAttribute('required', true); }
+    if (ftSecs) { ftSecs.value = ''; ftSecs.toggleAttribute('required', true); }
+    if (ftCap) ftCap.value = '';
+    const ftTimeInputs = document.getElementById('fortime-time-inputs');
+    const ftCapContainer = document.getElementById('fortime-cap-reps-container');
+    if (ftTimeInputs) ftTimeInputs.classList.remove('hidden');
+    if (ftCapContainer) ftCapContainer.classList.add('hidden');
+    const ftScore = document.getElementById('fortime-score-preview');
+    if (ftScore) ftScore.textContent = '—';
+    // Reset button
     const pwBtn = document.getElementById('log-workout-btn');
-    if (pwBtn) pwBtn.disabled = true;
+    if (pwBtn) { pwBtn.disabled = true; pwBtn.classList.remove('is-primary'); pwBtn.classList.add('is-ghost'); }
     showFeedback('Workout logged!', 'emerald', 'log-workout-feedback');
     haptic(HAPTIC.confirm);
   } catch (err) {
@@ -4969,11 +5110,12 @@ if (document.getElementById('fortime-movement-list')) {
     // Removed - uses unified Add Movement form
   }
 
-  // INTERVAL Score Preview
-const intervalRounds = document.getElementById('interval-rounds-completed');
-const intervalPartial = document.getElementById('interval-partial-reps');
-if (intervalRounds) intervalRounds.addEventListener('input', updateIntervalScorePreview);
-if (intervalPartial) intervalPartial.addEventListener('input', updateIntervalScorePreview);
+  // Unified Log Score Preview
+const logRoundsInput = document.getElementById('log-rounds');
+const logPartialInput = document.getElementById('log-partial-reps');
+if (logRoundsInput) { logRoundsInput.addEventListener('input', updateLogScorePreview); logRoundsInput.addEventListener('input', updateLogWorkoutButtonState); logRoundsInput.addEventListener('input', recalcForTimeRemaining); }
+if (logPartialInput) { logPartialInput.addEventListener('input', updateLogScorePreview); logPartialInput.addEventListener('input', recalcForTimeRemaining); }
+document.getElementById('fortime-cap-reps')?.addEventListener('input', updateLogScorePreview);
 
 // Initial movement row for INTERVAL
 if (document.getElementById('interval-movement-list')) {
@@ -5722,6 +5864,8 @@ window.addFriendFromLeaderboard = addFriendFromLeaderboard;
 window.removeFriend = removeFriend;
 window.switchLeaderboardScope = switchLeaderboardScope;
 window.switchLeaderboardFormula = switchLeaderboardFormula;
+window.logRound = logRound;
+window.logRep = logRep;
 window.toggleLeaderboardExpand = toggleLeaderboardExpand;
 window.showQRCode = showQRCode;
 window.handleCalcRemove = handleCalcRemove;
