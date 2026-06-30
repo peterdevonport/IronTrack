@@ -3141,7 +3141,7 @@ function selectCalendarDay(dateStr) {
             return `
 <div class="bg-slate-900 border border-slate-700 rounded-xl p-2.5">
     <div class="flex justify-between items-center">
-        <span class="workout-type-badge ${badgeClass}">${escapeHtml(item.type)}</span>
+        <span class="workout-type-badge ${badgeClass}">${escapeHtml(formatWorkoutType(item.type))}</span>
         <span class="text-emerald-400 font-bold font-mono text-xs">${escapeHtml(item.scoreDisplay || '—')}</span>
     </div>
     ${descLine ? `<p class="text-[10px] text-slate-400 font-mono mt-1">${escapeHtml(descLine)}</p>` : ''}
@@ -3329,7 +3329,7 @@ function renderStructuredWorkoutCard(sw) {
         </div>
         ` : ''}
 
-        <span class="workout-type-badge self-start ${badgeClass}">${escapeHtml(type)}</span>
+        <span class="workout-type-badge self-start ${badgeClass}">${escapeHtml(formatWorkoutType(type))}</span>
         ${descLine ? `<span class="text-xs text-slate-400 font-mono mt-0.5">${escapeHtml(descLine)}</span>` : ''}
       </div>
 
@@ -3337,9 +3337,6 @@ function renderStructuredWorkoutCard(sw) {
         <button type="button" data-fav-id="${sw.id}" onclick="event.stopPropagation(); toggleStructuredFavorite('${sw.id}')" class="${favColorClass} hover:scale-110 transition-transform btn-fav-star" title="Favorite">
           ${starIcon}
         </button>
-        ${hasMovements ? `
-        <span class="text-xs text-slate-500 font-medium hover:text-slate-300 transition-colors cursor-pointer show-more-text">Show more</span>
-        ` : ''}
       </div>
 
     </div>
@@ -3353,7 +3350,7 @@ function renderStructuredWorkoutCard(sw) {
       ${hasMovements ? `
       <div class="flex gap-2 mt-2 w-full">
 
-        <button type="button" onclick="event.stopPropagation(); doStructuredWorkout('${sw.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11" title="Do Workout">
+        <button type="button" onclick="event.stopPropagation(); doStructuredWorkout('${sw.id}')" class="flex-1 btn-core is-primary-ghost btn-card-action h-11" title="Do Workout">
           <i data-lucide="dumbbell" size="18"></i>
         </button>
 
@@ -3371,6 +3368,10 @@ function renderStructuredWorkoutCard(sw) {
 
       </div>` : ''}
     </div>
+    ${hasMovements ? `
+    <div class="flex justify-end mt-3">
+      <span class="text-xs text-slate-500 font-medium hover:text-slate-300 transition-colors cursor-pointer show-more-text" onclick="event.stopPropagation(); toggleWorkoutCard(this)">Show more</span>
+    </div>` : ''}
 </div>
   `;
 }
@@ -3616,7 +3617,7 @@ function renderPlanCard(plan) {
         </div>
         ` : ''}
 
-        <span class="workout-type-badge self-start ${badgeClass}">${escapeHtml(type)}</span>
+        <span class="workout-type-badge self-start ${badgeClass}">${escapeHtml(formatWorkoutType(type))}</span>
         ${descLine ? `<span class="text-xs text-slate-400 font-mono mt-0.5">${escapeHtml(descLine)}</span>` : ''}
       </div>
 
@@ -3624,9 +3625,6 @@ function renderPlanCard(plan) {
         <button type="button" data-fav-id="${plan.id}" onclick="event.stopPropagation(); togglePlanFavorite('${plan.id}')" class="${favColorClass} hover:scale-110 transition-transform btn-fav-star" title="Favorite">
           ${starIcon}
         </button>
-        ${hasMovements ? `
-        <span class="text-xs text-slate-500 font-medium hover:text-slate-300 transition-colors cursor-pointer show-more-text">Show more</span>
-        ` : ''}
       </div>
 
     </div>
@@ -3635,12 +3633,16 @@ function renderPlanCard(plan) {
       ${movementsHtml}
       ${hasMovements ? `
       <div class="flex gap-2 mt-3 w-full">
-        <button type="button" onclick="doPlanWorkout('${plan.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11"><i data-lucide="dumbbell" size="18"></i></button>
+        <button type="button" onclick="doPlanWorkout('${plan.id}')" class="flex-1 btn-core is-primary-ghost btn-card-action h-11"><i data-lucide="dumbbell" size="18"></i></button>
         <button type="button" onclick="loadPlan('${plan.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11"><i data-lucide="clipboard-pen-line" size="18"></i></button>
         <button type="button" onclick="openShareModal('${plan.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11"><i data-lucide="share-2" size="18"></i></button>
         <button type="button" onclick="deletePlan('${plan.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11 hover:!text-rose-400 hover:!border-rose-400"><i data-lucide="trash-2" size="18"></i></button>
       </div>` : ''}
     </div>
+    ${hasMovements ? `
+    <div class="flex justify-end mt-3">
+      <span class="text-xs text-slate-500 font-medium hover:text-slate-300 transition-colors cursor-pointer show-more-text" onclick="event.stopPropagation(); toggleWorkoutCard(this)">Show more</span>
+    </div>` : ''}
 </div>`;
 }
 
@@ -3800,19 +3802,22 @@ function buildWorkoutDescription(workout) {
   return lines.join('<br>');
 }
 
+function formatWorkoutType(type) {
+  return type === 'FOR_TIME' ? 'For Time' : type;
+}
+
 function buildWorkoutSummaryLine(type, structure) {
   switch (type) {
     case 'AMRAP': {
       const mins = Math.round((structure.durationSeconds || 0) / 60);
-      return `${mins}:00`;
+      return `As Many Rounds As Possible in ${mins}:00 mins`;
     }
     case 'EMOM': {
       const rounds = structure.rounds || 0;
-      const intervalSec = structure.intervalSeconds || 0;
-      if (intervalSec === 60) return `\u00D7 ${rounds} rounds`;
+      const intervalSec = structure.intervalSeconds || 60;
       const mins = Math.floor(intervalSec / 60);
       const secs = intervalSec % 60;
-      return `Every ${mins}:${String(secs).padStart(2, '0')} \u00B7 ${rounds} rounds`;
+      return `Every ${mins}:${String(secs).padStart(2, '0')} x ${rounds} rounds`;
     }
     case 'FOR_TIME': {
       const cap = structure.durationMinutes;
@@ -3843,7 +3848,7 @@ function setupTrainingTab(w) {
 
   const badge = document.getElementById('log-workout-type-badge');
   if (badge) {
-    badge.textContent = type;
+    badge.textContent = formatWorkoutType(type);
     badge.className = 'workout-type-badge self-start ' + type.toLowerCase();
     badge.style.display = '';
   }
@@ -4478,7 +4483,7 @@ function renderSharedPlanCard(share) {
         </div>
         ` : ''}
 
-        <span class="workout-type-badge self-start ${badgeClass}">${escapeHtml(type)}</span>
+        <span class="workout-type-badge self-start ${badgeClass}">${escapeHtml(formatWorkoutType(type))}</span>
         ${descLine ? `<span class="text-xs text-slate-400 font-mono mt-0.5">${escapeHtml(descLine)}</span>` : ''}
       </div>
 
@@ -4486,20 +4491,21 @@ function renderSharedPlanCard(share) {
         <button type="button" data-fav-id="${share.id}" onclick="toggleFavorite('${share.id}')" class="${favColorClass} hover:scale-110 transition-transform btn-fav-star" title="Favorite">
           ${starIcon}
         </button>
-        ${hasMovements ? `
-        <span class="text-xs text-slate-500 font-medium hover:text-slate-300 transition-colors cursor-pointer show-more-text">Show more</span>
-        ` : ''}
       </div>
 
     </div>
     <div class="flex flex-wrap gap-1.5 mt-3 structured-movements${hasMovements ? ' hidden' : ''}">
       ${displayMovements}
       ${hasMovements ? `<div class="flex gap-2 mt-3 w-full">
-        <button type="button" onclick="doSharedPlan('${share.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11"><i data-lucide="dumbbell" size="18"></i></button>
+        <button type="button" onclick="doSharedPlan('${share.id}')" class="flex-1 btn-core is-primary-ghost btn-card-action h-11"><i data-lucide="dumbbell" size="18"></i></button>
         <button type="button" onclick="loadSharedPlan('${share.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11"><i data-lucide="clipboard-pen-line" size="18"></i></button>
         <button type="button" onclick="dismissSharedPlan('${share.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11 hover:!text-rose-400 hover:!border-rose-400"><i data-lucide="trash-2" size="18"></i></button>
       </div>` : ''}
     </div>
+    ${hasMovements ? `
+    <div class="flex justify-end mt-3">
+      <span class="text-xs text-slate-500 font-medium hover:text-slate-300 transition-colors cursor-pointer show-more-text" onclick="event.stopPropagation(); toggleWorkoutCard(this)">Show more</span>
+    </div>` : ''}
 </div>`;
 }
 
