@@ -3352,18 +3352,22 @@ function renderStructuredWorkoutCard(sw) {
 
         <button type="button" onclick="event.stopPropagation(); doStructuredWorkout('${sw.id}')" class="flex-1 btn-core is-primary-ghost btn-card-action h-11" title="Do Workout">
           <i data-lucide="dumbbell" size="18"></i>
+          <span>Train</span>
         </button>
 
         <button type="button" onclick="event.stopPropagation(); redoWorkout('${sw.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11" title="Load">
           <i data-lucide="clipboard-pen-line" size="18"></i>
+          <span>Plan</span>
         </button>
 
         <button type="button" onclick="event.stopPropagation(); openShareModal('${sw.id}', true)" class="flex-1 btn-core is-ghost btn-card-action h-11" title="Share">
           <i data-lucide="share-2" size="18"></i>
+          <span>Share</span>
         </button>
 
         <button type="button" onclick="event.stopPropagation(); deleteStructuredWorkout('${sw.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11 hover:!text-rose-400 hover:!border-rose-400" title="Delete">
           <i data-lucide="trash-2" size="18"></i>
+          <span>Delete</span>
         </button>
 
       </div>` : ''}
@@ -3633,10 +3637,10 @@ function renderPlanCard(plan) {
       ${movementsHtml}
       ${hasMovements ? `
       <div class="flex gap-2 mt-3 w-full">
-        <button type="button" onclick="doPlanWorkout('${plan.id}')" class="flex-1 btn-core is-primary-ghost btn-card-action h-11"><i data-lucide="dumbbell" size="18"></i></button>
-        <button type="button" onclick="loadPlan('${plan.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11"><i data-lucide="clipboard-pen-line" size="18"></i></button>
-        <button type="button" onclick="openShareModal('${plan.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11"><i data-lucide="share-2" size="18"></i></button>
-        <button type="button" onclick="deletePlan('${plan.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11 hover:!text-rose-400 hover:!border-rose-400"><i data-lucide="trash-2" size="18"></i></button>
+        <button type="button" onclick="doPlanWorkout('${plan.id}')" class="flex-1 btn-core is-primary-ghost btn-card-action h-11"><i data-lucide="dumbbell" size="18"></i><span>Train</span></button>
+        <button type="button" onclick="loadPlan('${plan.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11"><i data-lucide="clipboard-pen-line" size="18"></i><span>Plan</span></button>
+        <button type="button" onclick="openShareModal('${plan.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11"><i data-lucide="share-2" size="18"></i><span>Share</span></button>
+        <button type="button" onclick="deletePlan('${plan.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11 hover:!text-rose-400 hover:!border-rose-400"><i data-lucide="trash-2" size="18"></i><span>Delete</span></button>
       </div>` : ''}
     </div>
     ${hasMovements ? `
@@ -4497,9 +4501,9 @@ function renderSharedPlanCard(share) {
     <div class="flex flex-wrap gap-1.5 mt-3 structured-movements${hasMovements ? ' hidden' : ''}">
       ${displayMovements}
       ${hasMovements ? `<div class="flex gap-2 mt-3 w-full">
-        <button type="button" onclick="doSharedPlan('${share.id}')" class="flex-1 btn-core is-primary-ghost btn-card-action h-11"><i data-lucide="dumbbell" size="18"></i></button>
-        <button type="button" onclick="loadSharedPlan('${share.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11"><i data-lucide="clipboard-pen-line" size="18"></i></button>
-        <button type="button" onclick="dismissSharedPlan('${share.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11 hover:!text-rose-400 hover:!border-rose-400"><i data-lucide="trash-2" size="18"></i></button>
+        <button type="button" onclick="doSharedPlan('${share.id}')" class="flex-1 btn-core is-primary-ghost btn-card-action h-11"><i data-lucide="dumbbell" size="18"></i><span>Train</span></button>
+        <button type="button" onclick="loadSharedPlan('${share.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11"><i data-lucide="clipboard-pen-line" size="18"></i><span>Plan</span></button>
+        <button type="button" onclick="dismissSharedPlan('${share.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11 hover:!text-rose-400 hover:!border-rose-400"><i data-lucide="trash-2" size="18"></i><span>Delete</span></button>
       </div>` : ''}
     </div>
     ${hasMovements ? `
