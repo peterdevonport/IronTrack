@@ -128,6 +128,12 @@ body {
   color: #000000;
 }
 
+/* + LOG REP button — always stays as outline-only, no hover fill */
+#log-rep-btn.btn-core.is-primary-ghost:hover:not(:disabled) {
+  background-color: transparent;
+  color: var(--emerald-400);
+}
+
 /* ==========================================
    DYNAMIC SUB-THEMES (Filter Overrides)
    ========================================== */
