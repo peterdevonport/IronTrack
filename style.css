@@ -134,6 +134,11 @@ body {
   color: var(--emerald-400);
 }
 
+/* + LOG ROUND button — static fill, no hover brightness change */
+#log-round-btn.btn-core.is-primary:hover:not(:disabled) {
+  background-color: var(--emerald-500);
+}
+
 /* ==========================================
    DYNAMIC SUB-THEMES (Filter Overrides)
    ========================================== */
