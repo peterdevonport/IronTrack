@@ -99,6 +99,7 @@ const EXERCISE_CATALOG = [
   { name: 'Pike Push-up', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 0.75 },
   { name: 'Pistol', category: 'bodyweight', type: 'bodyweight', movement: 'squat', loadFactor: 1.00 },
   { name: 'Pull-up', category: 'bodyweight', type: 'bodyweight', movement: 'pull', loadFactor: 1.00 },
+  { name: 'Weighted Pull Up', category: 'bodyweight', type: 'weighted', movement: 'pull', loadFactor: 1.00 },
   { name: 'Push-up', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 0.67 },
   { name: 'Ring Dip', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 1.00 },
   { name: 'Ring Row', category: 'bodyweight', type: 'bodyweight', movement: 'pull', loadFactor: 0.80 },
@@ -200,6 +201,7 @@ let pendingOnboarding1RMs = [];
 let activeRecords = {};
 let cachedMaxLoadByExercise = {};
 let cachedMax1RMByExercise = {};
+let cachedMaxRepsByExercise = {};
 let calendarMonth = new Date();
 let calendarSelectedDate = null;
 let calendarCompact = true;
@@ -928,6 +930,7 @@ function listenToDataStream(uid) {
         activeRecords = {};
         cachedMaxLoadByExercise = {};
         cachedMax1RMByExercise = {};
+        cachedMaxRepsByExercise = {};
 
         snapshot.forEach((doc) => {
             const data = doc.data();
@@ -954,6 +957,13 @@ function listenToDataStream(uid) {
             if (!cachedMax1RMByExercise[data.exercise] || calculated1RM > cachedMax1RMByExercise[data.exercise]) {
                 cachedMax1RMByExercise[data.exercise] = calculated1RM;
             }
+
+            // Track max reps per exercise
+            if (!cachedMaxRepsByExercise[data.exercise] || reps > cachedMaxRepsByExercise[data.exercise]) {
+                cachedMaxRepsByExercise[data.exercise] = reps;
+            }
+
+
         });
 
         // Data already sorted desc by Firestore
@@ -1013,13 +1023,25 @@ function update1RMRegistryUI() {
 
     let html = '';
     pageExercises.forEach(exercise => {
-        const maxEstimated1RM = cachedMax1RMByExercise[exercise] || 0;
-        const absolutePB = cachedMaxLoadByExercise[exercise] || 0;
-        html += `
-            <span class="text-slate-400 font-medium truncate">${escapeHtml(exercise)}</span>
-            <span class="text-slate-200 font-mono text-right">${Math.round(maxEstimated1RM)} kg</span>
-            <span class="text-slate-200 font-mono text-right">${Math.round(absolutePB)} kg</span>
-        `;
+        const info = getExerciseInfo(exercise);
+        const isBodyweight = info.type === 'bodyweight';
+
+        if (isBodyweight) {
+            const maxReps = cachedMaxRepsByExercise[exercise] || 0;
+            html += `
+                <span class="text-slate-400 font-medium truncate">${escapeHtml(exercise)}</span>
+                <span class="text-slate-200 font-mono text-right">—</span>
+                <span class="text-slate-200 font-mono text-right">${maxReps} reps</span>
+            `;
+        } else {
+            const maxEstimated1RM = cachedMax1RMByExercise[exercise] || 0;
+            const absolutePB = cachedMaxLoadByExercise[exercise] || 0;
+            html += `
+                <span class="text-slate-400 font-medium truncate">${escapeHtml(exercise)}</span>
+                <span class="text-slate-200 font-mono text-right">${Math.round(maxEstimated1RM)} kg</span>
+                <span class="text-slate-200 font-mono text-right">${Math.round(absolutePB)} kg</span>
+            `;
+        }
     });
 
     tableBody.innerHTML = html;
@@ -1428,18 +1450,28 @@ function populateExerciseDropdown() {
 function toggleBWFields() {
   const exercise = document.getElementById('exercise').value;
   const info = getExerciseInfo(exercise);
-  const isBodyweight = info.type === 'bodyweight';
+  const isBodyweightForm = info.category === 'bodyweight';
   const bwExtras = document.getElementById('bw-extras');
+  const extLoadField = document.getElementById('external-load-field');
+  const estLoadColumn = document.getElementById('est-load-column');
   const weightField = document.getElementById('weight-field');
   const weightInput = document.getElementById('weight');
   const weightLabel = document.getElementById('weight-label');
 
-  if (isBodyweight) {
+  if (isBodyweightForm) {
     bwExtras.classList.remove('hidden');
     weightField.classList.remove('hidden');
     weightInput.value = userBiometrics.bodyweight || '';
     weightInput.disabled = true;
     if (weightLabel) weightLabel.textContent = 'Bodyweight';
+    if (info.type === 'bodyweight') {
+      extLoadField.classList.add('hidden');
+      estLoadColumn.classList.add('col-span-2');
+      if (externalLoadInput) externalLoadInput.value = '';
+    } else {
+      extLoadField.classList.remove('hidden');
+      estLoadColumn.classList.remove('col-span-2');
+    }
   } else {
     bwExtras.classList.add('hidden');
     weightField.classList.remove('hidden');
@@ -1452,7 +1484,8 @@ function toggleBWFields() {
 
 function updateEstimatedLoadDisplay() {
   const exercise = document.getElementById('exercise').value;
-  const externalLoad = parseFloat(document.getElementById('external-load').value) || 0;
+  const info = getExerciseInfo(exercise);
+  const externalLoad = info.type === 'bodyweight' ? 0 : (parseFloat(document.getElementById('external-load').value) || 0);
   const loadFactor = LOAD_FACTORS[exercise];
   const display = document.getElementById('estimated-load-display');
   const disclaimer = document.getElementById('lf-disclaimer');
@@ -1464,7 +1497,7 @@ function updateEstimatedLoadDisplay() {
     display.textContent = estLoad > 0 ? `${Math.round(estLoad)}` : '—';
     if (disclaimer) disclaimer.classList.remove('hidden');
     if (estLoadLabel) {
-      estLoadLabel.textContent = `BW × ${loadFactor} + External Load`;
+      estLoadLabel.textContent = info.type === 'bodyweight' ? `Estimated Load (kg) = Bodyweight x ${loadFactor}` : `BW × ${loadFactor} + External Load`;
     }
   } else {
     display.textContent = '—';

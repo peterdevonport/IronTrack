@@ -434,12 +434,12 @@
               <p id="pb-log-feedback" class="text-xs text-slate-500 font-medium h-4 mt-2"></p>
             </details>
 
-            <div class="grid grid-cols-3 gap-y-3 gap-x-4 text-sm mt-4">
+            <div class="grid grid-cols-[1.5fr_1fr_1fr] gap-y-3 gap-x-4 text-sm mt-4">
               <span class="text-slate-500 font-bold uppercase text-[10px]">Lift</span>
               <span class="text-emerald-400 font-bold uppercase text-[10px] text-right">Est. 1RM</span>
               <span class="text-purple-400 font-bold uppercase text-[10px] text-right">Personal Best</span>
 
-              <div id="registry-table-body" class="col-span-3 grid grid-cols-3 gap-y-3 gap-x-4"></div>
+              <div id="registry-table-body" class="col-span-3 grid grid-cols-[1.5fr_1fr_1fr] gap-y-3 gap-x-4"></div>
               <div id="records-pagination" class="hidden col-span-3 flex items-center justify-between gap-3 mt-2">
                 <button id="prev-records-page-btn" class="btn-core is-secondary btn-size-input" type="button">Previous</button>
                 <p class="text-xs text-slate-400 text-center min-w-[120px]">
@@ -548,11 +548,11 @@
 
               <div id="bw-extras" class="hidden space-y-4">
                 <div class="grid grid-cols-2 gap-3">
-                  <div>
+                  <div id="external-load-field">
                     <label class="form-label">External Load (kg)</label>
                     <input type="number" id="external-load" placeholder="0" min="0" step="any" class="input-core" />
                   </div>
-                  <div>
+                  <div id="est-load-column">
                     <label class="form-label" id="est-load-label">Est. Load / Rep</label>
                     <div id="estimated-load-display" class="input-core bg-slate-800/50 text-emerald-400 font-bold flex items-center justify-center min-h-[42px]">—</div>
                   </div>
