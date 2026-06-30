@@ -2639,9 +2639,6 @@ function updateLogWorkoutButtonState() {
   const rounds = parseInt(document.getElementById('log-rounds')?.value, 10) || 0;
   const partial = parseInt(document.getElementById('log-partial-reps')?.value, 10) || 0;
   const hasActivity = rounds > 0 || partial > 0;
-  const structure = pendingPlannedWorkout?.structure;
-  const goal = structure?.rounds || 5;
-  const met = rounds >= goal;
   const btn = document.getElementById('log-workout-btn');
   if (btn) {
     if (hasActivity) {
@@ -2654,10 +2651,6 @@ function updateLogWorkoutButtonState() {
       btn.setAttribute('disabled', 'disabled');
     }
   }
-  const roundBtn = document.getElementById('log-round-btn');
-  if (roundBtn) { roundBtn.classList.toggle('is-secondary', met); roundBtn.classList.toggle('is-primary', !met); }
-  const repBtn = document.getElementById('log-rep-btn');
-  if (repBtn) { repBtn.classList.toggle('is-secondary', met); repBtn.classList.toggle('is-primary-ghost', !met); }
 }
 
 async function submitIntervalWorkout(e) {
