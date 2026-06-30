@@ -3346,7 +3346,7 @@ function renderStructuredWorkoutCard(sw) {
         </button>
 
         <button type="button" onclick="event.stopPropagation(); redoWorkout('${sw.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11" title="Load">
-          <i data-lucide="upload" size="18"></i>
+          <i data-lucide="clipboard-pen-line" size="18"></i>
         </button>
 
         <button type="button" onclick="event.stopPropagation(); openShareModal('${sw.id}', true)" class="flex-1 btn-core is-ghost btn-card-action h-11" title="Share">
@@ -3624,7 +3624,7 @@ function renderPlanCard(plan) {
       ${hasMovements ? `
       <div class="flex gap-2 mt-3 w-full">
         <button type="button" onclick="doPlanWorkout('${plan.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11"><i data-lucide="dumbbell" size="18"></i></button>
-        <button type="button" onclick="loadPlan('${plan.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11"><i data-lucide="upload" size="18"></i></button>
+        <button type="button" onclick="loadPlan('${plan.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11"><i data-lucide="clipboard-pen-line" size="18"></i></button>
         <button type="button" onclick="openShareModal('${plan.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11"><i data-lucide="share-2" size="18"></i></button>
         <button type="button" onclick="deletePlan('${plan.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11 hover:!text-rose-400 hover:!border-rose-400"><i data-lucide="trash-2" size="18"></i></button>
       </div>` : ''}
@@ -4467,7 +4467,7 @@ function renderSharedPlanCard(share) {
       ${displayMovements}
       ${hasMovements ? `<div class="flex gap-2 mt-3 w-full">
         <button type="button" onclick="doSharedPlan('${share.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11"><i data-lucide="dumbbell" size="18"></i></button>
-        <button type="button" onclick="loadSharedPlan('${share.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11"><i data-lucide="upload" size="18"></i></button>
+        <button type="button" onclick="loadSharedPlan('${share.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11"><i data-lucide="clipboard-pen-line" size="18"></i></button>
         <button type="button" onclick="dismissSharedPlan('${share.id}')" class="flex-1 btn-core is-ghost btn-card-action h-11 hover:!text-rose-400 hover:!border-rose-400"><i data-lucide="trash-2" size="18"></i></button>
       </div>` : ''}
     </div>
