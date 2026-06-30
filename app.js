@@ -2637,14 +2637,26 @@ function updateLogScorePreview() {
 
 function updateLogWorkoutButtonState() {
   const rounds = parseInt(document.getElementById('log-rounds')?.value, 10) || 0;
+  const partial = parseInt(document.getElementById('log-partial-reps')?.value, 10) || 0;
+  const hasActivity = rounds > 0 || partial > 0;
   const structure = pendingPlannedWorkout?.structure;
   const goal = structure?.rounds || 5;
   const met = rounds >= goal;
   const btn = document.getElementById('log-workout-btn');
+  if (btn) {
+    if (hasActivity) {
+      btn.classList.remove('is-ghost');
+      btn.classList.add('is-primary-ghost');
+      btn.removeAttribute('disabled');
+    } else {
+      btn.classList.remove('is-primary-ghost');
+      btn.classList.add('is-ghost');
+      btn.setAttribute('disabled', 'disabled');
+    }
+  }
   const roundBtn = document.getElementById('log-round-btn');
-  const repBtn = document.getElementById('log-rep-btn');
-  if (btn) { btn.classList.toggle('is-primary', met); btn.classList.toggle('is-ghost', !met); }
   if (roundBtn) { roundBtn.classList.toggle('is-secondary', met); roundBtn.classList.toggle('is-primary', !met); }
+  const repBtn = document.getElementById('log-rep-btn');
   if (repBtn) { repBtn.classList.toggle('is-secondary', met); repBtn.classList.toggle('is-primary-ghost', !met); }
 }
 
@@ -5203,7 +5215,7 @@ if (document.getElementById('fortime-movement-list')) {
 const logRoundsInput = document.getElementById('log-rounds');
 const logPartialInput = document.getElementById('log-partial-reps');
 if (logRoundsInput) { logRoundsInput.addEventListener('input', updateLogScorePreview); logRoundsInput.addEventListener('input', updateLogWorkoutButtonState); logRoundsInput.addEventListener('input', recalcForTimeRemaining); }
-if (logPartialInput) { logPartialInput.addEventListener('input', updateLogScorePreview); logPartialInput.addEventListener('input', recalcForTimeRemaining); }
+if (logPartialInput) { logPartialInput.addEventListener('input', updateLogScorePreview); logPartialInput.addEventListener('input', updateLogWorkoutButtonState); logPartialInput.addEventListener('input', recalcForTimeRemaining); }
 document.getElementById('fortime-cap-reps')?.addEventListener('input', updateLogScorePreview);
 
 // Initial movement row for INTERVAL
