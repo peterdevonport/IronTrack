@@ -98,8 +98,8 @@ const EXERCISE_CATALOG = [
   { name: 'Muscle-up', category: 'bodyweight', type: 'bodyweight', movement: 'pull', loadFactor: 1.00 },
   { name: 'Pike Push-up', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 0.75 },
   { name: 'Pistol', category: 'bodyweight', type: 'bodyweight', movement: 'squat', loadFactor: 1.00 },
-  { name: 'Pull-up', category: 'bodyweight', type: 'bodyweight', movement: 'pull', loadFactor: 1.00 },
-  { name: 'Weighted Pull Up', category: 'bodyweight', type: 'weighted', movement: 'pull', loadFactor: 1.00 },
+  { name: 'Pull Up', category: 'bodyweight', type: 'bodyweight', movement: 'pull', loadFactor: 1.00 },
+  { name: 'Pull Up (Weighted)', category: 'bodyweight', type: 'weighted', movement: 'pull', loadFactor: 1.00, hidden: true },
   { name: 'Push-up', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 0.67 },
   { name: 'Ring Dip', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 1.00 },
   { name: 'Ring Row', category: 'bodyweight', type: 'bodyweight', movement: 'pull', loadFactor: 0.80 },
@@ -176,6 +176,7 @@ const FORM_SCHEMAS = {
 
 function getSchemaKey(exerciseName) {
   const info = getExerciseInfo(exerciseName);
+  if (info.name === 'Pull Up') return 'weighted';
   if (info.type === 'bodyweight') return 'bodyweight';
   if (info.type === 'weighted' && LOAD_FACTORS[exerciseName]) return 'weighted';
   return 'standard';
@@ -947,6 +948,11 @@ async function logPB() {
     }
     const reps = parseInt(document.getElementById('pb-reps')?.value, 10) || 1;
 
+    let storedExercise = exercise;
+    if (exercise === 'Pull Up' && externalLoad > 0) {
+        storedExercise = 'Pull Up (Weighted)';
+    }
+
     if (!weight || weight <= 0) {
         showFeedback('Please enter a valid weight.', 'red', 'pb-log-feedback');
         return;
@@ -957,7 +963,7 @@ async function logPB() {
     try {
         const logEntry = {
             userId: currentUser.uid,
-            exercise,
+            exercise: storedExercise,
             sets: 1,
             reps,
             weight,
@@ -1687,7 +1693,7 @@ function buildExerciseOptionsHtml(categories, placeholder) {
     const items = EXERCISE_CATALOG.filter(ex => ex.category === cat).sort(sortByName);
     if (items.length) {
       html += `<optgroup label="─ ${labels[cat]} ─">`;
-      items.forEach(ex => { html += `<option value="${ex.name}">${ex.name}</option>`; });
+      items.forEach(ex => { if (ex.hidden) return; html += `<option value="${ex.name}">${ex.name}</option>`; });
       html += `</optgroup>`;
     }
   });
@@ -5471,9 +5477,14 @@ workoutForm.addEventListener('submit', async (e) => {
     }
     const totalVolume = estimatedLoad * reps * sets;
 
+    let storedExercise = exercise;
+    if (exercise === 'Pull Up' && externalLoad > 0) {
+        storedExercise = 'Pull Up (Weighted)';
+    }
+
     const log = {
         userId: currentUser.uid,
-        exercise,
+        exercise: storedExercise,
         sets,
         reps,
         weight,
