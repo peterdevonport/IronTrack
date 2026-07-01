@@ -5166,14 +5166,13 @@ function renderLogs(workouts) {
         } else {
           borderClass = isPB ? 'log-entry-pb' : is1RMOnly ? 'log-entry-1rm' : 'log-entry';
         }
-        const secondLine = `Est. 1RM: ${oneRM}kg  <span class="text-slate-600">|</span>  Vol: ${totalVolume.toLocaleString()}kg`;
         const repDisplay = workout.partialReps ? `${sets} × ${reps} + ${workout.partialReps} reps` : `${sets} × ${reps}`;
 
         return `
-<div class="${borderClass} p-4 rounded-2xl mb-3 flex justify-between items-center shadow-2xl shadow-slate-950/60 transition-all duration-200" style="background-color: var(--slate-900);">
-    <div>
-        <div class="flex items-center gap-2">
-            <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm">${escapeHtml(workout.exercise)}</h4>
+<div class="${borderClass} p-4 rounded-2xl mb-3 flex justify-between items-stretch gap-3 shadow-2xl shadow-slate-950/60 transition-all duration-200" style="background-color: var(--slate-900);">
+    <div class="flex-1">
+        <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm">${escapeHtml(workout.exercise)}</h4>
+        <div class="flex items-center gap-2 mt-1 min-h-5">
             ${isPB ? '<span class="bg-purple-950/50 text-purple-400 border border-purple-800/60 text-[9px] px-1.5 rounded font-black">PB</span>' : ''}
             ${isMax1RM ? '<span class="bg-emerald-950/50 text-emerald-400 border border-emerald-800/60 text-[9px] px-1.5 rounded font-extrabold">1RM</span>' : ''}
         </div>
@@ -5181,15 +5180,18 @@ function renderLogs(workouts) {
             ${new Date(workout.timestamp).toLocaleDateString()}
         </p>
     </div>
-    <div class="text-right">
-        <span class="text-white font-mono text-base font-semibold">
-            ${repDisplay} 
-            <span class="text-slate-500 text-xs">@</span> 
-            ${Math.round(load)}kg
-        </span>
-        <p class="text-slate-400 text-xs font-mono mt-0.5">
-            ${secondLine}
-        </p>
+    <div class="text-right flex-1 flex flex-col justify-between">
+        <div>
+            <span class="text-white font-mono text-base font-semibold">
+                ${repDisplay} 
+                <span class="text-slate-500 text-xs">@</span> 
+                ${Math.round(load)}kg
+            </span>
+        </div>
+        <div>
+            <p class="text-slate-400 text-xs font-mono mt-0.5">Est. 1RM: ${oneRM}kg</p>
+            <p class="text-slate-400 text-xs font-mono mt-0.5">Vol: ${totalVolume.toLocaleString()}kg</p>
+        </div>
     </div>
 </div>
         `;
