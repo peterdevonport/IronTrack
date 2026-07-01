@@ -113,6 +113,241 @@ const EXERCISE_CATALOG = [
 const LOAD_FACTORS = {};
 EXERCISE_CATALOG.forEach(ex => { if (ex.loadFactor) LOAD_FACTORS[ex.name] = ex.loadFactor; });
 
+// ─── Schema-Driven Form Layouts ──────────────────────────────────────────────
+
+const INPUT_CLASS = 'w-full bg-slate-950 border border-slate-700 rounded-xl px-3 h-[39px] text-center text-slate-100 focus:outline-none focus:border-emerald-400 transition';
+const CALC_CLASS = 'w-full bg-slate-800/50 border border-slate-700 rounded-xl px-3 py-2.5 text-center text-emerald-400 font-bold min-h-[42px] flex items-center justify-center';
+
+const FORM_SCHEMAS = {
+  logSet: {
+    standard: [
+      { id: 'log-set-sets', label: 'Sets', type: 'number', width: 'col-span-4', attrs: { min: 1, step: 1, value: 1 } },
+      { id: 'log-set-reps', label: 'Reps', type: 'number', width: 'col-span-4', attrs: { min: 1, step: 1, value: 1 } },
+      { id: 'log-set-weight', label: 'Weight (kg)', type: 'number', width: 'col-span-4', attrs: { min: 0, step: 'any', placeholder: '60' } },
+    ],
+    bodyweight: [
+      { id: 'log-set-sets', label: 'Sets', type: 'number', width: 'col-span-4', attrs: { min: 1, step: 1, value: 1 } },
+      { id: 'log-set-reps', label: 'Reps', type: 'number', width: 'col-span-4', attrs: { min: 1, step: 1, value: 1 } },
+      { id: 'log-set-bodyweight', label: 'Bodyweight (kg)', type: 'number', width: 'col-span-4', attrs: { disabled: true } },
+      { id: 'log-set-total-load', label: 'Est. Load', type: 'readonly-calc', width: 'col-span-12' },
+    ],
+    weighted: [
+      { id: 'log-set-sets', label: 'Sets', type: 'number', width: 'col-span-4', attrs: { min: 1, step: 1, value: 1 } },
+      { id: 'log-set-reps', label: 'Reps', type: 'number', width: 'col-span-4', attrs: { min: 1, step: 1, value: 1 } },
+      { id: 'log-set-bodyweight', label: 'Bodyweight (kg)', type: 'number', width: 'col-span-4', attrs: { disabled: true } },
+      { id: 'log-set-ext-load', label: 'External Load (kg)', type: 'number', width: 'col-span-6', attrs: { min: 0, step: 'any', placeholder: '0' } },
+      { id: 'log-set-total-load', label: 'Total Load', type: 'readonly-calc', width: 'col-span-6' },
+    ],
+  },
+  logPB: {
+    standard: [
+      { id: 'pb-reps', label: 'Reps', type: 'number', width: 'col-span-6', attrs: { min: 1, step: 1, value: 1 } },
+      { id: 'pb-weight', label: 'Weight (kg)', type: 'number', width: 'col-span-6', attrs: { min: 0, step: 'any', placeholder: 'kg' } },
+    ],
+    bodyweight: [
+      { id: 'pb-reps', label: 'Reps', type: 'number', width: 'col-span-4', attrs: { min: 1, step: 1, value: 1 } },
+      { id: 'pb-bodyweight', label: 'Bodyweight (kg)', type: 'number', width: 'col-span-4', attrs: { disabled: true } },
+      { id: 'pb-total-load', label: 'Est. Load', type: 'readonly-calc', width: 'col-span-4' },
+    ],
+    weighted: [
+      { id: 'pb-reps', label: 'Reps', type: 'number', width: 'col-span-4', attrs: { min: 1, step: 1, value: 1 } },
+      { id: 'pb-bodyweight', label: 'Bodyweight (kg)', type: 'number', width: 'col-span-4', attrs: { disabled: true } },
+      { id: 'pb-ext-load', label: 'External Load (kg)', type: 'number', width: 'col-span-4', attrs: { min: 0, step: 'any', placeholder: '0' } },
+      { id: 'pb-total-load', label: 'Total Load', type: 'readonly-calc', width: 'col-span-12' },
+    ],
+  },
+  planWorkout: {
+      standard: [
+        { type: 'wms', label: '', width: 'col-span-12' }
+      ],
+    bodyweight: [
+      { id: 'plan-reps', label: 'Reps', type: 'number', width: 'col-span-4', attrs: { min: 1, step: 1, placeholder: 'Reps' } },
+      { id: 'plan-bodyweight', label: 'Bodyweight (kg)', type: 'number', width: 'col-span-4', attrs: { disabled: true } },
+      { id: 'plan-total-load', label: 'Est. Load', type: 'readonly-calc', width: 'col-span-4' },
+    ],
+    weighted: [
+      { id: 'plan-reps', label: 'Reps', type: 'number', width: 'col-span-4', attrs: { min: 1, step: 1, placeholder: 'Reps' } },
+      { id: 'plan-bodyweight', label: 'Bodyweight (kg)', type: 'number', width: 'col-span-4', attrs: { disabled: true } },
+      { id: 'plan-ext-load', label: 'External Load (kg)', type: 'number', width: 'col-span-4', attrs: { min: 0, step: 'any', placeholder: '0' } },
+      { id: 'plan-total-load', label: 'Total Load', type: 'readonly-calc', width: 'col-span-12' },
+    ],
+  },
+};
+
+function getSchemaKey(exerciseName) {
+  const info = getExerciseInfo(exerciseName);
+  if (info.type === 'bodyweight') return 'bodyweight';
+  if (info.type === 'weighted' && LOAD_FACTORS[exerciseName]) return 'weighted';
+  return 'standard';
+}
+
+function computeTotalLoad(fieldValues, exerciseName, prefix) {
+  const lf = LOAD_FACTORS[exerciseName];
+  const bw = parseFloat(fieldValues[prefix + '-bodyweight']) || userBiometrics.bodyweight || 0;
+  const ext = parseFloat(fieldValues[prefix + '-ext-load']) || 0;
+  if (lf !== undefined) {
+    const est = bw * lf + ext;
+    return est > 0 ? Math.round(est).toString() : '\u2014';
+  }
+  return '\u2014';
+}
+
+function renderFormFields(containerId, schema, options = {}) {
+  const container = document.getElementById(containerId);
+  if (!container) return null;
+  const existingGrid = container.querySelector('.schema-grid');
+  if (existingGrid) existingGrid.remove();
+
+  const grid = document.createElement('div');
+  grid.className = 'schema-grid grid grid-cols-12 gap-3';
+  container.appendChild(grid);
+
+  const fields = {};
+  const fieldValues = { ...options.initialValues };
+
+  schema.forEach(fd => {
+    const wrapper = document.createElement('div');
+    wrapper.className = fd.width;
+
+    if (fd.type === 'wms') {
+      if (fd.label) {
+        const label = document.createElement('label');
+        label.className = 'form-label';
+        label.textContent = fd.label;
+        wrapper.appendChild(label);
+      }
+
+      // Label row — hidden on small screens, visible sm+
+      const labelRow = document.createElement('div');
+      labelRow.className = 'hidden sm:flex gap-3 items-center flex-nowrap mb-0.5';
+      const repsLabel = document.createElement('span');
+      repsLabel.className = 'form-label text-xs flex-1';
+      repsLabel.textContent = 'Reps';
+      labelRow.appendChild(repsLabel);
+      const labelSpacer = document.createElement('span');
+      labelSpacer.className = 'w-4 shrink-0';
+      labelRow.appendChild(labelSpacer);
+      const loadLabel = document.createElement('span');
+      loadLabel.className = 'form-label text-xs flex-1';
+      loadLabel.textContent = 'Load';
+      labelRow.appendChild(loadLabel);
+      const pillSpacer = document.createElement('span');
+      pillSpacer.className = 'w-24 shrink-0';
+      labelRow.appendChild(pillSpacer);
+      wrapper.appendChild(labelRow);
+
+      // Input row — all items vertically centered
+      const inputRow = document.createElement('div');
+      inputRow.className = 'flex gap-3 items-center flex-nowrap';
+
+      const repsInput = document.createElement('input');
+      repsInput.type = 'number';
+      repsInput.id = 'plan-reps';
+      repsInput.placeholder = 'Reps';
+      repsInput.min = 1;
+      repsInput.step = 1;
+      repsInput.className = INPUT_CLASS + ' min-w-0 flex-1';
+      inputRow.appendChild(repsInput);
+      fields['plan-reps'] = repsInput;
+
+      const sep = document.createElement('span');
+      sep.className = 'text-slate-500 text-xs font-mono shrink-0';
+      sep.textContent = '@';
+      inputRow.appendChild(sep);
+
+      const loadInput = document.createElement('input');
+      loadInput.type = 'number';
+      loadInput.id = 'plan-weight';
+      loadInput.placeholder = 'Load';
+      loadInput.min = 0;
+      loadInput.step = 'any';
+      loadInput.className = INPUT_CLASS + ' min-w-0 flex-1';
+      inputRow.appendChild(loadInput);
+      fields['plan-weight'] = loadInput;
+
+      // WMS pill
+      const pill = document.createElement('div');
+      pill.className = 'wms-pill shrink-0';
+      pill.id = 'plan-wms-pill';
+      pill.dataset.mode = 'absolute';
+      const modes = ['absolute', 'pct', 'rpe'];
+      const plabels = ['kg', '%', 'RPE'];
+      modes.forEach((m, i) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'wms-pill-btn' + (m === 'absolute' ? ' is-active' : '');
+        btn.dataset.mode = m;
+        btn.textContent = plabels[i];
+        btn.onclick = function () { togglePlanWms(this); };
+        pill.appendChild(btn);
+      });
+      fields['plan-wms-pill'] = pill;
+      inputRow.appendChild(pill);
+
+      wrapper.appendChild(inputRow);
+
+      // Calc row
+      const calcRow = document.createElement('div');
+      calcRow.className = 'flex items-center mt-1';
+      const calcSpan = document.createElement('span');
+      calcSpan.id = 'plan-calc-weight';
+      calcSpan.className = 'text-emerald-400 font-mono text-xs hidden';
+      calcSpan.textContent = '\u2192';
+      calcRow.appendChild(calcSpan);
+      fields['plan-calc-weight'] = calcSpan;
+      wrapper.appendChild(calcRow);
+
+      grid.appendChild(wrapper);
+      return;
+    }
+
+    // Label for all non-wms fields
+    const label = document.createElement('label');
+    label.className = 'form-label';
+    label.textContent = fd.label;
+    if (fd.type !== 'readonly-calc') label.htmlFor = fd.id;
+    wrapper.appendChild(label);
+
+    if (fd.type === 'readonly-calc') {
+      const display = document.createElement('div');
+      display.id = fd.id;
+      display.className = CALC_CLASS;
+      display.textContent = '\u2014';
+      wrapper.appendChild(display);
+      fields[fd.id] = display;
+    } else {
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.id = fd.id;
+      input.className = INPUT_CLASS;
+      if (fd.attrs) {
+        Object.entries(fd.attrs).forEach(([k, v]) => {
+          if (k === 'value') {
+            input.value = v;
+            fieldValues[fd.id] = v;
+          } else if (v === true) {
+            input.setAttribute(k, '');
+          } else {
+            input.setAttribute(k, v);
+          }
+        });
+      }
+      input.addEventListener('input', () => {
+        fieldValues[fd.id] = input.value;
+        if (options.onFieldChange) options.onFieldChange(fieldValues);
+      });
+      wrapper.appendChild(input);
+      fields[fd.id] = input;
+    }
+
+    grid.appendChild(wrapper);
+  });
+
+  return { fields, fieldValues, grid };
+}
+
+// ─── End Schema-Driven Form Layouts ──────────────────────────────────────────
+
 function getExerciseInfo(name) {
   return EXERCISE_CATALOG.find(ex => ex.name === name) || { category: 'barbell', type: 'weighted' };
 }
@@ -151,9 +386,7 @@ const totalPagesDisplay = document.getElementById('total-pages');
 const workoutFilter = document.getElementById('workout-filter');
 const entriesPerPage = 5;
 const exerciseSelect = document.getElementById('exercise');
-const externalLoadInput = document.getElementById('external-load');
-const estimatedLoadDisplay = document.getElementById('estimated-load-display');
-const estLoadLabel = document.getElementById('est-load-label');
+
 
 // Onboarding
 const onboardingView = document.getElementById('onboarding-view');
@@ -173,8 +406,6 @@ const onboardingFeedback = document.getElementById('onboarding-feedback');
 
 // PB Log
 const pbLogExercise = document.getElementById('pb-log-exercise');
-const pbLogWeight = document.getElementById('pb-log-weight');
-const pbLogReps = document.getElementById('pb-log-reps');
 const pbLogBtn = document.getElementById('pb-log-btn');
 const pbLogFeedback = document.getElementById('pb-log-feedback');
 
@@ -672,16 +903,50 @@ async function saveOnboarding() {
     }
 }
 
+function refreshPBForm() {
+  const exercise = document.getElementById('pb-log-exercise')?.value;
+  if (!exercise) { renderFormFields('pb-log-fields', FORM_SCHEMAS.logPB.standard); return; }
+  const schemaKey = getSchemaKey(exercise);
+  const schema = FORM_SCHEMAS.logPB[schemaKey] || FORM_SCHEMAS.logPB.standard;
+  const result = renderFormFields('pb-log-fields', schema, {
+    initialValues: { 'pb-bodyweight': userBiometrics.bodyweight || 0 },
+    onFieldChange: (values) => {
+      const total = document.getElementById('pb-total-load');
+      if (total) total.textContent = computeTotalLoad(values, exercise, 'pb');
+    }
+  });
+  if (result && result.fields['pb-bodyweight']) {
+    result.fields['pb-bodyweight'].value = userBiometrics.bodyweight || '';
+  }
+  if (result && result.fields['pb-total-load']) {
+    const initValues = { ...result.fieldValues, 'pb-bodyweight': userBiometrics.bodyweight || 0 };
+    result.fields['pb-total-load'].textContent = computeTotalLoad(initValues, exercise, 'pb');
+  }
+}
+
 async function logPB() {
     if (!currentUser) return;
     const exercise = pbLogExercise?.value;
-    const weight = parseFloat(pbLogWeight?.value);
-    const reps = parseInt(pbLogReps?.value, 10) || 1;
-
     if (!exercise) {
         showFeedback('Please select an exercise.', 'red', 'pb-log-feedback');
         return;
     }
+    const schemaKey = getSchemaKey(exercise);
+    let weight, externalLoad = 0, estimatedLoad;
+    if (schemaKey === 'bodyweight') {
+      weight = parseFloat(document.getElementById('pb-bodyweight')?.value) || userBiometrics.bodyweight || 0;
+      estimatedLoad = (userBiometrics.bodyweight || 0) * (LOAD_FACTORS[exercise] || 1);
+    } else if (schemaKey === 'weighted') {
+      weight = parseFloat(document.getElementById('pb-bodyweight')?.value) || userBiometrics.bodyweight || 0;
+      externalLoad = parseFloat(document.getElementById('pb-ext-load')?.value) || 0;
+      estimatedLoad = (userBiometrics.bodyweight || 0) * (LOAD_FACTORS[exercise] || 1) + externalLoad;
+      weight += externalLoad;
+    } else {
+      weight = parseFloat(document.getElementById('pb-weight')?.value);
+      estimatedLoad = weight;
+    }
+    const reps = parseInt(document.getElementById('pb-reps')?.value, 10) || 1;
+
     if (!weight || weight <= 0) {
         showFeedback('Please enter a valid weight.', 'red', 'pb-log-feedback');
         return;
@@ -696,9 +961,9 @@ async function logPB() {
             sets: 1,
             reps,
             weight,
-            externalLoad: 0,
-            estimatedLoad: weight,
-            totalVolume: weight * reps,
+            externalLoad,
+            estimatedLoad,
+            totalVolume: estimatedLoad * reps,
             timestamp: Timestamp.now(),
             source: 'pb-log',
             isInitialMax: false
@@ -706,8 +971,7 @@ async function logPB() {
         await addDoc(collection(db, "workouts"), logEntry);
 
         pbLogExercise.value = '';
-        pbLogWeight.value = '';
-        pbLogReps.value = '1';
+        refreshPBForm();
         showFeedback('Record logged! It will appear in your records.', 'emerald', 'pb-log-feedback');
         haptic(HAPTIC.confirm);
     } catch (err) {
@@ -906,16 +1170,19 @@ if (onboardingExerciseSelect) {
 if (pbLogBtn) {
     pbLogBtn.addEventListener('click', logPB);
 }
-if (pbLogWeight) {
-    pbLogWeight.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') { e.preventDefault(); logPB(); }
-    });
-}
 if (pbLogExercise) {
+    pbLogExercise.addEventListener('change', refreshPBForm);
     pbLogExercise.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') { e.preventDefault(); logPB(); }
     });
 }
+// Delegate Enter key on recreated PB inputs
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.closest('#pb-log-fields')) {
+        e.preventDefault();
+        logPB();
+    }
+});
 
 // Realtime Data Mining
 function listenToDataStream(uid) {
@@ -1328,17 +1595,16 @@ if (workoutFilter) {
   });
 }
 
-// Wire exercise dropdown change and external load input
+// Wire exercise dropdown change
 if (exerciseSelect) {
-  exerciseSelect.addEventListener('change', toggleBWFields);
-}
-if (externalLoadInput) {
-  externalLoadInput.addEventListener('input', updateEstimatedLoadDisplay);
+  exerciseSelect.addEventListener('change', refreshLogSetForm);
 }
 
 // Populate exercise dropdown on load
 populateExerciseDropdown();
 populateLiftSelectors();
+refreshLogSetForm();
+refreshPBForm();
 
 // Wire calculator events
 const calcLiftSelect = document.getElementById('calc-lift-select');
@@ -1447,64 +1713,36 @@ function populateExerciseDropdown() {
   }
 }
 
-function toggleBWFields() {
-  const exercise = document.getElementById('exercise').value;
-  const info = getExerciseInfo(exercise);
-  const isBodyweightForm = info.category === 'bodyweight';
-  const bwExtras = document.getElementById('bw-extras');
-  const extLoadField = document.getElementById('external-load-field');
-  const estLoadColumn = document.getElementById('est-load-column');
-  const weightField = document.getElementById('weight-field');
-  const weightInput = document.getElementById('weight');
-  const weightLabel = document.getElementById('weight-label');
+function refreshLogSetForm() {
+  const exercise = document.getElementById('exercise')?.value;
+  if (!exercise) { renderFormFields('log-set-fields', FORM_SCHEMAS.logSet.standard); return; }
+  const schemaKey = getSchemaKey(exercise);
+  const schema = FORM_SCHEMAS.logSet[schemaKey];
+  if (!schema) return;
 
-  if (isBodyweightForm) {
-    bwExtras.classList.remove('hidden');
-    weightField.classList.remove('hidden');
-    weightInput.value = userBiometrics.bodyweight || '';
-    weightInput.disabled = true;
-    if (weightLabel) weightLabel.textContent = 'Bodyweight';
-    if (info.type === 'bodyweight') {
-      extLoadField.classList.add('hidden');
-      estLoadColumn.classList.add('col-span-2');
-      if (externalLoadInput) externalLoadInput.value = '';
-    } else {
-      extLoadField.classList.remove('hidden');
-      estLoadColumn.classList.remove('col-span-2');
+  const result = renderFormFields('log-set-fields', schema, {
+    initialValues: { 'log-set-bodyweight': userBiometrics.bodyweight || 0 },
+    onFieldChange: (values) => {
+      const total = document.getElementById('log-set-total-load');
+      if (total) total.textContent = computeTotalLoad(values, exercise, 'log-set');
     }
-  } else {
-    bwExtras.classList.add('hidden');
-    weightField.classList.remove('hidden');
-    weightInput.disabled = false;
-    if (externalLoadInput) externalLoadInput.value = '';
-    if (weightLabel) weightLabel.textContent = 'Weight (kg)';
-  }
-  updateEstimatedLoadDisplay();
-}
+  });
 
-function updateEstimatedLoadDisplay() {
-  const exercise = document.getElementById('exercise').value;
-  const info = getExerciseInfo(exercise);
-  const externalLoad = info.type === 'bodyweight' ? 0 : (parseFloat(document.getElementById('external-load').value) || 0);
-  const loadFactor = LOAD_FACTORS[exercise];
-  const display = document.getElementById('estimated-load-display');
+  if (result && result.fields['log-set-bodyweight']) {
+    result.fields['log-set-bodyweight'].value = userBiometrics.bodyweight || '';
+  }
+  if (result && result.fields['log-set-total-load']) {
+    const initValues = { ...result.fieldValues, 'log-set-bodyweight': userBiometrics.bodyweight || 0 };
+    result.fields['log-set-total-load'].textContent = computeTotalLoad(initValues, exercise, 'log-set');
+  }
+
   const disclaimer = document.getElementById('lf-disclaimer');
-  if (!display) return;
-
-  if (loadFactor !== undefined) {
-    const bw = userBiometrics.bodyweight || 0;
-    const estLoad = bw * loadFactor + externalLoad;
-    display.textContent = estLoad > 0 ? `${Math.round(estLoad)}` : '—';
-    if (disclaimer) disclaimer.classList.remove('hidden');
-    if (estLoadLabel) {
-      estLoadLabel.textContent = info.type === 'bodyweight' ? `Estimated Load (kg) = Bodyweight x ${loadFactor}` : `BW × ${loadFactor} + External Load`;
-    }
-  } else {
-    display.textContent = '—';
-    if (disclaimer) disclaimer.classList.add('hidden');
-    if (estLoadLabel) estLoadLabel.textContent = 'Est. Load / Rep';
+  if (disclaimer) {
+    const lf = LOAD_FACTORS[exercise];
+    disclaimer.classList.toggle('hidden', lf === undefined);
   }
 }
+
 
 function populateWorkoutFilter(exercises) {
   if (!workoutFilter) return;
@@ -1929,12 +2167,34 @@ function addPlanMinuteSlot(data) {
 
 // ─── Unified Plan Functions ─────────────────────────────────────────────────
 
+function refreshPlanForm() {
+  const exercise = document.getElementById('plan-exercise')?.value;
+  const schemaKey = exercise ? getSchemaKey(exercise) : 'standard';
+  const schema = FORM_SCHEMAS.planWorkout[schemaKey] || FORM_SCHEMAS.planWorkout.standard;
+  const result = renderFormFields('plan-movement-fields', schema, {
+    initialValues: { 'plan-bodyweight': userBiometrics.bodyweight || 0 },
+    onFieldChange: (values) => {
+      const total = document.getElementById('plan-total-load');
+      if (total && exercise) total.textContent = computeTotalLoad(values, exercise, 'plan');
+      updatePlanCalcPreview();
+    }
+  });
+  if (result && result.fields['plan-bodyweight']) {
+    result.fields['plan-bodyweight'].value = userBiometrics.bodyweight || '';
+  }
+  if (result && result.fields['plan-total-load'] && exercise) {
+    const initValues = { ...result.fieldValues, 'plan-bodyweight': userBiometrics.bodyweight || 0 };
+    result.fields['plan-total-load'].textContent = computeTotalLoad(initValues, exercise, 'plan');
+  }
+  updatePlanCalcPreview();
+}
+
 function handlePlanExerciseChange() {
   const exercise = document.getElementById('plan-exercise')?.value;
   const oneRmDisplay = document.getElementById('plan-one-rm-display');
   const oneRM = exercise ? (activeRecords[exercise] || 0) : 0;
   if (oneRmDisplay) oneRmDisplay.textContent = oneRM > 0 ? `${Math.round(oneRM)} kg` : '\u2014';
-  updatePlanCalcPreview();
+  refreshPlanForm();
 }
 
 function togglePlanWms(el) {
@@ -1968,11 +2228,22 @@ function togglePlanWms(el) {
 function updatePlanCalcPreview() {
   const exercise = document.getElementById('plan-exercise')?.value;
   const reps = parseInt(document.getElementById('plan-reps')?.value, 10);
+  const addBtn = document.getElementById('plan-add-btn');
+  if (!addBtn) return;
+
+  // Bodyweight/weighted: just need reps
+  if (exercise) {
+    const schemaKey = getSchemaKey(exercise);
+    if (schemaKey !== 'standard') {
+      addBtn.disabled = !(reps > 0);
+      return;
+    }
+  }
+
   const weightInput = document.getElementById('plan-weight');
   const calcSpan = document.getElementById('plan-calc-weight');
-  const addBtn = document.getElementById('plan-add-btn');
   const pill = document.getElementById('plan-wms-pill');
-  if (!weightInput || !calcSpan || !pill || !addBtn) return;
+  if (!weightInput || !calcSpan || !pill) return;
 
   const mode = pill.dataset.mode;
   const oneRM = exercise ? (activeRecords[exercise] || 0) : 0;
@@ -2026,24 +2297,34 @@ function updatePlanCalcPreview() {
 function handlePlanAdd() {
   const exercise = document.getElementById('plan-exercise')?.value;
   const reps = parseInt(document.getElementById('plan-reps')?.value, 10);
-  const weightInput = document.getElementById('plan-weight');
-  const pill = document.getElementById('plan-wms-pill');
-  if (!exercise || !reps || reps < 1 || !weightInput || !pill) return;
+  if (!exercise || !reps || reps < 1) return;
 
-  const weightMode = pill.dataset.mode;
-  const rawWeight = parseFloat(weightInput.value) || 0;
-  let pct = null, rpe = null;
+  const schemaKey = getSchemaKey(exercise);
+  let weight = 0, weightMode = 'absolute', pct = null, rpe = null;
 
-  if (weightMode === 'pct') {
-    pct = rawWeight;
-  } else if (weightMode === 'rpe') {
-    rpe = rawWeight;
-    if (rpe < 1 || rpe > 10) return;
-  } else if (weightMode === 'absolute' && rawWeight <= 0) {
-    return;
+  if (schemaKey === 'bodyweight') {
+    weight = parseFloat(document.getElementById('plan-bodyweight')?.value) || userBiometrics.bodyweight || 0;
+  } else if (schemaKey === 'weighted') {
+    weight = parseFloat(document.getElementById('plan-bodyweight')?.value) || userBiometrics.bodyweight || 0;
+    weight += parseFloat(document.getElementById('plan-ext-load')?.value) || 0;
+  } else {
+    const weightInput = document.getElementById('plan-weight');
+    const pill = document.getElementById('plan-wms-pill');
+    if (!weightInput || !pill) return;
+    weightMode = pill.dataset.mode;
+    const rawWeight = parseFloat(weightInput.value) || 0;
+    if (weightMode === 'pct') {
+      pct = rawWeight;
+    } else if (weightMode === 'rpe') {
+      rpe = rawWeight;
+      if (rpe < 1 || rpe > 10) return;
+    } else if (rawWeight <= 0) {
+      return;
+    }
+    weight = rawWeight;
   }
 
-  const movement = { exerciseId: exercise, reps, weight: rawWeight, weightMode, pct, rpe };
+  const movement = { exerciseId: exercise, reps, weight, weightMode, pct, rpe };
   const type = document.getElementById('workout-type')?.value;
 
   if (type === 'EMOM') {
@@ -5163,10 +5444,11 @@ workoutForm.addEventListener('submit', async (e) => {
 
     const exercise = document.getElementById('exercise').value;
     if (!exercise) return showFeedback('Please select an exercise.', 'red', 'workoutFeedback');
-    const sets = parseInt(document.getElementById('sets').value, 10);
-    const reps = parseInt(document.getElementById('reps').value, 10);
-    const weight = parseFloat(document.getElementById('weight').value) || 0;
-    const externalLoad = parseFloat(document.getElementById('external-load').value) || 0;
+    const schemaKey = getSchemaKey(exercise);
+    const sets = parseInt(document.getElementById('log-set-sets').value, 10);
+    const reps = parseInt(document.getElementById('log-set-reps').value, 10);
+    const weight = parseFloat(document.getElementById('log-set-weight')?.value) || parseFloat(document.getElementById('log-set-bodyweight')?.value) || 0;
+    const externalLoad = parseFloat(document.getElementById('log-set-ext-load')?.value) || 0;
     const loadFactor = LOAD_FACTORS[exercise];
     let estimatedLoad = weight;
     if (loadFactor !== undefined) {
@@ -5188,13 +5470,7 @@ workoutForm.addEventListener('submit', async (e) => {
 
     try {
         await addDoc(collection(db, "workouts"), log);
-        workoutForm.reset();
-        const weightInput = document.getElementById('weight');
-        const weightLabel = document.getElementById('weight-label');
-        weightInput.disabled = false;
-        if (weightLabel) weightLabel.textContent = 'Weight (kg)';
-        document.getElementById('bw-extras').classList.add('hidden');
-        if (estimatedLoadDisplay) estimatedLoadDisplay.textContent = '—';
+        refreshLogSetForm();
         showFeedback('Workout saved. Keep crushing it!', 'emerald', 'workoutFeedback');
         haptic(HAPTIC.confirm);
     } catch (err) {
@@ -5279,6 +5555,7 @@ document.addEventListener('input', (e) => {
 });
 
 populateMovementDropdowns();
+refreshPlanForm();
 
 // Structured Workout Pagination
 const prevStructuredBtn = document.getElementById('prev-structured-page-btn');

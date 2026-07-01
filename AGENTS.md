@@ -62,3 +62,20 @@ Created a persistent work session summary so state is never lost.
 - Discovered existing `workouts` docs have Firestore **Timestamp** objects while new structured contributions used plain **number** (`Date.now()`).
 - Firestore sorts numbers **before** timestamps in ascending order, so in DESC order all Timestamp entries sort above number entries. The `limit(100)` query returned only Timestamp-type (old) entries, hiding all new structured contributions from `lastWorkouts` → volume chart appeared blank.
 - **Fix:** Added `Timestamp` to Firebase import. Changed `writeStructuredLogEntry`, manual log form, PB log, and onboarding entry to use `Timestamp.now()` instead of `Date.now()`. Removed unused `now` param from `writeStructuredLogEntry` and cleaned up all generator call sites.
+
+### Schema-driven form refactoring (feat/schema-driven-forms)
+- Created FORM_SCHEMAS registry with 9 schemas (3 contexts × 3 exercise types: standard, bodyweight, weighted)
+- Added renderFormFields() building 12-column grid from schema, handling number, readonly-calc, and wms field types
+- Added getSchemaKey() exercise → schema variant mapping
+- Added computeTotalLoad() with context-aware prefix
+- Replaced hardcoded Log a Lift inputs with #log-set-fields rendered by refreshLogSetForm()
+- Replaced hardcoded PB inputs with #pb-log-fields rendered by refreshPBForm()
+- Replaced hardcoded Plan inputs with #plan-movement-fields rendered by refreshPlanForm()
+- refreshLogSetForm/PB/Plan all render standard schema on page load (no exercise) and correct schema on exercise change
+- handlePlanAdd() now handles bodyweight (reads bodyweight) and weighted (reads bodyweight + ext-load) exercises
+- updatePlanCalcPreview() handles bodyweight/weighted (just checks reps > 0, enables Add button)
+- All three forms wired with input event delegation for real-time total-load computation
+- Removed dead code: toggleBWFields(), updateEstimatedLoadDisplay(), stale DOM refs
+- Calls to refreshLogSetForm() and refreshPBForm() on page load after populateExerciseDropdown()
+- Calls to refreshPlanForm() on page load after populateMovementDropdowns()
+- computeTotalLoad(label) ref removed — function now returns plain string; callers updated
