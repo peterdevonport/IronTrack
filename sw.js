@@ -1,5 +1,5 @@
 const CACHE = "irontrack-__DEPLOY_VER__";
-const URLS = ["./", "./index.html", "./style.css", "./app.js", "./manifest.json",
+const URLS = ["./", "./index.html", "./404.html", "./style.css", "./app.js", "./manifest.json",
   "./favicon.ico", "./icon-16x16.png", "./icon-32x32.png",
   "./icon-48x48.png", "./icon-64x64.png", "./icon-96x96.png",
   "./icon-128x128.png", "./icon-144x144.png", "./icon-152x152.png",
