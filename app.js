@@ -4624,17 +4624,26 @@ async function shareByQR() {
   const qrDisplay = document.getElementById('share-qr-display');
   if (!qrDisplay) return;
 
-  const plan = lastWorkoutPlans.find(p => p.id === sharePlanId);
-  if (!plan) {
-    feedback.textContent = 'Plan not found.';
-    return;
+  let plan;
+  if (shareIsWorkout) {
+    plan = lastStructuredWorkouts.find(w => w.id === sharePlanId);
+    if (!plan) {
+      feedback.textContent = 'Workout not found.';
+      return;
+    }
+  } else {
+    plan = lastWorkoutPlans.find(p => p.id === sharePlanId);
+    if (!plan) {
+      feedback.textContent = 'Plan not found.';
+      return;
+    }
   }
 
-  const sharerSnap = await getDoc(getProfileDocRef(currentUser.uid));
-  const sharerData = sharerSnap.exists() ? sharerSnap.data() : {};
-  const displayName = sharerData.displayName || currentUser?.email?.split('@')[0] || 'Unknown';
-
   try {
+    const sharerSnap = await getDoc(getProfileDocRef(currentUser.uid));
+    const sharerData = sharerSnap.exists() ? sharerSnap.data() : {};
+    const displayName = sharerData.displayName || currentUser?.email?.split('@')[0] || 'Unknown';
+
     const existing = await getDocs(query(
       collection(db, "shared_plans"),
       where("sharedBy", "==", currentUser.uid),
