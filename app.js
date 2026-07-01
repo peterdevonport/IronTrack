@@ -4497,6 +4497,7 @@ function switchShareMode(mode) {
     friendsSection.classList.remove('hidden');
     qrSection.classList.add('hidden');
     document.getElementById('share-plan-feedback').textContent = '';
+    updateShareSendButton();
   } else {
     btnQR.className = 'btn-core is-primary btn-size-row';
     btnFriends.className = 'btn-core is-ghost btn-size-row';
@@ -4549,6 +4550,10 @@ async function openShareModal(planId, isWorkout = false) {
       </label>`;
   });
   list.innerHTML = html;
+  document.querySelectorAll('.share-friend-checkbox').forEach(cb => {
+    cb.addEventListener('change', updateShareSendButton);
+  });
+  updateShareSendButton();
   modal.classList.remove('hidden');
 }
 
@@ -4556,6 +4561,22 @@ function toggleSelectAllFriends() {
   const selectAll = document.getElementById('share-select-all');
   const checked = selectAll?.checked ?? false;
   document.querySelectorAll('.share-friend-checkbox').forEach(cb => cb.checked = checked);
+  updateShareSendButton();
+}
+
+function updateShareSendButton() {
+  const btn = document.getElementById('share-plan-send');
+  if (!btn) return;
+  const anyChecked = document.querySelectorAll('.share-friend-checkbox:checked').length > 0;
+  if (anyChecked) {
+    btn.disabled = false;
+    btn.classList.remove('is-ghost');
+    btn.classList.add('is-primary');
+  } else {
+    btn.disabled = true;
+    btn.classList.remove('is-primary');
+    btn.classList.add('is-ghost');
+  }
 }
 
 async function shareWithFriends() {
@@ -6307,6 +6328,7 @@ window.saveSharedPlanToMyPlans = saveSharedPlanToMyPlans;
 window.dismissSharedPlan = dismissSharedPlan;
 window.switchPlansFilter = switchPlansFilter;
 window.toggleSelectAllFriends = toggleSelectAllFriends;
+window.updateShareSendButton = updateShareSendButton;
 window.toggleFavorite = toggleFavorite;
 window.togglePlanFavorite = togglePlanFavorite;
 window.toggleStructuredFavorite = toggleStructuredFavorite;
