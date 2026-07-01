@@ -4654,7 +4654,6 @@ async function shareByQR() {
     let docRef;
     if (!existing.empty) {
       docRef = existing.docs[0].ref;
-      await updateDoc(docRef, { createdAt: serverTimestamp() });
     } else {
       docRef = await addDoc(collection(db, "shared_plans"), {
         sharedBy: currentUser.uid,
