@@ -153,6 +153,11 @@ body {
   color: var(--slate-950);
   border-color: var(--color-purple-500);
 }
+#chip-pb.is-active:hover {
+  background-color: var(--color-purple-500);
+  color: var(--slate-950);
+  border-color: var(--color-purple-500);
+}
 
 /* --- 1-Rep Max (1RM) States - Emerald Theme --- */
 #chip-1rm:hover {
@@ -160,6 +165,11 @@ body {
   border-color: var(--emerald-400);
 }
 #chip-1rm.is-active {
+  background-color: var(--emerald-500);
+  color: var(--slate-950);
+  border-color: var(--emerald-500);
+}
+#chip-1rm.is-active:hover {
   background-color: var(--emerald-500);
   color: var(--slate-950);
   border-color: var(--emerald-500);
