@@ -69,7 +69,7 @@ body {
   text-align: center;
   border-radius: 9999px;         /* Perfect modern pill shapes universally */
   border: 1px solid transparent; /* Locks layout dimensions to prevent hovering jitters */
-  transition: all 0.2s ease-in-out;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out, opacity 0.2s ease-in-out;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -441,6 +441,15 @@ body {
   pointer-events: none;
 }
 
+#cal-toggle-view.btn-core.is-ghost:hover:not(:disabled) {
+  color: var(--slate-400);
+  border-color: transparent;
+}
+
+#cal-toggle-view.btn-core.is-ghost {
+  border-color: transparent;
+}
+
 .challenge-bar {
   transition: width 0.5s ease-in-out;
 }
@@ -643,6 +652,56 @@ details.surface-card[open] summary::after {
 #vh-avg,
 #vh-total {
   font-family: monospace;
+}
+
+#vh-bars-inner {
+  position: relative;
+  width: 100%;
+}
+
+@keyframes vh-slide-out-left {
+  to { transform: translateX(-100%); opacity: 0; }
+}
+@keyframes vh-slide-out-right {
+  to { transform: translateX(100%); opacity: 0; }
+}
+@keyframes vh-slide-in-left {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes vh-slide-in-right {
+  from { transform: translateX(-100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+#vh-bars-inner.slide-out-left {
+  animation: vh-slide-out-left 0.2s ease-in forwards;
+}
+#vh-bars-inner.slide-out-right {
+  animation: vh-slide-out-right 0.2s ease-in forwards;
+}
+#vh-bars-inner.slide-in-left {
+  animation: vh-slide-in-left 0.25s ease-out forwards;
+}
+#vh-bars-inner.slide-in-right {
+  animation: vh-slide-in-right 0.25s ease-out forwards;
+}
+
+#cal-grid-inner {
+  position: relative;
+  width: 100%;
+}
+#cal-grid-inner.slide-out-left {
+  animation: vh-slide-out-left 0.2s ease-in forwards;
+}
+#cal-grid-inner.slide-out-right {
+  animation: vh-slide-out-right 0.2s ease-in forwards;
+}
+#cal-grid-inner.slide-in-left {
+  animation: vh-slide-in-left 0.25s ease-out forwards;
+}
+#cal-grid-inner.slide-in-right {
+  animation: vh-slide-in-right 0.25s ease-out forwards;
 }
 
 /* ==========================================

@@ -116,24 +116,24 @@ EXERCISE_CATALOG.forEach(ex => { if (ex.loadFactor) LOAD_FACTORS[ex.name] = ex.l
 // ─── Schema-Driven Form Layouts ──────────────────────────────────────────────
 
 const INPUT_CLASS = 'w-full bg-slate-950 border border-slate-700 rounded-xl px-3 h-[39px] text-center text-slate-100 focus:outline-none focus:border-emerald-400 transition';
-const CALC_CLASS = 'w-full bg-slate-800/50 border border-slate-700 rounded-xl px-3 py-2.5 text-center text-emerald-400 font-bold min-h-[42px] flex items-center justify-center';
+const CALC_CLASS = 'w-full bg-slate-800/50 border border-slate-700 rounded-xl px-3 text-center text-emerald-400 font-bold h-[39px] flex items-center justify-center';
 
 const FORM_SCHEMAS = {
   logSet: {
     standard: [
-      { id: 'log-set-sets', label: 'Sets', type: 'number', width: 'col-span-4', attrs: { min: 1, step: 1, value: 1 } },
-      { id: 'log-set-reps', label: 'Reps', type: 'number', width: 'col-span-4', attrs: { min: 1, step: 1, value: 1 } },
+      { id: 'log-set-sets', label: 'Sets', type: 'number', width: 'col-span-4', attrs: { min: 1, step: 1, placeholder: '1' } },
+      { id: 'log-set-reps', label: 'Reps', type: 'number', width: 'col-span-4', attrs: { min: 1, step: 1, placeholder: '1' } },
       { id: 'log-set-weight', label: 'Weight (kg)', type: 'number', width: 'col-span-4', attrs: { min: 0, step: 'any', placeholder: '60' } },
     ],
     bodyweight: [
-      { id: 'log-set-sets', label: 'Sets', type: 'number', width: 'col-span-4', attrs: { min: 1, step: 1, value: 1 } },
-      { id: 'log-set-reps', label: 'Reps', type: 'number', width: 'col-span-4', attrs: { min: 1, step: 1, value: 1 } },
+      { id: 'log-set-sets', label: 'Sets', type: 'number', width: 'col-span-4', attrs: { min: 1, step: 1, placeholder: '1' } },
+      { id: 'log-set-reps', label: 'Reps', type: 'number', width: 'col-span-4', attrs: { min: 1, step: 1, placeholder: '1' } },
       { id: 'log-set-bodyweight', label: 'Bodyweight (kg)', type: 'number', width: 'col-span-4', attrs: { disabled: true } },
       { id: 'log-set-total-load', label: 'Est. Load', type: 'readonly-calc', width: 'col-span-12' },
     ],
     weighted: [
-      { id: 'log-set-sets', label: 'Sets', type: 'number', width: 'col-span-4', attrs: { min: 1, step: 1, value: 1 } },
-      { id: 'log-set-reps', label: 'Reps', type: 'number', width: 'col-span-4', attrs: { min: 1, step: 1, value: 1 } },
+      { id: 'log-set-sets', label: 'Sets', type: 'number', width: 'col-span-4', attrs: { min: 1, step: 1, placeholder: '1' } },
+      { id: 'log-set-reps', label: 'Reps', type: 'number', width: 'col-span-4', attrs: { min: 1, step: 1, placeholder: '1' } },
       { id: 'log-set-bodyweight', label: 'Bodyweight (kg)', type: 'number', width: 'col-span-4', attrs: { disabled: true } },
       { id: 'log-set-ext-load', label: 'External Load (kg)', type: 'number', width: 'col-span-6', attrs: { min: 0, step: 'any', placeholder: '0' } },
       { id: 'log-set-total-load', label: 'Total Load', type: 'readonly-calc', width: 'col-span-6' },
@@ -1719,9 +1719,40 @@ function populateExerciseDropdown() {
   }
 }
 
+function updateLogSetButtonState() {
+  const btn = document.getElementById('log-set-btn');
+  const exercise = document.getElementById('exercise')?.value;
+  if (!btn) return;
+
+  if (!exercise) {
+    btn.disabled = true;
+    btn.className = 'btn-core is-ghost btn-size-input';
+    return;
+  }
+
+  const schemaKey = getSchemaKey(exercise);
+  const sets = parseInt(document.getElementById('log-set-sets')?.value, 10);
+  const reps = parseInt(document.getElementById('log-set-reps')?.value, 10);
+
+  let valid = sets > 0 && reps > 0;
+
+  if (schemaKey === 'standard') {
+    const weight = parseFloat(document.getElementById('log-set-weight')?.value);
+    valid = valid && weight > 0;
+  }
+
+  if (valid) {
+    btn.disabled = false;
+    btn.className = 'btn-core is-primary btn-size-input';
+  } else {
+    btn.disabled = true;
+    btn.className = 'btn-core is-ghost btn-size-input';
+  }
+}
+
 function refreshLogSetForm() {
   const exercise = document.getElementById('exercise')?.value;
-  if (!exercise) { renderFormFields('log-set-fields', FORM_SCHEMAS.logSet.standard); return; }
+  if (!exercise) { renderFormFields('log-set-fields', FORM_SCHEMAS.logSet.standard); updateLogSetButtonState(); return; }
   const schemaKey = getSchemaKey(exercise);
   const schema = FORM_SCHEMAS.logSet[schemaKey];
   if (!schema) return;
@@ -1731,6 +1762,7 @@ function refreshLogSetForm() {
     onFieldChange: (values) => {
       const total = document.getElementById('log-set-total-load');
       if (total) total.textContent = computeTotalLoad(values, exercise, 'log-set');
+      updateLogSetButtonState();
     }
   });
 
@@ -1747,6 +1779,8 @@ function refreshLogSetForm() {
     const lf = LOAD_FACTORS[exercise];
     disclaimer.classList.toggle('hidden', lf === undefined);
   }
+
+  updateLogSetButtonState();
 }
 
 
@@ -3357,6 +3391,7 @@ function renderCalendar() {
     }
 
     grid.innerHTML = html;
+    updateCalTodayBtnState();
 }
 
 function updateConsistencyMetrics() {
@@ -3490,6 +3525,29 @@ function selectCalendarDay(dateStr) {
 }
 
 function changeCalendarNav(delta) {
+    const inner = document.getElementById('cal-grid-inner');
+    if (!inner) {
+        applyCalendarNav(delta);
+        renderCalendar();
+        return;
+    }
+    const outClass = delta > 0 ? 'slide-out-left' : 'slide-out-right';
+    const inClass = delta > 0 ? 'slide-in-left' : 'slide-in-right';
+    inner.classList.add(outClass);
+    inner.addEventListener('animationend', function handlerOut() {
+        inner.removeEventListener('animationend', handlerOut);
+        inner.classList.remove(outClass);
+        applyCalendarNav(delta);
+        renderCalendar();
+        inner.classList.add(inClass);
+        inner.addEventListener('animationend', function handlerIn() {
+            inner.removeEventListener('animationend', handlerIn);
+            inner.classList.remove(inClass);
+        }, { once: true });
+    }, { once: true });
+}
+
+function applyCalendarNav(delta) {
     if (calendarCompact) {
         calendarWeekOffset += delta;
         const monday = getMonday(new Date());
@@ -3498,7 +3556,62 @@ function changeCalendarNav(delta) {
     } else {
         calendarMonth.setMonth(calendarMonth.getMonth() + delta);
     }
-    renderCalendar();
+    calendarSelectedDate = null;
+    const detail = document.getElementById('cal-day-detail');
+    if (detail) detail.classList.add('hidden');
+    autoSelectFirstActiveDay();
+}
+
+function autoSelectFirstActiveDay() {
+    const activeDates = window.__irontrackActiveDates || new Set();
+    if (activeDates.size === 0) return;
+    let startDate, endDate;
+    if (calendarCompact) {
+        const monday = getMonday(new Date());
+        monday.setDate(monday.getDate() + calendarWeekOffset * 7);
+        startDate = new Date(monday);
+        endDate = new Date(monday);
+        endDate.setDate(endDate.getDate() + 6);
+    } else {
+        const year = calendarMonth.getFullYear();
+        const month = calendarMonth.getMonth();
+        startDate = new Date(year, month, 1);
+        endDate = new Date(year, month + 1, 0);
+    }
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        if (activeDates.has(dateStr)) {
+            selectCalendarDay(dateStr);
+            return;
+        }
+    }
+}
+
+function goToCalendarToday() {
+    calendarWeekOffset = 0;
+    calendarMonth = new Date();
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    selectCalendarDay(todayStr);
+}
+
+function updateCalTodayBtnState() {
+    const btn = document.getElementById('cal-today');
+    if (!btn) return;
+    const now = new Date();
+    let isCurrent = false;
+    if (calendarCompact) {
+        isCurrent = calendarWeekOffset === 0;
+    } else {
+        isCurrent = calendarMonth.getFullYear() === now.getFullYear() && calendarMonth.getMonth() === now.getMonth();
+    }
+    if (isCurrent) {
+        btn.className = 'btn-core is-ghost btn-size-row';
+        btn.disabled = true;
+    } else {
+        btn.className = 'btn-core is-primary-ghost btn-size-row';
+        btn.disabled = false;
+    }
 }
 
 function toggleCalendarView() {
@@ -3513,7 +3626,7 @@ function toggleCalendarView() {
         calendarMonth = new Date(monday);
     }
     const btn = document.getElementById('cal-toggle-view');
-    if (btn) btn.textContent = calendarCompact ? 'Show Full Month' : 'Show Current Week';
+    if (btn) btn.textContent = calendarCompact ? 'Month View ▽' : 'Week View △';
     renderCalendar();
 }
 
@@ -5357,15 +5470,16 @@ function formatRangeLabel(period, offset) {
 }
 
 function renderVolumeHistory() {
-  const container = document.getElementById('vh-bars-container');
+  const inner = document.getElementById('vh-bars-inner');
   const totalEl = document.getElementById('vh-total');
   const rangeLabel = document.getElementById('vh-range-label');
-  if (!container) return;
+  if (!inner) return;
 
   if (!lastWorkouts || lastWorkouts.length === 0) {
-    container.innerHTML = '<p class="text-xs text-slate-500 italic py-8 text-center w-full">Log some workouts to see your volume history.</p>';
+    inner.innerHTML = '<p class="text-xs text-slate-500 italic py-8 text-center w-full">Log some workouts to see your volume history.</p>';
     if (totalEl) totalEl.textContent = '';
     if (rangeLabel) rangeLabel.textContent = '';
+    updateTodayBtnState();
     return;
   }
 
@@ -5379,15 +5493,14 @@ function renderVolumeHistory() {
   const totalVolume = buckets.reduce((sum, b) => sum + b.volume, 0);
 
   if (totalEl) {
-    totalEl.textContent = `Total: ${Math.round(totalVolume).toLocaleString()} kg`;
+    totalEl.textContent = `Total Volume: ${Math.round(totalVolume).toLocaleString()} kg`;
   }
 
   const avgEl = document.getElementById('vh-avg');
-  const nowMs = Date.now();
-  const startedCount = buckets.filter(b => b.periodStart <= nowMs && b.periodEnd >= userSignupTs).length;
-  const avgVolume = startedCount >= 2 ? totalVolume / startedCount : 0;
+  const activeCount = buckets.filter(b => b.volume > 0).length;
+  const avgVolume = activeCount >= 2 ? totalVolume / activeCount : 0;
   if (avgEl) {
-    avgEl.textContent = avgVolume > 0 ? `Avg: ${Math.round(avgVolume).toLocaleString()} kg` : '';
+    avgEl.textContent = avgVolume > 0 ? `Average Training Day Vol: ${Math.round(avgVolume).toLocaleString()} kg` : '';
   }
 
   const chartHeight = 104;
@@ -5410,7 +5523,8 @@ function renderVolumeHistory() {
     avgLineHtml = `<div class="vh-avg-line" style="bottom: ${avgHeight}px"></div>`;
   }
 
-  container.innerHTML = barsHtml + avgLineHtml;
+  inner.innerHTML = barsHtml + avgLineHtml;
+  updateTodayBtnState();
 }
 
 function switchVolumePeriod(period) {
@@ -5428,8 +5542,43 @@ function switchVolumePeriod(period) {
 }
 
 function shiftVolumePeriod(delta) {
-  volumePeriodOffset += delta;
+  const inner = document.getElementById('vh-bars-inner');
+  if (!inner) {
+    volumePeriodOffset += delta;
+    renderVolumeHistory();
+    return;
+  }
+  const outClass = delta > 0 ? 'slide-out-left' : 'slide-out-right';
+  const inClass = delta > 0 ? 'slide-in-left' : 'slide-in-right';
+  inner.classList.add(outClass);
+  inner.addEventListener('animationend', function handlerOut() {
+    inner.removeEventListener('animationend', handlerOut);
+    inner.classList.remove(outClass);
+    volumePeriodOffset += delta;
+    renderVolumeHistory();
+    inner.classList.add(inClass);
+    inner.addEventListener('animationend', function handlerIn() {
+      inner.removeEventListener('animationend', handlerIn);
+      inner.classList.remove(inClass);
+    }, { once: true });
+  }, { once: true });
+}
+
+function goToCurrentPeriod() {
+  volumePeriodOffset = 0;
   renderVolumeHistory();
+}
+
+function updateTodayBtnState() {
+  const btn = document.getElementById('vh-today');
+  if (!btn) return;
+  if (volumePeriodOffset === 0) {
+    btn.className = 'btn-core is-ghost btn-size-row';
+    btn.disabled = true;
+  } else {
+    btn.className = 'btn-core is-primary-ghost btn-size-row';
+    btn.disabled = false;
+  }
 }
 
 function populateVolumeFilter(exercises) {
@@ -6310,6 +6459,7 @@ window.togglePlanWms = togglePlanWms;
 window.toggleForTimeDnf = toggleForTimeDnf;
 window.selectCalendarDay = selectCalendarDay;
 window.changeCalendarNav = changeCalendarNav;
+window.goToCalendarToday = goToCalendarToday;
 window.toggleCalendarView = toggleCalendarView;
 window.closeCalendarDayDetail = closeCalendarDayDetail;
 window.savePlan = savePlan;
@@ -6338,7 +6488,62 @@ window.shareByQR = shareByQR;
 window.updatePillActive = updatePillActive;
 window.switchVolumePeriod = switchVolumePeriod;
 window.shiftVolumePeriod = shiftVolumePeriod;
+window.goToCurrentPeriod = goToCurrentPeriod;
 window.onVolumeFilterChange = onVolumeFilterChange;
+
+// Volume Chart Touch Swipe
+(function setupVolumeSwipe() {
+  const container = document.getElementById('vh-bars-container');
+  if (!container) return;
+  let startX = 0, startY = 0, startTime = 0;
+  container.addEventListener('touchstart', function(e) {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    startTime = Date.now();
+  }, { passive: true });
+  container.addEventListener('touchmove', function(e) {
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+  container.addEventListener('touchend', function(e) {
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+    const elapsed = Date.now() - startTime;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5 && elapsed < 500) {
+      shiftVolumePeriod(dx < 0 ? 1 : -1);
+    }
+  }, { passive: true });
+})();
+
+// Calendar Touch Swipe
+(function setupCalendarSwipe() {
+  const container = document.getElementById('cal-grid-container');
+  if (!container) return;
+  let startX = 0, startY = 0, startTime = 0;
+  container.addEventListener('touchstart', function(e) {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    startTime = Date.now();
+  }, { passive: true });
+  container.addEventListener('touchmove', function(e) {
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+  container.addEventListener('touchend', function(e) {
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+    const elapsed = Date.now() - startTime;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5 && elapsed < 500) {
+      changeCalendarNav(dx < 0 ? 1 : -1);
+    }
+  }, { passive: true });
+})();
 
 // Profile Modal
 const modalClose = document.getElementById('profile-modal-close');
