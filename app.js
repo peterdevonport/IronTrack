@@ -5158,7 +5158,14 @@ function renderLogs(workouts) {
         const oneRM = Math.round(load * (1 + reps / 30));
         const totalWorkReps = workout.totalWorkReps || (reps * sets);
         const totalVolume = Math.round(load * totalWorkReps);
-        const borderClass = isPB ? 'log-entry-pb' : is1RMOnly ? 'log-entry-1rm' : 'log-entry';
+        let borderClass;
+        if (chipPBActive && !chip1RMActive) {
+          borderClass = 'log-entry-pb';
+        } else if (chip1RMActive && !chipPBActive) {
+          borderClass = 'log-entry-1rm';
+        } else {
+          borderClass = isPB ? 'log-entry-pb' : is1RMOnly ? 'log-entry-1rm' : 'log-entry';
+        }
         const secondLine = `Est. 1RM: ${oneRM}kg  <span class="text-slate-600">|</span>  Vol: ${totalVolume.toLocaleString()}kg`;
         const repDisplay = workout.partialReps ? `${sets} × ${reps} + ${workout.partialReps} reps` : `${sets} × ${reps}`;
 
