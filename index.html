@@ -34,7 +34,7 @@
         </p>
       </div>
       <div class="flex items-center gap-2">
-        <button id="profile-btn" class="btn-core is-secondary btn-size-header-util cursor-pointer hidden" title="Profile &amp; Social">
+        <button id="profile-btn" aria-label="Profile" class="btn-core is-secondary btn-size-header-util cursor-pointer hidden" title="Profile &amp; Social">
           <i data-lucide="user" size="18"></i>
         </button>
       </div>
@@ -58,7 +58,7 @@
           <div>
             <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Password</label>
             <div class="relative">
-              <input type="password" id="auth-password" placeholder="••••••••" required class="input-core pr-10" />
+              <input type="password" id="auth-password" placeholder="••••••••" required minlength="6" autocomplete="current-password" class="input-core pr-10" />
               <button id="toggle-password-btn" type="button" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" tabindex="-1">
                 <i data-lucide="eye" id="eye-icon" size="18"></i>
                 <i data-lucide="eye-off" id="eye-off-icon" size="18" class="hidden"></i>
@@ -94,7 +94,7 @@
             Send Reset Link
           </button>
         </div>
-        <p id="forgot-password-feedback" class="text-xs text-slate-500 font-medium text-center h-4"></p>
+        <p id="forgot-password-feedback" aria-live="polite" class="text-xs text-slate-500 font-medium text-center h-4"></p>
       </div>
     </section>
 
@@ -130,15 +130,15 @@
         <div class="grid grid-cols-3 gap-3">
           <div>
             <label class="form-label text-[10px]">This Month</label>
-            <input type="number" id="onboarding-days-monthly" placeholder="0" min="0" step="1" class="input-core" />
+            <input type="number" id="onboarding-days-monthly" placeholder="0" min="0" step="1" required class="input-core" />
           </div>
           <div>
             <label class="form-label text-[10px]">This Year</label>
-            <input type="number" id="onboarding-days-yearly" placeholder="0" min="0" step="1" class="input-core" />
+            <input type="number" id="onboarding-days-yearly" placeholder="0" min="0" step="1" required class="input-core" />
           </div>
           <div>
             <label class="form-label text-[10px]">Lifetime</label>
-            <input type="number" id="onboarding-days-lifetime" placeholder="0" min="0" step="1" class="input-core" />
+            <input type="number" id="onboarding-days-lifetime" placeholder="0" min="0" step="1" required class="input-core" />
           </div>
         </div>
       </div>
@@ -158,11 +158,11 @@
             </div>
             <div class="w-20">
               <label class="form-label">Weight</label>
-              <input type="number" id="onboarding-1rm-weight" placeholder="kg" min="0" step="any" class="input-core" />
+              <input type="number" id="onboarding-1rm-weight" placeholder="kg" min="0" step="any" required class="input-core" />
             </div>
             <div class="w-16">
               <label class="form-label">Reps</label>
-              <input type="number" id="onboarding-1rm-reps" value="1" min="1" step="1" class="input-core" />
+              <input type="number" id="onboarding-1rm-reps" value="1" min="1" step="1" required class="input-core" />
             </div>
             <button type="button" id="onboarding-add-1rm" class="btn-core is-secondary btn-size-row whitespace-nowrap cursor-pointer">+ Add</button>
           </div>
@@ -176,7 +176,7 @@
       <button type="button" id="onboarding-save-btn" class="btn-core is-primary btn-size-input w-full cursor-pointer">
         Save & Start Training
       </button>
-      <p id="onboarding-feedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
+      <p id="onboarding-feedback" aria-live="polite" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
     </section>
 
     <main id="app-view" class="hidden flex-1">
@@ -211,7 +211,7 @@
             <div id="cal-day-detail" class="hidden mt-3 p-3 bg-slate-950 rounded-xl space-y-2">
               <div class="flex justify-between items-center">
                 <p id="cal-day-detail-date" class="text-xs font-bold text-slate-300"></p>
-                <button id="cal-day-detail-close" type="button" class="text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" onclick="closeCalendarDayDetail()"><i data-lucide="circle-x" size="18"></i></button>
+                <button id="cal-day-detail-close" aria-label="Close" type="button" class="text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" onclick="closeCalendarDayDetail()"><i data-lucide="circle-x" size="18"></i></button>
               </div>
               <div id="cal-day-workouts" class="space-y-1.5 max-h-48 overflow-y-auto pr-1.5"></div>
             </div>
@@ -390,12 +390,13 @@
 
             <div class="overflow-x-auto">
               <table class="w-full text-left text-sm text-slate-300">
+                <caption class="sr-only">Leaderboard</caption>
                 <thead>
                   <tr class="table-leaderboard-head">
-                    <th class="py-2">Rank</th>
-                    <th class="py-2">Lifter</th>
-                    <th id="tableHeaderScore" class="py-2 text-right">Score</th>
-                    <th class="py-2 text-right">Action</th>
+                    <th class="py-2" scope="col">Rank</th>
+                    <th class="py-2" scope="col">Lifter</th>
+                    <th id="tableHeaderScore" class="py-2 text-right" scope="col">Score</th>
+                    <th class="py-2 text-right" scope="col">Action</th>
                   </tr>
                 </thead>
                 <tbody id="leaderboardRows"></tbody>
@@ -423,7 +424,7 @@
                 </div>
                 <div id="pb-log-fields"></div>
                 <button type="button" id="pb-log-btn" class="btn-core is-secondary whitespace-nowrap cursor-pointer shrink-0 px-3 py-2">Log it</button>
-                <p id="pb-log-feedback" class="text-xs text-slate-500 font-medium h-4 mt-2"></p>
+                <p id="pb-log-feedback" aria-live="polite" class="text-xs text-slate-500 font-medium h-4 mt-2"></p>
               </div>
             </details>
 
@@ -497,7 +498,7 @@
                 </div>
                 <div id="fortime-cap-reps-container" class="hidden mt-2">
                   <label class="form-label">Remaining Reps</label>
-                  <input type="number" id="fortime-cap-reps" placeholder="45" min="0" step="1" class="input-core" />
+                  <input type="number" id="fortime-cap-reps" placeholder="45" min="0" step="1" required class="input-core" />
                 </div>
                 <p class="text-xs text-slate-400 mt-2">
                   Score: <span id="fortime-score-preview" class="text-emerald-400 font-bold font-mono">—</span>
@@ -506,7 +507,7 @@
             </div>
 
             <button type="button" onclick="submitPendingWorkout()" class="btn-core is-ghost btn-size-input" disabled id="log-workout-btn">Log Workout</button>
-            <p id="log-workout-feedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
+            <p id="log-workout-feedback" aria-live="polite" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
           </section>
 
           <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1" id="record-training-card">
@@ -529,7 +530,7 @@
                 Log Sets
               </button>
 
-              <p id="workoutFeedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
+              <p id="workoutFeedback" aria-live="polite" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
             </form>
 
           </section>
@@ -540,7 +541,7 @@
       <div id="plan-name-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80" style="backdrop-filter: blur(4px);" role="dialog" aria-modal="true" aria-labelledby="plan-name-modal-title">
         <div class="surface-card w-full max-w-sm mx-4 space-y-4">
           <p id="plan-name-modal-title" class="form-label text-base">Name Your Plan</p>
-          <input type="text" id="plan-name-input" class="input-core" placeholder="e.g. Monday Push Day" />
+          <input type="text" id="plan-name-input" class="input-core" placeholder="e.g. Monday Push Day" required />
           <div class="flex gap-2">
             <button type="button" id="plan-name-cancel" class="btn-core is-ghost btn-size-input">Cancel</button>
             <button type="button" id="plan-name-save" class="btn-core is-primary btn-size-input">Save Plan</button>
@@ -661,7 +662,7 @@
             <!-- AMRAP metadata -->
             <div id="amrap-fields">
               <label class="form-label">Duration (minutes)</label>
-              <input type="number" id="amrap-duration" placeholder="12" min="1" step="1" class="input-core" />
+              <input type="number" id="amrap-duration" placeholder="12" min="1" step="1" required class="input-core" />
             </div>
 
             <!-- EMOM metadata -->
@@ -673,15 +674,15 @@
               <div class="mb-4">
                 <label class="form-label">Interval</label>
                 <div class="flex gap-2 items-center">
-                  <input type="number" id="emom-interval-min" placeholder="1" min="0" step="1" class="input-core w-20" />
+                  <input type="number" id="emom-interval-min" placeholder="1" min="0" step="1" required class="input-core w-20" />
                   <span class="text-slate-400 text-xs">min</span>
-                  <input type="number" id="emom-interval-sec" placeholder="00" min="0" max="59" step="1" class="input-core w-20" />
+                  <input type="number" id="emom-interval-sec" placeholder="00" min="0" max="59" step="1" required class="input-core w-20" />
                   <span class="text-slate-400 text-xs">sec</span>
                 </div>
               </div>
               <div id="emom-rounds-field" class="mb-4">
                 <label class="form-label">Rounds</label>
-                <input type="number" id="emom-rounds" placeholder="10" min="1" step="1" class="input-core" />
+                <input type="number" id="emom-rounds" placeholder="10" min="1" step="1" required class="input-core" />
                 <p class="text-xs text-slate-400 mt-1">Duration: <span id="emom-duration-display">—</span></p>
               </div>
             </div>
@@ -691,11 +692,11 @@
               <div class="grid grid-cols-2 gap-3">
                 <div>
                   <label class="form-label">Time Cap (minutes)</label>
-                  <input type="number" id="fortime-cap" placeholder="12" min="1" step="1" class="input-core" />
+                  <input type="number" id="fortime-cap" placeholder="12" min="1" step="1" required class="input-core" />
                 </div>
                 <div>
                   <label class="form-label">Rounds</label>
-                  <input type="number" id="fortime-rounds" placeholder="3" min="1" step="1" class="input-core" />
+                  <input type="number" id="fortime-rounds" placeholder="3" min="1" step="1" required class="input-core" />
                 </div>
               </div>
             </div>
@@ -705,15 +706,15 @@
               <div class="grid grid-cols-3 gap-3">
                 <div>
                   <label class="form-label">Rounds</label>
-                  <input type="number" id="interval-rounds" placeholder="5" min="1" step="1" class="input-core" />
+                  <input type="number" id="interval-rounds" placeholder="5" min="1" step="1" required class="input-core" />
                 </div>
                 <div>
                   <label class="form-label">Work (min)</label>
-                  <input type="number" id="interval-work-min" placeholder="2" min="0" step="1" class="input-core" />
+                  <input type="number" id="interval-work-min" placeholder="2" min="0" step="1" required class="input-core" />
                 </div>
                 <div>
                   <label class="form-label">Rest (min)</label>
-                  <input type="number" id="interval-rest-min" placeholder="1" min="0" step="1" class="input-core" />
+                  <input type="number" id="interval-rest-min" placeholder="1" min="0" step="1" required class="input-core" />
                 </div>
               </div>
             </div>
@@ -757,7 +758,7 @@
               <button type="button" onclick="doWorkout()" class="flex-1 btn-core is-primary-ghost btn-card-action h-11" title="Do Workout"><i data-lucide="dumbbell" size="18"></i></button>
               <button type="button" onclick="savePlan()" class="flex-1 btn-core is-ghost btn-card-action h-11" title="Save for Later"><i data-lucide="save" size="18"></i></button>
             </div>
-            <p id="planFeedback" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
+            <p id="planFeedback" aria-live="polite" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
           </section>
 
         </div>
@@ -886,7 +887,7 @@
               <div class="mb-4">
                 <label class="form-label">Email</label>
                 <div class="relative">
-                  <input type="email" id="profile-email" readonly disabled class="input-core opacity-60 pr-10" />
+                  <input type="email" id="profile-email" readonly disabled autocomplete="email" class="input-core opacity-60 pr-10" />
                   <span class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none p-1 leading-none">
                     <i data-lucide="lock" size="18"></i>
                   </span>
@@ -901,7 +902,7 @@
                   <div>
                     <label for="cp-current" class="form-label">Current Password</label>
                     <div class="relative">
-                      <input type="password" id="cp-current" placeholder="Current password" class="input-core pr-10" />
+                      <input type="password" id="cp-current" placeholder="Current password" required minlength="6" autocomplete="current-password" class="input-core pr-10" />
                       <button type="button" class="toggle-pw-btn absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" tabindex="-1" data-target="cp-current" aria-label="Toggle password visibility">
                         <i data-lucide="eye" class="eye-icon" size="18"></i>
                         <i data-lucide="eye-off" class="eye-off-icon hidden" size="18"></i>
@@ -911,7 +912,7 @@
                   <div>
                     <label for="cp-new" class="form-label">New Password</label>
                     <div class="relative">
-                      <input type="password" id="cp-new" placeholder="New password (min 6 chars)" class="input-core pr-10" />
+                      <input type="password" id="cp-new" placeholder="New password (min 6 chars)" required minlength="6" autocomplete="new-password" class="input-core pr-10" />
                       <button type="button" class="toggle-pw-btn absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" tabindex="-1" data-target="cp-new" aria-label="Toggle password visibility">
                         <i data-lucide="eye" class="eye-icon" size="18"></i>
                         <i data-lucide="eye-off" class="eye-off-icon hidden" size="18"></i>
@@ -921,7 +922,7 @@
                   <div>
                     <label for="cp-confirm" class="form-label">Confirm Password</label>
                     <div class="relative">
-                      <input type="password" id="cp-confirm" placeholder="Confirm new password" class="input-core pr-10" />
+                      <input type="password" id="cp-confirm" placeholder="Confirm new password" required minlength="6" autocomplete="new-password" class="input-core pr-10" />
                       <button type="button" class="toggle-pw-btn absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" tabindex="-1" data-target="cp-confirm" aria-label="Toggle password visibility">
                         <i data-lucide="eye" class="eye-icon" size="18"></i>
                         <i data-lucide="eye-off" class="eye-off-icon hidden" size="18"></i>
@@ -950,7 +951,7 @@
               <form id="profile-form" class="grid grid-cols-2 gap-4">
                 <div class="col-span-2">
                   <label class="form-label">Display Name</label>
-                  <input type="text" id="profile-display-name" placeholder="Your display name" class="input-core" />
+                  <input type="text" id="profile-display-name" placeholder="Your display name" required autocomplete="name" class="input-core" />
                   <p class="text-xs text-slate-500 mt-1">Shown on leaderboard & friends. Falls back to email prefix if blank.</p>
                 </div>
                 <div>
@@ -967,7 +968,7 @@
                 <button type="submit" id="save-profile-btn" class="btn-core is-primary btn-size-input col-span-2" disabled>
                   Update Profile
                 </button>
-                <p id="profileFeedback" class="text-xs text-slate-500 font-medium h-4 col-span-2 text-center"></p>
+                <p id="profileFeedback" aria-live="polite" class="text-xs text-slate-500 font-medium h-4 col-span-2 text-center"></p>
               </form>
             </section>
 
@@ -988,7 +989,7 @@
 
                 <div class="flex gap-2">
                   <input id="myCyberTag" type="text" readonly class="input-core" value="connecting to network..." />
-                  <button id="btnCopyCyberTag" onclick="copyCyberTag()" class="btn-core is-secondary btn-size-side">
+                  <button id="btnCopyCyberTag" aria-label="Copy Cyber-Tag" onclick="copyCyberTag()" class="btn-core is-secondary btn-size-side">
                     <i data-lucide="copy" size="18"></i>
                   </button>
                 </div>
@@ -1000,7 +1001,7 @@
 
                   <div class="flex gap-2">
                     <input type="text" id="friendUidInput" placeholder="Paste friend's Cyber-Tag here..." class="input-core" />
-                    <button id="btnAddFriend" class="btn-core is-ghost btn-size-side" onclick="handleAddFriend()">
+                    <button id="btnAddFriend" aria-label="Add friend" class="btn-core is-ghost btn-size-side" onclick="handleAddFriend()">
                       <i data-lucide="user-plus" size="18"></i>
                     </button>
                   </div>
@@ -1035,7 +1036,7 @@
 
   </div>
 
-  <nav id="bottom-nav" class="hidden w-full">
+  <nav id="bottom-nav" class="hidden w-full" aria-label="Main navigation">
     <div class="max-w-md lg:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="bottom-nav-inner">
         <button class="nav-tab active" data-tab="dashboard" title="Workouts">
@@ -1074,7 +1075,7 @@
   }
 </script>
 
-<div id="toast-notification" class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex items-center justify-center pointer-events-none">
+<div id="toast-notification" aria-live="assertive" role="alert" class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex items-center justify-center pointer-events-none">
     <span id="toast-notification-inner" class="px-4 py-2 rounded-lg bg-slate-800/90 backdrop-blur-sm border border-slate-700 shadow-xl text-xs font-medium opacity-0 transition-all duration-500"></span>
   </div>
 </body>
