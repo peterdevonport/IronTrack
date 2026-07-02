@@ -1,0 +1,26 @@
+name: CI Test Suite
+
+on:
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  run-tests: # This is the job name to select in your GitHub Status Checks or Rulesets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm' # Speeds up runs by caching your node_modules automatically
+
+      - name: Install Dependencies
+        run: npm ci # Assumes you have a package-lock.json. Use 'npm i' if you don't.
+
+      - name: Run Vitest Suite
+        # This calls your "test" script from image_a43943.png. 
+        # Vitest will automatically detect the CI environment and exit cleanly.
+        run: npm test
