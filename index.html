@@ -423,7 +423,8 @@
                 </div>
                 <div id="pb-log-fields"></div>
                 <button type="button" id="pb-log-btn" class="btn-core is-secondary whitespace-nowrap cursor-pointer shrink-0 px-3 py-2">Log it</button>
-              <p id="pb-log-feedback" class="text-xs text-slate-500 font-medium h-4 mt-2"></p>
+                <p id="pb-log-feedback" class="text-xs text-slate-500 font-medium h-4 mt-2"></p>
+              </div>
             </details>
 
             <div class="grid grid-cols-[1.5fr_1fr_1fr] gap-y-3 gap-x-4 text-sm mt-4">
@@ -536,9 +537,9 @@
         </div>
       </div>
 
-      <div id="plan-name-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80" style="backdrop-filter: blur(4px);">
+      <div id="plan-name-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80" style="backdrop-filter: blur(4px);" role="dialog" aria-modal="true" aria-labelledby="plan-name-modal-title">
         <div class="surface-card w-full max-w-sm mx-4 space-y-4">
-          <p class="form-label text-base">Name Your Plan</p>
+          <p id="plan-name-modal-title" class="form-label text-base">Name Your Plan</p>
           <input type="text" id="plan-name-input" class="input-core" placeholder="e.g. Monday Push Day" />
           <div class="flex gap-2">
             <button type="button" id="plan-name-cancel" class="btn-core is-ghost btn-size-input">Cancel</button>
@@ -548,9 +549,9 @@
         </div>
       </div>
 
-      <div id="share-plan-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80" style="backdrop-filter: blur(4px);">
+      <div id="share-plan-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80" style="backdrop-filter: blur(4px);" role="dialog" aria-modal="true" aria-labelledby="share-plan-modal-title">
         <div class="surface-card w-full max-w-sm mx-4 space-y-4">
-          <p class="form-label text-base">Share Plan</p>
+          <p id="share-plan-modal-title" class="form-label text-base">Share Plan</p>
           <div class="flex gap-2 mb-2">
             <button type="button" id="share-mode-friends" class="btn-core is-primary btn-size-row" onclick="switchShareMode('friends')">Friends</button>
             <button type="button" id="share-mode-qr" class="btn-core is-ghost btn-size-row" onclick="switchShareMode('qr')">QR Code</button>
@@ -867,12 +868,12 @@
       </div>
 
       <!-- Profile Modal Overlay -->
-      <div id="profile-modal" class="fixed inset-0 z-50 hidden">
+      <div id="profile-modal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title">
         <div id="profile-modal-backdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
         <div class="relative max-w-lg mx-auto mt-8 sm:mt-16 px-4">
           <div class="surface-card rounded-xl overflow-hidden">
             <div class="flex items-center justify-between px-6 pt-6 pb-2">
-              <h2 class="text-lg font-bold text-slate-200">Your Profile</h2>
+              <h2 id="profile-modal-title" class="text-lg font-bold text-slate-200">Your Profile</h2>
               <button id="profile-modal-close" class="text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" type="button">
                 <i data-lucide="circle-x" size="18"></i>
               </button>
@@ -897,26 +898,35 @@
                 </button>
                 <div id="change-password-form" class="hidden space-y-3 p-3 bg-slate-900/60 rounded-xl">
                   <p class="text-xs text-slate-400">Enter your current password and a new password.</p>
-                  <div class="relative">
-                    <input type="password" id="cp-current" placeholder="Current password" class="input-core pr-10" />
-                    <button type="button" class="toggle-pw-btn absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" tabindex="-1" data-target="cp-current">
-                      <i data-lucide="eye" class="eye-icon" size="18"></i>
-                      <i data-lucide="eye-off" class="eye-off-icon hidden" size="18"></i>
-                    </button>
+                  <div>
+                    <label for="cp-current" class="form-label">Current Password</label>
+                    <div class="relative">
+                      <input type="password" id="cp-current" placeholder="Current password" class="input-core pr-10" />
+                      <button type="button" class="toggle-pw-btn absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" tabindex="-1" data-target="cp-current" aria-label="Toggle password visibility">
+                        <i data-lucide="eye" class="eye-icon" size="18"></i>
+                        <i data-lucide="eye-off" class="eye-off-icon hidden" size="18"></i>
+                      </button>
+                    </div>
                   </div>
-                  <div class="relative">
-                    <input type="password" id="cp-new" placeholder="New password (min 6 chars)" class="input-core pr-10" />
-                    <button type="button" class="toggle-pw-btn absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" tabindex="-1" data-target="cp-new">
-                      <i data-lucide="eye" class="eye-icon" size="18"></i>
-                      <i data-lucide="eye-off" class="eye-off-icon hidden" size="18"></i>
-                    </button>
+                  <div>
+                    <label for="cp-new" class="form-label">New Password</label>
+                    <div class="relative">
+                      <input type="password" id="cp-new" placeholder="New password (min 6 chars)" class="input-core pr-10" />
+                      <button type="button" class="toggle-pw-btn absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" tabindex="-1" data-target="cp-new" aria-label="Toggle password visibility">
+                        <i data-lucide="eye" class="eye-icon" size="18"></i>
+                        <i data-lucide="eye-off" class="eye-off-icon hidden" size="18"></i>
+                      </button>
+                    </div>
                   </div>
-                  <div class="relative">
-                    <input type="password" id="cp-confirm" placeholder="Confirm new password" class="input-core pr-10" />
-                    <button type="button" class="toggle-pw-btn absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" tabindex="-1" data-target="cp-confirm">
-                      <i data-lucide="eye" class="eye-icon" size="18"></i>
-                      <i data-lucide="eye-off" class="eye-off-icon hidden" size="18"></i>
-                    </button>
+                  <div>
+                    <label for="cp-confirm" class="form-label">Confirm Password</label>
+                    <div class="relative">
+                      <input type="password" id="cp-confirm" placeholder="Confirm new password" class="input-core pr-10" />
+                      <button type="button" class="toggle-pw-btn absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" tabindex="-1" data-target="cp-confirm" aria-label="Toggle password visibility">
+                        <i data-lucide="eye" class="eye-icon" size="18"></i>
+                        <i data-lucide="eye-off" class="eye-off-icon hidden" size="18"></i>
+                      </button>
+                    </div>
                   </div>
                   <div class="grid grid-cols-2 gap-3">
                     <button type="button" id="cp-cancel" class="btn-core is-ghost btn-size-input">Cancel</button>

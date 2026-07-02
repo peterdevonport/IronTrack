@@ -4402,9 +4402,16 @@ function doSharedPlan(shareId) {
   });
 }
 
+let isSubmittingWorkout = false;
+
 async function submitPendingWorkout() {
+  if (isSubmittingWorkout) return;
   if (!currentUser) return alert('Please sign in first.');
   if (!pendingPlannedWorkout) return showFeedback('No planned workout to log.', 'rose', 'log-workout-feedback');
+
+  const btn = document.getElementById('log-workout-btn');
+  if (btn) btn.disabled = true;
+  isSubmittingWorkout = true;
 
   const { type, name, structure } = pendingPlannedWorkout;
   const now = Timestamp.now();
@@ -4549,6 +4556,9 @@ async function submitPendingWorkout() {
     } else {
       alert('Failed to log workout: ' + err.message);
     }
+  } finally {
+    if (btn) btn.disabled = false;
+    isSubmittingWorkout = false;
   }
 }
 
