@@ -463,6 +463,7 @@ let lastSharedPlans = [];
 let sharedPlansPage = 1;
 let plansFilter = 'mine'; // 'mine' | 'shared'
 let unsubscribeSharedPlans = null;
+let unsubscribeProfile = null;
 
 // Global state variables for social & leaderboards
 let currentScope = 'global'; // 'global' or 'friends'
@@ -558,6 +559,7 @@ onAuthStateChanged(auth, async (user) => {
         if (unsubscribeStructured) { unsubscribeStructured(); unsubscribeStructured = null; }
         if (unsubscribePlans) { unsubscribePlans(); unsubscribePlans = null; }
         if (unsubscribeSharedPlans) { unsubscribeSharedPlans(); unsubscribeSharedPlans = null; }
+        if (unsubscribeProfile) { unsubscribeProfile(); unsubscribeProfile = null; }
         if (leaderboardUnsubscribe) { leaderboardUnsubscribe(); leaderboardUnsubscribe = null; }
         loginView.classList.remove('hidden');
         appView.classList.add('hidden');
@@ -5854,7 +5856,7 @@ async function initSocialProfile(user, dotsScore = 0) {
     });
   }
 
-  onSnapshot(profileRef, (snapshot) => {
+  unsubscribeProfile = onSnapshot(profileRef, (snapshot) => {
     const data = snapshot.data();
     userFriendsList = Array.isArray(data?.friends) ? data.friends : [];
     renderActiveFriendsList();
