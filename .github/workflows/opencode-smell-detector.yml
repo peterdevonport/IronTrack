@@ -1,0 +1,55 @@
+name: OpenCode Code Smell Reviewer
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    branches: [main, master]
+
+jobs:
+  review-smells:
+    # 🛑 LOOP PROTECTION: Ensures the AI analyzer completely ignores any commits 
+    # pushed by GitHub bots or branches created by OpenCode itself.
+    if: |
+      github.actor != 'github-actions[bot]' && 
+      !startsWith(github.head_ref, 'opencode/')
+    
+    runs-on: ubuntu-latest
+    
+    # 🔑 CLOUD PERMISSIONS: Explicitly gives the runner permission to read the PR 
+    # and write to your repository's Issue tracker.
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: read
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetches full git history so the AI can compare the branch accurately
+
+      - name: Analyze Code Smells with Qwen 3.7 Plus
+        uses: anomalyco/opencode/github@latest
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed so OpenCode can use the 'gh' CLI tool
+        with:
+          model: opencode-go/qwen3.7-plus
+          prompt: |
+            You are an elite Staff Engineer executing an automated Code Smell and Architectural Review.
+            Analyze the git diff of this Pull Request. Focus heavily on identifying technical debt and design anti-patterns.
+
+            LOOK EXCLUSIVELY FOR:
+            1. Clean Code Violations: Deeply nested conditions, magic numbers, poorly named variables, or repetitive copy-pasted logic (DRY violations).
+            2. Architectural Smells: Tight coupling, business logic mixed into UI layers, bloated functions (over 50 lines), or poor separation of concerns.
+            3. Operational Risks: Missing edge-case error handling, unhandled Promise rejections, or forgotten 'TODO'/'FIXME' comments in modified lines.
+
+            CRITICAL EXECUTION RULES:
+            - Do NOT fail the GitHub Actions build.
+            - Do NOT leave review comments directly on the PR.
+            - For every distinct code smell you identify, execute a native GitHub CLI command to log it as a separate background issue.
+            
+            Each issue must be clearly labeled with 'tech-debt' so the Auto-Fixer workflow can pick it up later.
+
+            EXECUTION TEMPLATE:
+            gh issue create --title "[OpenCode Technical Debt] <Short, clear summary of the smell>" --body "### Location\nFound in modified section of code.\n\n### Description\n<Detailed explanation of why this is a code smell and how it violates best practices>\n\n### Suggested Refactor\n<A high-level architectural blueprint or pseudo-code strategy for fixing it>" --label "tech-debt"
