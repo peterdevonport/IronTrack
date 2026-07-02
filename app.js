@@ -2285,6 +2285,43 @@ function togglePlanWms(el) {
   }
 }
 
+function previewPctMode(pct, oneRM, calcSpan, addBtn) {
+  if (!isNaN(pct) && pct > 0) {
+    const calculated = Math.round(oneRM * pct / 100);
+    calcSpan.textContent = '\u2192 ' + calculated + ' kg';
+    calcSpan.className = 'text-emerald-400 font-mono text-xs';
+    return true;
+  }
+  calcSpan.textContent = '\u2192';
+  calcSpan.className = 'text-emerald-400 font-mono text-xs';
+  return false;
+}
+
+function previewRpeMode(rpe, reps, oneRM, calcSpan) {
+  if (!isNaN(rpe) && rpe >= 1 && rpe <= 10 && reps && reps >= 1) {
+    const rir = 10 - rpe;
+    const totalRepsPossible = reps + rir;
+    const targetWeight = Math.round(oneRM / (1 + totalRepsPossible / 30));
+    calcSpan.textContent = '\u2192 ' + targetWeight + ' kg';
+    calcSpan.className = 'text-emerald-400 font-mono text-xs';
+    return true;
+  }
+  calcSpan.textContent = '\u2192';
+  calcSpan.className = 'text-emerald-400 font-mono text-xs';
+  return false;
+}
+
+function previewAbsoluteMode(kg, calcSpan) {
+  if (kg > 0) {
+    calcSpan.textContent = '\u2192 ' + kg + ' kg';
+    calcSpan.className = 'text-emerald-400 font-mono text-xs';
+    return true;
+  }
+  calcSpan.textContent = '\u2192';
+  calcSpan.className = 'text-emerald-400 font-mono text-xs';
+  return false;
+}
+
 function updatePlanCalcPreview() {
   const exercise = document.getElementById('plan-exercise')?.value;
   const reps = parseInt(document.getElementById('plan-reps')?.value, 10);
@@ -2317,40 +2354,13 @@ function updatePlanCalcPreview() {
 
   let valid = false;
   if (mode === 'pct') {
-    const pct = parseFloat(weightInput.value);
-    if (!isNaN(pct) && pct > 0) {
-      const calculated = Math.round(oneRM * pct / 100);
-      calcSpan.textContent = '\u2192 ' + calculated + ' kg';
-      calcSpan.className = 'text-emerald-400 font-mono text-xs';
-      valid = true;
-    } else {
-      calcSpan.textContent = '\u2192';
-      calcSpan.className = 'text-emerald-400 font-mono text-xs';
-    }
+    valid = previewPctMode(parseFloat(weightInput.value), oneRM, calcSpan, addBtn);
   } else if (mode === 'rpe') {
-    const rpe = parseFloat(weightInput.value);
-    if (!isNaN(rpe) && rpe >= 1 && rpe <= 10 && reps && reps >= 1) {
-      const rir = 10 - rpe;
-      const totalRepsPossible = reps + rir;
-      const targetWeight = Math.round(oneRM / (1 + totalRepsPossible / 30));
-      calcSpan.textContent = '\u2192 ' + targetWeight + ' kg';
-      calcSpan.className = 'text-emerald-400 font-mono text-xs';
-      valid = true;
-    } else {
-      calcSpan.textContent = '\u2192';
-      calcSpan.className = 'text-emerald-400 font-mono text-xs';
-    }
+    valid = previewRpeMode(parseFloat(weightInput.value), reps, oneRM, calcSpan);
   } else {
-    const kg = parseFloat(weightInput.value);
-    if (kg > 0) {
-      calcSpan.textContent = '\u2192 ' + kg + ' kg';
-      calcSpan.className = 'text-emerald-400 font-mono text-xs';
-      valid = true;
-    } else {
-      calcSpan.textContent = '\u2192';
-      calcSpan.className = 'text-emerald-400 font-mono text-xs';
-    }
+    valid = previewAbsoluteMode(parseFloat(weightInput.value), calcSpan);
   }
+
   addBtn.disabled = !valid;
 }
 
@@ -4993,110 +5003,122 @@ function toLocalDateKey(d) {
   return `${y}-${m}-${day}`;
 }
 
-function computeVolumeHistory(workouts, period, filterExercise) {
-  const now = new Date();
+function computeDailyBuckets(workouts, now, filterExercise) {
   const buckets = {};
-
-  if (period === 'daily') {
-    const ref = new Date(now);
-    ref.setDate(ref.getDate() + state.volume.offset * 7);
-    const weekStart = getWeekStart(ref);
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(weekStart);
-      d.setDate(d.getDate() + i);
-      const key = toLocalDateKey(d);
-      const periodStart = new Date(d);
-      const periodEnd = new Date(d);
-      periodEnd.setHours(23, 59, 59, 999);
-      const periodEndMs = periodEnd.getTime();
-      buckets[key] = { label: periodEndMs < state.user.userSignupTs ? '' : d.toLocaleDateString('en-US', { weekday: 'short' }), volume: 0, periodStart: periodStart.getTime(), periodEnd: periodEndMs };
-    }
-  } else if (period === 'weekly') {
-    const monthRef = new Date(now.getFullYear(), now.getMonth() + state.volume.offset, 1);
-    const monthStart = monthRef;
-    const monthEnd = new Date(monthRef.getFullYear(), monthRef.getMonth() + 1, 0, 23, 59, 59, 999);
-    const firstWeekStart = getWeekStart(monthStart);
-    const lastWeekStart = getWeekStart(monthEnd);
-    let cursor = new Date(firstWeekStart);
-    while (cursor <= lastWeekStart) {
-      const weekEnd = getWeekEnd(cursor);
-      const key = toLocalDateKey(cursor);
-      const weekEndMs = weekEnd.getTime();
-      const label = weekEndMs < state.user.userSignupTs ? '' : cursor.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      buckets[key] = { label, volume: 0, weekStart: new Date(cursor), weekEnd: new Date(weekEnd), periodStart: cursor.getTime(), periodEnd: weekEndMs };
-      cursor.setDate(cursor.getDate() + 7);
-    }
-  } else if (period === 'monthly') {
-    const year = now.getFullYear() + state.volume.offset;
-    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    for (let i = 0; i < 12; i++) {
-      const key = `${year}-${String(i + 1).padStart(2, '0')}`;
-      const monthEnd = new Date(year, i + 1, 0, 23, 59, 59, 999);
-      const monthStart = new Date(year, i, 1);
-      const monthEndMs = monthEnd.getTime();
-      buckets[key] = { label: monthEndMs < state.user.userSignupTs ? '' : monthNames[i], volume: 0, periodStart: monthStart.getTime(), periodEnd: monthEndMs };
-    }
-  } else {
-    const baseYear = now.getFullYear() + state.volume.offset * 5;
-    for (let i = 0; i < 5; i++) {
-      const yr = baseYear - 4 + i;
-      const key = String(yr);
-      const yearEnd = new Date(yr + 1, 0, 0, 23, 59, 59, 999);
-      const yearStart = new Date(yr, 0, 1);
-      const yearEndMs = yearEnd.getTime();
-      buckets[key] = { label: yearEndMs < state.user.userSignupTs ? '' : String(yr), volume: 0, periodStart: yearStart.getTime(), periodEnd: yearEndMs };
-    }
+  const ref = new Date(now);
+  ref.setDate(ref.getDate() + state.volume.offset * 7);
+  const weekStart = getWeekStart(ref);
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart);
+    d.setDate(d.getDate() + i);
+    const key = toLocalDateKey(d);
+    const periodStart = new Date(d);
+    const periodEnd = new Date(d);
+    periodEnd.setHours(23, 59, 59, 999);
+    const periodEndMs = periodEnd.getTime();
+    buckets[key] = { label: periodEndMs < state.user.userSignupTs ? '' : d.toLocaleDateString('en-US', { weekday: 'short' }), volume: 0, periodStart: periodStart.getTime(), periodEnd: periodEndMs };
   }
-
+  const weekEnd = getWeekEnd(ref);
   workouts.forEach(w => {
-    const ts = w.timestamp;
-    if (!ts) return;
-    const d = new Date(ts);
+    const d = new Date(w.timestamp);
     if (isNaN(d.getTime())) return;
-
+    if (d < weekStart || d > weekEnd) return;
     if (filterExercise !== 'All' && w.exercise !== filterExercise) return;
-
     const volume = parseFloat(w.totalVolume) || 0;
     if (volume <= 0) return;
+    const key = toLocalDateKey(d);
+    if (buckets[key] !== undefined) buckets[key].volume += volume;
+  });
+  return Object.values(buckets);
+}
 
-    if (period === 'daily') {
-      const ref = new Date(now);
-      ref.setDate(ref.getDate() + state.volume.offset * 7);
-      const weekStart = getWeekStart(ref);
-      const weekEnd = getWeekEnd(ref);
-      if (d < weekStart || d > weekEnd) return;
-      const key = toLocalDateKey(d);
-      if (buckets[key] !== undefined) {
+function computeWeeklyBuckets(workouts, now, filterExercise) {
+  const buckets = {};
+  const monthRef = new Date(now.getFullYear(), now.getMonth() + state.volume.offset, 1);
+  const monthEnd = new Date(monthRef.getFullYear(), monthRef.getMonth() + 1, 0, 23, 59, 59, 999);
+  const firstWeekStart = getWeekStart(monthRef);
+  const lastWeekStart = getWeekStart(monthEnd);
+  let cursor = new Date(firstWeekStart);
+  while (cursor <= lastWeekStart) {
+    const weekEnd = getWeekEnd(cursor);
+    const key = toLocalDateKey(cursor);
+    const weekEndMs = weekEnd.getTime();
+    const label = weekEndMs < state.user.userSignupTs ? '' : cursor.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    buckets[key] = { label, volume: 0, weekStart: new Date(cursor), weekEnd: new Date(weekEnd), periodStart: cursor.getTime(), periodEnd: weekEndMs };
+    cursor.setDate(cursor.getDate() + 7);
+  }
+  workouts.forEach(w => {
+    const d = new Date(w.timestamp);
+    if (isNaN(d.getTime()) || d < monthRef || d > monthEnd) return;
+    if (filterExercise !== 'All' && w.exercise !== filterExercise) return;
+    const volume = parseFloat(w.totalVolume) || 0;
+    if (volume <= 0) return;
+    for (const key in buckets) {
+      if (d >= buckets[key].weekStart && d <= buckets[key].weekEnd) {
         buckets[key].volume += volume;
-      }
-    } else if (period === 'weekly') {
-      for (const key in buckets) {
-        const b = buckets[key];
-        if (d >= b.weekStart && d <= b.weekEnd) {
-          b.volume += volume;
-          break;
-        }
-      }
-    } else if (period === 'monthly') {
-      const year = now.getFullYear() + state.volume.offset;
-      if (d.getFullYear() !== year) return;
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      if (buckets[key] !== undefined) {
-        buckets[key].volume += volume;
-      }
-    } else {
-      const baseYear = now.getFullYear() + state.volume.offset * 5;
-      const startYear = baseYear - 4;
-      const endYear = baseYear;
-      if (d.getFullYear() < startYear || d.getFullYear() > endYear) return;
-      const key = String(d.getFullYear());
-      if (buckets[key] !== undefined) {
-        buckets[key].volume += volume;
+        break;
       }
     }
   });
-
   return Object.values(buckets);
+}
+
+function computeMonthlyBuckets(workouts, now, filterExercise) {
+  const buckets = {};
+  const year = now.getFullYear() + state.volume.offset;
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  for (let i = 0; i < 12; i++) {
+    const key = `${year}-${String(i + 1).padStart(2, '0')}`;
+    const monthEnd = new Date(year, i + 1, 0, 23, 59, 59, 999);
+    const monthStart = new Date(year, i, 1);
+    const monthEndMs = monthEnd.getTime();
+    buckets[key] = { label: monthEndMs < state.user.userSignupTs ? '' : monthNames[i], volume: 0, periodStart: monthStart.getTime(), periodEnd: monthEndMs };
+  }
+  workouts.forEach(w => {
+    const d = new Date(w.timestamp);
+    if (isNaN(d.getTime()) || d.getFullYear() !== year) return;
+    if (filterExercise !== 'All' && w.exercise !== filterExercise) return;
+    const volume = parseFloat(w.totalVolume) || 0;
+    if (volume <= 0) return;
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    if (buckets[key] !== undefined) buckets[key].volume += volume;
+  });
+  return Object.values(buckets);
+}
+
+function computeYearlyBuckets(workouts, now, filterExercise) {
+  const buckets = {};
+  const baseYear = now.getFullYear() + state.volume.offset * 5;
+  const startYear = baseYear - 4;
+  for (let i = 0; i < 5; i++) {
+    const yr = startYear + i;
+    const key = String(yr);
+    const yearEnd = new Date(yr + 1, 0, 0, 23, 59, 59, 999);
+    const yearStart = new Date(yr, 0, 1);
+    const yearEndMs = yearEnd.getTime();
+    buckets[key] = { label: yearEndMs < state.user.userSignupTs ? '' : String(yr), volume: 0, periodStart: yearStart.getTime(), periodEnd: yearEndMs };
+  }
+  workouts.forEach(w => {
+    const d = new Date(w.timestamp);
+    if (isNaN(d.getTime())) return;
+    if (d.getFullYear() < startYear || d.getFullYear() > baseYear) return;
+    if (filterExercise !== 'All' && w.exercise !== filterExercise) return;
+    const volume = parseFloat(w.totalVolume) || 0;
+    if (volume <= 0) return;
+    const key = String(d.getFullYear());
+    if (buckets[key] !== undefined) buckets[key].volume += volume;
+  });
+  return Object.values(buckets);
+}
+
+function computeVolumeHistory(workouts, period, filterExercise) {
+  const now = new Date();
+  switch (period) {
+    case 'daily': return computeDailyBuckets(workouts, now, filterExercise);
+    case 'weekly': return computeWeeklyBuckets(workouts, now, filterExercise);
+    case 'monthly': return computeMonthlyBuckets(workouts, now, filterExercise);
+    default: return computeYearlyBuckets(workouts, now, filterExercise);
+  }
 }
 
 function formatRangeLabel(period, offset) {
