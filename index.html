@@ -190,10 +190,10 @@
 
             <div class="mt-4">
               <div class="flex items-center justify-between mb-2">
-                <button id="cal-prev-month" type="button" class="btn-core is-secondary btn-size-row" onclick="changeCalendarNav(-1)">&lt;</button>
+                <button id="cal-prev-month" type="button" class="btn-core is-secondary btn-size-row">&lt;</button>
                 <span id="cal-month-label" class="text-sm font-bold text-slate-200"></span>
-                <button id="cal-today" type="button" class="btn-core is-ghost btn-size-row" onclick="goToCalendarToday()" disabled>Today</button>
-                <button id="cal-next-month" type="button" class="btn-core is-secondary btn-size-row" onclick="changeCalendarNav(1)">&gt;</button>
+                <button id="cal-today" type="button" class="btn-core is-ghost btn-size-row" disabled>Today</button>
+                <button id="cal-next-month" type="button" class="btn-core is-secondary btn-size-row">&gt;</button>
               </div>
               <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
                 <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
@@ -204,14 +204,14 @@
                 </div>
               </div>
               <div class="mt-2 text-right">
-                <button id="cal-toggle-view" type="button" class="btn-core is-ghost btn-size-row" onclick="toggleCalendarView()">Month View ▽</button>
+                <button id="cal-toggle-view" type="button" class="btn-core is-ghost btn-size-row">Month View ▽</button>
               </div>
             </div>
 
             <div id="cal-day-detail" class="hidden mt-3 p-3 bg-slate-950 rounded-xl space-y-2">
               <div class="flex justify-between items-center">
                 <p id="cal-day-detail-date" class="text-xs font-bold text-slate-300"></p>
-                <button id="cal-day-detail-close" aria-label="Close" type="button" class="text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" onclick="closeCalendarDayDetail()"><i data-lucide="circle-x" size="18"></i></button>
+                <button id="cal-day-detail-close" aria-label="Close" type="button" class="text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none"><i data-lucide="circle-x" size="18"></i></button>
               </div>
               <div id="cal-day-workouts" class="space-y-1.5 max-h-48 overflow-y-auto pr-1.5"></div>
             </div>
@@ -271,9 +271,9 @@
             <h2 class="section-heading">Saved Plans</h2>
             <p class="text-description mb-4">Your saved workout templates.</p>
             <div class="grid grid-cols-3 gap-2 mb-3">
-              <button type="button" id="plans-filter-mine" class="btn-core is-primary btn-size-row" onclick="switchPlansFilter('mine')">My Plans</button>
-              <button type="button" id="plans-filter-shared" class="btn-core is-ghost btn-size-row" onclick="switchPlansFilter('shared')">Shared</button>
-              <button type="button" id="plans-filter-favorites" class="btn-core is-ghost btn-size-row" onclick="switchPlansFilter('favorites')">Favorites</button>
+              <button type="button" id="plans-filter-mine" class="btn-core is-primary btn-size-row">My Plans</button>
+              <button type="button" id="plans-filter-shared" class="btn-core is-ghost btn-size-row">Shared</button>
+              <button type="button" id="plans-filter-favorites" class="btn-core is-ghost btn-size-row">Favorites</button>
             </div>
             <div id="saved-plans-inline" class="space-y-2">
               <p class="text-xs text-slate-500 italic py-2 text-center">No saved plans yet.</p>
@@ -370,18 +370,18 @@
             <div class="mt-4 mb-2">
               <div class="flex flex-col sm:flex-row justify-between gap-3">
                 <div class="inline-flex gap-1 p-0.5 w-fit rounded-xl bg-slate-950">
-                  <button id="btnGlobalBoard" onclick="switchLeaderboardScope('global')" class="btn-core is-primary btn-size-row">
+                  <button id="btnGlobalBoard" class="btn-core is-primary btn-size-row">
                     Global
                   </button>
-                  <button id="btnFriendsBoard" onclick="switchLeaderboardScope('friends')" class="btn-core is-ghost btn-size-row">
+                  <button id="btnFriendsBoard" class="btn-core is-ghost btn-size-row">
                     Friends
                   </button>
                 </div>
                 <div class="inline-flex gap-1 p-0.5 w-fit rounded-xl bg-slate-950">
-                  <button id="btnFormulaDots" onclick="switchLeaderboardFormula('dots')" class="btn-core is-primary btn-size-row">
+                  <button id="btnFormulaDots" class="btn-core is-primary btn-size-row">
                     DOTS
                   </button>
-                  <button id="btnFormulaSinclair" onclick="switchLeaderboardFormula('sinclair')" class="btn-core is-ghost btn-size-row">
+                  <button id="btnFormulaSinclair" class="btn-core is-ghost btn-size-row">
                     Sinclair
                   </button>
                 </div>
@@ -401,7 +401,7 @@
                 </thead>
                 <tbody id="leaderboardRows"></tbody>
               </table>
-              <button id="leaderboard-expand-btn" class="btn-core is-ghost btn-size-input mt-3 w-full hidden" onclick="toggleLeaderboardExpand()">
+              <button id="leaderboard-expand-btn" class="btn-core is-ghost btn-size-input mt-3 w-full hidden">
                 Show All
               </button>
             </div>
@@ -463,12 +463,12 @@
                   <div>
                     <label class="form-label">Rounds Completed</label>
                     <input type="number" id="log-rounds" placeholder="0" min="0" step="1" class="input-core" required />
-                    <button type="button" id="log-round-btn" onclick="logRound()" class="btn-core is-primary btn-size-input w-full mt-2">+ LOG ROUND</button>
+                    <button type="button" id="log-round-btn" class="btn-core is-primary btn-size-input w-full mt-2">+ LOG ROUND</button>
                   </div>
                   <div>
                     <label class="form-label">Partial Reps</label>
                     <input type="number" id="log-partial-reps" placeholder="0" min="0" step="1" class="input-core" />
-                    <button type="button" id="log-rep-btn" onclick="logRep()" class="btn-core is-primary-ghost btn-size-input w-full mt-2">+ LOG REP</button>
+                    <button type="button" id="log-rep-btn" class="btn-core is-primary-ghost btn-size-input w-full mt-2">+ LOG REP</button>
                   </div>
                 </div>
                 <p class="text-xs text-slate-400 mt-2">
@@ -482,7 +482,7 @@
                 <h3 class="form-label mb-2">Result</h3>
                 <div class="flex items-center mb-2">
                   <label class="flex items-center gap-2 cursor-pointer min-w-[44px] min-h-[44px] p-3">
-                    <input type="checkbox" id="fortime-dnf" onchange="toggleForTimeDnf()" class="w-4 h-4 rounded border-slate-600 bg-slate-800 accent-emerald-500" />
+                    <input type="checkbox" id="fortime-dnf" class="w-4 h-4 rounded border-slate-600 bg-slate-800 accent-emerald-500" />
                     <span class="text-xs text-slate-400">DNF</span>
                   </label>
                 </div>
@@ -506,7 +506,7 @@
               </div>
             </div>
 
-            <button type="button" onclick="submitPendingWorkout()" class="btn-core is-ghost btn-size-input" disabled id="log-workout-btn">Log Workout</button>
+            <button type="button" class="btn-core is-ghost btn-size-input" disabled id="log-workout-btn">Log Workout</button>
             <p id="log-workout-feedback" aria-live="polite" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
           </section>
 
@@ -554,14 +554,14 @@
         <div class="surface-card w-full max-w-sm mx-4 space-y-4">
           <p id="share-plan-modal-title" class="form-label text-base">Share Plan</p>
           <div class="flex gap-2 mb-2">
-            <button type="button" id="share-mode-friends" class="btn-core is-primary btn-size-row" onclick="switchShareMode('friends')">Friends</button>
-            <button type="button" id="share-mode-qr" class="btn-core is-ghost btn-size-row" onclick="switchShareMode('qr')">QR Code</button>
+            <button type="button" id="share-mode-friends" class="btn-core is-primary btn-size-row">Friends</button>
+            <button type="button" id="share-mode-qr" class="btn-core is-ghost btn-size-row">QR Code</button>
           </div>
           <div id="share-friends-section">
             <p class="text-xs text-slate-400">Select friends to share this plan with:</p>
             <div id="share-select-all-container" class="hidden mb-1">
               <label class="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-800 cursor-pointer">
-                <input type="checkbox" id="share-select-all" onchange="toggleSelectAllFriends()" />
+                <input type="checkbox" id="share-select-all" />
                 <span class="text-sm text-slate-300 font-medium">Select All</span>
               </label>
             </div>
@@ -594,8 +594,8 @@
             <p class="text-xs text-slate-400 mb-3">Est. 1RM: <span id="calc-one-rm-display" class="text-emerald-400 font-bold font-mono">—</span></p>
 
             <div class="grid grid-cols-2 gap-1 p-0.5 w-full rounded-xl bg-slate-950 mb-4">
-              <button type="button" id="calc-mode-pct" class="btn-core is-primary btn-size-row" onclick="switchCalcMode('pct')">%1RM</button>
-              <button type="button" id="calc-mode-rpe" class="btn-core is-ghost btn-size-row" onclick="switchCalcMode('rpe')">RPE</button>
+              <button type="button" id="calc-mode-pct" class="btn-core is-primary btn-size-row">%1RM</button>
+              <button type="button" id="calc-mode-rpe" class="btn-core is-ghost btn-size-row">RPE</button>
             </div>
 
             <div id="calc-pct-inputs">
@@ -647,7 +647,7 @@
 
             <div id="workout-type-selector" class="mb-4">
               <label class="form-label">Workout Type</label>
-              <select id="workout-type" class="dropdown-core" onchange="handleWorkoutTypeChange()">
+              <select id="workout-type" class="dropdown-core">
                 <option value="AMRAP">AMRAP</option>
                 <option value="EMOM">EMOM</option>
                 <option value="FOR_TIME">For Time</option>
@@ -668,8 +668,8 @@
             <!-- EMOM metadata -->
             <div id="emom-fields" class="hidden">
               <div class="inline-flex gap-1 p-0.5 w-fit rounded-xl bg-slate-950 mb-4">
-                <button id="emom-mode-seq" type="button" class="btn-core is-primary btn-size-row" onclick="switchEmomMode('sequence')">Sequence</button>
-                <button id="emom-mode-by-round" type="button" class="btn-core is-ghost btn-size-row" onclick="switchEmomMode('by_round')">By Round</button>
+                <button id="emom-mode-seq" type="button" class="btn-core is-primary btn-size-row">Sequence</button>
+                <button id="emom-mode-by-round" type="button" class="btn-core is-ghost btn-size-row">By Round</button>
               </div>
               <div class="mb-4">
                 <label class="form-label">Interval</label>
@@ -723,13 +723,13 @@
             <div id="plan-add-movement" class="bg-slate-900 rounded-lg p-3 space-y-3 mb-4 mt-4">
               <p class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Add Movement</p>
               <div>
-                <select id="plan-exercise" class="movement-exercise dropdown-core w-full" onchange="handlePlanExerciseChange()">
+                <select id="plan-exercise" class="movement-exercise dropdown-core w-full">
                   <option value="">Select exercise...</option>
                 </select>
               </div>
               <p class="text-xs text-slate-400">Est. 1RM: <span id="plan-one-rm-display" class="text-emerald-400 font-bold font-mono">—</span></p>
               <div id="plan-movement-fields"></div>
-              <button type="button" id="plan-add-btn" class="btn-core is-primary-ghost btn-size-input w-full" onclick="handlePlanAdd()" disabled>Add to Workout</button>
+              <button type="button" id="plan-add-btn" class="btn-core is-primary-ghost btn-size-input w-full" disabled>Add to Workout</button>
             </div>
 
             <!-- Movements table (hidden for EMOM) -->
@@ -755,8 +755,8 @@
 
             <!-- Shared action buttons -->
             <div class="flex gap-2">
-              <button type="button" onclick="doWorkout()" class="flex-1 btn-core is-primary-ghost btn-card-action h-11" title="Do Workout"><i data-lucide="dumbbell" size="18"></i></button>
-              <button type="button" onclick="savePlan()" class="flex-1 btn-core is-ghost btn-card-action h-11" title="Save for Later"><i data-lucide="save" size="18"></i></button>
+              <button type="button" id="btn-do-workout" class="flex-1 btn-core is-primary-ghost btn-card-action h-11" title="Do Workout"><i data-lucide="dumbbell" size="18"></i></button>
+              <button type="button" id="btn-save-plan" class="flex-1 btn-core is-ghost btn-card-action h-11" title="Save for Later"><i data-lucide="save" size="18"></i></button>
             </div>
             <p id="planFeedback" aria-live="polite" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
           </section>
@@ -772,23 +772,23 @@
             <p class="text-description mb-4">Track your training volume over time.</p>
 
             <div class="mb-3">
-              <select id="vh-filter" class="dropdown-core" onchange="onVolumeFilterChange()">
+              <select id="vh-filter" class="dropdown-core">
                 <option value="All">All Exercises</option>
               </select>
             </div>
 
             <div class="grid grid-cols-4 gap-1 p-0.5 rounded-xl bg-slate-950 mb-4">
-              <button type="button" id="vh-period-daily" class="btn-core is-primary btn-size-row" onclick="switchVolumePeriod('daily')">Daily</button>
-              <button type="button" id="vh-period-weekly" class="btn-core is-ghost btn-size-row" onclick="switchVolumePeriod('weekly')">Weekly</button>
-              <button type="button" id="vh-period-monthly" class="btn-core is-ghost btn-size-row" onclick="switchVolumePeriod('monthly')">Monthly</button>
-              <button type="button" id="vh-period-yearly" class="btn-core is-ghost btn-size-row" onclick="switchVolumePeriod('yearly')">Yearly</button>
+              <button type="button" id="vh-period-daily" class="btn-core is-primary btn-size-row">Daily</button>
+              <button type="button" id="vh-period-weekly" class="btn-core is-ghost btn-size-row">Weekly</button>
+              <button type="button" id="vh-period-monthly" class="btn-core is-ghost btn-size-row">Monthly</button>
+              <button type="button" id="vh-period-yearly" class="btn-core is-ghost btn-size-row">Yearly</button>
             </div>
 
             <div id="vh-nav-row" class="flex items-center justify-between mb-3">
-              <button type="button" id="vh-prev" class="btn-core is-secondary btn-size-row" onclick="shiftVolumePeriod(-1)">&lt;</button>
+              <button type="button" id="vh-prev" class="btn-core is-secondary btn-size-row">&lt;</button>
               <span id="vh-range-label" class="text-xs text-slate-400 font-mono"></span>
-              <button type="button" id="vh-today" class="btn-core is-ghost btn-size-row" onclick="goToCurrentPeriod()" disabled>Today</button>
-              <button type="button" id="vh-next" class="btn-core is-secondary btn-size-row" onclick="shiftVolumePeriod(1)">&gt;</button>
+              <button type="button" id="vh-today" class="btn-core is-ghost btn-size-row" disabled>Today</button>
+              <button type="button" id="vh-next" class="btn-core is-secondary btn-size-row">&gt;</button>
             </div>
 
             <div id="vh-bars-container" class="flex items-end gap-1.5" style="overflow: hidden;">
@@ -989,7 +989,7 @@
 
                 <div class="flex gap-2">
                   <input id="myCyberTag" type="text" readonly class="input-core" value="connecting to network..." />
-                  <button id="btnCopyCyberTag" aria-label="Copy Cyber-Tag" onclick="copyCyberTag()" class="btn-core is-secondary btn-size-side">
+                  <button id="btnCopyCyberTag" aria-label="Copy Cyber-Tag" class="btn-core is-secondary btn-size-side">
                     <i data-lucide="copy" size="18"></i>
                   </button>
                 </div>
@@ -1001,7 +1001,7 @@
 
                   <div class="flex gap-2">
                     <input type="text" id="friendUidInput" placeholder="Paste friend's Cyber-Tag here..." class="input-core" />
-                    <button id="btnAddFriend" aria-label="Add friend" class="btn-core is-ghost btn-size-side" onclick="handleAddFriend()">
+                    <button id="btnAddFriend" aria-label="Add friend" class="btn-core is-ghost btn-size-side">
                       <i data-lucide="user-plus" size="18"></i>
                     </button>
                   </div>

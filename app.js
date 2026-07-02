@@ -6221,3 +6221,83 @@ document.addEventListener('keydown', (e) => {
     closeProfileModal();
   }
 });
+
+// CSP-compliant event handler bindings
+function initCSPHandlers() {
+  const bind = (id, event, handler) => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener(event, handler);
+  };
+
+  // Calendar
+  bind('cal-prev-month', 'click', () => changeCalendarNav(-1));
+  bind('cal-today', 'click', goToCalendarToday);
+  bind('cal-next-month', 'click', () => changeCalendarNav(1));
+  bind('cal-toggle-view', 'click', toggleCalendarView);
+  bind('cal-day-detail-close', 'click', closeCalendarDayDetail);
+
+  // Plans filters
+  bind('plans-filter-mine', 'click', () => switchPlansFilter('mine'));
+  bind('plans-filter-shared', 'click', () => switchPlansFilter('shared'));
+  bind('plans-filter-favorites', 'click', () => switchPlansFilter('favorites'));
+
+  // Leaderboard
+  bind('btnGlobalBoard', 'click', () => switchLeaderboardScope('global'));
+  bind('btnFriendsBoard', 'click', () => switchLeaderboardScope('friends'));
+  bind('btnFormulaDots', 'click', () => switchLeaderboardFormula('dots'));
+  bind('btnFormulaSinclair', 'click', () => switchLeaderboardFormula('sinclair'));
+  bind('leaderboard-expand-btn', 'click', toggleLeaderboardExpand);
+
+  // Training tab
+  bind('log-round-btn', 'click', logRound);
+  bind('log-rep-btn', 'click', logRep);
+  bind('log-workout-btn', 'click', submitPendingWorkout);
+
+  // FOR_TIME
+  bind('fortime-dnf', 'change', toggleForTimeDnf);
+
+  // Share modal
+  bind('share-mode-friends', 'click', () => switchShareMode('friends'));
+  bind('share-mode-qr', 'click', () => switchShareMode('qr'));
+  bind('share-select-all', 'change', toggleSelectAllFriends);
+
+  // Calculator
+  bind('calc-mode-pct', 'click', () => switchCalcMode('pct'));
+  bind('calc-mode-rpe', 'click', () => switchCalcMode('rpe'));
+
+  // Workout type
+  bind('workout-type', 'change', handleWorkoutTypeChange);
+
+  // EMOM modes
+  bind('emom-mode-seq', 'click', () => switchEmomMode('sequence'));
+  bind('emom-mode-by-round', 'click', () => switchEmomMode('by_round'));
+
+  // Plan exercise
+  bind('plan-exercise', 'change', handlePlanExerciseChange);
+  bind('plan-add-btn', 'click', handlePlanAdd);
+
+  // Plan/Save buttons in training tab
+  bind('btn-do-workout', 'click', doWorkout);
+  bind('btn-save-plan', 'click', savePlan);
+
+  // Volume history
+  bind('vh-filter', 'change', onVolumeFilterChange);
+  bind('vh-period-daily', 'click', () => switchVolumePeriod('daily'));
+  bind('vh-period-weekly', 'click', () => switchVolumePeriod('weekly'));
+  bind('vh-period-monthly', 'click', () => switchVolumePeriod('monthly'));
+  bind('vh-period-yearly', 'click', () => switchVolumePeriod('yearly'));
+  bind('vh-prev', 'click', () => shiftVolumePeriod(-1));
+  bind('vh-today', 'click', goToCurrentPeriod);
+  bind('vh-next', 'click', () => shiftVolumePeriod(1));
+
+  // Social
+  bind('btnCopyCyberTag', 'click', copyCyberTag);
+  bind('btnAddFriend', 'click', handleAddFriend);
+}
+
+// Initialize CSP handlers after DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initCSPHandlers);
+} else {
+  initCSPHandlers();
+}
