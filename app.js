@@ -3533,9 +3533,9 @@ function selectCalendarDay(dateStr) {
             const repDisplay = item.partialReps ? `${sets} × ${reps} + ${item.partialReps} reps` : `${sets} × ${reps}`;
             let loadDisplay;
             if (item.weightMode === 'pct' && item.pct) {
-                loadDisplay = `${item.pct}% @ ${Math.round(load)}kg`;
+                loadDisplay = `${item.pct}% 1RM (${Math.round(load)}kg)`;
             } else if (item.weightMode === 'rpe' && item.rpe) {
-                loadDisplay = `RPE ${item.rpe} @ ${Math.round(load)}kg`;
+                loadDisplay = `RPE ${item.rpe} (${Math.round(load)}kg)`;
             } else {
                 loadDisplay = `${Math.round(load)}kg`;
             }
