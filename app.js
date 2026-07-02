@@ -1222,6 +1222,80 @@ document.addEventListener('keydown', (e) => {
 });
 
 // Realtime Data Mining
+
+function processWorkoutSnapshot(docs) {
+  const workouts = [];
+  const activeRecords = {};
+  const cachedMaxLoadByExercise = {};
+  const cachedMax1RMByExercise = {};
+  const cachedMaxRepsByExercise = {};
+
+  docs.forEach(doc => {
+    const data = doc.data();
+    const timestamp = data.timestamp?.toMillis ? data.timestamp.toMillis() : data.timestamp;
+    const workout = { id: doc.id, ...data, timestamp };
+    workouts.push(workout);
+
+    if (data.source === 'structured') return;
+
+    const effectiveWeight = getEffectiveLoad(workout);
+    const reps = parseInt(data.reps, 10);
+    const calculated1RM = estimate1RM(effectiveWeight, reps);
+
+    if (!activeRecords[data.exercise] || calculated1RM > activeRecords[data.exercise]) {
+      activeRecords[data.exercise] = calculated1RM;
+    }
+
+    if (!cachedMaxLoadByExercise[data.exercise] || effectiveWeight > cachedMaxLoadByExercise[data.exercise]) {
+      cachedMaxLoadByExercise[data.exercise] = effectiveWeight;
+    }
+    if (!cachedMax1RMByExercise[data.exercise] || calculated1RM > cachedMax1RMByExercise[data.exercise]) {
+      cachedMax1RMByExercise[data.exercise] = calculated1RM;
+    }
+
+    if (!cachedMaxRepsByExercise[data.exercise] || reps > cachedMaxRepsByExercise[data.exercise]) {
+      cachedMaxRepsByExercise[data.exercise] = reps;
+    }
+  });
+
+  return { workouts, activeRecords, cachedMaxLoadByExercise, cachedMax1RMByExercise, cachedMaxRepsByExercise };
+}
+
+function updateCaches(processed) {
+  activeRecords = processed.activeRecords;
+  cachedMaxLoadByExercise = processed.cachedMaxLoadByExercise;
+  cachedMax1RMByExercise = processed.cachedMax1RMByExercise;
+  cachedMaxRepsByExercise = processed.cachedMaxRepsByExercise;
+  
+  lastWorkouts = processed.workouts;
+  window.__lastWorkouts = lastWorkouts;
+  window.__irontrackWorkoutCount = lastWorkouts.length;
+  
+  if (lastWorkouts.length > 0) {
+    const earliestTs = Math.min(...lastWorkouts.map(w => w.timestamp));
+    if (earliestTs > 0 && earliestTs < userSignupTs) {
+      userSignupTs = earliestTs;
+    }
+  }
+}
+
+function renderFromWorkouts(workouts) {
+  try {
+    const uniqueExercises = Array.from(new Set(workouts.map(w => w.exercise)));
+    populateWorkoutFilter(uniqueExercises);
+    populateVolumeFilter(uniqueExercises);
+  } catch (e) {
+    // ignore if populate not available
+  }
+  
+  update1RMRegistryUI();
+  updateCalcCard();
+  processAnalytics();
+  renderLogs(workouts);
+  renderVolumeHistory();
+  debouncedSyncActivity();
+}
+
 function listenToDataStream(uid) {
     const q = query(
         collection(db, "workouts"),
@@ -1230,71 +1304,9 @@ function listenToDataStream(uid) {
         limit(100)
     );
     unsubscribeLogs = onSnapshot(q, async (snapshot) => {
-        let workouts = [];
-        activeRecords = {};
-        cachedMaxLoadByExercise = {};
-        cachedMax1RMByExercise = {};
-        cachedMaxRepsByExercise = {};
-
-        snapshot.forEach((doc) => {
-            const data = doc.data();
-            const timestamp = data.timestamp?.toMillis ? data.timestamp.toMillis() : data.timestamp;
-            const workout = { id: doc.id, ...data, timestamp };
-            workouts.push(workout);
-
-            // Skip structured workout contributions for 1RM/PB tracking
-            if (data.source === 'structured') return;
-
-            // Epley 1RM Estimation Formula using effective load
-            const effectiveWeight = getEffectiveLoad(workout);
-            const reps = parseInt(data.reps, 10);
-            const calculated1RM = estimate1RM(effectiveWeight, reps);
-
-            if (!activeRecords[data.exercise] || calculated1RM > activeRecords[data.exercise]) {
-                activeRecords[data.exercise] = calculated1RM;
-            }
-
-            // Track max load and max 1RM per exercise for PB/1RM badge rendering
-            if (!cachedMaxLoadByExercise[data.exercise] || effectiveWeight > cachedMaxLoadByExercise[data.exercise]) {
-                cachedMaxLoadByExercise[data.exercise] = effectiveWeight;
-            }
-            if (!cachedMax1RMByExercise[data.exercise] || calculated1RM > cachedMax1RMByExercise[data.exercise]) {
-                cachedMax1RMByExercise[data.exercise] = calculated1RM;
-            }
-
-            // Track max reps per exercise
-            if (!cachedMaxRepsByExercise[data.exercise] || reps > cachedMaxRepsByExercise[data.exercise]) {
-                cachedMaxRepsByExercise[data.exercise] = reps;
-            }
-
-
-        });
-
-        // Data already sorted desc by Firestore
-        window.__irontrackWorkoutCount = workouts.length;
-        lastWorkouts = workouts;
-        window.__lastWorkouts = lastWorkouts;
-        // Align signup reference to earliest workout for volume history
-        if (workouts.length > 0) {
-          const earliestTs = Math.min(...workouts.map(w => w.timestamp));
-          if (earliestTs > 0 && earliestTs < userSignupTs) {
-            userSignupTs = earliestTs;
-          }
-        }
-        // dynamicFriend populate filter options from live exercise names
-        try {
-          const uniqueExercises = Array.from(new Set(workouts.map(w => w.exercise)));
-          populateWorkoutFilter(uniqueExercises);
-          populateVolumeFilter(uniqueExercises);
-        } catch (e) {
-          // ignore if populate not available
-        }
-        update1RMRegistryUI();
-        updateCalcCard();
-        await processAnalytics();
-        renderLogs(workouts);
-        renderVolumeHistory();
-        debouncedSyncActivity();
+        const processed = processWorkoutSnapshot(snapshot.docs);
+        updateCaches(processed);
+        renderFromWorkouts(processed.workouts);
     }, (error) => {
         console.error('Workout stream error', error.code, error.message);
         if (error.code === 'permission-denied') {
