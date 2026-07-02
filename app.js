@@ -4242,7 +4242,7 @@ async function submitPendingWorkout() {
     if (err.code === 'permission-denied') {
       showFeedback('Save blocked by Firestore rules.', 'rose', 'log-workout-feedback');
     } else {
-      alert('Failed to log workout: ' + err.message);
+      showFeedback('Failed to log workout: ' + err.message, 'rose', 'log-workout-feedback');
     }
   } finally {
     if (btn) btn.disabled = false;
@@ -4275,7 +4275,7 @@ function capturePlanStructure(type) {
       const intervalSec = parseInt(document.getElementById('emom-interval-sec')?.value, 10) || 0;
       const intervalSeconds = intervalMin * 60 + intervalSec;
       let minutes;
-      try { minutes = getEmomMovementData(); } catch (_) { minutes = []; }
+      try { minutes = getEmomMovementData(); } catch (e) { console.error('EMOM movement data error:', e); minutes = []; }
       const rounds = state.builder.emomMode === 'by_round' ? minutes.length : parseInt(document.getElementById('emom-rounds')?.value, 10) || 0;
       const durationSeconds = rounds * intervalSeconds;
       return { mode: state.builder.emomMode, rounds, durationMinutes: Math.floor(durationSeconds / 60), intervalSeconds, minutes };
@@ -5861,11 +5861,15 @@ function switchLeaderboardFormula(formula) {
 }
 
 async function updateUserLeaderboardProfile(uid, dotsScore, sinclairScore) {
-  await setDoc(getProfileDocRef(uid), {
-    dotsScore: parseFloat(dotsScore) || 0,
-    sinclairScore: parseFloat(sinclairScore) || 0, // Added field mapping
-    lastActive: serverTimestamp()
-  }, { merge: true });
+  try {
+    await setDoc(getProfileDocRef(uid), {
+      dotsScore: parseFloat(dotsScore) || 0,
+      sinclairScore: parseFloat(sinclairScore) || 0,
+      lastActive: serverTimestamp()
+    }, { merge: true });
+  } catch (err) {
+    console.error('Leaderboard profile update failed', err.code, err.message);
+  }
 }
 
 const debouncedUpdateLeaderboard = debounce(async (uid, dots, sinclair) => {
@@ -6004,6 +6008,7 @@ async function processFriendRequest(friendId) {
             haptic(HAPTIC.tap);
         } else {
             console.error("Cyber-Tag not found.");
+            showFeedback('Cyber-Tag not found. Check the ID and try again.', 'rose', 'socialAddFriendFeedback');
         }
     } catch (err) {
         console.error("Error linking friend:", err);
