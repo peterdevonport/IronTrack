@@ -1325,7 +1325,7 @@ function listenToDataStream(uid) {
         limit(100)
     );
     unsubscribeLogs = onSnapshot(q, async (snapshot) => {
-        const processed = processWorkoutSnapshot(snapshot.docs);
+        const processed = processWorkoutSnapshot(snapshot.docs, getEffectiveLoad, estimate1RM);
         updateCaches(processed);
         renderFromWorkouts(processed.workouts);
     }, (error) => {
