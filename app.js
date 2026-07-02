@@ -2040,21 +2040,30 @@ async function writeStructuredLogEntry({ workoutId, movement, sets, totalReps, e
   }
 }
 
-async function generateAmrapContributions(workoutId, movements, roundsCompleted, additionalReps) {
-  console.log(`[contrib] generateAmrapContributions: workoutId=${workoutId}, movements=${movements.length}, rounds=${roundsCompleted}, addReps=${additionalReps}`);
-
-  for (const movement of movements) {
+async function generateContributionsBase(workoutId, movements, processMovement) {
+  for (let i = 0; i < movements.length; i++) {
+    const movement = movements[i];
     if (getExerciseInfo(movement.exerciseId).category === 'cardio') continue;
-    const totalRepsPerMovement = roundsCompleted * movement.reps + additionalReps;
-    if (totalRepsPerMovement <= 0) continue;
+
+    const result = processMovement(movement, i);
+    if (!result || result.totalReps <= 0) continue;
 
     await writeStructuredLogEntry({
       workoutId, movement,
-      sets: roundsCompleted,
-      totalReps: totalRepsPerMovement,
-      extraFields: { additionalReps }
+      sets: result.sets,
+      totalReps: result.totalReps,
+      extraFields: result.extraFields || {}
     });
   }
+}
+
+async function generateAmrapContributions(workoutId, movements, roundsCompleted, additionalReps) {
+  console.log(`[contrib] generateAmrapContributions: workoutId=${workoutId}, movements=${movements.length}, rounds=${roundsCompleted}, addReps=${additionalReps}`);
+
+  await generateContributionsBase(workoutId, movements, (movement) => {
+    const totalReps = roundsCompleted * movement.reps + additionalReps;
+    return { totalReps, sets: roundsCompleted, extraFields: { additionalReps } };
+  });
 }
 
 // ─── EMOM Functions ───────────────────────────────────────────────────────
@@ -2710,26 +2719,17 @@ async function generateForTimeContributions(workoutId, movements, rounds, remain
   const fullRounds = Math.floor(repsPerRound > 0 ? totalCompleted / repsPerRound : 0);
   let partialRoundReps = totalCompleted % (repsPerRound || 1);
 
-  for (const movement of movements) {
-    if (getExerciseInfo(movement.exerciseId).category === 'cardio') continue;
+  await generateContributionsBase(workoutId, movements, (movement) => {
     const movementPartialReps = Math.min(movement.reps, partialRoundReps);
     partialRoundReps = Math.max(0, partialRoundReps - movement.reps);
     const performedReps = movement.reps * fullRounds + movementPartialReps;
-    if (performedReps <= 0) continue;
-
+    if (performedReps <= 0) return null;
     const effectiveSets = fullRounds + (movementPartialReps === movement.reps ? 1 : 0);
     const displayPartialReps = movementPartialReps < movement.reps ? movementPartialReps : 0;
-
     const extraFields = {};
     if (displayPartialReps > 0) extraFields.partialReps = displayPartialReps;
-
-    await writeStructuredLogEntry({
-      workoutId, movement,
-      sets: effectiveSets,
-      totalReps: performedReps,
-      extraFields
-    });
-  }
+    return { totalReps: performedReps, sets: effectiveSets, extraFields };
+  });
 }
 
 // ─── INTERVAL Functions ───────────────────────────────────────────────────
@@ -2852,27 +2852,16 @@ async function generateIntervalContributions(workoutId, movements, roundsComplet
   console.log(`[contrib] generateIntervalContributions: workoutId=${workoutId}, movements=${movements.length}, rounds=${roundsCompleted}, partialReps=${partialReps}`);
   let remainingPartial = partialReps;
 
-  for (let i = 0; i < movements.length; i++) {
-    const movement = movements[i];
-    if (getExerciseInfo(movement.exerciseId).category === 'cardio') continue;
+  await generateContributionsBase(workoutId, movements, (movement) => {
     const movementPartialReps = Math.min(movement.reps, remainingPartial);
     remainingPartial = Math.max(0, remainingPartial - movement.reps);
-    const totalRepsPerMovement = movement.reps * roundsCompleted + movementPartialReps;
-    if (totalRepsPerMovement <= 0) continue;
-
+    const totalReps = movement.reps * roundsCompleted + movementPartialReps;
     const effectiveSets = roundsCompleted + (movementPartialReps === movement.reps ? 1 : 0);
     const displayPartialReps = movementPartialReps < movement.reps ? movementPartialReps : 0;
-
     const extraFields = {};
     if (displayPartialReps > 0) extraFields.partialReps = displayPartialReps;
-
-    await writeStructuredLogEntry({
-      workoutId, movement,
-      sets: effectiveSets,
-      totalReps: totalRepsPerMovement,
-      extraFields
-    });
-  }
+    return { totalReps, sets: effectiveSets, extraFields };
+  });
 }
 
 // ==========================================
@@ -3452,12 +3441,41 @@ function formatCardDate(ts) {
   return `${d.getDate()} ${months[d.getMonth()]} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
 
+function renderWorkoutCard(id, name, type, badgeClass, descLine, metadataHtml, movementsHtml, actionsHtml, isFavorite, favCallback) {
+  const isFav = isFavorite === true;
+  const starIcon = isFav ? '\u2605' : '\u2606';
+  const favColorClass = isFav ? 'text-amber-400' : 'text-slate-500';
+  const hasMovements = movementsHtml.trim().length > 0;
+
+  return `<div class="structured-card p-4 rounded-2xl mb-3 shadow-2xl shadow-slate-950/60 transition-all duration-200" style="background-color: var(--slate-900);" data-workout-id="${id}">
+    <div class="flex justify-between items-stretch gap-3 ${hasMovements ? 'structured-header-clickable cursor-pointer' : ''}"${hasMovements ? ` onclick="toggleWorkoutCard(this)"` : ''}>
+      <div class="flex flex-col justify-start gap-1.5 min-w-0 flex-1">
+        <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm truncate">${escapeHtml(name)}</h4>
+        ${metadataHtml}
+        <span class="workout-type-badge self-start ${badgeClass}">${escapeHtml(formatWorkoutType(type))}</span>
+        ${descLine ? `<span class="text-xs text-slate-400 font-mono mt-0.5">${escapeHtml(descLine)}</span>` : ''}
+      </div>
+      <div class="flex flex-col justify-between items-end shrink-0">
+        <button type="button" onclick="event.stopPropagation(); ${favCallback}" class="${favColorClass} hover:scale-110 transition-transform btn-fav-star" title="Favorite">
+          ${starIcon}
+        </button>
+      </div>
+    </div>
+    <div class="flex flex-wrap gap-1.5 mt-3 structured-movements${hasMovements ? ' hidden' : ''}">
+      ${movementsHtml}
+      ${hasMovements ? `<div class="flex gap-2 mt-3 w-full">${actionsHtml}</div>` : ''}
+    </div>
+    ${hasMovements ? `
+    <div class="flex justify-end mt-3">
+      <span class="text-xs text-slate-500 font-medium hover:text-slate-300 transition-colors cursor-pointer show-more-text" onclick="event.stopPropagation(); toggleWorkoutCard(this)">Show more</span>
+    </div>` : ''}
+</div>`;
+}
+
 function renderStructuredWorkoutCard(sw) {
   const type = sw.type || 'AMRAP';
   const badgeClass = type.toLowerCase();
   const descLine = buildWorkoutSummaryLine(type, sw.structure || {});
-  let durationLabel = '';
-  let scoreLabel = '';
   let movementsHtml = '';
 
   if (type === 'EMOM') {
@@ -3469,121 +3487,40 @@ function renderStructuredWorkoutCard(sw) {
       const label = isByRound ? `Round ${idx + 1}: ` : '';
       return `<span class="movement-chip">${label}${escapeHtml(mov.exerciseId)} × ${mov.reps}${formatMovementLoad(mov)}</span>`;
     }).join('');
-    durationLabel = `${sw.structure?.durationMinutes || 0} min`;
-    const intSec = sw.structure?.intervalSeconds;
-    if (intSec && intSec !== 60) {
-      durationLabel += ` · ${intSec}s interval`;
-    }
-    scoreLabel = 'rounds';
   } else if (type === 'FOR_TIME') {
     const movements = sw.structure?.movements || [];
     movementsHtml = movements.map(m => {
       return `<span class="movement-chip">${escapeHtml(m.exerciseId)} × ${m.reps}${formatMovementLoad(m)}</span>`;
     }).join('');
-    const cap = sw.structure?.durationMinutes;
-    durationLabel = cap ? `${cap} min cap` : '';
-    const rounds = sw.structure?.rounds;
-    const rdLabel = rounds ? ` · ${rounds} rds` : '';
-    durationLabel += rdLabel;
-    scoreLabel = sw.result?.completed === false ? 'cap reps' : 'time';
   } else if (type === 'INTERVAL') {
     const movements = sw.structure?.movements || [];
     movementsHtml = movements.map(m => {
       return `<span class="movement-chip">${escapeHtml(m.exerciseId)} × ${m.reps}${formatMovementLoad(m)}</span>`;
     }).join('');
-    const ws = sw.structure?.workSeconds || 0;
-    const rs = sw.structure?.restSeconds || 0;
-    const wrk = `${Math.floor(ws / 60)}:${(ws % 60).toString().padStart(2, '0')}`;
-    const rst = `${Math.floor(rs / 60)}:${(rs % 60).toString().padStart(2, '0')}`;
-    const rds = sw.structure?.rounds || 0;
-    durationLabel = `${wrk} / ${rst} × ${rds}`;
-    scoreLabel = 'rounds + reps';
   } else {
     const movements = sw.structure?.movements || [];
     movementsHtml = movements.map(m => {
       return `<span class="movement-chip">${escapeHtml(m.exerciseId)} × ${m.reps}${formatMovementLoad(m)}</span>`;
     }).join('');
-    const durationMin = Math.round((sw.structure?.durationSeconds || 0) / 60);
-    durationLabel = `${durationMin} min`;
-    scoreLabel = 'rounds + reps';
   }
 
-  const hasMovements = movementsHtml.trim().length > 0;
-  const isFav = sw.favorite === true;
-  const starIcon = isFav ? '\u2605' : '\u2606';
-  const favColorClass = isFav ? 'text-amber-400' : 'text-slate-500';
+  if (movementsHtml.trim().length > 0) {
+    movementsHtml = `<div class="w-full text-sm text-slate-300 border-t border-slate-800/60 pt-2">${movementsHtml}</div>`;
+  }
 
-  return `
-<div class="structured-card p-4 pt-3 rounded-2xl mb-3 shadow-2xl shadow-slate-950/60 transition-all duration-200" style="background-color: var(--slate-900);" data-workout-id="${sw.id}">
+  const metadataHtml = [
+    sw.isShared ? `<div class="flex items-center gap-1.5 text-xs text-slate-300"><i data-lucide="share-2" class="w-3.5 h-3.5 shrink-0"></i><span class="truncate">${escapeHtml(sw.username || 'Shared User')}</span></div>` : '',
+    sw.timestamp ? `<div class="flex items-center gap-1.5 text-xs text-slate-400"><i data-lucide="calendar" class="w-3.5 h-3.5 shrink-0"></i><span>${formatCardDate(sw.timestamp)}</span></div>` : ''
+  ].filter(Boolean).join('\n');
 
-    <div class="flex justify-between items-stretch gap-3 ${hasMovements ? 'structured-header-clickable cursor-pointer' : ''}"${hasMovements ? ` onclick="toggleWorkoutCard(this)"` : ''}>
+  const actionsHtml = [
+    `<button type="button" onclick="event.stopPropagation(); doStructuredWorkout('${sw.id}')" class="flex-1 btn-core is-primary-ghost btn-card-action" title="Do Workout"><i data-lucide="dumbbell" size="18"></i><span>Train</span></button>`,
+    `<button type="button" onclick="event.stopPropagation(); redoWorkout('${sw.id}')" class="flex-1 btn-core is-ghost btn-card-action" title="Load"><i data-lucide="clipboard-pen-line" size="18"></i><span>Plan</span></button>`,
+    `<button type="button" onclick="event.stopPropagation(); openShareModal('${sw.id}', true)" class="flex-1 btn-core is-ghost btn-card-action" title="Share"><i data-lucide="share-2" size="18"></i><span>Share</span></button>`,
+    `<button type="button" onclick="event.stopPropagation(); deleteStructuredWorkout('${sw.id}')" class="flex-1 btn-core is-ghost btn-card-action hover:!text-rose-400 hover:!border-rose-400" title="Delete"><i data-lucide="trash-2" size="18"></i><span>Delete</span></button>`
+  ].join('\n');
 
-      <div class="flex flex-col justify-start gap-1.5 min-w-0 flex-1">
-        <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm truncate">${escapeHtml(sw.name)}</h4>
-
-        ${sw.isShared ? `
-        <div class="flex items-center gap-1.5 text-xs text-slate-300">
-          <i data-lucide="share-2" class="w-3.5 h-3.5 shrink-0"></i>
-          <span class="truncate">${escapeHtml(sw.username || 'Shared User')}</span>
-        </div>
-        ` : ''}
-
-        ${sw.timestamp ? `
-        <div class="flex items-center gap-1.5 text-xs text-slate-400">
-          <i data-lucide="calendar" class="w-3.5 h-3.5 shrink-0"></i>
-          <span>${formatCardDate(sw.timestamp)}</span>
-        </div>
-        ` : ''}
-
-        <span class="workout-type-badge self-start ${badgeClass}">${escapeHtml(formatWorkoutType(type))}</span>
-        ${descLine ? `<span class="text-xs text-slate-400 font-mono mt-0.5">${escapeHtml(descLine)}</span>` : ''}
-      </div>
-
-      <div class="flex flex-col justify-between items-end shrink-0">
-        <button type="button" data-fav-id="${sw.id}" onclick="event.stopPropagation(); toggleStructuredFavorite('${sw.id}')" class="${favColorClass} hover:scale-110 transition-transform btn-fav-star" title="Favorite">
-          ${starIcon}
-        </button>
-      </div>
-
-    </div>
-
-    <div class="flex flex-wrap gap-1.5 mt-3 structured-movements${hasMovements ? ' hidden' : ''}">
-
-      <div class="w-full text-sm text-slate-300 border-t border-slate-800/60 pt-2">
-        ${movementsHtml}
-      </div>
-
-      ${hasMovements ? `
-      <div class="flex gap-2 mt-2 w-full">
-
-        <button type="button" onclick="event.stopPropagation(); doStructuredWorkout('${sw.id}')" class="flex-1 btn-core is-primary-ghost btn-card-action" title="Do Workout">
-          <i data-lucide="dumbbell" size="18"></i>
-          <span>Train</span>
-        </button>
-
-        <button type="button" onclick="event.stopPropagation(); redoWorkout('${sw.id}')" class="flex-1 btn-core is-ghost btn-card-action" title="Load">
-          <i data-lucide="clipboard-pen-line" size="18"></i>
-          <span>Plan</span>
-        </button>
-
-        <button type="button" onclick="event.stopPropagation(); openShareModal('${sw.id}', true)" class="flex-1 btn-core is-ghost btn-card-action" title="Share">
-          <i data-lucide="share-2" size="18"></i>
-          <span>Share</span>
-        </button>
-
-        <button type="button" onclick="event.stopPropagation(); deleteStructuredWorkout('${sw.id}')" class="flex-1 btn-core is-ghost btn-card-action hover:!text-rose-400 hover:!border-rose-400" title="Delete">
-          <i data-lucide="trash-2" size="18"></i>
-          <span>Delete</span>
-        </button>
-
-      </div>` : ''}
-    </div>
-    ${hasMovements ? `
-    <div class="flex justify-end mt-3">
-      <span class="text-xs text-slate-500 font-medium hover:text-slate-300 transition-colors cursor-pointer show-more-text" onclick="event.stopPropagation(); toggleWorkoutCard(this)">Show more</span>
-    </div>` : ''}
-</div>
-  `;
+  return renderWorkoutCard(sw.id, sw.name, type, badgeClass, descLine, metadataHtml, movementsHtml, actionsHtml, sw.favorite, `toggleStructuredFavorite('${sw.id}')`);
 }
 
 function saveExpandedCardIds() {
@@ -3788,52 +3725,18 @@ function renderPlanCard(plan) {
     }).join('');
   }
 
-  const hasMovements = movementsHtml.trim().length > 0;
-  const isFav = plan.favorite === true;
-  const starIcon = isFav ? '\u2605' : '\u2606';
-  const favColorClass = isFav ? 'text-amber-400' : 'text-slate-500';
+  const metadataHtml = plan.createdAt
+    ? `<div class="flex items-center gap-1.5 text-xs text-slate-400"><i data-lucide="calendar" class="w-3.5 h-3.5 shrink-0"></i><span>${formatCardDate(plan.createdAt)}</span></div>`
+    : '';
 
-  return `<div class="structured-card p-4 rounded-2xl mb-3 shadow-2xl shadow-slate-950/60 transition-all duration-200" style="background-color: var(--slate-900);" data-workout-id="${plan.id}">
+  const actionsHtml = [
+    `<button type="button" onclick="doPlanWorkout('${plan.id}')" class="flex-1 btn-core is-primary-ghost btn-card-action"><i data-lucide="dumbbell" size="18"></i><span>Train</span></button>`,
+    `<button type="button" onclick="loadPlan('${plan.id}')" class="flex-1 btn-core is-ghost btn-card-action"><i data-lucide="clipboard-pen-line" size="18"></i><span>Plan</span></button>`,
+    `<button type="button" onclick="openShareModal('${plan.id}')" class="flex-1 btn-core is-ghost btn-card-action"><i data-lucide="share-2" size="18"></i><span>Share</span></button>`,
+    `<button type="button" onclick="deletePlan('${plan.id}')" class="flex-1 btn-core is-ghost btn-card-action hover:!text-rose-400 hover:!border-rose-400"><i data-lucide="trash-2" size="18"></i><span>Delete</span></button>`
+  ].join('\n');
 
-    <div class="flex justify-between items-stretch gap-3 ${hasMovements ? 'structured-header-clickable cursor-pointer' : ''}"${hasMovements ? ` onclick="toggleWorkoutCard(this)"` : ''}>
-
-      <div class="flex flex-col justify-start gap-1.5 min-w-0 flex-1">
-        <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm truncate">${escapeHtml(plan.name)}</h4>
-
-        ${plan.createdAt ? `
-        <div class="flex items-center gap-1.5 text-xs text-slate-400">
-          <i data-lucide="calendar" class="w-3.5 h-3.5 shrink-0"></i>
-          <span>${formatCardDate(plan.createdAt)}</span>
-        </div>
-        ` : ''}
-
-        <span class="workout-type-badge self-start ${badgeClass}">${escapeHtml(formatWorkoutType(type))}</span>
-        ${descLine ? `<span class="text-xs text-slate-400 font-mono mt-0.5">${escapeHtml(descLine)}</span>` : ''}
-      </div>
-
-      <div class="flex flex-col justify-between items-end shrink-0">
-        <button type="button" data-fav-id="${plan.id}" onclick="event.stopPropagation(); togglePlanFavorite('${plan.id}')" class="${favColorClass} hover:scale-110 transition-transform btn-fav-star" title="Favorite">
-          ${starIcon}
-        </button>
-      </div>
-
-    </div>
-
-    <div class="flex flex-wrap gap-1.5 mt-3 structured-movements${hasMovements ? ' hidden' : ''}">
-      ${movementsHtml}
-      ${hasMovements ? `
-      <div class="flex gap-2 mt-3 w-full">
-        <button type="button" onclick="doPlanWorkout('${plan.id}')" class="flex-1 btn-core is-primary-ghost btn-card-action"><i data-lucide="dumbbell" size="18"></i><span>Train</span></button>
-        <button type="button" onclick="loadPlan('${plan.id}')" class="flex-1 btn-core is-ghost btn-card-action"><i data-lucide="clipboard-pen-line" size="18"></i><span>Plan</span></button>
-        <button type="button" onclick="openShareModal('${plan.id}')" class="flex-1 btn-core is-ghost btn-card-action"><i data-lucide="share-2" size="18"></i><span>Share</span></button>
-        <button type="button" onclick="deletePlan('${plan.id}')" class="flex-1 btn-core is-ghost btn-card-action hover:!text-rose-400 hover:!border-rose-400"><i data-lucide="trash-2" size="18"></i><span>Delete</span></button>
-      </div>` : ''}
-    </div>
-    ${hasMovements ? `
-    <div class="flex justify-end mt-3">
-      <span class="text-xs text-slate-500 font-medium hover:text-slate-300 transition-colors cursor-pointer show-more-text" onclick="event.stopPropagation(); toggleWorkoutCard(this)">Show more</span>
-    </div>` : ''}
-</div>`;
+  return renderWorkoutCard(plan.id, plan.name, type, badgeClass, descLine, metadataHtml, movementsHtml, actionsHtml, plan.favorite, `togglePlanFavorite('${plan.id}')`);
 }
 
 async function deletePlan(planId) {
@@ -4673,56 +4576,20 @@ function renderSharedPlanCard(share) {
     return `<span class="movement-chip">${idx + 1}: ${escapeHtml(mov.exerciseId)} \u00D7 ${mov.reps}${mov.weight ? ' @ ' + mov.weight + 'kg' : ''}</span>`;
   }).join('');
 
-  const isFav = share.favorite === true;
-  const starIcon = isFav ? '\u2605' : '\u2606';
-  const favColorClass = isFav ? 'text-amber-400' : 'text-slate-500';
-
   const displayMovements = type === 'EMOM' ? emomHtml : movementsHtml;
-  const hasMovements = displayMovements.trim().length > 0;
 
-  return `
-<div class="structured-card p-4 rounded-2xl mb-3 shadow-2xl shadow-slate-950/60 transition-all duration-200" style="background-color: var(--slate-900);" data-workout-id="${share.id}">
-    <div class="flex justify-between items-stretch gap-3 ${hasMovements ? 'structured-header-clickable cursor-pointer' : ''}"${hasMovements ? ` onclick="toggleWorkoutCard(this)"` : ''}>
+  const metadataHtml = [
+    `<div class="flex items-center gap-1.5 text-xs text-slate-300"><i data-lucide="share-2" class="w-3.5 h-3.5 shrink-0"></i><span class="truncate">${escapeHtml(share.sharedByDisplayName || 'Unknown')}</span></div>`,
+    share.createdAt ? `<div class="flex items-center gap-1.5 text-xs text-slate-400"><i data-lucide="calendar" class="w-3.5 h-3.5 shrink-0"></i><span>${formatCardDate(share.createdAt)}</span></div>` : ''
+  ].filter(Boolean).join('\n');
 
-      <div class="flex flex-col justify-start gap-1.5 min-w-0 flex-1">
-        <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm truncate">${escapeHtml(share.content?.name || '')}</h4>
+  const actionsHtml = [
+    `<button type="button" onclick="doSharedPlan('${share.id}')" class="flex-1 btn-core is-primary-ghost btn-card-action"><i data-lucide="dumbbell" size="18"></i><span>Train</span></button>`,
+    `<button type="button" onclick="loadSharedPlan('${share.id}')" class="flex-1 btn-core is-ghost btn-card-action"><i data-lucide="clipboard-pen-line" size="18"></i><span>Plan</span></button>`,
+    `<button type="button" onclick="dismissSharedPlan('${share.id}')" class="flex-1 btn-core is-ghost btn-card-action hover:!text-rose-400 hover:!border-rose-400"><i data-lucide="trash-2" size="18"></i><span>Delete</span></button>`
+  ].join('\n');
 
-        <div class="flex items-center gap-1.5 text-xs text-slate-300">
-          <i data-lucide="share-2" class="w-3.5 h-3.5 shrink-0"></i>
-          <span class="truncate">${escapeHtml(share.sharedByDisplayName || 'Unknown')}</span>
-        </div>
-
-        ${share.createdAt ? `
-        <div class="flex items-center gap-1.5 text-xs text-slate-400">
-          <i data-lucide="calendar" class="w-3.5 h-3.5 shrink-0"></i>
-          <span>${formatCardDate(share.createdAt)}</span>
-        </div>
-        ` : ''}
-
-        <span class="workout-type-badge self-start ${badgeClass}">${escapeHtml(formatWorkoutType(type))}</span>
-        ${descLine ? `<span class="text-xs text-slate-400 font-mono mt-0.5">${escapeHtml(descLine)}</span>` : ''}
-      </div>
-
-      <div class="flex flex-col justify-between items-end shrink-0">
-        <button type="button" data-fav-id="${share.id}" onclick="toggleFavorite('${share.id}')" class="${favColorClass} hover:scale-110 transition-transform btn-fav-star" title="Favorite">
-          ${starIcon}
-        </button>
-      </div>
-
-    </div>
-    <div class="flex flex-wrap gap-1.5 mt-3 structured-movements${hasMovements ? ' hidden' : ''}">
-      ${displayMovements}
-      ${hasMovements ? `<div class="flex gap-2 mt-3 w-full">
-        <button type="button" onclick="doSharedPlan('${share.id}')" class="flex-1 btn-core is-primary-ghost btn-card-action"><i data-lucide="dumbbell" size="18"></i><span>Train</span></button>
-        <button type="button" onclick="loadSharedPlan('${share.id}')" class="flex-1 btn-core is-ghost btn-card-action"><i data-lucide="clipboard-pen-line" size="18"></i><span>Plan</span></button>
-        <button type="button" onclick="dismissSharedPlan('${share.id}')" class="flex-1 btn-core is-ghost btn-card-action hover:!text-rose-400 hover:!border-rose-400"><i data-lucide="trash-2" size="18"></i><span>Delete</span></button>
-      </div>` : ''}
-    </div>
-    ${hasMovements ? `
-    <div class="flex justify-end mt-3">
-      <span class="text-xs text-slate-500 font-medium hover:text-slate-300 transition-colors cursor-pointer show-more-text" onclick="event.stopPropagation(); toggleWorkoutCard(this)">Show more</span>
-    </div>` : ''}
-</div>`;
+  return renderWorkoutCard(share.id, share.content?.name || '', type, badgeClass, descLine, metadataHtml, displayMovements, actionsHtml, share.favorite, `toggleFavorite('${share.id}')`);
 }
 
 function changeSharedPlansPage(direction) {

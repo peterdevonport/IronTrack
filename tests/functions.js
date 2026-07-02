@@ -215,3 +215,65 @@ export function resetTrainingTab(deps) {
   const pwBtn = document.getElementById('log-workout-btn');
   if (pwBtn) { pwBtn.disabled = true; pwBtn.classList.remove('is-primary'); pwBtn.classList.add('is-ghost'); }
 }
+
+// Contribution generators - testable versions
+export async function generateContributionsBase(workoutId, movements, processMovement, deps) {
+  const { writeStructuredLogEntry, getExerciseInfo } = deps;
+
+  for (let i = 0; i < movements.length; i++) {
+    const movement = movements[i];
+    if (getExerciseInfo(movement.exerciseId).category === 'cardio') continue;
+
+    const result = processMovement(movement, i);
+    if (!result || result.totalReps <= 0) continue;
+
+    await writeStructuredLogEntry({
+      workoutId, movement,
+      sets: result.sets,
+      totalReps: result.totalReps,
+      extraFields: result.extraFields || {}
+    });
+  }
+}
+
+export async function generateAmrapContributions(workoutId, movements, roundsCompleted, additionalReps, deps) {
+  await generateContributionsBase(workoutId, movements, (movement) => {
+    const totalReps = roundsCompleted * movement.reps + additionalReps;
+    return { totalReps, sets: roundsCompleted, extraFields: { additionalReps } };
+  }, deps);
+}
+
+export async function generateForTimeContributions(workoutId, movements, rounds, remainingReps, deps) {
+  const repsPerRound = movements.reduce((sum, m) => sum + (m.reps || 0), 0);
+  const totalPlanned = repsPerRound * rounds;
+  const totalCompleted = Math.max(0, totalPlanned - remainingReps);
+  const fullRounds = Math.floor(repsPerRound > 0 ? totalCompleted / repsPerRound : 0);
+  let partialRoundReps = totalCompleted % (repsPerRound || 1);
+
+  await generateContributionsBase(workoutId, movements, (movement) => {
+    const movementPartialReps = Math.min(movement.reps, partialRoundReps);
+    partialRoundReps = Math.max(0, partialRoundReps - movement.reps);
+    const performedReps = movement.reps * fullRounds + movementPartialReps;
+    if (performedReps <= 0) return null;
+    const effectiveSets = fullRounds + (movementPartialReps === movement.reps ? 1 : 0);
+    const displayPartialReps = movementPartialReps < movement.reps ? movementPartialReps : 0;
+    const extraFields = {};
+    if (displayPartialReps > 0) extraFields.partialReps = displayPartialReps;
+    return { totalReps: performedReps, sets: effectiveSets, extraFields };
+  }, deps);
+}
+
+export async function generateIntervalContributions(workoutId, movements, roundsCompleted, partialReps, deps) {
+  let remainingPartial = partialReps;
+
+  await generateContributionsBase(workoutId, movements, (movement) => {
+    const movementPartialReps = Math.min(movement.reps, remainingPartial);
+    remainingPartial = Math.max(0, remainingPartial - movement.reps);
+    const totalReps = movement.reps * roundsCompleted + movementPartialReps;
+    const effectiveSets = roundsCompleted + (movementPartialReps === movement.reps ? 1 : 0);
+    const displayPartialReps = movementPartialReps < movement.reps ? movementPartialReps : 0;
+    const extraFields = {};
+    if (displayPartialReps > 0) extraFields.partialReps = displayPartialReps;
+    return { totalReps, sets: effectiveSets, extraFields };
+  }, deps);
+}
