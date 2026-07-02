@@ -26,10 +26,6 @@ window.__irontrackAuthState = 'pending';
 window.__irontrackWorkoutCount = 0;
 
 // Volume History State (Issue #38)
-let volumePeriod = 'daily';
-let volumePeriodOffset = 0;
-let volumeFilter = 'All';
-let userSignupTs = 0;
 
 // Exercise Catalog & Load Factors
 const EXERCISE_CATALOG = [
@@ -184,7 +180,7 @@ function getSchemaKey(exerciseName) {
 
 function computeTotalLoad(fieldValues, exerciseName, prefix) {
   const lf = LOAD_FACTORS[exerciseName];
-  const bw = parseFloat(fieldValues[prefix + '-bodyweight']) || userBiometrics.bodyweight || 0;
+  const bw = parseFloat(fieldValues[prefix + '-bodyweight']) || state.user.userBiometrics.bodyweight || 0;
   const ext = parseFloat(fieldValues[prefix + '-ext-load']) || 0;
   if (lf !== undefined) {
     const est = bw * lf + ext;
@@ -374,21 +370,21 @@ function getEffectiveLoad(workout) {
     workout.exercise,
     parseFloat(workout.weight),
     parseFloat(workout.externalLoad),
-    userBiometrics.bodyweight
+    state.user.userBiometrics.bodyweight
   );
 }
 
-function updatePagination(name, currentPage, totalPages) {
+function updatePagination(name, page, totalPages) {
   const pagination = document.getElementById(`${name}-pagination`);
   if (!pagination) return;
   const currentEl = document.getElementById(`current-${name}-page`);
   const totalEl = document.getElementById(`total-${name}-pages`);
   const prevBtn = document.getElementById(`prev-${name}-page-btn`);
   const nextBtn = document.getElementById(`next-${name}-page-btn`);
-  if (currentEl) currentEl.textContent = currentPage;
+  if (currentEl) currentEl.textContent = page;
   if (totalEl) totalEl.textContent = totalPages;
-  if (prevBtn) prevBtn.disabled = currentPage <= 1;
-  if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+  if (prevBtn) prevBtn.disabled = page <= 1;
+  if (nextBtn) nextBtn.disabled = page >= totalPages;
   pagination.classList.toggle('hidden', totalPages <= 1);
 }
 
@@ -455,56 +451,81 @@ const RPE_RIR_MAP = { 10: 0, 9: 1, 8: 2, 7: 3, 6: 4 };
 
 let currentUser = null;
 let unsubscribeLogs = null;
-let userBiometrics = { gender: 'male', bodyweight: 75 };
-let userChallengeStreaks = { monthly: { completedPeriods: [], currentStreak: 0, bestStreak: 0 }, yearly: { completedPeriods: [], currentStreak: 0, bestStreak: 0 } };
 let pendingOnboarding1RMs = [];
-let activeRecords = {};
-let cachedMaxLoadByExercise = {};
-let cachedMax1RMByExercise = {};
-let cachedMaxRepsByExercise = {};
-let calendarMonth = new Date();
-let calendarSelectedDate = null;
-let calendarCompact = true;
-let calendarWeekOffset = 0;
-let calcEntriesByLift = {};
-let currentPage = 1;
-let recordsCurrentPage = 1;
-let urlParamsProcessed = false; // Add this flag
-let pendingPlannedWorkout = null;
-let workoutMovements = [];
-
-let paginatedWorkouts = [];
-let lastWorkouts = [];
-
-// Structured workout state
-let lastStructuredWorkouts = [];
-let structuredCurrentPage = 1;
-let plansCurrentPage = 1;
-let unsubscribeStructured = null;
-
-// Workout plan state
-let lastWorkoutPlans = [];
-let unsubscribePlans = null;
-
-// Shared plan state
-let lastSharedPlans = [];
-let sharedPlansPage = 1;
-let plansFilter = 'mine'; // 'mine' | 'shared'
-let unsubscribeSharedPlans = null;
 let unsubscribeProfile = null;
+let leaderboardUnsubscribe = null;
+let urlParamsProcessed = false;
 
-// Global state variables for social & leaderboards
-let currentScope = 'global'; // 'global' or 'friends'
-let currentFormula = 'dots';  // 'dots' or 'sinclair'
-let userFriendsList = [];    // Array of friend UIDs
-let friendDisplayCache = {}; // uid -> profile data snapshot
-let friendsPage = 1;         // Pagination for friends list
-let leaderboardUnsubscribe = null; //
-let leaderboardCache = [];
-let leaderboardShowAll = false;
+const state = {
+  user: {
+    userBiometrics: { gender: 'male', bodyweight: 75 },
+    userChallengeStreaks: {
+      monthly: { completedPeriods: [], currentStreak: 0, bestStreak: 0 },
+      yearly: { completedPeriods: [], currentStreak: 0, bestStreak: 0 }
+    },
+    userSignupTs: 0
+  },
+  cache: {
+    activeRecords: {},
+    cachedMaxLoadByExercise: {},
+    cachedMax1RMByExercise: {},
+    cachedMaxRepsByExercise: {}
+  },
+  data: {
+    lastWorkouts: [],
+    lastStructuredWorkouts: [],
+    lastWorkoutPlans: [],
+    lastSharedPlans: [],
+    paginatedWorkouts: [],
+    calcEntriesByLift: {}
+  },
+  pagination: {
+    workouts: 1,
+    structured: 1,
+    plans: 1,
+    sharedPlans: 1,
+    records: 1,
+    friends: 1
+  },
+  calendar: {
+    month: new Date(),
+    selectedDate: null,
+    compact: true,
+    weekOffset: 0
+  },
+  volume: {
+    period: 'daily',
+    offset: 0,
+    filter: 'All'
+  },
+  builder: {
+    workoutMovements: [],
+    pendingPlannedWorkout: null,
+    emomMode: 'sequence'
+  },
+  social: {
+    currentScope: 'global',
+    currentFormula: 'dots',
+    userFriendsList: [],
+    friendDisplayCache: {},
+    leaderboardCache: [],
+    leaderboardShowAll: false
+  },
+  share: {
+    sharePlanId: null,
+    shareIsWorkout: false,
+    shareMode: 'friends'
+  },
+  ui: {
+    plansFilter: 'mine',
+    currentTab: 'dashboard'
+  }
+};
 
-// Bottom Navigation Tab Switching
-let currentTab = 'dashboard';
+let unsubscribeStructured = null;
+let unsubscribePlans = null;
+let unsubscribeSharedPlans = null;
+
 const tabContents = document.querySelectorAll('.tab-content');
 const navTabs = document.querySelectorAll('.nav-tab');
 
@@ -520,7 +541,7 @@ function switchTab(tabName) {
   const btn = document.querySelector('.nav-tab[data-tab="' + tabName + '"]');
   if (btn) btn.classList.add('active');
   window.scrollTo({ top: 0, behavior: 'smooth' });
-  currentTab = tabName;
+  state.ui.currentTab = tabName;
 }
 
 navTabs.forEach(btn => {
@@ -542,7 +563,7 @@ onAuthStateChanged(auth, async (user) => {
         authBtn.innerText = "Sign Out";
         if (profileBtn) profileBtn.classList.remove('hidden');
         window.__irontrackAuthState = 'signed-in';
-        userSignupTs = new Date(user.metadata.creationTime).getTime() || 0;
+        state.user.userSignupTs = new Date(user.metadata.creationTime).getTime() || 0;
         
         // ... (existing code: handle, greeting, cyberTag, pullProfileMetrics) ...
         const handle = (user.email || user.uid).split('@')[0];
@@ -552,7 +573,7 @@ onAuthStateChanged(auth, async (user) => {
         await initSocialProfile(user);
 
         // Check if onboarding is needed (first-time user)
-        if (!userBiometrics.onboardingComplete) {
+        if (!state.user.userBiometrics.onboardingComplete) {
             loginView.classList.add('hidden');
             appView.classList.add('hidden');
             if (bottomNav) bottomNav.classList.add('hidden');
@@ -601,7 +622,7 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('workout-list').innerHTML = '';
         document.getElementById('structured-workout-list').innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">No structured workouts logged yet.</p>';
         document.getElementById('registry-table-body').innerHTML = '';
-        calcEntriesByLift = {};
+        state.data.calcEntriesByLift = {};
         const calcEntriesList = document.getElementById('calc-entries-list');
         if (calcEntriesList) calcEntriesList.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">Select a lift with data to get started.</p>';
         const calcOneRm = document.getElementById('calc-one-rm-display');
@@ -610,12 +631,12 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('dots-tier').innerText = '-';
         document.getElementById('sinclair-display').innerText = '0.0';
         document.getElementById('sinclair-tier').innerText = '-';
-        userFriendsList = [];
-        friendDisplayCache = {};
+        state.social.userFriendsList = [];
+        state.social.friendDisplayCache = {};
         sharedPlanId = null;
-        friendsPage = 1;
-        sharedPlansPage = 1;
-        plansFilter = 'mine';
+        state.pagination.friends = 1;
+        state.pagination.sharedPlans = 1;
+        state.ui.plansFilter = 'mine';
         document.getElementById('friendsListContainer').innerHTML = '';
         const filterMineBtn = document.getElementById('plans-filter-mine');
         const filterSharedBtn = document.getElementById('plans-filter-shared');
@@ -627,10 +648,10 @@ onAuthStateChanged(auth, async (user) => {
         currentUser = null;
         urlParamsProcessed = false;
         window.__irontrackActiveDates = undefined;
-        calendarMonth = new Date();
-        calendarSelectedDate = null;
-        calendarCompact = true;
-        calendarWeekOffset = 0;
+        state.calendar.month = new Date();
+        state.calendar.selectedDate = null;
+        state.calendar.compact = true;
+        state.calendar.weekOffset = 0;
         window.__irontrackAuthState = 'signed-out';
     }
 });
@@ -764,16 +785,16 @@ async function pullProfileMetrics(uid) {
         const docRef = doc(db, "profiles", uid);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-            userBiometrics = { gender: 'male', bodyweight: 75, displayName: '', ...docSnap.data() };
+            state.user.userBiometrics = { gender: 'male', bodyweight: 75, displayName: '', ...docSnap.data() };
             if (docSnap.data().challengeStreaks) {
-                userChallengeStreaks = {
+                state.user.userChallengeStreaks = {
                     monthly: { completedPeriods: [], currentStreak: 0, bestStreak: 0, ...docSnap.data().challengeStreaks.monthly },
                     yearly: { completedPeriods: [], currentStreak: 0, bestStreak: 0, ...docSnap.data().challengeStreaks.yearly }
                 };
             }
-            document.getElementById('profile-gender').value = userBiometrics.gender;
-            document.getElementById('profile-weight').value = userBiometrics.bodyweight;
-            document.getElementById('profile-display-name').value = userBiometrics.displayName || '';
+            document.getElementById('profile-gender').value = state.user.userBiometrics.gender;
+            document.getElementById('profile-weight').value = state.user.userBiometrics.bodyweight;
+            document.getElementById('profile-display-name').value = state.user.userBiometrics.displayName || '';
         }
         const emailEl = document.getElementById('profile-email');
         if (emailEl && auth.currentUser) emailEl.value = auth.currentUser.email || '';
@@ -887,11 +908,11 @@ async function saveOnboarding() {
         }
         await setDoc(profileRef, profileData, { merge: true });
 
-        // Update local userBiometrics
-        userBiometrics.gender = gender;
-        userBiometrics.bodyweight = bodyweight;
-        userBiometrics.day0TrainingDays = { monthly: day0Monthly, yearly: day0Yearly, lifetime: day0Lifetime };
-        userBiometrics.onboardingComplete = true;
+        // Update local state.user.userBiometrics
+        state.user.userBiometrics.gender = gender;
+        state.user.userBiometrics.bodyweight = bodyweight;
+        state.user.userBiometrics.day0TrainingDays = { monthly: day0Monthly, yearly: day0Yearly, lifetime: day0Lifetime };
+        state.user.userBiometrics.onboardingComplete = true;
 
         // Also update the sidebar profile form
         document.getElementById('profile-gender').value = gender;
@@ -940,17 +961,17 @@ function refreshPBForm() {
   const schemaKey = getSchemaKey(exercise);
   const schema = FORM_SCHEMAS.logPB[schemaKey] || FORM_SCHEMAS.logPB.standard;
   const result = renderFormFields('pb-log-fields', schema, {
-    initialValues: { 'pb-bodyweight': userBiometrics.bodyweight || 0 },
+    initialValues: { 'pb-bodyweight': state.user.userBiometrics.bodyweight || 0 },
     onFieldChange: (values) => {
       const total = document.getElementById('pb-total-load');
       if (total) total.textContent = computeTotalLoad(values, exercise, 'pb');
     }
   });
   if (result && result.fields['pb-bodyweight']) {
-    result.fields['pb-bodyweight'].value = userBiometrics.bodyweight || '';
+    result.fields['pb-bodyweight'].value = state.user.userBiometrics.bodyweight || '';
   }
   if (result && result.fields['pb-total-load']) {
-    const initValues = { ...result.fieldValues, 'pb-bodyweight': userBiometrics.bodyweight || 0 };
+    const initValues = { ...result.fieldValues, 'pb-bodyweight': state.user.userBiometrics.bodyweight || 0 };
     result.fields['pb-total-load'].textContent = computeTotalLoad(initValues, exercise, 'pb');
   }
 }
@@ -964,7 +985,7 @@ async function logPB() {
     }
     const schemaKey = getSchemaKey(exercise);
     let weight, externalLoad = 0, estimatedLoad;
-    const bw = userBiometrics.bodyweight || 0;
+    const bw = state.user.userBiometrics.bodyweight || 0;
     if (schemaKey === 'bodyweight') {
       weight = parseFloat(document.getElementById('pb-bodyweight')?.value) || bw;
       estimatedLoad = computeEffectiveLoad(exercise, weight, 0, bw);
@@ -1028,14 +1049,14 @@ profileForm.addEventListener('submit', async (e) => {
         || 'Anonymous Cyber-Lifter';
     document.getElementById('profile-display-name').value = displayName;
 
-    userBiometrics = {
+    state.user.userBiometrics = {
         gender: document.getElementById('profile-gender').value,
         bodyweight: parseFloat(document.getElementById('profile-weight').value),
         displayName
     };
 
     try {
-        await setDoc(doc(db, "profiles", currentUser.uid), userBiometrics, { merge: true });
+        await setDoc(doc(db, "profiles", currentUser.uid), state.user.userBiometrics, { merge: true });
         processAnalytics();
         showFeedback('Profile updated successfully!', 'emerald', 'profileFeedback');
         saveProfileBtn.disabled = true;
@@ -1223,7 +1244,7 @@ document.addEventListener('keydown', (e) => {
 
 // Realtime Data Mining
 
-function processWorkoutSnapshot(docs) {
+function processWorkoutSnapshot(docs, getEffectiveLoad, estimate1RM) {
   const workouts = [];
   const activeRecords = {};
   const cachedMaxLoadByExercise = {};
@@ -1242,19 +1263,19 @@ function processWorkoutSnapshot(docs) {
     const reps = parseInt(data.reps, 10);
     const calculated1RM = estimate1RM(effectiveWeight, reps);
 
-    if (!activeRecords[data.exercise] || calculated1RM > activeRecords[data.exercise]) {
-      activeRecords[data.exercise] = calculated1RM;
+    if (!state.cache.activeRecords[data.exercise] || calculated1RM > state.cache.activeRecords[data.exercise]) {
+      state.cache.activeRecords[data.exercise] = calculated1RM;
     }
 
-    if (!cachedMaxLoadByExercise[data.exercise] || effectiveWeight > cachedMaxLoadByExercise[data.exercise]) {
-      cachedMaxLoadByExercise[data.exercise] = effectiveWeight;
+    if (!state.cache.cachedMaxLoadByExercise[data.exercise] || effectiveWeight > state.cache.cachedMaxLoadByExercise[data.exercise]) {
+      state.cache.cachedMaxLoadByExercise[data.exercise] = effectiveWeight;
     }
-    if (!cachedMax1RMByExercise[data.exercise] || calculated1RM > cachedMax1RMByExercise[data.exercise]) {
-      cachedMax1RMByExercise[data.exercise] = calculated1RM;
+    if (!state.cache.cachedMax1RMByExercise[data.exercise] || calculated1RM > state.cache.cachedMax1RMByExercise[data.exercise]) {
+      state.cache.cachedMax1RMByExercise[data.exercise] = calculated1RM;
     }
 
-    if (!cachedMaxRepsByExercise[data.exercise] || reps > cachedMaxRepsByExercise[data.exercise]) {
-      cachedMaxRepsByExercise[data.exercise] = reps;
+    if (!state.cache.cachedMaxRepsByExercise[data.exercise] || reps > state.cache.cachedMaxRepsByExercise[data.exercise]) {
+      state.cache.cachedMaxRepsByExercise[data.exercise] = reps;
     }
   });
 
@@ -1262,19 +1283,19 @@ function processWorkoutSnapshot(docs) {
 }
 
 function updateCaches(processed) {
-  activeRecords = processed.activeRecords;
-  cachedMaxLoadByExercise = processed.cachedMaxLoadByExercise;
-  cachedMax1RMByExercise = processed.cachedMax1RMByExercise;
-  cachedMaxRepsByExercise = processed.cachedMaxRepsByExercise;
+  state.cache.activeRecords = processed.state.cache.activeRecords;
+  state.cache.cachedMaxLoadByExercise = processed.state.cache.cachedMaxLoadByExercise;
+  state.cache.cachedMax1RMByExercise = processed.state.cache.cachedMax1RMByExercise;
+  state.cache.cachedMaxRepsByExercise = processed.state.cache.cachedMaxRepsByExercise;
   
-  lastWorkouts = processed.workouts;
-  window.__lastWorkouts = lastWorkouts;
-  window.__irontrackWorkoutCount = lastWorkouts.length;
+  state.data.lastWorkouts = processed.workouts;
+  window.__lastWorkouts = state.data.lastWorkouts;
+  window.__irontrackWorkoutCount = state.data.lastWorkouts.length;
   
-  if (lastWorkouts.length > 0) {
-    const earliestTs = Math.min(...lastWorkouts.map(w => w.timestamp));
-    if (earliestTs > 0 && earliestTs < userSignupTs) {
-      userSignupTs = earliestTs;
+  if (state.data.lastWorkouts.length > 0) {
+    const earliestTs = Math.min(...state.data.lastWorkouts.map(w => w.timestamp));
+    if (earliestTs > 0 && earliestTs < state.user.userSignupTs) {
+      state.user.userSignupTs = earliestTs;
     }
   }
 }
@@ -1320,7 +1341,7 @@ function update1RMRegistryUI() {
     const tableBody = document.getElementById('registry-table-body');
     if (!tableBody) return;
 
-    const manualWorkouts = lastWorkouts.filter(w => w.source !== 'structured');
+    const manualWorkouts = state.data.lastWorkouts.filter(w => w.source !== 'structured');
 
     const uniqueExercises = Array.from(new Set(manualWorkouts.map(w => w.exercise))).filter(Boolean).sort();
 
@@ -1333,8 +1354,8 @@ function update1RMRegistryUI() {
 
     const recordsPerPage = 10;
     const totalPages = Math.max(1, Math.ceil(uniqueExercises.length / recordsPerPage));
-    recordsCurrentPage = Math.min(recordsCurrentPage, totalPages);
-    const start = (recordsCurrentPage - 1) * recordsPerPage;
+    state.pagination.records = Math.min(state.pagination.records, totalPages);
+    const start = (state.pagination.records - 1) * recordsPerPage;
     const pageExercises = uniqueExercises.slice(start, start + recordsPerPage);
 
     let html = '';
@@ -1343,15 +1364,15 @@ function update1RMRegistryUI() {
         const isBodyweight = info.type === 'bodyweight';
 
         if (isBodyweight) {
-            const maxReps = cachedMaxRepsByExercise[exercise] || 0;
+            const maxReps = state.cache.cachedMaxRepsByExercise[exercise] || 0;
             html += `
                 <span class="text-slate-400 font-medium truncate">${escapeHtml(exercise)}</span>
                 <span class="text-slate-200 font-mono text-right">—</span>
                 <span class="text-slate-200 font-mono text-right">${maxReps} reps</span>
             `;
         } else {
-            const maxEstimated1RM = cachedMax1RMByExercise[exercise] || 0;
-            const absolutePB = cachedMaxLoadByExercise[exercise] || 0;
+            const maxEstimated1RM = state.cache.cachedMax1RMByExercise[exercise] || 0;
+            const absolutePB = state.cache.cachedMaxLoadByExercise[exercise] || 0;
             html += `
                 <span class="text-slate-400 font-medium truncate">${escapeHtml(exercise)}</span>
                 <span class="text-slate-200 font-mono text-right">${Math.round(maxEstimated1RM)} kg</span>
@@ -1362,7 +1383,7 @@ function update1RMRegistryUI() {
 
     tableBody.innerHTML = html;
 
-    updatePagination('records', recordsCurrentPage, totalPages);
+    updatePagination('records', state.pagination.records, totalPages);
 }
 
 function updateCalcCard() {
@@ -1377,7 +1398,7 @@ function updateCalcCard() {
         return;
     }
 
-    const oneRM = activeRecords[exercise] || 0;
+    const oneRM = state.cache.activeRecords[exercise] || 0;
     if (oneRmDisplay) {
         oneRmDisplay.textContent = oneRM > 0 ? `${Math.round(oneRM)} kg` : '—';
     }
@@ -1419,7 +1440,7 @@ function updateCalcPreview() {
     const select = document.getElementById('calc-lift-select');
     if (!select) return;
     const exercise = select.value;
-    const oneRM = activeRecords[exercise] || 0;
+    const oneRM = state.cache.activeRecords[exercise] || 0;
 
     if (!exercise || oneRM <= 0) {
         previewWeight.textContent = '—';
@@ -1471,18 +1492,18 @@ function handleCalcAdd() {
     const select = document.getElementById('calc-lift-select');
     if (!select) return;
     const exercise = select.value;
-    const oneRM = activeRecords[exercise] || 0;
+    const oneRM = state.cache.activeRecords[exercise] || 0;
     if (!exercise || oneRM <= 0) return;
 
-    if (!calcEntriesByLift[exercise]) {
-        calcEntriesByLift[exercise] = [];
+    if (!state.data.calcEntriesByLift[exercise]) {
+        state.data.calcEntriesByLift[exercise] = [];
     }
 
     if (currentCalcMode === 'pct') {
         const pctInput = document.getElementById('calc-pct-input');
         const pct = parseFloat(pctInput?.value);
         if (isNaN(pct) || pct <= 0) return;
-        calcEntriesByLift[exercise].push({ type: 'pct', pct });
+        state.data.calcEntriesByLift[exercise].push({ type: 'pct', pct });
         pctInput.value = '';
     } else {
         const repsInput = document.getElementById('calc-rpe-reps');
@@ -1490,7 +1511,7 @@ function handleCalcAdd() {
         const reps = parseInt(repsInput?.value, 10);
         const rpe = parseFloat(rpeSelect?.value);
         if (!reps || reps < 1 || isNaN(rpe)) return;
-        calcEntriesByLift[exercise].push({ type: 'rpe', reps, rpe });
+        state.data.calcEntriesByLift[exercise].push({ type: 'rpe', reps, rpe });
         repsInput.value = '';
         rpeSelect.value = '';
     }
@@ -1504,13 +1525,13 @@ function handleCalcRemove(btnEl) {
     if (!btnEl) return;
     const exercise = btnEl.dataset.exercise;
     const idx = parseInt(btnEl.dataset.index, 10);
-    if (!calcEntriesByLift[exercise] || isNaN(idx) || idx < 0 || idx >= calcEntriesByLift[exercise].length) return;
-    calcEntriesByLift[exercise].splice(idx, 1);
+    if (!state.data.calcEntriesByLift[exercise] || isNaN(idx) || idx < 0 || idx >= state.data.calcEntriesByLift[exercise].length) return;
+    state.data.calcEntriesByLift[exercise].splice(idx, 1);
     renderCalcEntries();
 }
 
 function handleCalcClear() {
-    calcEntriesByLift = {};
+    state.data.calcEntriesByLift = {};
     renderCalcEntries();
 }
 
@@ -1519,7 +1540,7 @@ function renderCalcEntries() {
     if (!entriesList) return;
 
     let allEntries = [];
-    for (const [exercise, entries] of Object.entries(calcEntriesByLift)) {
+    for (const [exercise, entries] of Object.entries(state.data.calcEntriesByLift)) {
         entries.forEach((entry, idx) => {
             allEntries.push({ ...entry, exercise, idx });
         });
@@ -1532,7 +1553,7 @@ function renderCalcEntries() {
 
     let html = '';
     allEntries.forEach(entry => {
-        const oneRM = activeRecords[entry.exercise] || 0;
+        const oneRM = state.cache.activeRecords[entry.exercise] || 0;
         let source, weight;
         if (entry.type === 'pct') {
             weight = Math.round(oneRM * entry.pct / 100);
@@ -1582,21 +1603,21 @@ function updatePaginationControls(totalPages) {
 
     const isVisible = totalPages > 1;
     paginationControls.classList.toggle('hidden', !isVisible);
-    currentPageDisplay.innerText = currentPage;
+    currentPageDisplay.innerText = state.pagination.workouts;
     totalPagesDisplay.innerText = totalPages;
 
-    prevPageBtn.disabled = currentPage <= 1;
-    nextPageBtn.disabled = currentPage >= totalPages;
+    prevPageBtn.disabled = state.pagination.workouts <= 1;
+    nextPageBtn.disabled = state.pagination.workouts >= totalPages;
 }
 
 function changePage(direction) {
-    const totalPages = Math.max(1, Math.ceil(paginatedWorkouts.length / entriesPerPage));
-    if (direction === 'prev' && currentPage > 1) {
-        currentPage -= 1;
-    } else if (direction === 'next' && currentPage < totalPages) {
-        currentPage += 1;
+    const totalPages = Math.max(1, Math.ceil(state.data.paginatedWorkouts.length / entriesPerPage));
+    if (direction === 'prev' && state.pagination.workouts > 1) {
+        state.pagination.workouts -= 1;
+    } else if (direction === 'next' && state.pagination.workouts < totalPages) {
+        state.pagination.workouts += 1;
     }
-    renderLogs(lastWorkouts);
+    renderLogs(state.data.lastWorkouts);
 }
 
 if (prevPageBtn) {
@@ -1607,13 +1628,13 @@ if (nextPageBtn) {
 }
 
 function changeRecordsPage(direction) {
-    const manualWorkouts = lastWorkouts.filter(w => w.source !== 'structured');
+    const manualWorkouts = state.data.lastWorkouts.filter(w => w.source !== 'structured');
     const uniqueExercises = Array.from(new Set(manualWorkouts.map(w => w.exercise))).filter(Boolean).sort();
     const totalPages = Math.max(1, Math.ceil(uniqueExercises.length / 10));
-    if (direction === 'prev' && recordsCurrentPage > 1) {
-        recordsCurrentPage--;
-    } else if (direction === 'next' && recordsCurrentPage < totalPages) {
-        recordsCurrentPage++;
+    if (direction === 'prev' && state.pagination.records > 1) {
+        state.pagination.records--;
+    } else if (direction === 'next' && state.pagination.records < totalPages) {
+        state.pagination.records++;
     }
     update1RMRegistryUI();
 }
@@ -1628,8 +1649,8 @@ if (nextRecordsBtn) {
 }
 if (workoutFilter) {
   workoutFilter.addEventListener('change', () => {
-    currentPage = 1;
-    renderLogs(lastWorkouts);
+    state.pagination.workouts = 1;
+    renderLogs(state.data.lastWorkouts);
   });
 }
 
@@ -1696,8 +1717,8 @@ if (chipPBEl) {
     // Toggle class state cleanly based on status
     chipPBEl.classList.toggle('is-active', active);
     
-    currentPage = 1; //
-    renderLogs(lastWorkouts); //
+    state.pagination.workouts = 1; //
+    renderLogs(state.data.lastWorkouts); //
   });
 }
 
@@ -1710,8 +1731,8 @@ if (chip1RMEl) {
     // Toggle class state cleanly based on status
     chip1RMEl.classList.toggle('is-active', active);
     
-    currentPage = 1; //
-    renderLogs(lastWorkouts); //
+    state.pagination.workouts = 1; //
+    renderLogs(state.data.lastWorkouts); //
   });
 }
 
@@ -1790,7 +1811,7 @@ function refreshLogSetForm() {
   if (!schema) return;
 
   const result = renderFormFields('log-set-fields', schema, {
-    initialValues: { 'log-set-bodyweight': userBiometrics.bodyweight || 0 },
+    initialValues: { 'log-set-bodyweight': state.user.userBiometrics.bodyweight || 0 },
     onFieldChange: (values) => {
       const total = document.getElementById('log-set-total-load');
       if (total) total.textContent = computeTotalLoad(values, exercise, 'log-set');
@@ -1799,10 +1820,10 @@ function refreshLogSetForm() {
   });
 
   if (result && result.fields['log-set-bodyweight']) {
-    result.fields['log-set-bodyweight'].value = userBiometrics.bodyweight || '';
+    result.fields['log-set-bodyweight'].value = state.user.userBiometrics.bodyweight || '';
   }
   if (result && result.fields['log-set-total-load']) {
-    const initValues = { ...result.fieldValues, 'log-set-bodyweight': userBiometrics.bodyweight || 0 };
+    const initValues = { ...result.fieldValues, 'log-set-bodyweight': state.user.userBiometrics.bodyweight || 0 };
     result.fields['log-set-total-load'].textContent = computeTotalLoad(initValues, exercise, 'log-set');
   }
 
@@ -1842,15 +1863,15 @@ function populateLiftSelectors() {
 
 // Mathematical Engine Implementations
 async function processAnalytics() {
-    const bw = userBiometrics.bodyweight;
-    const gender = userBiometrics.gender;
+    const bw = state.user.userBiometrics.bodyweight;
+    const gender = state.user.userBiometrics.gender;
 
     // ==========================================
     // 1. DOTS Calculation & Lift Breakdown
     // ==========================================
-    const squatRec = activeRecords['Back Squat'] || 0;
-    const benchRec = activeRecords['Bench Press'] || 0;
-    const deadliftRec = activeRecords['Deadlift'] || 0;
+    const squatRec = state.cache.activeRecords['Back Squat'] || 0;
+    const benchRec = state.cache.activeRecords['Bench Press'] || 0;
+    const deadliftRec = state.cache.activeRecords['Deadlift'] || 0;
 
     // Inject individual Powerlifting 1RMs into the DOTS side-breakdown view
     const dotsSquatEl = document.getElementById('dots-breakdown-squat');
@@ -1880,8 +1901,8 @@ async function processAnalytics() {
     // ==========================================
     // 2. Sinclair Calculation & Lift Breakdown
     // ==========================================
-    const snatchRec = activeRecords['Snatch'] || 0;
-    const cleanRec = activeRecords['Clean & Jerk'] || 0;
+    const snatchRec = state.cache.activeRecords['Snatch'] || 0;
+    const cleanRec = state.cache.activeRecords['Clean & Jerk'] || 0;
 
     // Inject individual Olympic Weightlifting 1RMs into the Sinclair side-breakdown view
     const sinclairSnatchEl = document.getElementById('sinclair-breakdown-snatch');
@@ -1936,8 +1957,6 @@ function getRankingTier(score, system, gender) {
 // STRUCTURED WORKOUT SYSTEM
 // ==========================================
 
-let emomMode = 'sequence';
-
 function populateMovementDropdowns() {
   document.querySelectorAll('.movement-exercise').forEach(sel => {
     if (sel.options.length > 1) return;
@@ -1979,7 +1998,7 @@ function formatScore_ROUNDS_AND_REPS(rounds, additionalReps) {
 
 
 async function writeStructuredLogEntry({ workoutId, movement, sets, totalReps, extraFields = {} }) {
-  const bw = userBiometrics.bodyweight || 0;
+  const bw = state.user.userBiometrics.bodyweight || 0;
   const loadFactor = LOAD_FACTORS[movement.exerciseId];
   let estimatedLoad = 0;
   let weight = 0;
@@ -1993,13 +2012,13 @@ async function writeStructuredLogEntry({ workoutId, movement, sets, totalReps, e
   }
 
   if (movement.weightMode === 'pct' && movement.pct) {
-    const oneRM = activeRecords[movement.exerciseId] || 0;
+    const oneRM = state.cache.activeRecords[movement.exerciseId] || 0;
     if (oneRM > 0) {
       estimatedLoad = Math.round(oneRM * movement.pct / 100);
       weight = estimatedLoad;
     }
   } else if (movement.weightMode === 'rpe' && movement.rpe) {
-    const oneRM = activeRecords[movement.exerciseId] || 0;
+    const oneRM = state.cache.activeRecords[movement.exerciseId] || 0;
     if (oneRM > 0) {
       const rir = 10 - movement.rpe;
       const totalRepsPossible = movement.reps + rir;
@@ -2074,7 +2093,7 @@ function handleWorkoutTypeChange() {
   if (!desc) return;
 
   // Clear movements on type switch
-  workoutMovements = [];
+  state.builder.workoutMovements = [];
   const movementsList = document.getElementById('plan-movements-list');
   if (movementsList) movementsList.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">Add movements above.</p>';
   const slots = document.getElementById('emom-minute-slots');
@@ -2094,7 +2113,7 @@ function handleWorkoutTypeChange() {
     desc.textContent = 'Record an EMOM (Every Minute On the Minute) workout.';
     if (movementsSection) movementsSection.classList.add('hidden');
     if (emomSlotsArea) emomSlotsArea.classList.remove('hidden');
-    switchEmomMode(emomMode);
+    switchEmomMode(state.builder.emomMode);
     updateEmomSummary(); updateEmomDurationDisplay();
   } else if (type === 'FOR_TIME') {
     document.getElementById('fortime-fields').classList.remove('hidden');
@@ -2126,7 +2145,7 @@ function handleWorkoutTypeChange() {
 }
 
 function switchEmomMode(mode) {
-  emomMode = mode;
+  state.builder.emomMode = mode;
   const btnSeq = document.getElementById('emom-mode-seq');
   const btnByRound = document.getElementById('emom-mode-by-round');
   const heading = document.getElementById('emom-slot-heading');
@@ -2160,12 +2179,12 @@ function addPlanMinuteSlot(data) {
     container.dataset.planBootstrapped = 'true';
   }
   const count = container.children.length + 1;
-  const label = emomMode === 'sequence' ? `#${count}` : `Round ${count}`;
+  const label = state.builder.emomMode === 'sequence' ? `#${count}` : `Round ${count}`;
   const row = document.createElement('div');
   row.className = 'minute-row flex gap-2 items-center py-1.5 px-2 rounded-lg hover:bg-slate-800/40';
 
   if (data) {
-    const oneRM = activeRecords[data.exerciseId] || 0;
+    const oneRM = state.cache.activeRecords[data.exerciseId] || 0;
     let weightDisplay = data.weight;
     let source;
     if (data.weightMode === 'pct' && data.pct) {
@@ -2213,7 +2232,7 @@ function refreshPlanForm() {
   const schemaKey = exercise ? getSchemaKey(exercise) : 'standard';
   const schema = FORM_SCHEMAS.planWorkout[schemaKey] || FORM_SCHEMAS.planWorkout.standard;
   const result = renderFormFields('plan-movement-fields', schema, {
-    initialValues: { 'plan-bodyweight': userBiometrics.bodyweight || 0 },
+    initialValues: { 'plan-bodyweight': state.user.userBiometrics.bodyweight || 0 },
     onFieldChange: (values) => {
       const total = document.getElementById('plan-total-load');
       if (total && exercise) total.textContent = computeTotalLoad(values, exercise, 'plan');
@@ -2221,10 +2240,10 @@ function refreshPlanForm() {
     }
   });
   if (result && result.fields['plan-bodyweight']) {
-    result.fields['plan-bodyweight'].value = userBiometrics.bodyweight || '';
+    result.fields['plan-bodyweight'].value = state.user.userBiometrics.bodyweight || '';
   }
   if (result && result.fields['plan-total-load'] && exercise) {
-    const initValues = { ...result.fieldValues, 'plan-bodyweight': userBiometrics.bodyweight || 0 };
+    const initValues = { ...result.fieldValues, 'plan-bodyweight': state.user.userBiometrics.bodyweight || 0 };
     result.fields['plan-total-load'].textContent = computeTotalLoad(initValues, exercise, 'plan');
   }
   updatePlanCalcPreview();
@@ -2233,7 +2252,7 @@ function refreshPlanForm() {
 function handlePlanExerciseChange() {
   const exercise = document.getElementById('plan-exercise')?.value;
   const oneRmDisplay = document.getElementById('plan-one-rm-display');
-  const oneRM = exercise ? (activeRecords[exercise] || 0) : 0;
+  const oneRM = exercise ? (state.cache.activeRecords[exercise] || 0) : 0;
   if (oneRmDisplay) oneRmDisplay.textContent = oneRM > 0 ? `${Math.round(oneRM)} kg` : '\u2014';
   refreshPlanForm();
 }
@@ -2287,7 +2306,7 @@ function updatePlanCalcPreview() {
   if (!weightInput || !calcSpan || !pill) return;
 
   const mode = pill.dataset.mode;
-  const oneRM = exercise ? (activeRecords[exercise] || 0) : 0;
+  const oneRM = exercise ? (state.cache.activeRecords[exercise] || 0) : 0;
 
   if (!exercise || oneRM <= 0) {
     calcSpan.textContent = oneRM > 0 ? '\u2192' : 'No 1RM';
@@ -2344,9 +2363,9 @@ function handlePlanAdd() {
   let weight = 0, weightMode = 'absolute', pct = null, rpe = null;
 
   if (schemaKey === 'bodyweight') {
-    weight = parseFloat(document.getElementById('plan-bodyweight')?.value) || userBiometrics.bodyweight || 0;
+    weight = parseFloat(document.getElementById('plan-bodyweight')?.value) || state.user.userBiometrics.bodyweight || 0;
   } else if (schemaKey === 'weighted') {
-    weight = parseFloat(document.getElementById('plan-bodyweight')?.value) || userBiometrics.bodyweight || 0;
+    weight = parseFloat(document.getElementById('plan-bodyweight')?.value) || state.user.userBiometrics.bodyweight || 0;
     weight += parseFloat(document.getElementById('plan-ext-load')?.value) || 0;
   } else {
     const weightInput = document.getElementById('plan-weight');
@@ -2371,7 +2390,7 @@ function handlePlanAdd() {
   if (type === 'EMOM') {
     addPlanMinuteSlot(movement);
   } else {
-    workoutMovements.push(movement);
+    state.builder.workoutMovements.push(movement);
     renderPlanMovements();
   }
 
@@ -2382,7 +2401,7 @@ function renderPlanMovements() {
   const list = document.getElementById('plan-movements-list');
   if (!list) return;
 
-  if (workoutMovements.length === 0) {
+  if (state.builder.workoutMovements.length === 0) {
     list.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">Add movements above.</p>';
     const addBtn = document.getElementById('plan-add-btn');
     if (addBtn) addBtn.disabled = true;
@@ -2390,8 +2409,8 @@ function renderPlanMovements() {
   }
 
   let html = '';
-  workoutMovements.forEach((m, i) => {
-    const oneRM = activeRecords[m.exerciseId] || 0;
+  state.builder.workoutMovements.forEach((m, i) => {
+    const oneRM = state.cache.activeRecords[m.exerciseId] || 0;
     let source, weight;
     if (m.weightMode === 'pct' && m.pct) {
       weight = oneRM > 0 ? Math.round(oneRM * m.pct / 100) : m.weight;
@@ -2419,14 +2438,14 @@ function renderPlanMovements() {
 }
 
 function removePlanMovement(index) {
-  if (index < 0 || index >= workoutMovements.length) return;
-  workoutMovements.splice(index, 1);
+  if (index < 0 || index >= state.builder.workoutMovements.length) return;
+  state.builder.workoutMovements.splice(index, 1);
   renderPlanMovements();
   haptic(HAPTIC.tap);
 }
 
 function populatePlanMovements(movements) {
-  workoutMovements = (movements || []).map(m => ({
+  state.builder.workoutMovements = (movements || []).map(m => ({
     exerciseId: m.exerciseId || m.movement,
     reps: parseInt(m.reps, 10) || 0,
     weight: parseFloat(m.kg || m.weight) || 0,
@@ -2475,7 +2494,7 @@ async function savePlan() {
     const intervalMin = parseInt(document.getElementById('emom-interval-min')?.value, 10) || 0;
     const intervalSec = parseInt(document.getElementById('emom-interval-sec')?.value, 10) || 0;
     const intervalSeconds = intervalMin * 60 + intervalSec;
-    const rounds = emomMode === 'by_round' ? (document.querySelectorAll('#emom-minute-slots .minute-row').length) : (parseInt(document.getElementById('emom-rounds')?.value, 10) || 0);
+    const rounds = state.builder.emomMode === 'by_round' ? (document.querySelectorAll('#emom-minute-slots .minute-row').length) : (parseInt(document.getElementById('emom-rounds')?.value, 10) || 0);
     const durationSeconds = rounds * intervalSeconds;
     let intervalLabel;
     if (intervalSeconds === 60) intervalLabel = 'EMOM';
@@ -2521,7 +2540,7 @@ function removeMinuteSlot(btn) {
   if (container) {
     container.querySelectorAll('.minute-row').forEach((r, i) => {
       const label = r.querySelector('.minute-label');
-      if (label) label.textContent = emomMode === 'sequence' ? `#${i + 1}` : `Round ${i + 1}`;
+      if (label) label.textContent = state.builder.emomMode === 'sequence' ? `#${i + 1}` : `Round ${i + 1}`;
     });
   }
   updateEmomSummary();
@@ -2536,7 +2555,7 @@ function updateEmomDurationDisplay() {
   const display = document.getElementById('emom-duration-display');
   const container = document.getElementById('emom-minute-slots');
   const slots = container ? container.querySelectorAll('.minute-row').length : 0;
-  const rounds = emomMode === 'by_round' ? slots : parseInt(roundsInput?.value, 10);
+  const rounds = state.builder.emomMode === 'by_round' ? slots : parseInt(roundsInput?.value, 10);
   if (!display) return;
   if (!rounds || rounds <= 0 || (intervalMin === 0 && intervalSec === 0)) {
     display.textContent = '\u2014';
@@ -2558,7 +2577,7 @@ function updateEmomSummary() {
   const textEl = document.getElementById('emom-summary-text');
   if (!container || !summaryEl || !textEl) return;
   const slots = container.querySelectorAll('.minute-row').length;
-  const rounds = emomMode === 'by_round' ? slots : parseInt(roundsInput?.value, 10);
+  const rounds = state.builder.emomMode === 'by_round' ? slots : parseInt(roundsInput?.value, 10);
   if (rounds > 0 && slots > 0 && intervalSeconds > 0) {
     const totalSec = rounds * intervalSeconds;
     let intervalLabel;
@@ -2577,7 +2596,7 @@ function updateEmomSummary() {
     }
     const prefix = totalSec % 60 === 0 ? `${totalSec / 60} Min ` : '';
     const name = `${prefix}${intervalLabel}`;
-    if (emomMode === 'sequence') {
+    if (state.builder.emomMode === 'sequence') {
       const exerciseLabel = slots === 1 ? 'exercise' : 'exercises';
       textEl.textContent = `${name} \u00D7 ${rounds} rounds \u00B7 ${slots}-${exerciseLabel} sequence`;
     } else {
@@ -2617,7 +2636,7 @@ function updateEmomScorePreview() {
   const roundsInput = document.getElementById('emom-rounds');
   const container = document.getElementById('emom-minute-slots');
   const slots = container ? container.querySelectorAll('.minute-row').length : 0;
-  const rounds = emomMode === 'by_round' ? slots : parseInt(roundsInput?.value, 10);
+  const rounds = state.builder.emomMode === 'by_round' ? slots : parseInt(roundsInput?.value, 10);
   const preview = document.getElementById('emom-score-preview');
   if (!preview) return;
   if (rounds > 0) {
@@ -2756,9 +2775,9 @@ function getRepsPerRound(type, structure) {
 }
 
 function recalcForTimeRemaining() {
-  const type = pendingPlannedWorkout?.type;
+  const type = state.builder.pendingPlannedWorkout?.type;
   if (type !== 'FOR_TIME') return;
-  const structure = pendingPlannedWorkout?.structure;
+  const structure = state.builder.pendingPlannedWorkout?.structure;
   if (!structure) return;
   const roundsCompleted = parseInt(document.getElementById('log-rounds')?.value, 10) || 0;
   const partialReps = parseInt(document.getElementById('log-partial-reps')?.value, 10) || 0;
@@ -2786,8 +2805,8 @@ function logRound() {
 }
 
 function logRep() {
-  const type = pendingPlannedWorkout?.type;
-  const structure = pendingPlannedWorkout?.structure;
+  const type = state.builder.pendingPlannedWorkout?.type;
+  const structure = state.builder.pendingPlannedWorkout?.structure;
   const repsPerRound = getRepsPerRound(type, structure);
   const partial = document.getElementById('log-partial-reps');
   if (!partial) return;
@@ -2808,8 +2827,8 @@ function logRep() {
 function updateLogScorePreview() {
   const rounds = parseInt(document.getElementById('log-rounds')?.value, 10) || 0;
   const partial = parseInt(document.getElementById('log-partial-reps')?.value, 10) || 0;
-  const type = pendingPlannedWorkout?.type;
-  const structure = pendingPlannedWorkout?.structure;
+  const type = state.builder.pendingPlannedWorkout?.type;
+  const structure = state.builder.pendingPlannedWorkout?.structure;
   const preview = document.getElementById('log-score-preview');
   if (!preview) return;
   if (type === 'FOR_TIME') {
@@ -2872,8 +2891,8 @@ async function computeAndSyncDailyActivity() {
     if (!currentUser) return;
     
     const allTimestamps = [];
-    lastWorkouts.forEach(w => allTimestamps.push(w.timestamp));
-    lastStructuredWorkouts.forEach(sw => allTimestamps.push(sw.timestamp));
+    state.data.lastWorkouts.forEach(w => allTimestamps.push(w.timestamp));
+    state.data.lastStructuredWorkouts.forEach(sw => allTimestamps.push(sw.timestamp));
     
     const activeDates = new Set();
     allTimestamps.forEach(ts => {
@@ -2916,7 +2935,7 @@ function calculateChallengeProgress() {
     const lifetimeActive = activeDates.size;
 
     // Add day0 offsets from onboarding
-    const day0 = userBiometrics?.day0TrainingDays || { monthly: 0, yearly: 0, lifetime: 0 };
+    const day0 = state.user.userBiometrics?.day0TrainingDays || { monthly: 0, yearly: 0, lifetime: 0 };
 
     return { monthly: monthlyActive + (day0.monthly || 0), yearly: yearlyActive + (day0.yearly || 0), lifetime: lifetimeActive + (day0.lifetime || 0) };
 }
@@ -3018,8 +3037,8 @@ async function updateChallengeStreaks(monthlyDone, yearlyDone) {
     const currentYear = String(now.getFullYear());
 
     let updated = false;
-    const monthly = { completedPeriods: [...userChallengeStreaks.monthly.completedPeriods], currentStreak: 0, bestStreak: userChallengeStreaks.monthly.bestStreak || 0 };
-    const yearly = { completedPeriods: [...userChallengeStreaks.yearly.completedPeriods], currentStreak: 0, bestStreak: userChallengeStreaks.yearly.bestStreak || 0 };
+    const monthly = { completedPeriods: [...state.user.userChallengeStreaks.monthly.completedPeriods], currentStreak: 0, bestStreak: state.user.userChallengeStreaks.monthly.bestStreak || 0 };
+    const yearly = { completedPeriods: [...state.user.userChallengeStreaks.yearly.completedPeriods], currentStreak: 0, bestStreak: state.user.userChallengeStreaks.yearly.bestStreak || 0 };
 
     if (monthlyDone && !monthly.completedPeriods.includes(currentMonth)) {
         monthly.completedPeriods.push(currentMonth);
@@ -3035,13 +3054,13 @@ async function updateChallengeStreaks(monthlyDone, yearlyDone) {
     monthly.bestStreak = Math.max(monthly.bestStreak, monthly.currentStreak);
     yearly.bestStreak = Math.max(yearly.bestStreak, yearly.currentStreak);
 
-    userChallengeStreaks = { monthly, yearly };
+    state.user.userChallengeStreaks = { monthly, yearly };
 
     renderStreakUI(monthly.currentStreak, yearly.currentStreak);
 
     if (updated) {
         try {
-            await setDoc(doc(db, "profiles", currentUser.uid), { challengeStreaks: userChallengeStreaks }, { merge: true });
+            await setDoc(doc(db, "profiles", currentUser.uid), { challengeStreaks: state.user.userChallengeStreaks }, { merge: true });
         } catch (e) {
             console.error('Failed to sync challenge streaks', e);
         }
@@ -3071,9 +3090,9 @@ function renderCalendar() {
 
     let html = '';
 
-    if (calendarCompact) {
+    if (state.calendar.compact) {
         const monday = getMonday(today);
-        monday.setDate(monday.getDate() + calendarWeekOffset * 7);
+        monday.setDate(monday.getDate() + state.calendar.weekOffset * 7);
         const sunday = new Date(monday);
         sunday.setDate(sunday.getDate() + 6);
 
@@ -3089,8 +3108,8 @@ function renderCalendar() {
             const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
             const isActive = activeDates.has(dateStr);
             const isToday = dateStr === todayStr;
-            const isSelected = calendarSelectedDate === dateStr;
-            const isThisMonth = date.getMonth() === calendarMonth.getMonth() && date.getFullYear() === calendarMonth.getFullYear();
+            const isSelected = state.calendar.selectedDate === dateStr;
+            const isThisMonth = date.getMonth() === state.calendar.month.getMonth() && date.getFullYear() === state.calendar.month.getFullYear();
 
             if (isThisMonth) {
                 let cls = 'cal-day';
@@ -3103,8 +3122,8 @@ function renderCalendar() {
             }
         }
     } else {
-        const year = calendarMonth.getFullYear();
-        const month = calendarMonth.getMonth();
+        const year = state.calendar.month.getFullYear();
+        const month = state.calendar.month.getMonth();
 
         label.textContent = `${monthNames[month]} ${year}`;
 
@@ -3122,7 +3141,7 @@ function renderCalendar() {
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             const isActive = activeDates.has(dateStr);
             const isToday = dateStr === todayStr;
-            const isSelected = calendarSelectedDate === dateStr;
+            const isSelected = state.calendar.selectedDate === dateStr;
 
             let cls = 'cal-day';
             if (isActive) cls += ' cal-day-active';
@@ -3213,15 +3232,15 @@ function getWorkoutsForDate(dateStr) {
         if (itemDate === dateStr) results.push(item);
     }
     
-    lastWorkouts.forEach(addIfMatches);
-    lastStructuredWorkouts.forEach(addIfMatches);
+    state.data.lastWorkouts.forEach(addIfMatches);
+    state.data.lastStructuredWorkouts.forEach(addIfMatches);
     
     results.sort((a, b) => a.timestamp - b.timestamp);
     return results;
 }
 
 function selectCalendarDay(dateStr) {
-    calendarSelectedDate = dateStr;
+    state.calendar.selectedDate = dateStr;
     renderCalendar();
     
     const detail = document.getElementById('cal-day-detail');
@@ -3305,15 +3324,15 @@ function changeCalendarNav(delta) {
 }
 
 function applyCalendarNav(delta) {
-    if (calendarCompact) {
-        calendarWeekOffset += delta;
+    if (state.calendar.compact) {
+        state.calendar.weekOffset += delta;
         const monday = getMonday(new Date());
-        monday.setDate(monday.getDate() + calendarWeekOffset * 7);
-        calendarMonth = new Date(monday);
+        monday.setDate(monday.getDate() + state.calendar.weekOffset * 7);
+        state.calendar.month = new Date(monday);
     } else {
-        calendarMonth.setMonth(calendarMonth.getMonth() + delta);
+        state.calendar.month.setMonth(state.calendar.month.getMonth() + delta);
     }
-    calendarSelectedDate = null;
+    state.calendar.selectedDate = null;
     const detail = document.getElementById('cal-day-detail');
     if (detail) detail.classList.add('hidden');
     autoSelectFirstActiveDay();
@@ -3323,15 +3342,15 @@ function autoSelectFirstActiveDay() {
     const activeDates = window.__irontrackActiveDates || new Set();
     if (activeDates.size === 0) return;
     let startDate, endDate;
-    if (calendarCompact) {
+    if (state.calendar.compact) {
         const monday = getMonday(new Date());
-        monday.setDate(monday.getDate() + calendarWeekOffset * 7);
+        monday.setDate(monday.getDate() + state.calendar.weekOffset * 7);
         startDate = new Date(monday);
         endDate = new Date(monday);
         endDate.setDate(endDate.getDate() + 6);
     } else {
-        const year = calendarMonth.getFullYear();
-        const month = calendarMonth.getMonth();
+        const year = state.calendar.month.getFullYear();
+        const month = state.calendar.month.getMonth();
         startDate = new Date(year, month, 1);
         endDate = new Date(year, month + 1, 0);
     }
@@ -3345,8 +3364,8 @@ function autoSelectFirstActiveDay() {
 }
 
 function goToCalendarToday() {
-    calendarWeekOffset = 0;
-    calendarMonth = new Date();
+    state.calendar.weekOffset = 0;
+    state.calendar.month = new Date();
     const now = new Date();
     const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     selectCalendarDay(todayStr);
@@ -3357,10 +3376,10 @@ function updateCalTodayBtnState() {
     if (!btn) return;
     const now = new Date();
     let isCurrent = false;
-    if (calendarCompact) {
-        isCurrent = calendarWeekOffset === 0;
+    if (state.calendar.compact) {
+        isCurrent = state.calendar.weekOffset === 0;
     } else {
-        isCurrent = calendarMonth.getFullYear() === now.getFullYear() && calendarMonth.getMonth() === now.getMonth();
+        isCurrent = state.calendar.month.getFullYear() === now.getFullYear() && state.calendar.month.getMonth() === now.getMonth();
     }
     if (isCurrent) {
         btn.className = 'btn-core is-ghost btn-size-row';
@@ -3372,23 +3391,23 @@ function updateCalTodayBtnState() {
 }
 
 function toggleCalendarView() {
-    calendarCompact = !calendarCompact;
-    if (calendarCompact) {
-        calendarWeekOffset = 0;
+    state.calendar.compact = !state.calendar.compact;
+    if (state.calendar.compact) {
+        state.calendar.weekOffset = 0;
         const monday = getMonday(new Date());
-        calendarMonth = new Date(monday);
+        state.calendar.month = new Date(monday);
     } else {
         const monday = getMonday(new Date());
-        monday.setDate(monday.getDate() + calendarWeekOffset * 7);
-        calendarMonth = new Date(monday);
+        monday.setDate(monday.getDate() + state.calendar.weekOffset * 7);
+        state.calendar.month = new Date(monday);
     }
     const btn = document.getElementById('cal-toggle-view');
-    if (btn) btn.textContent = calendarCompact ? 'Month View ▽' : 'Week View △';
+    if (btn) btn.textContent = state.calendar.compact ? 'Month View ▽' : 'Week View △';
     renderCalendar();
 }
 
 function closeCalendarDayDetail() {
-    calendarSelectedDate = null;
+    state.calendar.selectedDate = null;
     const detail = document.getElementById('cal-day-detail');
     if (detail) detail.classList.add('hidden');
     renderCalendar();
@@ -3408,7 +3427,7 @@ function listenToStructuredWorkouts(uid) {
       const timestamp = data.timestamp?.toMillis ? data.timestamp.toMillis() : data.timestamp;
       workouts.push({ id: doc.id, ...data, timestamp });
     });
-    lastStructuredWorkouts = workouts;
+    state.data.lastStructuredWorkouts = workouts;
     renderStructuredWorkoutHistory();
     debouncedSyncActivity();
   }, (error) => {
@@ -3564,7 +3583,7 @@ function renderStructuredWorkoutHistory() {
 
   const expandedIds = saveExpandedCardIds();
 
-  const workouts = lastStructuredWorkouts;
+  const workouts = state.data.lastStructuredWorkouts;
 
   if (!workouts.length) {
     container.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">No structured workouts logged yet.</p>';
@@ -3574,23 +3593,23 @@ function renderStructuredWorkoutHistory() {
 
   const perPage = 3;
   const totalPages = Math.max(1, Math.ceil(workouts.length / perPage));
-  structuredCurrentPage = Math.min(structuredCurrentPage, totalPages);
-  const start = (structuredCurrentPage - 1) * perPage;
+  state.pagination.structured = Math.min(state.pagination.structured, totalPages);
+  const start = (state.pagination.structured - 1) * perPage;
   const pageItems = workouts.slice(start, start + perPage);
 
   container.innerHTML = pageItems.map(renderStructuredWorkoutCard).join('');
   restoreExpandedCardIds(expandedIds);
   if (typeof lucide !== 'undefined') lucide.createIcons();
 
-  updatePagination('structured', structuredCurrentPage, totalPages);
+  updatePagination('structured', state.pagination.structured, totalPages);
 }
 
 function changeStructuredPage(direction) {
-  const totalPages = Math.max(1, Math.ceil(lastStructuredWorkouts.length / 3));
-  if (direction === 'prev' && structuredCurrentPage > 1) {
-    structuredCurrentPage--;
-  } else if (direction === 'next' && structuredCurrentPage < totalPages) {
-    structuredCurrentPage++;
+  const totalPages = Math.max(1, Math.ceil(state.data.lastStructuredWorkouts.length / 3));
+  if (direction === 'prev' && state.pagination.structured > 1) {
+    state.pagination.structured--;
+  } else if (direction === 'next' && state.pagination.structured < totalPages) {
+    state.pagination.structured++;
   }
   renderStructuredWorkoutHistory();
 }
@@ -3617,9 +3636,9 @@ function listenToPlans(uid) {
       plans.push({ id: doc.id, ...data, createdAt });
     });
     plans.sort((a, b) => b.createdAt - a.createdAt);
-    lastWorkoutPlans = plans;
-    if (plansFilter === 'mine') renderPlansUI();
-    if (plansFilter === 'favorites') renderSharedPlansUI();
+    state.data.lastWorkoutPlans = plans;
+    if (state.ui.plansFilter === 'mine') renderPlansUI();
+    if (state.ui.plansFilter === 'favorites') renderSharedPlansUI();
   }, (error) => {
     console.error('Plans stream error', error.code, error.message);
   });
@@ -3632,27 +3651,27 @@ function renderPlansUI() {
 
   const expandedIds = saveExpandedCardIds();
 
-  if (!lastWorkoutPlans.length) {
+  if (!state.data.lastWorkoutPlans.length) {
     container.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">No saved plans yet.</p>';
     if (pagination) pagination.classList.add('hidden');
     return;
   }
 
   const perPage = 3;
-  const totalPages = Math.max(1, Math.ceil(lastWorkoutPlans.length / perPage));
-  plansCurrentPage = Math.min(plansCurrentPage, totalPages);
-  const start = (plansCurrentPage - 1) * perPage;
-  const pageItems = lastWorkoutPlans.slice(start, start + perPage);
+  const totalPages = Math.max(1, Math.ceil(state.data.lastWorkoutPlans.length / perPage));
+  state.pagination.plans = Math.min(state.pagination.plans, totalPages);
+  const start = (state.pagination.plans - 1) * perPage;
+  const pageItems = state.data.lastWorkoutPlans.slice(start, start + perPage);
 
   container.innerHTML = pageItems.map(plan => renderPlanCard(plan)).join('');
   restoreExpandedCardIds(expandedIds);
   if (typeof lucide !== 'undefined') lucide.createIcons();
 
-  updatePagination('plans', plansCurrentPage, totalPages);
+  updatePagination('plans', state.pagination.plans, totalPages);
 }
 
 function switchPlansFilter(filter) {
-  plansFilter = filter;
+  state.ui.plansFilter = filter;
   const btnMine = document.getElementById('plans-filter-mine');
   const btnShared = document.getElementById('plans-filter-shared');
   const btnFavs = document.getElementById('plans-filter-favorites');
@@ -3684,11 +3703,11 @@ function switchPlansFilter(filter) {
 }
 
 function changePlansPage(direction) {
-  const totalPages = Math.max(1, Math.ceil(lastWorkoutPlans.length / 3));
-  if (direction === 'prev' && plansCurrentPage > 1) {
-    plansCurrentPage--;
-  } else if (direction === 'next' && plansCurrentPage < totalPages) {
-    plansCurrentPage++;
+  const totalPages = Math.max(1, Math.ceil(state.data.lastWorkoutPlans.length / 3));
+  if (direction === 'prev' && state.pagination.plans > 1) {
+    state.pagination.plans--;
+  } else if (direction === 'next' && state.pagination.plans < totalPages) {
+    state.pagination.plans++;
   }
   renderPlansUI();
 }
@@ -3764,7 +3783,7 @@ async function deleteStructuredWorkout(workoutId) {
 }
 
 function loadPlan(planId) {
-  const plan = lastWorkoutPlans.find(p => p.id === planId);
+  const plan = state.data.lastWorkoutPlans.find(p => p.id === planId);
   if (!plan) return;
 
   switchTab('calculator');
@@ -3790,7 +3809,7 @@ function loadPlan(planId) {
 }
 
 function redoWorkout(workoutId) {
-  const sw = lastStructuredWorkouts.find(w => w.id === workoutId);
+  const sw = state.data.lastStructuredWorkouts.find(w => w.id === workoutId);
   if (!sw) return;
 
   switchTab('calculator');
@@ -3822,7 +3841,7 @@ const WORKOUT_TYPE_TO_RESULT_ID = {
 };
 
 function formatMovementWeight(m) {
-  const oneRM = activeRecords[m.exerciseId || m.movement] || 0;
+  const oneRM = state.cache.activeRecords[m.exerciseId || m.movement] || 0;
   const reps = parseInt(m.reps, 10) || 1;
   if (m.weightMode === 'pct' && m.pct) {
     const computed = oneRM > 0 ? Math.round(oneRM * m.pct / 100) : m.weight;
@@ -3934,7 +3953,7 @@ function buildWorkoutSummaryLine(type, structure) {
 
 function setupTrainingTab(w) {
   const type = w.type;
-  pendingPlannedWorkout = w;
+  state.builder.pendingPlannedWorkout = w;
 
   const placeholder = document.getElementById('log-workout-placeholder');
   if (placeholder) placeholder.classList.add('hidden');
@@ -4014,7 +4033,7 @@ function doWorkout() {
 }
 
 function doStructuredWorkout(workoutId) {
-  const sw = lastStructuredWorkouts.find(w => w.id === workoutId);
+  const sw = state.data.lastStructuredWorkouts.find(w => w.id === workoutId);
   if (!sw) return;
   switchTab('training');
   setupTrainingTab({
@@ -4027,7 +4046,7 @@ function doStructuredWorkout(workoutId) {
 }
 
 function doPlanWorkout(planId) {
-  const plan = lastWorkoutPlans.find(p => p.id === planId);
+  const plan = state.data.lastWorkoutPlans.find(p => p.id === planId);
   if (!plan) return;
   switchTab('training');
   setupTrainingTab({
@@ -4040,7 +4059,7 @@ function doPlanWorkout(planId) {
 }
 
 function doSharedPlan(shareId) {
-  const share = lastSharedPlans.find(s => s.id === shareId);
+  const share = state.data.lastSharedPlans.find(s => s.id === shareId);
   if (!share || !share.content) return;
   const plan = share.content;
   switchTab('training');
@@ -4154,7 +4173,7 @@ async function submitIntervalWorkout(name, structure, now) {
 }
 
 function resetTrainingTab() {
-  pendingPlannedWorkout = null;
+  state.builder.pendingPlannedWorkout = null;
   const pwBadge = document.getElementById('log-workout-type-badge');
   if (pwBadge) { pwBadge.textContent = ''; pwBadge.style.display = 'none'; }
   const pwPlaceholder = document.getElementById('log-workout-placeholder');
@@ -4193,13 +4212,13 @@ function resetTrainingTab() {
 async function submitPendingWorkout() {
   if (isSubmittingWorkout) return;
   if (!currentUser) return alert('Please sign in first.');
-  if (!pendingPlannedWorkout) return showFeedback('No planned workout to log.', 'rose', 'log-workout-feedback');
+  if (!state.builder.pendingPlannedWorkout) return showFeedback('No planned workout to log.', 'rose', 'log-workout-feedback');
 
   const btn = document.getElementById('log-workout-btn');
   if (btn) btn.disabled = true;
   isSubmittingWorkout = true;
 
-  const { type, name, structure } = pendingPlannedWorkout;
+  const { type, name, structure } = state.builder.pendingPlannedWorkout;
   const now = Timestamp.now();
 
   try {
@@ -4233,7 +4252,7 @@ async function submitPendingWorkout() {
 
 function capturePlanStructure(type) {
   const getMovementsFromWorkout = () => {
-    return workoutMovements.map(m => ({
+    return state.builder.workoutMovements.map(m => ({
       movement: m.exerciseId,
       reps: m.reps,
       kg: m.weight,
@@ -4257,9 +4276,9 @@ function capturePlanStructure(type) {
       const intervalSeconds = intervalMin * 60 + intervalSec;
       let minutes;
       try { minutes = getEmomMovementData(); } catch (_) { minutes = []; }
-      const rounds = emomMode === 'by_round' ? minutes.length : parseInt(document.getElementById('emom-rounds')?.value, 10) || 0;
+      const rounds = state.builder.emomMode === 'by_round' ? minutes.length : parseInt(document.getElementById('emom-rounds')?.value, 10) || 0;
       const durationSeconds = rounds * intervalSeconds;
-      return { mode: emomMode, rounds, durationMinutes: Math.floor(durationSeconds / 60), intervalSeconds, minutes };
+      return { mode: state.builder.emomMode, rounds, durationMinutes: Math.floor(durationSeconds / 60), intervalSeconds, minutes };
     }
     case 'FOR_TIME': {
       const timeCap = parseInt(document.getElementById('fortime-cap')?.value, 10) || 0;
@@ -4278,12 +4297,8 @@ function capturePlanStructure(type) {
   }
 }
 
-let sharePlanId = null;
-let shareIsWorkout = false;
-let shareMode = 'friends'; // 'friends' | 'qr'
-
 function switchShareMode(mode) {
-  shareMode = mode;
+  state.share.shareMode = mode;
   const btnFriends = document.getElementById('share-mode-friends');
   const btnQR = document.getElementById('share-mode-qr');
   const friendsSection = document.getElementById('share-friends-section');
@@ -4310,26 +4325,26 @@ async function openShareModal(planId, isWorkout = false) {
   const feedback = document.getElementById('share-plan-feedback');
   if (!modal || !list) return;
 
-  sharePlanId = planId;
-  shareIsWorkout = isWorkout;
+  state.share.sharePlanId = planId;
+  state.share.shareIsWorkout = isWorkout;
   feedback.textContent = '';
 
   switchShareMode('qr');
   document.getElementById('share-qr-display').innerHTML = '';
   document.getElementById('share-select-all-container').classList.add('hidden');
-  if (!userFriendsList.length) {
+  if (!state.social.userFriendsList.length) {
     list.innerHTML = '<p class="text-xs text-slate-500 italic text-center py-2">No friends linked yet. Add friends in the Friends section first.</p>';
     modal.classList.remove('hidden');
     return;
   }
 
   const friendDocs = await Promise.allSettled(
-    userFriendsList.filter(fUid => !friendDisplayCache[fUid]).map(fUid => getProfileDocument(fUid))
+    state.social.userFriendsList.filter(fUid => !state.social.friendDisplayCache[fUid]).map(fUid => getProfileDocument(fUid))
   );
   friendDocs.forEach((result, i) => {
     if (result.status === 'fulfilled' && result.value.exists()) {
-      const uid = userFriendsList.filter(fUid => !friendDisplayCache[fUid])[i];
-      if (uid) friendDisplayCache[uid] = result.value.data();
+      const uid = state.social.userFriendsList.filter(fUid => !state.social.friendDisplayCache[fUid])[i];
+      if (uid) state.social.friendDisplayCache[uid] = result.value.data();
     }
   });
 
@@ -4337,8 +4352,8 @@ async function openShareModal(planId, isWorkout = false) {
   document.getElementById('share-select-all').checked = false;
 
   let html = '';
-  userFriendsList.forEach((fUid) => {
-    const fDoc = friendDisplayCache[fUid];
+  state.social.userFriendsList.forEach((fUid) => {
+    const fDoc = state.social.friendDisplayCache[fUid];
     const name = fDoc ? getDisplayName(fDoc, fUid) : fUid;
     html += `
       <label class="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-800 cursor-pointer">
@@ -4366,8 +4381,8 @@ async function shareWithFriends() {
   }
 
   let content;
-  if (shareIsWorkout) {
-    const workout = lastStructuredWorkouts.find(w => w.id === sharePlanId);
+  if (state.share.shareIsWorkout) {
+    const workout = state.data.lastStructuredWorkouts.find(w => w.id === state.share.sharePlanId);
     if (!workout) {
       feedback.textContent = 'Workout not found.';
       return;
@@ -4378,7 +4393,7 @@ async function shareWithFriends() {
       structure: workout.structure
     };
   } else {
-    const plan = lastWorkoutPlans.find(p => p.id === sharePlanId);
+    const plan = state.data.lastWorkoutPlans.find(p => p.id === state.share.sharePlanId);
     if (!plan) {
       feedback.textContent = 'Plan not found.';
       return;
@@ -4401,8 +4416,8 @@ async function shareWithFriends() {
         sharedBy: currentUser.uid,
         sharedByDisplayName: displayName,
         sharedWith: fUid,
-        planId: sharePlanId,
-        contentType: shareIsWorkout ? 'workout' : 'plan',
+        planId: state.share.sharePlanId,
+        contentType: state.share.shareIsWorkout ? 'workout' : 'plan',
         content,
         status: 'pending',
         createdAt: serverTimestamp()
@@ -4423,14 +4438,14 @@ async function shareByQR() {
   if (!qrDisplay) return;
 
   let plan;
-  if (shareIsWorkout) {
-    plan = lastStructuredWorkouts.find(w => w.id === sharePlanId);
+  if (state.share.shareIsWorkout) {
+    plan = state.data.lastStructuredWorkouts.find(w => w.id === state.share.sharePlanId);
     if (!plan) {
       feedback.textContent = 'Workout not found.';
       return;
     }
   } else {
-    plan = lastWorkoutPlans.find(p => p.id === sharePlanId);
+    plan = state.data.lastWorkoutPlans.find(p => p.id === state.share.sharePlanId);
     if (!plan) {
       feedback.textContent = 'Plan not found.';
       return;
@@ -4504,8 +4519,8 @@ function listenToSharedPlans(uid) {
       plans.push({ id: doc.id, ...data, createdAt });
     });
     plans.sort((a, b) => b.createdAt - a.createdAt);
-    lastSharedPlans = plans;
-    if (plansFilter === 'shared' || plansFilter === 'favorites') {
+    state.data.lastSharedPlans = plans;
+    if (state.ui.plansFilter === 'shared' || state.ui.plansFilter === 'favorites') {
       renderSharedPlansUI();
     }
   }, (error) => {
@@ -4521,10 +4536,10 @@ function renderSharedPlansUI() {
   const expandedIds = saveExpandedCardIds();
 
   let items = [];
-  if (plansFilter === 'favorites') {
-    const favoritedOwn = lastWorkoutPlans.filter(p => p.favorite === true).map(p => ({ type: 'own', plan: p }));
-    const favoritedShared = lastSharedPlans.filter(s => s.favorite === true).map(s => ({ type: 'shared', share: s }));
-    const favoritedStructured = lastStructuredWorkouts.filter(w => w.favorite === true).map(w => ({ type: 'structured', structured: w }));
+  if (state.ui.plansFilter === 'favorites') {
+    const favoritedOwn = state.data.lastWorkoutPlans.filter(p => p.favorite === true).map(p => ({ type: 'own', plan: p }));
+    const favoritedShared = state.data.lastSharedPlans.filter(s => s.favorite === true).map(s => ({ type: 'shared', share: s }));
+    const favoritedStructured = state.data.lastStructuredWorkouts.filter(w => w.favorite === true).map(w => ({ type: 'structured', structured: w }));
     items = [...favoritedOwn, ...favoritedShared, ...favoritedStructured];
     items.sort((a, b) => {
       const aDate = a.type === 'own' ? a.plan.createdAt : a.type === 'shared' ? a.share.createdAt : a.structured.timestamp;
@@ -4532,11 +4547,11 @@ function renderSharedPlansUI() {
       return (bDate || 0) - (aDate || 0);
     });
   } else {
-    items = lastSharedPlans.map(s => ({ type: 'shared', share: s }));
+    items = state.data.lastSharedPlans.map(s => ({ type: 'shared', share: s }));
   }
 
   if (!items.length) {
-    const msg = plansFilter === 'favorites'
+    const msg = state.ui.plansFilter === 'favorites'
       ? '<p class="text-xs text-slate-500 italic py-2 text-center">No favorited plans yet. Star a plan to add it here.</p>'
       : '<p class="text-xs text-slate-500 italic py-2 text-center">No shared plans yet.</p>';
     container.innerHTML = msg;
@@ -4546,8 +4561,8 @@ function renderSharedPlansUI() {
 
   const perPage = 3;
   const totalPages = Math.max(1, Math.ceil(items.length / perPage));
-  sharedPlansPage = Math.min(sharedPlansPage, totalPages);
-  const start = (sharedPlansPage - 1) * perPage;
+  state.pagination.sharedPlans = Math.min(state.pagination.sharedPlans, totalPages);
+  const start = (state.pagination.sharedPlans - 1) * perPage;
   const pageItems = items.slice(start, start + perPage);
 
   container.innerHTML = pageItems.map(item => {
@@ -4556,7 +4571,7 @@ function renderSharedPlansUI() {
   restoreExpandedCardIds(expandedIds);
   if (typeof lucide !== 'undefined') lucide.createIcons();
 
-  updatePagination('shared-plans', sharedPlansPage, totalPages);
+  updatePagination('shared-plans', state.pagination.sharedPlans, totalPages);
 }
 
 function renderSharedPlanCard(share) {
@@ -4593,18 +4608,18 @@ function renderSharedPlanCard(share) {
 }
 
 function changeSharedPlansPage(direction) {
-  const totalPages = Math.max(1, Math.ceil(lastSharedPlans.length / 3));
-  if (direction === 'prev' && sharedPlansPage > 1) {
-    sharedPlansPage--;
-  } else if (direction === 'next' && sharedPlansPage < totalPages) {
-    sharedPlansPage++;
+  const totalPages = Math.max(1, Math.ceil(state.data.lastSharedPlans.length / 3));
+  if (direction === 'prev' && state.pagination.sharedPlans > 1) {
+    state.pagination.sharedPlans--;
+  } else if (direction === 'next' && state.pagination.sharedPlans < totalPages) {
+    state.pagination.sharedPlans++;
   }
   renderSharedPlansUI();
 }
 
 async function saveSharedPlanToMyPlans(shareId) {
   if (!currentUser) return;
-  const share = lastSharedPlans.find(s => s.id === shareId);
+  const share = state.data.lastSharedPlans.find(s => s.id === shareId);
   if (!share) return;
 
   const planDoc = {
@@ -4648,7 +4663,7 @@ function updateStarIcon(id, isFav) {
 
 async function toggleFavorite(shareId) {
   if (!currentUser) return;
-  const share = lastSharedPlans.find(s => s.id === shareId);
+  const share = state.data.lastSharedPlans.find(s => s.id === shareId);
   if (!share) return;
   const newVal = !(share.favorite === true);
   share.favorite = newVal;
@@ -4656,7 +4671,7 @@ async function toggleFavorite(shareId) {
   try {
     await updateDoc(doc(db, "shared_plans", shareId), { favorite: newVal });
     haptic(HAPTIC.tap);
-    if (plansFilter === 'favorites') renderSharedPlansUI();
+    if (state.ui.plansFilter === 'favorites') renderSharedPlansUI();
   } catch (err) {
     share.favorite = !newVal;
     updateStarIcon(shareId, !newVal);
@@ -4666,7 +4681,7 @@ async function toggleFavorite(shareId) {
 
 async function togglePlanFavorite(planId) {
   if (!currentUser) return;
-  const plan = lastWorkoutPlans.find(p => p.id === planId);
+  const plan = state.data.lastWorkoutPlans.find(p => p.id === planId);
   if (!plan) return;
   const newVal = !(plan.favorite === true);
   plan.favorite = newVal;
@@ -4674,7 +4689,7 @@ async function togglePlanFavorite(planId) {
   try {
     await updateDoc(doc(db, "workout_plans", planId), { favorite: newVal });
     haptic(HAPTIC.tap);
-    if (plansFilter === 'favorites') renderSharedPlansUI();
+    if (state.ui.plansFilter === 'favorites') renderSharedPlansUI();
   } catch (err) {
     plan.favorite = !newVal;
     updateStarIcon(planId, !newVal);
@@ -4684,7 +4699,7 @@ async function togglePlanFavorite(planId) {
 
 async function toggleStructuredFavorite(swId) {
   if (!currentUser) return;
-  const sw = lastStructuredWorkouts.find(w => w.id === swId);
+  const sw = state.data.lastStructuredWorkouts.find(w => w.id === swId);
   if (!sw) return;
   const newVal = !(sw.favorite === true);
   sw.favorite = newVal;
@@ -4692,7 +4707,7 @@ async function toggleStructuredFavorite(swId) {
   try {
     await updateDoc(doc(db, "structured_workouts", swId), { favorite: newVal });
     haptic(HAPTIC.tap);
-    if (plansFilter === 'favorites') renderSharedPlansUI();
+    if (state.ui.plansFilter === 'favorites') renderSharedPlansUI();
   } catch (err) {
     sw.favorite = !newVal;
     updateStarIcon(swId, !newVal);
@@ -4701,7 +4716,7 @@ async function toggleStructuredFavorite(swId) {
 }
 
 function loadSharedPlan(shareId) {
-  const share = lastSharedPlans.find(s => s.id === shareId);
+  const share = state.data.lastSharedPlans.find(s => s.id === shareId);
   if (!share) return;
   const plan = share.content;
   if (!plan) return;
@@ -4865,19 +4880,19 @@ function renderLogs(workouts) {
         return;
     }
 
-    paginatedWorkouts = workouts;
+    state.data.paginatedWorkouts = workouts;
     const selected = workoutFilter ? workoutFilter.value : 'All';
 
-    paginatedWorkouts.forEach(workout => {
+    state.data.paginatedWorkouts.forEach(workout => {
         if (workout.source === 'structured' || workout.source === 'onboarding' || workout.source === 'pb-log') return;
         const load = getEffectiveLoad(workout);
-        workout._isPB = load >= (cachedMaxLoadByExercise[workout.exercise] || 0) && load > 0;
+        workout._isPB = load >= (state.cache.cachedMaxLoadByExercise[workout.exercise] || 0) && load > 0;
         const reps = parseInt(workout.reps, 10) || 1;
         const oneRM = Math.round(load * (1 + reps / 30));
-        workout._isMax1RM = oneRM >= (cachedMax1RMByExercise[workout.exercise] || 0) && oneRM > 0;
+        workout._isMax1RM = oneRM >= (state.cache.cachedMax1RMByExercise[workout.exercise] || 0) && oneRM > 0;
     });
 
-    let displayList = (selected === 'All') ? paginatedWorkouts : paginatedWorkouts.filter(w => w.exercise === selected);
+    let displayList = (selected === 'All') ? state.data.paginatedWorkouts : state.data.paginatedWorkouts.filter(w => w.exercise === selected);
 
     // Apply PB / 1RM chip filters if enabled (read state from DOM dataset)
     const chipPBActive = document.getElementById('chip-pb')?.dataset?.active === 'true';
@@ -4887,15 +4902,15 @@ function renderLogs(workouts) {
     }
 
     // Expose render debug info for testing
-    try { window.__lastRenderInfo = { chipPBActive, chip1RMActive, displayListLength: displayList.length, totalWorkouts: paginatedWorkouts.length }; } catch (e) {}
+    try { window.__lastRenderInfo = { chipPBActive, chip1RMActive, displayListLength: displayList.length, totalWorkouts: state.data.paginatedWorkouts.length }; } catch (e) {}
 
     const totalPages = Math.max(1, Math.ceil(displayList.length / entriesPerPage));
-    currentPage = Math.min(currentPage, totalPages);
-    let startIndex = (currentPage - 1) * entriesPerPage;
+    state.pagination.workouts = Math.min(state.pagination.workouts, totalPages);
+    let startIndex = (state.pagination.workouts - 1) * entriesPerPage;
     let pageItems = displayList.slice(startIndex, startIndex + entriesPerPage);
 
     if (!pageItems.length && displayList.length) {
-      currentPage = 1;
+      state.pagination.workouts = 1;
       startIndex = 0;
       pageItems = displayList.slice(0, entriesPerPage);
     }
@@ -4984,7 +4999,7 @@ function computeVolumeHistory(workouts, period, filterExercise) {
 
   if (period === 'daily') {
     const ref = new Date(now);
-    ref.setDate(ref.getDate() + volumePeriodOffset * 7);
+    ref.setDate(ref.getDate() + state.volume.offset * 7);
     const weekStart = getWeekStart(ref);
     for (let i = 0; i < 7; i++) {
       const d = new Date(weekStart);
@@ -4994,10 +5009,10 @@ function computeVolumeHistory(workouts, period, filterExercise) {
       const periodEnd = new Date(d);
       periodEnd.setHours(23, 59, 59, 999);
       const periodEndMs = periodEnd.getTime();
-      buckets[key] = { label: periodEndMs < userSignupTs ? '' : d.toLocaleDateString('en-US', { weekday: 'short' }), volume: 0, periodStart: periodStart.getTime(), periodEnd: periodEndMs };
+      buckets[key] = { label: periodEndMs < state.user.userSignupTs ? '' : d.toLocaleDateString('en-US', { weekday: 'short' }), volume: 0, periodStart: periodStart.getTime(), periodEnd: periodEndMs };
     }
   } else if (period === 'weekly') {
-    const monthRef = new Date(now.getFullYear(), now.getMonth() + volumePeriodOffset, 1);
+    const monthRef = new Date(now.getFullYear(), now.getMonth() + state.volume.offset, 1);
     const monthStart = monthRef;
     const monthEnd = new Date(monthRef.getFullYear(), monthRef.getMonth() + 1, 0, 23, 59, 59, 999);
     const firstWeekStart = getWeekStart(monthStart);
@@ -5007,29 +5022,29 @@ function computeVolumeHistory(workouts, period, filterExercise) {
       const weekEnd = getWeekEnd(cursor);
       const key = toLocalDateKey(cursor);
       const weekEndMs = weekEnd.getTime();
-      const label = weekEndMs < userSignupTs ? '' : cursor.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const label = weekEndMs < state.user.userSignupTs ? '' : cursor.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       buckets[key] = { label, volume: 0, weekStart: new Date(cursor), weekEnd: new Date(weekEnd), periodStart: cursor.getTime(), periodEnd: weekEndMs };
       cursor.setDate(cursor.getDate() + 7);
     }
   } else if (period === 'monthly') {
-    const year = now.getFullYear() + volumePeriodOffset;
+    const year = now.getFullYear() + state.volume.offset;
     const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     for (let i = 0; i < 12; i++) {
       const key = `${year}-${String(i + 1).padStart(2, '0')}`;
       const monthEnd = new Date(year, i + 1, 0, 23, 59, 59, 999);
       const monthStart = new Date(year, i, 1);
       const monthEndMs = monthEnd.getTime();
-      buckets[key] = { label: monthEndMs < userSignupTs ? '' : monthNames[i], volume: 0, periodStart: monthStart.getTime(), periodEnd: monthEndMs };
+      buckets[key] = { label: monthEndMs < state.user.userSignupTs ? '' : monthNames[i], volume: 0, periodStart: monthStart.getTime(), periodEnd: monthEndMs };
     }
   } else {
-    const baseYear = now.getFullYear() + volumePeriodOffset * 5;
+    const baseYear = now.getFullYear() + state.volume.offset * 5;
     for (let i = 0; i < 5; i++) {
       const yr = baseYear - 4 + i;
       const key = String(yr);
       const yearEnd = new Date(yr + 1, 0, 0, 23, 59, 59, 999);
       const yearStart = new Date(yr, 0, 1);
       const yearEndMs = yearEnd.getTime();
-      buckets[key] = { label: yearEndMs < userSignupTs ? '' : String(yr), volume: 0, periodStart: yearStart.getTime(), periodEnd: yearEndMs };
+      buckets[key] = { label: yearEndMs < state.user.userSignupTs ? '' : String(yr), volume: 0, periodStart: yearStart.getTime(), periodEnd: yearEndMs };
     }
   }
 
@@ -5046,7 +5061,7 @@ function computeVolumeHistory(workouts, period, filterExercise) {
 
     if (period === 'daily') {
       const ref = new Date(now);
-      ref.setDate(ref.getDate() + volumePeriodOffset * 7);
+      ref.setDate(ref.getDate() + state.volume.offset * 7);
       const weekStart = getWeekStart(ref);
       const weekEnd = getWeekEnd(ref);
       if (d < weekStart || d > weekEnd) return;
@@ -5063,14 +5078,14 @@ function computeVolumeHistory(workouts, period, filterExercise) {
         }
       }
     } else if (period === 'monthly') {
-      const year = now.getFullYear() + volumePeriodOffset;
+      const year = now.getFullYear() + state.volume.offset;
       if (d.getFullYear() !== year) return;
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
       if (buckets[key] !== undefined) {
         buckets[key].volume += volume;
       }
     } else {
-      const baseYear = now.getFullYear() + volumePeriodOffset * 5;
+      const baseYear = now.getFullYear() + state.volume.offset * 5;
       const startYear = baseYear - 4;
       const endYear = baseYear;
       if (d.getFullYear() < startYear || d.getFullYear() > endYear) return;
@@ -5111,7 +5126,7 @@ function renderVolumeHistory() {
   const rangeLabel = document.getElementById('vh-range-label');
   if (!inner) return;
 
-  if (!lastWorkouts || lastWorkouts.length === 0) {
+  if (!state.data.lastWorkouts || state.data.lastWorkouts.length === 0) {
     inner.innerHTML = '<p class="text-xs text-slate-500 italic py-8 text-center w-full">Log some workouts to see your volume history.</p>';
     if (totalEl) totalEl.textContent = '';
     if (rangeLabel) rangeLabel.textContent = '';
@@ -5120,10 +5135,10 @@ function renderVolumeHistory() {
   }
 
   if (rangeLabel) {
-    rangeLabel.textContent = formatRangeLabel(volumePeriod, volumePeriodOffset);
+    rangeLabel.textContent = formatRangeLabel(state.volume.period, state.volume.offset);
   }
 
-  const buckets = computeVolumeHistory(lastWorkouts, volumePeriod, volumeFilter);
+  const buckets = computeVolumeHistory(state.data.lastWorkouts, state.volume.period, state.volume.filter);
 
   const maxVolume = Math.max(...buckets.map(b => b.volume), 1);
   const totalVolume = buckets.reduce((sum, b) => sum + b.volume, 0);
@@ -5164,8 +5179,8 @@ function renderVolumeHistory() {
 }
 
 function switchVolumePeriod(period) {
-  volumePeriod = period;
-  volumePeriodOffset = 0;
+  state.volume.period = period;
+  state.volume.offset = 0;
 
   ['daily', 'weekly', 'monthly', 'yearly'].forEach(p => {
     const btn = document.getElementById(`vh-period-${p}`);
@@ -5180,7 +5195,7 @@ function switchVolumePeriod(period) {
 function shiftVolumePeriod(delta) {
   const inner = document.getElementById('vh-bars-inner');
   if (!inner) {
-    volumePeriodOffset += delta;
+    state.volume.offset += delta;
     renderVolumeHistory();
     return;
   }
@@ -5190,7 +5205,7 @@ function shiftVolumePeriod(delta) {
   inner.addEventListener('animationend', function handlerOut() {
     inner.removeEventListener('animationend', handlerOut);
     inner.classList.remove(outClass);
-    volumePeriodOffset += delta;
+    state.volume.offset += delta;
     renderVolumeHistory();
     inner.classList.add(inClass);
     inner.addEventListener('animationend', function handlerIn() {
@@ -5201,14 +5216,14 @@ function shiftVolumePeriod(delta) {
 }
 
 function goToCurrentPeriod() {
-  volumePeriodOffset = 0;
+  state.volume.offset = 0;
   renderVolumeHistory();
 }
 
 function updateTodayBtnState() {
   const btn = document.getElementById('vh-today');
   if (!btn) return;
-  if (volumePeriodOffset === 0) {
+  if (state.volume.offset === 0) {
     btn.className = 'btn-core is-ghost btn-size-row';
     btn.disabled = true;
   } else {
@@ -5230,16 +5245,16 @@ function populateVolumeFilter(exercises) {
   });
   if (currentVal && Array.from(select.options).some(o => o.value === currentVal)) {
     select.value = currentVal;
-    volumeFilter = currentVal;
+    state.volume.filter = currentVal;
   } else {
     select.value = 'All';
-    volumeFilter = 'All';
+    state.volume.filter = 'All';
   }
 }
 
 function onVolumeFilterChange() {
   const select = document.getElementById('vh-filter');
-  volumeFilter = select ? select.value : 'All';
+  state.volume.filter = select ? select.value : 'All';
   renderVolumeHistory();
 }
 
@@ -5255,7 +5270,7 @@ workoutForm.addEventListener('submit', async (e) => {
     const reps = parseInt(document.getElementById('log-set-reps').value, 10);
     const weight = parseFloat(document.getElementById('log-set-weight')?.value) || parseFloat(document.getElementById('log-set-bodyweight')?.value) || 0;
     const externalLoad = parseFloat(document.getElementById('log-set-ext-load')?.value) || 0;
-    const estimatedLoad = computeEffectiveLoad(exercise, weight, externalLoad, userBiometrics.bodyweight);
+    const estimatedLoad = computeEffectiveLoad(exercise, weight, externalLoad, state.user.userBiometrics.bodyweight);
     const totalVolume = estimatedLoad * reps * sets;
 
     let storedExercise = exercise;
@@ -5390,7 +5405,7 @@ if (shareCancelBtn) shareCancelBtn.addEventListener('click', () => {
   document.getElementById('share-plan-modal').classList.add('hidden');
   document.getElementById('share-plan-feedback').textContent = '';
   document.getElementById('share-qr-display').innerHTML = '';
-  sharePlanId = null;
+  state.share.sharePlanId = null;
 });
 
 // Shared Plans Pagination
@@ -5451,7 +5466,7 @@ async function initSocialProfile(user, dotsScore = 0) {
 
   unsubscribeProfile = onSnapshot(profileRef, (snapshot) => {
     const data = snapshot.data();
-    userFriendsList = Array.isArray(data?.friends) ? data.friends : [];
+    state.social.userFriendsList = Array.isArray(data?.friends) ? data.friends : [];
     renderActiveFriendsList();
     renderLeaderboardView();
   }, (error) => {
@@ -5494,7 +5509,7 @@ async function handleAddFriend() {
   if (targetUid === currentUser.uid) {
     return showFeedback("Can't link your own tag.", 'red', feedbackTarget);
   }
-  if (userFriendsList.includes(targetUid)) {
+  if (state.social.userFriendsList.includes(targetUid)) {
     return showFeedback("Friend already linked.", 'yellow', feedbackTarget);
   }
 
@@ -5538,7 +5553,7 @@ async function addFriendFromLeaderboard(friendUid) {
   if (!friendUid || friendUid === currentUser.uid) {
     return;
   }
-  if (userFriendsList.includes(friendUid)) {
+  if (state.social.userFriendsList.includes(friendUid)) {
     return showFeedback('Already connected with this athlete.', 'yellow');
   }
 
@@ -5567,7 +5582,7 @@ async function removeFriend(friendUid) {
   const currentUser = auth.currentUser;
   if (!currentUser) return showFeedback('Sign in to remove friends.', 'red');
   if (!friendUid) return;
-  if (!userFriendsList.includes(friendUid)) return showFeedback('Athlete not in your friend list.', 'yellow');
+  if (!state.social.userFriendsList.includes(friendUid)) return showFeedback('Athlete not in your friend list.', 'yellow');
 
   if (!confirm('Remove this friend from your list?')) return;
 
@@ -5576,7 +5591,7 @@ async function removeFriend(friendUid) {
       friends: arrayRemove(friendUid)
     });
 
-    userFriendsList = userFriendsList.filter(u => u !== friendUid);
+    state.social.userFriendsList = state.social.userFriendsList.filter(u => u !== friendUid);
     renderActiveFriendsList();
     syncLeaderboardFeed();
     showFeedback('Friend removed.', 'slate');
@@ -5592,7 +5607,7 @@ async function removeFriend(friendUid) {
 async function renderActiveFriendsList() {
   const container = document.getElementById('friendsListContainer');
   const pagination = document.getElementById('friends-pagination');
-  if (userFriendsList.length === 0) {
+  if (state.social.userFriendsList.length === 0) {
     container.innerHTML = `<p class="text-xs text-slate-500 italic">No allies linked yet. Share your Cyber-Tag!</p>`;
     if (pagination) pagination.classList.add('hidden');
     return;
@@ -5600,21 +5615,21 @@ async function renderActiveFriendsList() {
 
   try {
     const friendResults = await Promise.allSettled(
-      userFriendsList.map(fUid => getProfileDocument(fUid))
+      state.social.userFriendsList.map(fUid => getProfileDocument(fUid))
     );
 
-    friendDisplayCache = {};
+    state.social.friendDisplayCache = {};
     friendResults.forEach((result, i) => {
       if (result.status === 'fulfilled' && result.value.exists()) {
-        friendDisplayCache[userFriendsList[i]] = result.value.data();
+        state.social.friendDisplayCache[state.social.userFriendsList[i]] = result.value.data();
       }
     });
 
     const perPage = 3;
-    const totalPages = Math.max(1, Math.ceil(userFriendsList.length / perPage));
-    friendsPage = Math.min(friendsPage, totalPages);
-    const start = (friendsPage - 1) * perPage;
-    const pageItems = userFriendsList.slice(start, start + perPage);
+    const totalPages = Math.max(1, Math.ceil(state.social.userFriendsList.length / perPage));
+    state.pagination.friends = Math.min(state.pagination.friends, totalPages);
+    const start = (state.pagination.friends - 1) * perPage;
+    const pageItems = state.social.userFriendsList.slice(start, start + perPage);
 
     let html = '';
     pageItems.forEach((fUid, i) => {
@@ -5655,7 +5670,7 @@ async function renderActiveFriendsList() {
     container.innerHTML = html || `<p class="text-xs text-slate-500 italic">No valid allies found for the linked Cyber-Tags.</p>`;
     if (typeof lucide !== 'undefined') lucide.createIcons();
 
-    updatePagination('friends', friendsPage, totalPages);
+    updatePagination('friends', state.pagination.friends, totalPages);
   } catch (error) {
     console.error('Active friends render failed', error.code, error.message);
     container.innerHTML = `<p class="text-xs text-red-400">Failed to render active grid context. Check Firestore rules for profiles.</p>`;
@@ -5663,11 +5678,11 @@ async function renderActiveFriendsList() {
 }
 
 function changeFriendsPage(direction) {
-  const totalPages = Math.max(1, Math.ceil(userFriendsList.length / 3));
-  if (direction === 'prev' && friendsPage > 1) {
-    friendsPage--;
-  } else if (direction === 'next' && friendsPage < totalPages) {
-    friendsPage++;
+  const totalPages = Math.max(1, Math.ceil(state.social.userFriendsList.length / 3));
+  if (direction === 'prev' && state.pagination.friends > 1) {
+    state.pagination.friends--;
+  } else if (direction === 'next' && state.pagination.friends < totalPages) {
+    state.pagination.friends++;
   }
   renderActiveFriendsList();
 }
@@ -5676,7 +5691,7 @@ function changeFriendsPage(direction) {
  * Manage Global vs Friends Leaderboard UI Toggles
  */
 function switchLeaderboardScope(scope) {
-  currentScope = scope; //
+  state.social.currentScope = scope; //
   const btnGlobal = document.getElementById('btnGlobalBoard'); //
   const btnFriends = document.getElementById('btnFriendsBoard'); //
 
@@ -5694,7 +5709,7 @@ function switchLeaderboardScope(scope) {
  * Build a single leaderboard row HTML
  */
 function buildLeaderboardRow(profile, rank, isMe, isFriend) {
-  const rawScore = currentFormula === 'dots' ? profile.dotsScore : (profile.sinclairScore || 0);
+  const rawScore = state.social.currentFormula === 'dots' ? profile.dotsScore : (profile.sinclairScore || 0);
   const displayScore = formatDotsScore(rawScore);
   const badgeBaseClasses = 'inline-flex items-center justify-center rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider';
   const actionCell = isMe
@@ -5724,7 +5739,7 @@ function buildLeaderboardRow(profile, rank, isMe, isFriend) {
  * Toggle leaderboard between compact and show-all modes
  */
 function toggleLeaderboardExpand() {
-  leaderboardShowAll = !leaderboardShowAll;
+  state.social.leaderboardShowAll = !state.social.leaderboardShowAll;
   renderLeaderboardView();
 }
 
@@ -5738,18 +5753,18 @@ function renderLeaderboardView() {
   const currentUser = auth.currentUser;
 
   const filtered = [];
-  leaderboardCache.forEach(profile => {
+  state.social.leaderboardCache.forEach(profile => {
     const isMe = currentUser && profile.uid === currentUser.uid;
-    const isFriend = userFriendsList.includes(profile.uid);
+    const isFriend = state.social.userFriendsList.includes(profile.uid);
 
-    if (currentScope === 'friends' && !isMe && !isFriend) {
+    if (state.social.currentScope === 'friends' && !isMe && !isFriend) {
       return;
     }
 
     filtered.push({ profile, isMe, isFriend });
   });
 
-  if (!leaderboardShowAll && filtered.length > 0) {
+  if (!state.social.leaderboardShowAll && filtered.length > 0) {
     const meIdx = filtered.findIndex(f => f.isMe);
     let sliceStart, sliceEnd;
 
@@ -5782,8 +5797,8 @@ function renderLeaderboardView() {
     if (typeof lucide !== 'undefined') lucide.createIcons();
 
     if (expandBtn) {
-      expandBtn.classList.toggle('hidden', filtered.length <= 3 || !leaderboardShowAll);
-      if (leaderboardShowAll) {
+      expandBtn.classList.toggle('hidden', filtered.length <= 3 || !state.social.leaderboardShowAll);
+      if (state.social.leaderboardShowAll) {
         expandBtn.textContent = 'Show Compact';
       } else {
         expandBtn.textContent = 'Show All';
@@ -5801,14 +5816,14 @@ function syncLeaderboardFeed() {
     leaderboardUnsubscribe = null;
   }
 
-  const sortField = currentFormula === 'dots' ? "dotsScore" : "sinclairScore";
+  const sortField = state.social.currentFormula === 'dots' ? "dotsScore" : "sinclairScore";
 
   const leaderboardQuery = query(collection(db, "profiles"), orderBy(sortField, "desc"), limit(50));
   
   leaderboardUnsubscribe = onSnapshot(leaderboardQuery, (snapshot) => {
-    leaderboardCache = [];
+    state.social.leaderboardCache = [];
     snapshot.forEach((doc) => {
-      leaderboardCache.push(doc.data());
+      state.social.leaderboardCache.push(doc.data());
     });
     renderLeaderboardView();
   }, (error) => {
@@ -5821,7 +5836,7 @@ function syncLeaderboardFeed() {
  * Manage DOTS vs Sinclair Leaderboard Metric System Toggles
  */
 function switchLeaderboardFormula(formula) {
-  currentFormula = formula;
+  state.social.currentFormula = formula;
   
   const btnDots = document.getElementById('btnFormulaDots');
   const btnSinclair = document.getElementById('btnFormulaSinclair');
@@ -5974,7 +5989,7 @@ async function processFriendRequest(friendId) {
     if (!currentUser || friendId === currentUser.uid) return;
 
     // Check if already friends to prevent unnecessary updates
-    if (userFriendsList.includes(friendId)) {
+    if (state.social.userFriendsList.includes(friendId)) {
         console.log("Friend already linked.");
         return;
     }
