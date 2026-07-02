@@ -2019,6 +2019,22 @@ async function writeStructuredLogEntry({ workoutId, movement, sets, totalReps, e
     weight = movement.weight || 0;
   }
 
+  if (movement.weightMode === 'pct' && movement.pct) {
+    const oneRM = activeRecords[movement.exerciseId] || 0;
+    if (oneRM > 0) {
+      estimatedLoad = Math.round(oneRM * movement.pct / 100);
+      weight = estimatedLoad;
+    }
+  } else if (movement.weightMode === 'rpe' && movement.rpe) {
+    const oneRM = activeRecords[movement.exerciseId] || 0;
+    if (oneRM > 0) {
+      const rir = 10 - movement.rpe;
+      const totalRepsPossible = movement.reps + rir;
+      estimatedLoad = Math.round(oneRM / (1 + totalRepsPossible / 30));
+      weight = estimatedLoad;
+    }
+  }
+
   const totalVolume = estimatedLoad * totalReps;
 
   console.log(`[contrib] writeStructuredLogEntry: exercise=${movement.exerciseId}, sets=${sets}, reps=${movement.reps}, totalReps=${totalReps}, weight=${weight}, estimatedLoad=${estimatedLoad}, totalVolume=${totalVolume}, source=structured`);
