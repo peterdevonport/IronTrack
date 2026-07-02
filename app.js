@@ -1283,10 +1283,10 @@ function processWorkoutSnapshot(docs, getEffectiveLoad, estimate1RM) {
 }
 
 function updateCaches(processed) {
-  state.cache.activeRecords = processed.state.cache.activeRecords;
-  state.cache.cachedMaxLoadByExercise = processed.state.cache.cachedMaxLoadByExercise;
-  state.cache.cachedMax1RMByExercise = processed.state.cache.cachedMax1RMByExercise;
-  state.cache.cachedMaxRepsByExercise = processed.state.cache.cachedMaxRepsByExercise;
+  state.cache.activeRecords = processed.activeRecords;
+  state.cache.cachedMaxLoadByExercise = processed.cachedMaxLoadByExercise;
+  state.cache.cachedMax1RMByExercise = processed.cachedMax1RMByExercise;
+  state.cache.cachedMaxRepsByExercise = processed.cachedMaxRepsByExercise;
   
   state.data.lastWorkouts = processed.workouts;
   window.__lastWorkouts = state.data.lastWorkouts;
