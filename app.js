@@ -3159,21 +3159,6 @@ async function computeAndSyncDailyActivity() {
     
     window.__irontrackActiveDates = activeDates;
     
-    const writes = [];
-    activeDates.forEach(dateStr => {
-        writes.push(setDoc(doc(db, "daily_activity", `${currentUser.uid}_${dateStr}`), {
-            userId: currentUser.uid,
-            date: dateStr,
-            hasWorkout: true,
-            totalDuration: 0
-        }, { merge: true }));
-    });
-    
-    try {
-        await Promise.all(writes);
-    } catch (e) {
-        if (e.code !== 'permission-denied') console.error('Daily activity sync error', e);
-    }
     renderConsistencyUI();
 }
 
