@@ -4656,6 +4656,7 @@ async function toggleFavorite(shareId) {
   try {
     await updateDoc(doc(db, "shared_plans", shareId), { favorite: newVal });
     haptic(HAPTIC.tap);
+    if (plansFilter === 'favorites') renderSharedPlansUI();
   } catch (err) {
     share.favorite = !newVal;
     updateStarIcon(shareId, !newVal);
@@ -4673,6 +4674,7 @@ async function togglePlanFavorite(planId) {
   try {
     await updateDoc(doc(db, "workout_plans", planId), { favorite: newVal });
     haptic(HAPTIC.tap);
+    if (plansFilter === 'favorites') renderSharedPlansUI();
   } catch (err) {
     plan.favorite = !newVal;
     updateStarIcon(planId, !newVal);
@@ -4690,6 +4692,7 @@ async function toggleStructuredFavorite(swId) {
   try {
     await updateDoc(doc(db, "structured_workouts", swId), { favorite: newVal });
     haptic(HAPTIC.tap);
+    if (plansFilter === 'favorites') renderSharedPlansUI();
   } catch (err) {
     sw.favorite = !newVal;
     updateStarIcon(swId, !newVal);
