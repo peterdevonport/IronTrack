@@ -36,7 +36,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed so OpenCode can use the 'gh' CLI tool
         with:
           model: opencode-go/qwen3.7-plus
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          use_github_token: true
           prompt: |
             You are an elite Staff Engineer executing an automated Code Smell and Architectural Review.
             Analyze the git diff of this Pull Request. Focus heavily on identifying technical debt and design anti-patterns.
