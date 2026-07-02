@@ -2035,6 +2035,9 @@ async function writeStructuredLogEntry({ workoutId, movement, sets, totalReps, e
     timestamp: Timestamp.now(),
     source: 'structured',
     workoutId,
+    weightMode: movement.weightMode || 'absolute',
+    pct: movement.pct || null,
+    rpe: movement.rpe || null,
     ...extraFields,
     totalWorkReps: totalReps
   };
@@ -3512,11 +3515,19 @@ function selectCalendarDay(dateStr) {
             const sets = item.sets || 1;
             const oneRM = Math.round(load * (1 + reps / 30));
             const repDisplay = item.partialReps ? `${sets} × ${reps} + ${item.partialReps} reps` : `${sets} × ${reps}`;
+            let loadDisplay;
+            if (item.weightMode === 'pct' && item.pct) {
+                loadDisplay = `${item.pct}% @ ${Math.round(load)}kg`;
+            } else if (item.weightMode === 'rpe' && item.rpe) {
+                loadDisplay = `RPE ${item.rpe} @ ${Math.round(load)}kg`;
+            } else {
+                loadDisplay = `${Math.round(load)}kg`;
+            }
             return `
 <div class="bg-slate-900 border border-slate-700 rounded-xl p-2.5">
     <div class="flex justify-between items-center">
         <span class="text-emerald-300 font-bold text-xs uppercase tracking-wider">${escapeHtml(item.exercise)}</span>
-        <span class="text-slate-200 font-mono text-xs">${repDisplay} @ ${Math.round(load)}kg</span>
+        <span class="text-slate-200 font-mono text-xs">${repDisplay} @ ${loadDisplay}</span>
     </div>
     <p class="text-slate-500 text-[10px] font-mono mt-0.5">Est. 1RM: ${oneRM}kg</p>
 </div>`;
