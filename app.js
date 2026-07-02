@@ -3618,7 +3618,7 @@ function listenToPlans(uid) {
     });
     plans.sort((a, b) => b.createdAt - a.createdAt);
     lastWorkoutPlans = plans;
-    renderPlansUI();
+    if (plansFilter === 'mine') renderPlansUI();
     if (plansFilter === 'favorites') renderSharedPlansUI();
   }, (error) => {
     console.error('Plans stream error', error.code, error.message);
