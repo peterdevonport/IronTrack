@@ -353,15 +353,29 @@ function getExerciseInfo(name) {
   return EXERCISE_CATALOG.find(ex => ex.name === name) || { category: 'barbell', type: 'weighted' };
 }
 
+function computeEffectiveLoad(exercise, weight, externalLoad, bodyweight) {
+  const loadFactor = LOAD_FACTORS[exercise];
+  if (loadFactor !== undefined) {
+    return (bodyweight || 0) * loadFactor + (externalLoad || 0);
+  }
+  return weight || 0;
+}
+
+function estimate1RM(load, reps) {
+  if (reps === 1) return load;
+  return load * (1 + reps / 30);
+}
+
 function getEffectiveLoad(workout) {
   if (workout.estimatedLoad !== undefined && workout.estimatedLoad !== null) {
     return workout.estimatedLoad;
   }
-  const loadFactor = LOAD_FACTORS[workout.exercise];
-  if (loadFactor !== undefined) {
-    return (userBiometrics.bodyweight || 0) * loadFactor + (parseFloat(workout.externalLoad) || 0);
-  }
-  return parseFloat(workout.weight) || 0;
+  return computeEffectiveLoad(
+    workout.exercise,
+    parseFloat(workout.weight),
+    parseFloat(workout.externalLoad),
+    userBiometrics.bodyweight
+  );
 }
 
 function updatePagination(name, currentPage, totalPages) {
@@ -950,17 +964,18 @@ async function logPB() {
     }
     const schemaKey = getSchemaKey(exercise);
     let weight, externalLoad = 0, estimatedLoad;
+    const bw = userBiometrics.bodyweight || 0;
     if (schemaKey === 'bodyweight') {
-      weight = parseFloat(document.getElementById('pb-bodyweight')?.value) || userBiometrics.bodyweight || 0;
-      estimatedLoad = (userBiometrics.bodyweight || 0) * (LOAD_FACTORS[exercise] || 1);
+      weight = parseFloat(document.getElementById('pb-bodyweight')?.value) || bw;
+      estimatedLoad = computeEffectiveLoad(exercise, weight, 0, bw);
     } else if (schemaKey === 'weighted') {
-      weight = parseFloat(document.getElementById('pb-bodyweight')?.value) || userBiometrics.bodyweight || 0;
+      weight = parseFloat(document.getElementById('pb-bodyweight')?.value) || bw;
       externalLoad = parseFloat(document.getElementById('pb-ext-load')?.value) || 0;
-      estimatedLoad = (userBiometrics.bodyweight || 0) * (LOAD_FACTORS[exercise] || 1) + externalLoad;
+      estimatedLoad = computeEffectiveLoad(exercise, weight, externalLoad, bw);
       weight += externalLoad;
     } else {
       weight = parseFloat(document.getElementById('pb-weight')?.value);
-      estimatedLoad = weight;
+      estimatedLoad = computeEffectiveLoad(exercise, weight, 0, bw);
     }
     const reps = parseInt(document.getElementById('pb-reps')?.value, 10) || 1;
 
@@ -1233,7 +1248,7 @@ function listenToDataStream(uid) {
             // Epley 1RM Estimation Formula using effective load
             const effectiveWeight = getEffectiveLoad(workout);
             const reps = parseInt(data.reps, 10);
-            const calculated1RM = reps === 1 ? effectiveWeight : effectiveWeight * (1 + reps / 30);
+            const calculated1RM = estimate1RM(effectiveWeight, reps);
 
             if (!activeRecords[data.exercise] || calculated1RM > activeRecords[data.exercise]) {
                 activeRecords[data.exercise] = calculated1RM;
@@ -2017,10 +2032,10 @@ async function writeStructuredLogEntry({ workoutId, movement, sets, totalReps, e
   let weight = 0;
 
   if (loadFactor !== undefined) {
-    estimatedLoad = bw * loadFactor;
+    estimatedLoad = computeEffectiveLoad(movement.exerciseId, bw, 0, bw);
     weight = bw;
   } else {
-    estimatedLoad = movement.weight || 0;
+    estimatedLoad = computeEffectiveLoad(movement.exerciseId, movement.weight, 0, bw);
     weight = movement.weight || 0;
   }
 
@@ -3534,7 +3549,7 @@ function selectCalendarDay(dateStr) {
             const load = getEffectiveLoad(item);
             const reps = parseInt(item.reps, 10) || 1;
             const sets = item.sets || 1;
-            const oneRM = Math.round(load * (1 + reps / 30));
+            const oneRM = Math.round(estimate1RM(load, reps));
             const repDisplay = item.partialReps ? `${sets} × ${reps} + ${item.partialReps} reps` : `${sets} × ${reps}`;
             let loadDisplay;
             if (item.weightMode === 'pct' && item.pct) {
@@ -5631,11 +5646,7 @@ workoutForm.addEventListener('submit', async (e) => {
     const reps = parseInt(document.getElementById('log-set-reps').value, 10);
     const weight = parseFloat(document.getElementById('log-set-weight')?.value) || parseFloat(document.getElementById('log-set-bodyweight')?.value) || 0;
     const externalLoad = parseFloat(document.getElementById('log-set-ext-load')?.value) || 0;
-    const loadFactor = LOAD_FACTORS[exercise];
-    let estimatedLoad = weight;
-    if (loadFactor !== undefined) {
-        estimatedLoad = (userBiometrics.bodyweight || 0) * loadFactor + externalLoad;
-    }
+    const estimatedLoad = computeEffectiveLoad(exercise, weight, externalLoad, userBiometrics.bodyweight);
     const totalVolume = estimatedLoad * reps * sets;
 
     let storedExercise = exercise;
