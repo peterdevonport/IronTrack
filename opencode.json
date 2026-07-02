@@ -3,7 +3,7 @@
   "model": "deepseek/deepseek-v4-flash",
   "agent": {
     "plan": {
-      "model": "opencode-go/qwen3.7-plus"
+      "model": "opencode-go/mimo-v2.5"
     },
     "build": {
       "model": "opencode-go/deepseek-v4-flash"
