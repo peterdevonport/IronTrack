@@ -1,31 +1,35 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { renderFromWorkouts } from './functions.js';
 
 describe('renderFromWorkouts', () => {
+  let functions;
+
   beforeEach(() => {
-    // Reset mocks
-    populateWorkoutFilter.mockClear();
-    populateVolumeFilter.mockClear();
-    update1RMRegistryUI.mockClear();
-    updateCalcCard.mockClear();
-    processAnalytics.mockClear();
-    renderLogs.mockClear();
-    renderVolumeHistory.mockClear();
-    debouncedSyncActivity.mockClear();
+    functions = {
+      populateWorkoutFilter: vi.fn(),
+      populateVolumeFilter: vi.fn(),
+      update1RMRegistryUI: vi.fn(),
+      updateCalcCard: vi.fn(),
+      processAnalytics: vi.fn(),
+      renderLogs: vi.fn(),
+      renderVolumeHistory: vi.fn(),
+      debouncedSyncActivity: vi.fn()
+    };
   });
 
   it('calls all render functions', () => {
     const workouts = [{ id: 'w1', exercise: 'Back Squat' }];
 
-    renderFromWorkouts(workouts);
+    renderFromWorkouts(workouts, functions);
 
-    expect(populateWorkoutFilter).toHaveBeenCalledWith(['Back Squat']);
-    expect(populateVolumeFilter).toHaveBeenCalledWith(['Back Squat']);
-    expect(update1RMRegistryUI).toHaveBeenCalled();
-    expect(updateCalcCard).toHaveBeenCalled();
-    expect(processAnalytics).toHaveBeenCalled();
-    expect(renderLogs).toHaveBeenCalledWith(workouts);
-    expect(renderVolumeHistory).toHaveBeenCalled();
-    expect(debouncedSyncActivity).toHaveBeenCalled();
+    expect(functions.populateWorkoutFilter).toHaveBeenCalledWith(['Back Squat']);
+    expect(functions.populateVolumeFilter).toHaveBeenCalledWith(['Back Squat']);
+    expect(functions.update1RMRegistryUI).toHaveBeenCalled();
+    expect(functions.updateCalcCard).toHaveBeenCalled();
+    expect(functions.processAnalytics).toHaveBeenCalled();
+    expect(functions.renderLogs).toHaveBeenCalledWith(workouts);
+    expect(functions.renderVolumeHistory).toHaveBeenCalled();
+    expect(functions.debouncedSyncActivity).toHaveBeenCalled();
   });
 
   it('extracts unique exercises from workouts', () => {
@@ -36,32 +40,32 @@ describe('renderFromWorkouts', () => {
       { id: 'w4', exercise: 'Deadlift' }
     ];
 
-    renderFromWorkouts(workouts);
+    renderFromWorkouts(workouts, functions);
 
-    expect(populateWorkoutFilter).toHaveBeenCalledWith(['Back Squat', 'Bench Press', 'Deadlift']);
-    expect(populateVolumeFilter).toHaveBeenCalledWith(['Back Squat', 'Bench Press', 'Deadlift']);
+    expect(functions.populateWorkoutFilter).toHaveBeenCalledWith(['Back Squat', 'Bench Press', 'Deadlift']);
+    expect(functions.populateVolumeFilter).toHaveBeenCalledWith(['Back Squat', 'Bench Press', 'Deadlift']);
   });
 
   it('handles empty workouts array', () => {
-    renderFromWorkouts([]);
+    renderFromWorkouts([], functions);
 
-    expect(populateWorkoutFilter).toHaveBeenCalledWith([]);
-    expect(populateVolumeFilter).toHaveBeenCalledWith([]);
-    expect(renderLogs).toHaveBeenCalledWith([]);
+    expect(functions.populateWorkoutFilter).toHaveBeenCalledWith([]);
+    expect(functions.populateVolumeFilter).toHaveBeenCalledWith([]);
+    expect(functions.renderLogs).toHaveBeenCalledWith([]);
   });
 
   it('handles errors in populateWorkoutFilter gracefully', () => {
-    populateWorkoutFilter.mockImplementation(() => { throw new Error('Test error'); });
+    functions.populateWorkoutFilter.mockImplementation(() => { throw new Error('Test error'); });
 
-    expect(() => renderFromWorkouts([])).not.toThrow();
-    expect(renderLogs).toHaveBeenCalled();
+    expect(() => renderFromWorkouts([], functions)).not.toThrow();
+    expect(functions.renderLogs).toHaveBeenCalled();
   });
 
   it('handles errors in populateVolumeFilter gracefully', () => {
-    populateVolumeFilter.mockImplementation(() => { throw new Error('Test error'); });
+    functions.populateVolumeFilter.mockImplementation(() => { throw new Error('Test error'); });
 
-    expect(() => renderFromWorkouts([])).not.toThrow();
-    expect(renderLogs).toHaveBeenCalled();
+    expect(() => renderFromWorkouts([], functions)).not.toThrow();
+    expect(functions.renderLogs).toHaveBeenCalled();
   });
 
   it('passes workouts to renderLogs', () => {
@@ -70,24 +74,24 @@ describe('renderFromWorkouts', () => {
       { id: 'w2', exercise: 'Bench Press', weight: 80, reps: 3 }
     ];
 
-    renderFromWorkouts(workouts);
+    renderFromWorkouts(workouts, functions);
 
-    expect(renderLogs).toHaveBeenCalledWith(workouts);
-    expect(renderLogs).toHaveBeenCalledTimes(1);
+    expect(functions.renderLogs).toHaveBeenCalledWith(workouts);
+    expect(functions.renderLogs).toHaveBeenCalledTimes(1);
   });
 
   it('calls render functions in correct order', () => {
     const callOrder = [];
-    populateWorkoutFilter.mockImplementation(() => callOrder.push('populateWorkoutFilter'));
-    populateVolumeFilter.mockImplementation(() => callOrder.push('populateVolumeFilter'));
-    update1RMRegistryUI.mockImplementation(() => callOrder.push('update1RMRegistryUI'));
-    updateCalcCard.mockImplementation(() => callOrder.push('updateCalcCard'));
-    processAnalytics.mockImplementation(() => callOrder.push('processAnalytics'));
-    renderLogs.mockImplementation(() => callOrder.push('renderLogs'));
-    renderVolumeHistory.mockImplementation(() => callOrder.push('renderVolumeHistory'));
-    debouncedSyncActivity.mockImplementation(() => callOrder.push('debouncedSyncActivity'));
+    functions.populateWorkoutFilter.mockImplementation(() => callOrder.push('populateWorkoutFilter'));
+    functions.populateVolumeFilter.mockImplementation(() => callOrder.push('populateVolumeFilter'));
+    functions.update1RMRegistryUI.mockImplementation(() => callOrder.push('update1RMRegistryUI'));
+    functions.updateCalcCard.mockImplementation(() => callOrder.push('updateCalcCard'));
+    functions.processAnalytics.mockImplementation(() => callOrder.push('processAnalytics'));
+    functions.renderLogs.mockImplementation(() => callOrder.push('renderLogs'));
+    functions.renderVolumeHistory.mockImplementation(() => callOrder.push('renderVolumeHistory'));
+    functions.debouncedSyncActivity.mockImplementation(() => callOrder.push('debouncedSyncActivity'));
 
-    renderFromWorkouts([]);
+    renderFromWorkouts([], functions);
 
     expect(callOrder).toEqual([
       'populateWorkoutFilter',
@@ -108,22 +112,22 @@ describe('renderFromWorkouts', () => {
       { id: 'w3', exercise: 'Deadlift' }
     ];
 
-    renderFromWorkouts(workouts);
+    renderFromWorkouts(workouts, functions);
 
     // Should include undefined in the unique exercises
-    expect(populateWorkoutFilter).toHaveBeenCalled();
+    expect(functions.populateWorkoutFilter).toHaveBeenCalled();
   });
 
   it('continues rendering even if populateWorkoutFilter throws', () => {
-    populateWorkoutFilter.mockImplementation(() => { throw new Error('Filter error'); });
+    functions.populateWorkoutFilter.mockImplementation(() => { throw new Error('Filter error'); });
 
-    renderFromWorkouts([{ id: 'w1', exercise: 'Back Squat' }]);
+    renderFromWorkouts([{ id: 'w1', exercise: 'Back Squat' }], functions);
 
-    expect(update1RMRegistryUI).toHaveBeenCalled();
-    expect(updateCalcCard).toHaveBeenCalled();
-    expect(processAnalytics).toHaveBeenCalled();
-    expect(renderLogs).toHaveBeenCalled();
-    expect(renderVolumeHistory).toHaveBeenCalled();
-    expect(debouncedSyncActivity).toHaveBeenCalled();
+    expect(functions.update1RMRegistryUI).toHaveBeenCalled();
+    expect(functions.updateCalcCard).toHaveBeenCalled();
+    expect(functions.processAnalytics).toHaveBeenCalled();
+    expect(functions.renderLogs).toHaveBeenCalled();
+    expect(functions.renderVolumeHistory).toHaveBeenCalled();
+    expect(functions.debouncedSyncActivity).toHaveBeenCalled();
   });
 });

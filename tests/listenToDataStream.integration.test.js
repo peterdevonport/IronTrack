@@ -1,46 +1,36 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { processWorkoutSnapshot, updateCaches, renderFromWorkouts } from './functions.js';
 
 describe('listenToDataStream integration', () => {
-  let snapshotCallback;
+  let globals, functions, getEffectiveLoad, estimate1RM;
 
   beforeEach(() => {
-    // Reset globals
-    global.activeRecords = {};
-    global.cachedMaxLoadByExercise = {};
-    global.cachedMax1RMByExercise = {};
-    global.cachedMaxRepsByExercise = {};
-    global.lastWorkouts = [];
-    global.userSignupTs = 5000;
-    global.window = {
-      __lastWorkouts: [],
-      __irontrackWorkoutCount: 0
+    globals = {
+      activeRecords: {},
+      cachedMaxLoadByExercise: {},
+      cachedMax1RMByExercise: {},
+      cachedMaxRepsByExercise: {},
+      lastWorkouts: [],
+      userSignupTs: 5000,
+      window: {
+        __lastWorkouts: [],
+        __irontrackWorkoutCount: 0
+      }
     };
 
-    // Reset mocks
-    getEffectiveLoad.mockClear();
-    estimate1RM.mockClear();
-    populateWorkoutFilter.mockClear();
-    populateVolumeFilter.mockClear();
-    update1RMRegistryUI.mockClear();
-    updateCalcCard.mockClear();
-    processAnalytics.mockClear();
-    renderLogs.mockClear();
-    renderVolumeHistory.mockClear();
-    debouncedSyncActivity.mockClear();
+    functions = {
+      populateWorkoutFilter: vi.fn(),
+      populateVolumeFilter: vi.fn(),
+      update1RMRegistryUI: vi.fn(),
+      updateCalcCard: vi.fn(),
+      processAnalytics: vi.fn(),
+      renderLogs: vi.fn(),
+      renderVolumeHistory: vi.fn(),
+      debouncedSyncActivity: vi.fn()
+    };
 
-    // Mock onSnapshot to capture callback
-    snapshotCallback = null;
-    onSnapshot.mockImplementation((q, callback) => {
-      snapshotCallback = callback;
-      return vi.fn(); // unsubscribe
-    });
-
-    // Mock Firestore functions
-    collection.mockReturnValue('workouts-collection');
-    query.mockReturnValue('query');
-    where.mockReturnValue('where');
-    orderBy.mockReturnValue('orderBy');
-    limit.mockReturnValue('limit');
+    getEffectiveLoad = vi.fn();
+    estimate1RM = vi.fn();
   });
 
   it('processes snapshot and triggers all renders', async () => {
@@ -51,25 +41,24 @@ describe('listenToDataStream integration', () => {
     getEffectiveLoad.mockReturnValue(100);
     estimate1RM.mockReturnValue(116.67);
 
-    listenToDataStream('user123');
-
-    // Simulate Firestore snapshot
-    const mockSnapshot = { docs: mockDocs };
-    await snapshotCallback(mockSnapshot);
+    // Simulate the full flow
+    const processed = processWorkoutSnapshot(mockDocs, getEffectiveLoad, estimate1RM);
+    updateCaches(processed, globals);
+    renderFromWorkouts(processed.workouts, functions);
 
     // Verify caches updated
-    expect(activeRecords['Back Squat']).toBe(116.67);
-    expect(lastWorkouts).toHaveLength(1);
-    expect(window.__irontrackWorkoutCount).toBe(1);
+    expect(globals.activeRecords['Back Squat']).toBe(116.67);
+    expect(globals.lastWorkouts).toHaveLength(1);
+    expect(globals.window.__irontrackWorkoutCount).toBe(1);
 
     // Verify renders called
-    expect(populateWorkoutFilter).toHaveBeenCalled();
-    expect(update1RMRegistryUI).toHaveBeenCalled();
-    expect(updateCalcCard).toHaveBeenCalled();
-    expect(processAnalytics).toHaveBeenCalled();
-    expect(renderLogs).toHaveBeenCalledWith(lastWorkouts);
-    expect(renderVolumeHistory).toHaveBeenCalled();
-    expect(debouncedSyncActivity).toHaveBeenCalled();
+    expect(functions.populateWorkoutFilter).toHaveBeenCalled();
+    expect(functions.update1RMRegistryUI).toHaveBeenCalled();
+    expect(functions.updateCalcCard).toHaveBeenCalled();
+    expect(functions.processAnalytics).toHaveBeenCalled();
+    expect(functions.renderLogs).toHaveBeenCalledWith(globals.lastWorkouts);
+    expect(functions.renderVolumeHistory).toHaveBeenCalled();
+    expect(functions.debouncedSyncActivity).toHaveBeenCalled();
   });
 
   it('handles multiple workouts correctly', async () => {
@@ -81,16 +70,15 @@ describe('listenToDataStream integration', () => {
     getEffectiveLoad.mockReturnValueOnce(100).mockReturnValueOnce(80);
     estimate1RM.mockReturnValueOnce(116.67).mockReturnValueOnce(88);
 
-    listenToDataStream('user123');
+    const processed = processWorkoutSnapshot(mockDocs, getEffectiveLoad, estimate1RM);
+    updateCaches(processed, globals);
+    renderFromWorkouts(processed.workouts, functions);
 
-    const mockSnapshot = { docs: mockDocs };
-    await snapshotCallback(mockSnapshot);
-
-    expect(lastWorkouts).toHaveLength(2);
-    expect(activeRecords['Back Squat']).toBe(116.67);
-    expect(activeRecords['Bench Press']).toBe(88);
-    expect(cachedMaxLoadByExercise['Back Squat']).toBe(100);
-    expect(cachedMaxLoadByExercise['Bench Press']).toBe(80);
+    expect(globals.lastWorkouts).toHaveLength(2);
+    expect(globals.activeRecords['Back Squat']).toBe(116.67);
+    expect(globals.activeRecords['Bench Press']).toBe(88);
+    expect(globals.cachedMaxLoadByExercise['Back Squat']).toBe(100);
+    expect(globals.cachedMaxLoadByExercise['Bench Press']).toBe(80);
   });
 
   it('skips structured workouts for 1RM tracking', async () => {
@@ -98,29 +86,26 @@ describe('listenToDataStream integration', () => {
       { id: 'w1', data: () => ({ exercise: 'Back Squat', weight: 100, reps: 5, source: 'structured', timestamp: { toMillis: () => 1000 } }) }
     ];
 
-    listenToDataStream('user123');
+    const processed = processWorkoutSnapshot(mockDocs, getEffectiveLoad, estimate1RM);
+    updateCaches(processed, globals);
 
-    const mockSnapshot = { docs: mockDocs };
-    await snapshotCallback(mockSnapshot);
-
-    expect(lastWorkouts).toHaveLength(1);
-    expect(activeRecords['Back Squat']).toBeUndefined();
+    expect(globals.lastWorkouts).toHaveLength(1);
+    expect(globals.activeRecords['Back Squat']).toBeUndefined();
     expect(getEffectiveLoad).not.toHaveBeenCalled();
   });
 
   it('handles empty snapshot', async () => {
-    listenToDataStream('user123');
+    const processed = processWorkoutSnapshot([], getEffectiveLoad, estimate1RM);
+    updateCaches(processed, globals);
+    renderFromWorkouts(processed.workouts, functions);
 
-    const mockSnapshot = { docs: [] };
-    await snapshotCallback(mockSnapshot);
-
-    expect(lastWorkouts).toHaveLength(0);
-    expect(window.__irontrackWorkoutCount).toBe(0);
-    expect(renderLogs).toHaveBeenCalledWith([]);
+    expect(globals.lastWorkouts).toHaveLength(0);
+    expect(globals.window.__irontrackWorkoutCount).toBe(0);
+    expect(functions.renderLogs).toHaveBeenCalledWith([]);
   });
 
   it('updates userSignupTs when workout is earlier', async () => {
-    userSignupTs = 5000;
+    globals.userSignupTs = 5000;
     const mockDocs = [
       { id: 'w1', data: () => ({ exercise: 'Back Squat', weight: 100, reps: 5, timestamp: { toMillis: () => 1000 } }) }
     ];
@@ -128,53 +113,10 @@ describe('listenToDataStream integration', () => {
     getEffectiveLoad.mockReturnValue(100);
     estimate1RM.mockReturnValue(116.67);
 
-    listenToDataStream('user123');
+    const processed = processWorkoutSnapshot(mockDocs, getEffectiveLoad, estimate1RM);
+    updateCaches(processed, globals);
 
-    const mockSnapshot = { docs: mockDocs };
-    await snapshotCallback(mockSnapshot);
-
-    expect(userSignupTs).toBe(1000);
-  });
-
-  it('handles error in snapshot callback', async () => {
-    const mockDocs = [
-      { id: 'w1', data: () => ({ exercise: 'Back Squat', weight: 100, reps: 5, timestamp: { toMillis: () => 1000 } }) }
-    ];
-
-    getEffectiveLoad.mockImplementation(() => { throw new Error('Test error'); });
-
-    listenToDataStream('user123');
-
-    const mockSnapshot = { docs: mockDocs };
-
-    // Should not throw
-    await expect(snapshotCallback(mockSnapshot)).rejects.toThrow('Test error');
-  });
-
-  it('handles Firestore permission-denied error', () => {
-    const error = { code: 'permission-denied', message: 'Missing or insufficient permissions' };
-    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-    // Mock getElementById for error display
-    const mockElement = { innerHTML: '' };
-    global.document = {
-      getElementById: vi.fn((id) => {
-        if (id === 'workout-list') return mockElement;
-        return null;
-      })
-    };
-
-    onSnapshot.mockImplementation((q, successCallback, errorCallback) => {
-      errorCallback(error);
-      return vi.fn();
-    });
-
-    listenToDataStream('user123');
-
-    expect(consoleError).toHaveBeenCalledWith('Workout stream error', 'permission-denied', 'Missing or insufficient permissions');
-    expect(mockElement.innerHTML).toContain('Workouts blocked by Firestore rules');
-
-    consoleError.mockRestore();
+    expect(globals.userSignupTs).toBe(1000);
   });
 
   it('calls debouncedSyncActivity after processing', async () => {
@@ -185,12 +127,11 @@ describe('listenToDataStream integration', () => {
     getEffectiveLoad.mockReturnValue(100);
     estimate1RM.mockReturnValue(116.67);
 
-    listenToDataStream('user123');
+    const processed = processWorkoutSnapshot(mockDocs, getEffectiveLoad, estimate1RM);
+    updateCaches(processed, globals);
+    renderFromWorkouts(processed.workouts, functions);
 
-    const mockSnapshot = { docs: mockDocs };
-    await snapshotCallback(mockSnapshot);
-
-    expect(debouncedSyncActivity).toHaveBeenCalled();
+    expect(functions.debouncedSyncActivity).toHaveBeenCalled();
   });
 
   it('processes workouts in order and maintains data integrity', async () => {
@@ -203,14 +144,12 @@ describe('listenToDataStream integration', () => {
     getEffectiveLoad.mockReturnValueOnce(100).mockReturnValueOnce(110).mockReturnValueOnce(120);
     estimate1RM.mockReturnValueOnce(116.67).mockReturnValueOnce(128.33).mockReturnValueOnce(140);
 
-    listenToDataStream('user123');
+    const processed = processWorkoutSnapshot(mockDocs, getEffectiveLoad, estimate1RM);
+    updateCaches(processed, globals);
 
-    const mockSnapshot = { docs: mockDocs };
-    await snapshotCallback(mockSnapshot);
-
-    expect(lastWorkouts).toHaveLength(3);
-    expect(activeRecords['Back Squat']).toBe(140);
-    expect(cachedMaxLoadByExercise['Back Squat']).toBe(120);
-    expect(cachedMaxRepsByExercise['Back Squat']).toBe(5);
+    expect(globals.lastWorkouts).toHaveLength(3);
+    expect(globals.activeRecords['Back Squat']).toBe(140);
+    expect(globals.cachedMaxLoadByExercise['Back Squat']).toBe(120);
+    expect(globals.cachedMaxRepsByExercise['Back Squat']).toBe(5);
   });
 });

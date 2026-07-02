@@ -1,17 +1,21 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+import { updateCaches } from './functions.js';
 
 describe('updateCaches', () => {
+  let globals;
+
   beforeEach(() => {
-    // Reset globals
-    global.activeRecords = {};
-    global.cachedMaxLoadByExercise = {};
-    global.cachedMax1RMByExercise = {};
-    global.cachedMaxRepsByExercise = {};
-    global.lastWorkouts = [];
-    global.userSignupTs = 5000;
-    global.window = {
-      __lastWorkouts: [],
-      __irontrackWorkoutCount: 0
+    globals = {
+      activeRecords: {},
+      cachedMaxLoadByExercise: {},
+      cachedMax1RMByExercise: {},
+      cachedMaxRepsByExercise: {},
+      lastWorkouts: [],
+      userSignupTs: 5000,
+      window: {
+        __lastWorkouts: [],
+        __irontrackWorkoutCount: 0
+      }
     };
   });
 
@@ -24,19 +28,19 @@ describe('updateCaches', () => {
       cachedMaxRepsByExercise: { 'Back Squat': 5 }
     };
 
-    updateCaches(processed);
+    updateCaches(processed, globals);
 
-    expect(activeRecords).toEqual(processed.activeRecords);
-    expect(cachedMaxLoadByExercise).toEqual(processed.cachedMaxLoadByExercise);
-    expect(cachedMax1RMByExercise).toEqual(processed.cachedMax1RMByExercise);
-    expect(cachedMaxRepsByExercise).toEqual(processed.cachedMaxRepsByExercise);
-    expect(lastWorkouts).toEqual(processed.workouts);
-    expect(window.__lastWorkouts).toEqual(processed.workouts);
-    expect(window.__irontrackWorkoutCount).toBe(1);
+    expect(globals.activeRecords).toEqual(processed.activeRecords);
+    expect(globals.cachedMaxLoadByExercise).toEqual(processed.cachedMaxLoadByExercise);
+    expect(globals.cachedMax1RMByExercise).toEqual(processed.cachedMax1RMByExercise);
+    expect(globals.cachedMaxRepsByExercise).toEqual(processed.cachedMaxRepsByExercise);
+    expect(globals.lastWorkouts).toEqual(processed.workouts);
+    expect(globals.window.__lastWorkouts).toEqual(processed.workouts);
+    expect(globals.window.__irontrackWorkoutCount).toBe(1);
   });
 
   it('updates userSignupTs if workout is earlier', () => {
-    userSignupTs = 5000;
+    globals.userSignupTs = 5000;
     const processed = {
       workouts: [{ id: 'w1', timestamp: 1000 }],
       activeRecords: {},
@@ -45,13 +49,13 @@ describe('updateCaches', () => {
       cachedMaxRepsByExercise: {}
     };
 
-    updateCaches(processed);
+    updateCaches(processed, globals);
 
-    expect(userSignupTs).toBe(1000);
+    expect(globals.userSignupTs).toBe(1000);
   });
 
   it('does not update userSignupTs if workout is later', () => {
-    userSignupTs = 1000;
+    globals.userSignupTs = 1000;
     const processed = {
       workouts: [{ id: 'w1', timestamp: 5000 }],
       activeRecords: {},
@@ -60,13 +64,13 @@ describe('updateCaches', () => {
       cachedMaxRepsByExercise: {}
     };
 
-    updateCaches(processed);
+    updateCaches(processed, globals);
 
-    expect(userSignupTs).toBe(1000);
+    expect(globals.userSignupTs).toBe(1000);
   });
 
   it('does not update userSignupTs if no workouts', () => {
-    userSignupTs = 1000;
+    globals.userSignupTs = 1000;
     const processed = {
       workouts: [],
       activeRecords: {},
@@ -75,13 +79,13 @@ describe('updateCaches', () => {
       cachedMaxRepsByExercise: {}
     };
 
-    updateCaches(processed);
+    updateCaches(processed, globals);
 
-    expect(userSignupTs).toBe(1000);
+    expect(globals.userSignupTs).toBe(1000);
   });
 
   it('handles multiple workouts and finds earliest', () => {
-    userSignupTs = 5000;
+    globals.userSignupTs = 5000;
     const processed = {
       workouts: [
         { id: 'w1', timestamp: 3000 },
@@ -94,9 +98,9 @@ describe('updateCaches', () => {
       cachedMaxRepsByExercise: {}
     };
 
-    updateCaches(processed);
+    updateCaches(processed, globals);
 
-    expect(userSignupTs).toBe(1000);
+    expect(globals.userSignupTs).toBe(1000);
   });
 
   it('sets window.__irontrackWorkoutCount correctly', () => {
@@ -112,14 +116,14 @@ describe('updateCaches', () => {
       cachedMaxRepsByExercise: {}
     };
 
-    updateCaches(processed);
+    updateCaches(processed, globals);
 
-    expect(window.__irontrackWorkoutCount).toBe(3);
+    expect(globals.window.__irontrackWorkoutCount).toBe(3);
   });
 
   it('overwrites previous cache values', () => {
-    activeRecords = { 'Old Exercise': 100 };
-    cachedMaxLoadByExercise = { 'Old Exercise': 80 };
+    globals.activeRecords = { 'Old Exercise': 100 };
+    globals.cachedMaxLoadByExercise = { 'Old Exercise': 80 };
 
     const processed = {
       workouts: [{ id: 'w1', timestamp: 1000 }],
@@ -129,14 +133,14 @@ describe('updateCaches', () => {
       cachedMaxRepsByExercise: { 'Back Squat': 5 }
     };
 
-    updateCaches(processed);
+    updateCaches(processed, globals);
 
-    expect(activeRecords).toEqual({ 'Back Squat': 116.67 });
-    expect(activeRecords['Old Exercise']).toBeUndefined();
+    expect(globals.activeRecords).toEqual({ 'Back Squat': 116.67 });
+    expect(globals.activeRecords['Old Exercise']).toBeUndefined();
   });
 
   it('handles zero timestamp correctly', () => {
-    userSignupTs = 5000;
+    globals.userSignupTs = 5000;
     const processed = {
       workouts: [{ id: 'w1', timestamp: 0 }],
       activeRecords: {},
@@ -145,9 +149,9 @@ describe('updateCaches', () => {
       cachedMaxRepsByExercise: {}
     };
 
-    updateCaches(processed);
+    updateCaches(processed, globals);
 
     // Should not update because earliestTs is 0, which is not > 0
-    expect(userSignupTs).toBe(5000);
+    expect(globals.userSignupTs).toBe(5000);
   });
 });

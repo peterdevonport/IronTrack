@@ -1,10 +1,12 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { processWorkoutSnapshot } from './functions.js';
 
 describe('processWorkoutSnapshot', () => {
+  let getEffectiveLoad, estimate1RM;
+
   beforeEach(() => {
-    // Reset mocks
-    getEffectiveLoad.mockClear();
-    estimate1RM.mockClear();
+    getEffectiveLoad = vi.fn();
+    estimate1RM = vi.fn();
   });
 
   it('extracts workout data from Firestore docs', () => {
@@ -13,7 +15,7 @@ describe('processWorkoutSnapshot', () => {
       { id: 'w2', data: () => ({ exercise: 'Bench Press', weight: 80, reps: 3, timestamp: { toMillis: () => 2000 } }) }
     ];
 
-    const result = processWorkoutSnapshot(mockDocs);
+    const result = processWorkoutSnapshot(mockDocs, getEffectiveLoad, estimate1RM);
 
     expect(result.workouts).toHaveLength(2);
     expect(result.workouts[0].id).toBe('w1');
@@ -30,7 +32,7 @@ describe('processWorkoutSnapshot', () => {
     getEffectiveLoad.mockReturnValue(100);
     estimate1RM.mockReturnValue(116.67);
 
-    const result = processWorkoutSnapshot(mockDocs);
+    const result = processWorkoutSnapshot(mockDocs, getEffectiveLoad, estimate1RM);
 
     expect(getEffectiveLoad).toHaveBeenCalled();
     expect(estimate1RM).toHaveBeenCalledWith(100, 5);
@@ -42,7 +44,7 @@ describe('processWorkoutSnapshot', () => {
       { id: 'w1', data: () => ({ exercise: 'Back Squat', weight: 100, reps: 5, source: 'structured', timestamp: { toMillis: () => 1000 } }) }
     ];
 
-    const result = processWorkoutSnapshot(mockDocs);
+    const result = processWorkoutSnapshot(mockDocs, getEffectiveLoad, estimate1RM);
 
     expect(result.workouts).toHaveLength(1);
     expect(result.activeRecords['Back Squat']).toBeUndefined();
@@ -58,7 +60,7 @@ describe('processWorkoutSnapshot', () => {
     getEffectiveLoad.mockReturnValueOnce(100).mockReturnValueOnce(120);
     estimate1RM.mockReturnValueOnce(116.67).mockReturnValueOnce(132);
 
-    const result = processWorkoutSnapshot(mockDocs);
+    const result = processWorkoutSnapshot(mockDocs, getEffectiveLoad, estimate1RM);
 
     expect(result.cachedMaxLoadByExercise['Back Squat']).toBe(120);
   });
@@ -72,7 +74,7 @@ describe('processWorkoutSnapshot', () => {
     getEffectiveLoad.mockReturnValueOnce(100).mockReturnValueOnce(90);
     estimate1RM.mockReturnValueOnce(116.67).mockReturnValueOnce(93);
 
-    const result = processWorkoutSnapshot(mockDocs);
+    const result = processWorkoutSnapshot(mockDocs, getEffectiveLoad, estimate1RM);
 
     expect(result.cachedMax1RMByExercise['Back Squat']).toBe(116.67);
   });
@@ -86,13 +88,13 @@ describe('processWorkoutSnapshot', () => {
     getEffectiveLoad.mockReturnValue(100);
     estimate1RM.mockReturnValue(116.67);
 
-    const result = processWorkoutSnapshot(mockDocs);
+    const result = processWorkoutSnapshot(mockDocs, getEffectiveLoad, estimate1RM);
 
     expect(result.cachedMaxRepsByExercise['Back Squat']).toBe(10);
   });
 
   it('handles empty snapshot', () => {
-    const result = processWorkoutSnapshot([]);
+    const result = processWorkoutSnapshot([], getEffectiveLoad, estimate1RM);
 
     expect(result.workouts).toHaveLength(0);
     expect(result.activeRecords).toEqual({});
@@ -109,7 +111,7 @@ describe('processWorkoutSnapshot', () => {
     getEffectiveLoad.mockReturnValue(0);
     estimate1RM.mockReturnValue(0);
 
-    const result = processWorkoutSnapshot(mockDocs);
+    const result = processWorkoutSnapshot(mockDocs, getEffectiveLoad, estimate1RM);
 
     expect(result.workouts).toHaveLength(1);
     expect(result.activeRecords['Back Squat']).toBe(0);
@@ -124,7 +126,7 @@ describe('processWorkoutSnapshot', () => {
     getEffectiveLoad.mockReturnValueOnce(100).mockReturnValueOnce(80);
     estimate1RM.mockReturnValueOnce(116.67).mockReturnValueOnce(88);
 
-    const result = processWorkoutSnapshot(mockDocs);
+    const result = processWorkoutSnapshot(mockDocs, getEffectiveLoad, estimate1RM);
 
     expect(result.activeRecords['Back Squat']).toBe(116.67);
     expect(result.activeRecords['Bench Press']).toBe(88);
@@ -141,7 +143,7 @@ describe('processWorkoutSnapshot', () => {
     getEffectiveLoad.mockReturnValueOnce(100).mockReturnValueOnce(110);
     estimate1RM.mockReturnValueOnce(116.67).mockReturnValueOnce(128.33);
 
-    const result = processWorkoutSnapshot(mockDocs);
+    const result = processWorkoutSnapshot(mockDocs, getEffectiveLoad, estimate1RM);
 
     expect(result.activeRecords['Back Squat']).toBe(128.33);
   });
@@ -155,7 +157,7 @@ describe('processWorkoutSnapshot', () => {
     getEffectiveLoad.mockReturnValueOnce(100).mockReturnValueOnce(90);
     estimate1RM.mockReturnValueOnce(116.67).mockReturnValueOnce(105);
 
-    const result = processWorkoutSnapshot(mockDocs);
+    const result = processWorkoutSnapshot(mockDocs, getEffectiveLoad, estimate1RM);
 
     expect(result.activeRecords['Back Squat']).toBe(116.67);
   });
