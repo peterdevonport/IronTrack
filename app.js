@@ -2285,6 +2285,43 @@ function togglePlanWms(el) {
   }
 }
 
+function previewPctMode(pct, oneRM, calcSpan, addBtn) {
+  if (!isNaN(pct) && pct > 0) {
+    const calculated = Math.round(oneRM * pct / 100);
+    calcSpan.textContent = '\u2192 ' + calculated + ' kg';
+    calcSpan.className = 'text-emerald-400 font-mono text-xs';
+    return true;
+  }
+  calcSpan.textContent = '\u2192';
+  calcSpan.className = 'text-emerald-400 font-mono text-xs';
+  return false;
+}
+
+function previewRpeMode(rpe, reps, oneRM, calcSpan) {
+  if (!isNaN(rpe) && rpe >= 1 && rpe <= 10 && reps && reps >= 1) {
+    const rir = 10 - rpe;
+    const totalRepsPossible = reps + rir;
+    const targetWeight = Math.round(oneRM / (1 + totalRepsPossible / 30));
+    calcSpan.textContent = '\u2192 ' + targetWeight + ' kg';
+    calcSpan.className = 'text-emerald-400 font-mono text-xs';
+    return true;
+  }
+  calcSpan.textContent = '\u2192';
+  calcSpan.className = 'text-emerald-400 font-mono text-xs';
+  return false;
+}
+
+function previewAbsoluteMode(kg, calcSpan) {
+  if (kg > 0) {
+    calcSpan.textContent = '\u2192 ' + kg + ' kg';
+    calcSpan.className = 'text-emerald-400 font-mono text-xs';
+    return true;
+  }
+  calcSpan.textContent = '\u2192';
+  calcSpan.className = 'text-emerald-400 font-mono text-xs';
+  return false;
+}
+
 function updatePlanCalcPreview() {
   const exercise = document.getElementById('plan-exercise')?.value;
   const reps = parseInt(document.getElementById('plan-reps')?.value, 10);
@@ -2317,40 +2354,13 @@ function updatePlanCalcPreview() {
 
   let valid = false;
   if (mode === 'pct') {
-    const pct = parseFloat(weightInput.value);
-    if (!isNaN(pct) && pct > 0) {
-      const calculated = Math.round(oneRM * pct / 100);
-      calcSpan.textContent = '\u2192 ' + calculated + ' kg';
-      calcSpan.className = 'text-emerald-400 font-mono text-xs';
-      valid = true;
-    } else {
-      calcSpan.textContent = '\u2192';
-      calcSpan.className = 'text-emerald-400 font-mono text-xs';
-    }
+    valid = previewPctMode(parseFloat(weightInput.value), oneRM, calcSpan, addBtn);
   } else if (mode === 'rpe') {
-    const rpe = parseFloat(weightInput.value);
-    if (!isNaN(rpe) && rpe >= 1 && rpe <= 10 && reps && reps >= 1) {
-      const rir = 10 - rpe;
-      const totalRepsPossible = reps + rir;
-      const targetWeight = Math.round(oneRM / (1 + totalRepsPossible / 30));
-      calcSpan.textContent = '\u2192 ' + targetWeight + ' kg';
-      calcSpan.className = 'text-emerald-400 font-mono text-xs';
-      valid = true;
-    } else {
-      calcSpan.textContent = '\u2192';
-      calcSpan.className = 'text-emerald-400 font-mono text-xs';
-    }
+    valid = previewRpeMode(parseFloat(weightInput.value), reps, oneRM, calcSpan);
   } else {
-    const kg = parseFloat(weightInput.value);
-    if (kg > 0) {
-      calcSpan.textContent = '\u2192 ' + kg + ' kg';
-      calcSpan.className = 'text-emerald-400 font-mono text-xs';
-      valid = true;
-    } else {
-      calcSpan.textContent = '\u2192';
-      calcSpan.className = 'text-emerald-400 font-mono text-xs';
-    }
+    valid = previewAbsoluteMode(parseFloat(weightInput.value), calcSpan);
   }
+
   addBtn.disabled = !valid;
 }
 
@@ -2456,6 +2466,16 @@ function populatePlanMovements(movements) {
   renderPlanMovements();
 }
 
+async function formatIntervalLabel(intervalMin, intervalSec) {
+  const intervalSeconds = intervalMin * 60 + intervalSec;
+  if (intervalSeconds === 60) return 'EMOM';
+  if (intervalSeconds === 120) return 'E2MOM';
+  if (intervalSeconds === 180) return 'E3MOM';
+  if (intervalMin > 0 && intervalSec === 0) return `E${intervalMin}MOM`;
+  if (intervalMin > 0) return `Every ${intervalMin}:${String(intervalSec).padStart(2, '0')}`;
+  return `Every :${String(intervalSec).padStart(2, '0')}`;
+}
+
 async function savePlan() {
   if (!currentUser) return alert('Please sign in first.');
   const type = document.getElementById('workout-type')?.value;
@@ -2496,13 +2516,7 @@ async function savePlan() {
     const intervalSeconds = intervalMin * 60 + intervalSec;
     const rounds = state.builder.emomMode === 'by_round' ? (document.querySelectorAll('#emom-minute-slots .minute-row').length) : (parseInt(document.getElementById('emom-rounds')?.value, 10) || 0);
     const durationSeconds = rounds * intervalSeconds;
-    let intervalLabel;
-    if (intervalSeconds === 60) intervalLabel = 'EMOM';
-    else if (intervalSeconds === 120) intervalLabel = 'E2MOM';
-    else if (intervalSeconds === 180) intervalLabel = 'E3MOM';
-    else if (intervalMin > 0 && intervalSec === 0) intervalLabel = `E${intervalMin}MOM`;
-    else if (intervalMin > 0) intervalLabel = `Every ${intervalMin}:${String(intervalSec).padStart(2, '0')}`;
-    else intervalLabel = `Every :${String(intervalSec).padStart(2, '0')}`;
+    const intervalLabel = formatIntervalLabel(intervalMin, intervalSec);
     const prefix = durationSeconds % 60 === 0 ? `${durationSeconds / 60} Min ` : '';
     autoName = `${prefix}${intervalLabel} \u00D7 ${rounds} rounds`;
   } else if (type === 'FOR_TIME') {
@@ -2580,20 +2594,7 @@ function updateEmomSummary() {
   const rounds = state.builder.emomMode === 'by_round' ? slots : parseInt(roundsInput?.value, 10);
   if (rounds > 0 && slots > 0 && intervalSeconds > 0) {
     const totalSec = rounds * intervalSeconds;
-    let intervalLabel;
-    if (intervalSeconds === 60) {
-      intervalLabel = `EMOM`;
-    } else if (intervalSeconds === 120) {
-      intervalLabel = `E2MOM`;
-    } else if (intervalSeconds === 180) {
-      intervalLabel = `E3MOM`;
-    } else if (intervalMin > 0 && intervalSec === 0) {
-      intervalLabel = `E${intervalMin}MOM`;
-    } else if (intervalMin > 0) {
-      intervalLabel = `Every ${intervalMin}:${String(intervalSec).padStart(2, '0')}`;
-    } else {
-      intervalLabel = `Every :${String(intervalSec).padStart(2, '0')}`;
-    }
+    const intervalLabel = formatIntervalLabel(intervalMin, intervalSec);
     const prefix = totalSec % 60 === 0 ? `${totalSec / 60} Min ` : '';
     const name = `${prefix}${intervalLabel}`;
     if (state.builder.emomMode === 'sequence') {
@@ -3717,16 +3718,6 @@ function renderPlanCard(plan) {
   const badgeClass = type.toLowerCase();
   const descLine = buildWorkoutSummaryLine(type, plan.structure || {});
 
-  function formatLoad(m) {
-    if (m.weightMode === 'rpe' && m.rpe) {
-      return ` @ RPE ${m.rpe}`;
-    }
-    if (m.weightMode === 'pct' && m.pct) {
-      return ` @ ${Math.round(m.pct)}%`;
-    }
-    return m.weight ? ` @ ${m.weight}kg` : '';
-  }
-
   let movementsHtml = '';
   const structure = plan.structure || {};
 
@@ -3735,12 +3726,12 @@ function renderPlanCard(plan) {
     movementsHtml = minutes.map((m, idx) => {
       const mov = m.movements?.[0];
       if (!mov) return '';
-      return `<span class="movement-chip">${idx + 1}: ${escapeHtml(mov.exerciseId)} \u00D7 ${mov.reps}${formatLoad(mov)}</span>`;
+      return `<span class="movement-chip">${idx + 1}: ${escapeHtml(mov.exerciseId)} \u00D7 ${mov.reps}${formatMovementLoad(mov)}</span>`;
     }).join('');
   } else {
     const movements = structure.movements || [];
     movementsHtml = movements.map(m => {
-      return `<span class="movement-chip">${escapeHtml(m.exerciseId)} \u00D7 ${m.reps}${formatLoad(m)}</span>`;
+      return `<span class="movement-chip">${escapeHtml(m.exerciseId)} \u00D7 ${m.reps}${formatMovementLoad(m)}</span>`;
     }).join('');
   }
 
@@ -4242,7 +4233,7 @@ async function submitPendingWorkout() {
     if (err.code === 'permission-denied') {
       showFeedback('Save blocked by Firestore rules.', 'rose', 'log-workout-feedback');
     } else {
-      alert('Failed to log workout: ' + err.message);
+      showFeedback('Failed to log workout: ' + err.message, 'rose', 'log-workout-feedback');
     }
   } finally {
     if (btn) btn.disabled = false;
@@ -4275,7 +4266,7 @@ function capturePlanStructure(type) {
       const intervalSec = parseInt(document.getElementById('emom-interval-sec')?.value, 10) || 0;
       const intervalSeconds = intervalMin * 60 + intervalSec;
       let minutes;
-      try { minutes = getEmomMovementData(); } catch (_) { minutes = []; }
+      try { minutes = getEmomMovementData(); } catch (e) { console.error('EMOM movement data error:', e); minutes = []; }
       const rounds = state.builder.emomMode === 'by_round' ? minutes.length : parseInt(document.getElementById('emom-rounds')?.value, 10) || 0;
       const durationSeconds = rounds * intervalSeconds;
       return { mode: state.builder.emomMode, rounds, durationMinutes: Math.floor(durationSeconds / 60), intervalSeconds, minutes };
@@ -4993,110 +4984,122 @@ function toLocalDateKey(d) {
   return `${y}-${m}-${day}`;
 }
 
-function computeVolumeHistory(workouts, period, filterExercise) {
-  const now = new Date();
+function computeDailyBuckets(workouts, now, filterExercise) {
   const buckets = {};
-
-  if (period === 'daily') {
-    const ref = new Date(now);
-    ref.setDate(ref.getDate() + state.volume.offset * 7);
-    const weekStart = getWeekStart(ref);
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(weekStart);
-      d.setDate(d.getDate() + i);
-      const key = toLocalDateKey(d);
-      const periodStart = new Date(d);
-      const periodEnd = new Date(d);
-      periodEnd.setHours(23, 59, 59, 999);
-      const periodEndMs = periodEnd.getTime();
-      buckets[key] = { label: periodEndMs < state.user.userSignupTs ? '' : d.toLocaleDateString('en-US', { weekday: 'short' }), volume: 0, periodStart: periodStart.getTime(), periodEnd: periodEndMs };
-    }
-  } else if (period === 'weekly') {
-    const monthRef = new Date(now.getFullYear(), now.getMonth() + state.volume.offset, 1);
-    const monthStart = monthRef;
-    const monthEnd = new Date(monthRef.getFullYear(), monthRef.getMonth() + 1, 0, 23, 59, 59, 999);
-    const firstWeekStart = getWeekStart(monthStart);
-    const lastWeekStart = getWeekStart(monthEnd);
-    let cursor = new Date(firstWeekStart);
-    while (cursor <= lastWeekStart) {
-      const weekEnd = getWeekEnd(cursor);
-      const key = toLocalDateKey(cursor);
-      const weekEndMs = weekEnd.getTime();
-      const label = weekEndMs < state.user.userSignupTs ? '' : cursor.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      buckets[key] = { label, volume: 0, weekStart: new Date(cursor), weekEnd: new Date(weekEnd), periodStart: cursor.getTime(), periodEnd: weekEndMs };
-      cursor.setDate(cursor.getDate() + 7);
-    }
-  } else if (period === 'monthly') {
-    const year = now.getFullYear() + state.volume.offset;
-    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    for (let i = 0; i < 12; i++) {
-      const key = `${year}-${String(i + 1).padStart(2, '0')}`;
-      const monthEnd = new Date(year, i + 1, 0, 23, 59, 59, 999);
-      const monthStart = new Date(year, i, 1);
-      const monthEndMs = monthEnd.getTime();
-      buckets[key] = { label: monthEndMs < state.user.userSignupTs ? '' : monthNames[i], volume: 0, periodStart: monthStart.getTime(), periodEnd: monthEndMs };
-    }
-  } else {
-    const baseYear = now.getFullYear() + state.volume.offset * 5;
-    for (let i = 0; i < 5; i++) {
-      const yr = baseYear - 4 + i;
-      const key = String(yr);
-      const yearEnd = new Date(yr + 1, 0, 0, 23, 59, 59, 999);
-      const yearStart = new Date(yr, 0, 1);
-      const yearEndMs = yearEnd.getTime();
-      buckets[key] = { label: yearEndMs < state.user.userSignupTs ? '' : String(yr), volume: 0, periodStart: yearStart.getTime(), periodEnd: yearEndMs };
-    }
+  const ref = new Date(now);
+  ref.setDate(ref.getDate() + state.volume.offset * 7);
+  const weekStart = getWeekStart(ref);
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart);
+    d.setDate(d.getDate() + i);
+    const key = toLocalDateKey(d);
+    const periodStart = new Date(d);
+    const periodEnd = new Date(d);
+    periodEnd.setHours(23, 59, 59, 999);
+    const periodEndMs = periodEnd.getTime();
+    buckets[key] = { label: periodEndMs < state.user.userSignupTs ? '' : d.toLocaleDateString('en-US', { weekday: 'short' }), volume: 0, periodStart: periodStart.getTime(), periodEnd: periodEndMs };
   }
-
+  const weekEnd = getWeekEnd(ref);
   workouts.forEach(w => {
-    const ts = w.timestamp;
-    if (!ts) return;
-    const d = new Date(ts);
+    const d = new Date(w.timestamp);
     if (isNaN(d.getTime())) return;
-
+    if (d < weekStart || d > weekEnd) return;
     if (filterExercise !== 'All' && w.exercise !== filterExercise) return;
-
     const volume = parseFloat(w.totalVolume) || 0;
     if (volume <= 0) return;
+    const key = toLocalDateKey(d);
+    if (buckets[key] !== undefined) buckets[key].volume += volume;
+  });
+  return Object.values(buckets);
+}
 
-    if (period === 'daily') {
-      const ref = new Date(now);
-      ref.setDate(ref.getDate() + state.volume.offset * 7);
-      const weekStart = getWeekStart(ref);
-      const weekEnd = getWeekEnd(ref);
-      if (d < weekStart || d > weekEnd) return;
-      const key = toLocalDateKey(d);
-      if (buckets[key] !== undefined) {
+function computeWeeklyBuckets(workouts, now, filterExercise) {
+  const buckets = {};
+  const monthRef = new Date(now.getFullYear(), now.getMonth() + state.volume.offset, 1);
+  const monthEnd = new Date(monthRef.getFullYear(), monthRef.getMonth() + 1, 0, 23, 59, 59, 999);
+  const firstWeekStart = getWeekStart(monthRef);
+  const lastWeekStart = getWeekStart(monthEnd);
+  let cursor = new Date(firstWeekStart);
+  while (cursor <= lastWeekStart) {
+    const weekEnd = getWeekEnd(cursor);
+    const key = toLocalDateKey(cursor);
+    const weekEndMs = weekEnd.getTime();
+    const label = weekEndMs < state.user.userSignupTs ? '' : cursor.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    buckets[key] = { label, volume: 0, weekStart: new Date(cursor), weekEnd: new Date(weekEnd), periodStart: cursor.getTime(), periodEnd: weekEndMs };
+    cursor.setDate(cursor.getDate() + 7);
+  }
+  workouts.forEach(w => {
+    const d = new Date(w.timestamp);
+    if (isNaN(d.getTime()) || d < monthRef || d > monthEnd) return;
+    if (filterExercise !== 'All' && w.exercise !== filterExercise) return;
+    const volume = parseFloat(w.totalVolume) || 0;
+    if (volume <= 0) return;
+    for (const key in buckets) {
+      if (d >= buckets[key].weekStart && d <= buckets[key].weekEnd) {
         buckets[key].volume += volume;
-      }
-    } else if (period === 'weekly') {
-      for (const key in buckets) {
-        const b = buckets[key];
-        if (d >= b.weekStart && d <= b.weekEnd) {
-          b.volume += volume;
-          break;
-        }
-      }
-    } else if (period === 'monthly') {
-      const year = now.getFullYear() + state.volume.offset;
-      if (d.getFullYear() !== year) return;
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      if (buckets[key] !== undefined) {
-        buckets[key].volume += volume;
-      }
-    } else {
-      const baseYear = now.getFullYear() + state.volume.offset * 5;
-      const startYear = baseYear - 4;
-      const endYear = baseYear;
-      if (d.getFullYear() < startYear || d.getFullYear() > endYear) return;
-      const key = String(d.getFullYear());
-      if (buckets[key] !== undefined) {
-        buckets[key].volume += volume;
+        break;
       }
     }
   });
-
   return Object.values(buckets);
+}
+
+function computeMonthlyBuckets(workouts, now, filterExercise) {
+  const buckets = {};
+  const year = now.getFullYear() + state.volume.offset;
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  for (let i = 0; i < 12; i++) {
+    const key = `${year}-${String(i + 1).padStart(2, '0')}`;
+    const monthEnd = new Date(year, i + 1, 0, 23, 59, 59, 999);
+    const monthStart = new Date(year, i, 1);
+    const monthEndMs = monthEnd.getTime();
+    buckets[key] = { label: monthEndMs < state.user.userSignupTs ? '' : monthNames[i], volume: 0, periodStart: monthStart.getTime(), periodEnd: monthEndMs };
+  }
+  workouts.forEach(w => {
+    const d = new Date(w.timestamp);
+    if (isNaN(d.getTime()) || d.getFullYear() !== year) return;
+    if (filterExercise !== 'All' && w.exercise !== filterExercise) return;
+    const volume = parseFloat(w.totalVolume) || 0;
+    if (volume <= 0) return;
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    if (buckets[key] !== undefined) buckets[key].volume += volume;
+  });
+  return Object.values(buckets);
+}
+
+function computeYearlyBuckets(workouts, now, filterExercise) {
+  const buckets = {};
+  const baseYear = now.getFullYear() + state.volume.offset * 5;
+  const startYear = baseYear - 4;
+  for (let i = 0; i < 5; i++) {
+    const yr = startYear + i;
+    const key = String(yr);
+    const yearEnd = new Date(yr + 1, 0, 0, 23, 59, 59, 999);
+    const yearStart = new Date(yr, 0, 1);
+    const yearEndMs = yearEnd.getTime();
+    buckets[key] = { label: yearEndMs < state.user.userSignupTs ? '' : String(yr), volume: 0, periodStart: yearStart.getTime(), periodEnd: yearEndMs };
+  }
+  workouts.forEach(w => {
+    const d = new Date(w.timestamp);
+    if (isNaN(d.getTime())) return;
+    if (d.getFullYear() < startYear || d.getFullYear() > baseYear) return;
+    if (filterExercise !== 'All' && w.exercise !== filterExercise) return;
+    const volume = parseFloat(w.totalVolume) || 0;
+    if (volume <= 0) return;
+    const key = String(d.getFullYear());
+    if (buckets[key] !== undefined) buckets[key].volume += volume;
+  });
+  return Object.values(buckets);
+}
+
+function computeVolumeHistory(workouts, period, filterExercise) {
+  const now = new Date();
+  switch (period) {
+    case 'daily': return computeDailyBuckets(workouts, now, filterExercise);
+    case 'weekly': return computeWeeklyBuckets(workouts, now, filterExercise);
+    case 'monthly': return computeMonthlyBuckets(workouts, now, filterExercise);
+    default: return computeYearlyBuckets(workouts, now, filterExercise);
+  }
 }
 
 function formatRangeLabel(period, offset) {
@@ -5861,11 +5864,15 @@ function switchLeaderboardFormula(formula) {
 }
 
 async function updateUserLeaderboardProfile(uid, dotsScore, sinclairScore) {
-  await setDoc(getProfileDocRef(uid), {
-    dotsScore: parseFloat(dotsScore) || 0,
-    sinclairScore: parseFloat(sinclairScore) || 0, // Added field mapping
-    lastActive: serverTimestamp()
-  }, { merge: true });
+  try {
+    await setDoc(getProfileDocRef(uid), {
+      dotsScore: parseFloat(dotsScore) || 0,
+      sinclairScore: parseFloat(sinclairScore) || 0,
+      lastActive: serverTimestamp()
+    }, { merge: true });
+  } catch (err) {
+    console.error('Leaderboard profile update failed', err.code, err.message);
+  }
 }
 
 const debouncedUpdateLeaderboard = debounce(async (uid, dots, sinclair) => {
@@ -6004,6 +6011,7 @@ async function processFriendRequest(friendId) {
             haptic(HAPTIC.tap);
         } else {
             console.error("Cyber-Tag not found.");
+            showFeedback('Cyber-Tag not found. Check the ID and try again.', 'rose', 'socialAddFriendFeedback');
         }
     } catch (err) {
         console.error("Error linking friend:", err);
@@ -6213,3 +6221,83 @@ document.addEventListener('keydown', (e) => {
     closeProfileModal();
   }
 });
+
+// CSP-compliant event handler bindings
+function initCSPHandlers() {
+  const bind = (id, event, handler) => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener(event, handler);
+  };
+
+  // Calendar
+  bind('cal-prev-month', 'click', () => changeCalendarNav(-1));
+  bind('cal-today', 'click', goToCalendarToday);
+  bind('cal-next-month', 'click', () => changeCalendarNav(1));
+  bind('cal-toggle-view', 'click', toggleCalendarView);
+  bind('cal-day-detail-close', 'click', closeCalendarDayDetail);
+
+  // Plans filters
+  bind('plans-filter-mine', 'click', () => switchPlansFilter('mine'));
+  bind('plans-filter-shared', 'click', () => switchPlansFilter('shared'));
+  bind('plans-filter-favorites', 'click', () => switchPlansFilter('favorites'));
+
+  // Leaderboard
+  bind('btnGlobalBoard', 'click', () => switchLeaderboardScope('global'));
+  bind('btnFriendsBoard', 'click', () => switchLeaderboardScope('friends'));
+  bind('btnFormulaDots', 'click', () => switchLeaderboardFormula('dots'));
+  bind('btnFormulaSinclair', 'click', () => switchLeaderboardFormula('sinclair'));
+  bind('leaderboard-expand-btn', 'click', toggleLeaderboardExpand);
+
+  // Training tab
+  bind('log-round-btn', 'click', logRound);
+  bind('log-rep-btn', 'click', logRep);
+  bind('log-workout-btn', 'click', submitPendingWorkout);
+
+  // FOR_TIME
+  bind('fortime-dnf', 'change', toggleForTimeDnf);
+
+  // Share modal
+  bind('share-mode-friends', 'click', () => switchShareMode('friends'));
+  bind('share-mode-qr', 'click', () => switchShareMode('qr'));
+  bind('share-select-all', 'change', toggleSelectAllFriends);
+
+  // Calculator
+  bind('calc-mode-pct', 'click', () => switchCalcMode('pct'));
+  bind('calc-mode-rpe', 'click', () => switchCalcMode('rpe'));
+
+  // Workout type
+  bind('workout-type', 'change', handleWorkoutTypeChange);
+
+  // EMOM modes
+  bind('emom-mode-seq', 'click', () => switchEmomMode('sequence'));
+  bind('emom-mode-by-round', 'click', () => switchEmomMode('by_round'));
+
+  // Plan exercise
+  bind('plan-exercise', 'change', handlePlanExerciseChange);
+  bind('plan-add-btn', 'click', handlePlanAdd);
+
+  // Plan/Save buttons in training tab
+  bind('btn-do-workout', 'click', doWorkout);
+  bind('btn-save-plan', 'click', savePlan);
+
+  // Volume history
+  bind('vh-filter', 'change', onVolumeFilterChange);
+  bind('vh-period-daily', 'click', () => switchVolumePeriod('daily'));
+  bind('vh-period-weekly', 'click', () => switchVolumePeriod('weekly'));
+  bind('vh-period-monthly', 'click', () => switchVolumePeriod('monthly'));
+  bind('vh-period-yearly', 'click', () => switchVolumePeriod('yearly'));
+  bind('vh-prev', 'click', () => shiftVolumePeriod(-1));
+  bind('vh-today', 'click', goToCurrentPeriod);
+  bind('vh-next', 'click', () => shiftVolumePeriod(1));
+
+  // Social
+  bind('btnCopyCyberTag', 'click', copyCyberTag);
+  bind('btnAddFriend', 'click', handleAddFriend);
+}
+
+// Initialize CSP handlers after DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initCSPHandlers);
+} else {
+  initCSPHandlers();
+}

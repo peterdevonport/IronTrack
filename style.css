@@ -24,6 +24,20 @@
 
   /* Layer 3 Specialty Background */
   --surface-inner: #0b0f19;
+
+  /* Workout Type Badge Colors */
+  --badge-amrap-bg: rgba(168, 85, 247, 0.15);
+  --badge-amrap-text: #c084fc;
+  --badge-amrap-border: rgba(168, 85, 247, 0.3);
+  --badge-emom-bg: rgba(34, 211, 238, 0.15);
+  --badge-emom-text: #67e8f9;
+  --badge-emom-border: rgba(34, 211, 238, 0.3);
+  --badge-fortime-bg: rgba(251, 146, 60, 0.15);
+  --badge-fortime-text: #fb923c;
+  --badge-fortime-border: rgba(251, 146, 60, 0.3);
+  --badge-interval-bg: rgba(244, 114, 182, 0.15);
+  --badge-interval-text: #f472b6;
+  --badge-interval-border: rgba(244, 114, 182, 0.3);
 }
 
 /* --- Base Body Fallbacks --- */
@@ -299,36 +313,6 @@ body {
   border: 1px solid var(--slate-700);
   background-color: var(--slate-900);
 }
-.structured-card .workout-type-badge {
-  font-size: 0.625rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  padding: 0.125rem 0.5rem;
-  border-radius: 9999px;
-  display: inline-block;
-  text-transform: uppercase;
-}
-.structured-card .workout-type-badge.amrap {
-  background-color: rgba(168, 85, 247, 0.15);
-  color: #c084fc;
-  border: 1px solid rgba(168, 85, 247, 0.3);
-}
-.structured-card .workout-type-badge.emom {
-  background-color: rgba(34, 211, 238, 0.15);
-  color: #67e8f9;
-  border: 1px solid rgba(34, 211, 238, 0.3);
-}
-.structured-card .workout-type-badge.for_time {
-  background-color: rgba(251, 146, 60, 0.15);
-  color: #fb923c;
-  border: 1px solid rgba(251, 146, 60, 0.3);
-}
-.structured-card .workout-type-badge.interval {
-  background-color: rgba(244, 114, 182, 0.15);
-  color: #f472b6;
-  border: 1px solid rgba(244, 114, 182, 0.3);
-}
-
 .workout-type-badge {
   font-size: 0.625rem;
   font-weight: 800;
@@ -339,24 +323,24 @@ body {
   text-transform: uppercase;
 }
 .workout-type-badge.amrap {
-  background-color: rgba(168, 85, 247, 0.15);
-  color: #c084fc;
-  border: 1px solid rgba(168, 85, 247, 0.3);
+  background-color: var(--badge-amrap-bg);
+  color: var(--badge-amrap-text);
+  border: 1px solid var(--badge-amrap-border);
 }
 .workout-type-badge.emom {
-  background-color: rgba(34, 211, 238, 0.15);
-  color: #67e8f9;
-  border: 1px solid rgba(34, 211, 238, 0.3);
+  background-color: var(--badge-emom-bg);
+  color: var(--badge-emom-text);
+  border: 1px solid var(--badge-emom-border);
 }
 .workout-type-badge.for_time {
-  background-color: rgba(251, 146, 60, 0.15);
-  color: #fb923c;
-  border: 1px solid rgba(251, 146, 60, 0.3);
+  background-color: var(--badge-fortime-bg);
+  color: var(--badge-fortime-text);
+  border: 1px solid var(--badge-fortime-border);
 }
 .workout-type-badge.interval {
-  background-color: rgba(244, 114, 182, 0.15);
-  color: #f472b6;
-  border: 1px solid rgba(244, 114, 182, 0.3);
+  background-color: var(--badge-interval-bg);
+  color: var(--badge-interval-text);
+  border: 1px solid var(--badge-interval-border);
 }
 
 .structured-card .score-display {
