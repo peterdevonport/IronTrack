@@ -364,6 +364,20 @@ function getEffectiveLoad(workout) {
   return parseFloat(workout.weight) || 0;
 }
 
+function updatePagination(name, currentPage, totalPages) {
+  const pagination = document.getElementById(`${name}-pagination`);
+  if (!pagination) return;
+  const currentEl = document.getElementById(`current-${name}-page`);
+  const totalEl = document.getElementById(`total-${name}-pages`);
+  const prevBtn = document.getElementById(`prev-${name}-page-btn`);
+  const nextBtn = document.getElementById(`next-${name}-page-btn`);
+  if (currentEl) currentEl.textContent = currentPage;
+  if (totalEl) totalEl.textContent = totalPages;
+  if (prevBtn) prevBtn.disabled = currentPage <= 1;
+  if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+  pagination.classList.toggle('hidden', totalPages <= 1);
+}
+
 // UI Selectors
 const loginView = document.getElementById('login-view');
 const appView = document.getElementById('app-view');
@@ -1321,18 +1335,7 @@ function update1RMRegistryUI() {
 
     tableBody.innerHTML = html;
 
-    const pagination = document.getElementById('records-pagination');
-    if (pagination) {
-        const currentEl = document.getElementById('current-records-page');
-        const totalEl = document.getElementById('total-records-pages');
-        const prevBtn = document.getElementById('prev-records-page-btn');
-        const nextBtn = document.getElementById('next-records-page-btn');
-        if (currentEl) currentEl.textContent = recordsCurrentPage;
-        if (totalEl) totalEl.textContent = totalPages;
-        if (prevBtn) prevBtn.disabled = recordsCurrentPage <= 1;
-        if (nextBtn) nextBtn.disabled = recordsCurrentPage >= totalPages;
-        pagination.classList.toggle('hidden', totalPages <= 1);
-    }
+    updatePagination('records', recordsCurrentPage, totalPages);
 }
 
 function updateCalcCard() {
@@ -3906,17 +3909,7 @@ function renderStructuredWorkoutHistory() {
   restoreExpandedCardIds(expandedIds);
   if (typeof lucide !== 'undefined') lucide.createIcons();
 
-  if (pagination) {
-    const currentEl = document.getElementById('current-structured-page');
-    const totalEl = document.getElementById('total-structured-pages');
-    const prevBtn = document.getElementById('prev-structured-page-btn');
-    const nextBtn = document.getElementById('next-structured-page-btn');
-    if (currentEl) currentEl.textContent = structuredCurrentPage;
-    if (totalEl) totalEl.textContent = totalPages;
-    if (prevBtn) prevBtn.disabled = structuredCurrentPage <= 1;
-    if (nextBtn) nextBtn.disabled = structuredCurrentPage >= totalPages;
-    pagination.classList.toggle('hidden', totalPages <= 1);
-  }
+  updatePagination('structured', structuredCurrentPage, totalPages);
 }
 
 function changeStructuredPage(direction) {
@@ -3982,17 +3975,7 @@ function renderPlansUI() {
   restoreExpandedCardIds(expandedIds);
   if (typeof lucide !== 'undefined') lucide.createIcons();
 
-  if (pagination) {
-    const currentEl = document.getElementById('current-plans-page');
-    const totalEl = document.getElementById('total-plans-pages');
-    const prevBtn = document.getElementById('prev-plans-page-btn');
-    const nextBtn = document.getElementById('next-plans-page-btn');
-    if (currentEl) currentEl.textContent = plansCurrentPage;
-    if (totalEl) totalEl.textContent = totalPages;
-    if (prevBtn) prevBtn.disabled = plansCurrentPage <= 1;
-    if (nextBtn) nextBtn.disabled = plansCurrentPage >= totalPages;
-    pagination.classList.toggle('hidden', totalPages <= 1);
-  }
+  updatePagination('plans', plansCurrentPage, totalPages);
 }
 
 function switchPlansFilter(filter) {
@@ -4916,17 +4899,7 @@ function renderSharedPlansUI() {
   restoreExpandedCardIds(expandedIds);
   if (typeof lucide !== 'undefined') lucide.createIcons();
 
-  if (pagination) {
-    const currentEl = document.getElementById('current-shared-plans-page');
-    const totalEl = document.getElementById('total-shared-plans-pages');
-    const prevBtn = document.getElementById('prev-shared-plans-page-btn');
-    const nextBtn = document.getElementById('next-shared-plans-page-btn');
-    if (currentEl) currentEl.textContent = sharedPlansPage;
-    if (totalEl) totalEl.textContent = totalPages;
-    if (prevBtn) prevBtn.disabled = sharedPlansPage <= 1;
-    if (nextBtn) nextBtn.disabled = sharedPlansPage >= totalPages;
-    pagination.classList.toggle('hidden', totalPages <= 1);
-  }
+  updatePagination('shared-plans', sharedPlansPage, totalPages);
 }
 
 function renderSharedPlanCard(share) {
@@ -6062,17 +6035,7 @@ async function renderActiveFriendsList() {
     container.innerHTML = html || `<p class="text-xs text-slate-500 italic">No valid allies found for the linked Cyber-Tags.</p>`;
     if (typeof lucide !== 'undefined') lucide.createIcons();
 
-    if (pagination) {
-      const currentEl = document.getElementById('current-friends-page');
-      const totalEl = document.getElementById('total-friends-pages');
-      const prevBtn = document.getElementById('prev-friends-page-btn');
-      const nextBtn = document.getElementById('next-friends-page-btn');
-      if (currentEl) currentEl.textContent = friendsPage;
-      if (totalEl) totalEl.textContent = totalPages;
-      if (prevBtn) prevBtn.disabled = friendsPage <= 1;
-      if (nextBtn) nextBtn.disabled = friendsPage >= totalPages;
-      pagination.classList.toggle('hidden', totalPages <= 1);
-    }
+    updatePagination('friends', friendsPage, totalPages);
   } catch (error) {
     console.error('Active friends render failed', error.code, error.message);
     container.innerHTML = `<p class="text-xs text-red-400">Failed to render active grid context. Check Firestore rules for profiles.</p>`;
