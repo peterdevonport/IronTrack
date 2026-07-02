@@ -2466,6 +2466,16 @@ function populatePlanMovements(movements) {
   renderPlanMovements();
 }
 
+async function formatIntervalLabel(intervalMin, intervalSec) {
+  const intervalSeconds = intervalMin * 60 + intervalSec;
+  if (intervalSeconds === 60) return 'EMOM';
+  if (intervalSeconds === 120) return 'E2MOM';
+  if (intervalSeconds === 180) return 'E3MOM';
+  if (intervalMin > 0 && intervalSec === 0) return `E${intervalMin}MOM`;
+  if (intervalMin > 0) return `Every ${intervalMin}:${String(intervalSec).padStart(2, '0')}`;
+  return `Every :${String(intervalSec).padStart(2, '0')}`;
+}
+
 async function savePlan() {
   if (!currentUser) return alert('Please sign in first.');
   const type = document.getElementById('workout-type')?.value;
@@ -2506,13 +2516,7 @@ async function savePlan() {
     const intervalSeconds = intervalMin * 60 + intervalSec;
     const rounds = state.builder.emomMode === 'by_round' ? (document.querySelectorAll('#emom-minute-slots .minute-row').length) : (parseInt(document.getElementById('emom-rounds')?.value, 10) || 0);
     const durationSeconds = rounds * intervalSeconds;
-    let intervalLabel;
-    if (intervalSeconds === 60) intervalLabel = 'EMOM';
-    else if (intervalSeconds === 120) intervalLabel = 'E2MOM';
-    else if (intervalSeconds === 180) intervalLabel = 'E3MOM';
-    else if (intervalMin > 0 && intervalSec === 0) intervalLabel = `E${intervalMin}MOM`;
-    else if (intervalMin > 0) intervalLabel = `Every ${intervalMin}:${String(intervalSec).padStart(2, '0')}`;
-    else intervalLabel = `Every :${String(intervalSec).padStart(2, '0')}`;
+    const intervalLabel = formatIntervalLabel(intervalMin, intervalSec);
     const prefix = durationSeconds % 60 === 0 ? `${durationSeconds / 60} Min ` : '';
     autoName = `${prefix}${intervalLabel} \u00D7 ${rounds} rounds`;
   } else if (type === 'FOR_TIME') {
@@ -2590,20 +2594,7 @@ function updateEmomSummary() {
   const rounds = state.builder.emomMode === 'by_round' ? slots : parseInt(roundsInput?.value, 10);
   if (rounds > 0 && slots > 0 && intervalSeconds > 0) {
     const totalSec = rounds * intervalSeconds;
-    let intervalLabel;
-    if (intervalSeconds === 60) {
-      intervalLabel = `EMOM`;
-    } else if (intervalSeconds === 120) {
-      intervalLabel = `E2MOM`;
-    } else if (intervalSeconds === 180) {
-      intervalLabel = `E3MOM`;
-    } else if (intervalMin > 0 && intervalSec === 0) {
-      intervalLabel = `E${intervalMin}MOM`;
-    } else if (intervalMin > 0) {
-      intervalLabel = `Every ${intervalMin}:${String(intervalSec).padStart(2, '0')}`;
-    } else {
-      intervalLabel = `Every :${String(intervalSec).padStart(2, '0')}`;
-    }
+    const intervalLabel = formatIntervalLabel(intervalMin, intervalSec);
     const prefix = totalSec % 60 === 0 ? `${totalSec / 60} Min ` : '';
     const name = `${prefix}${intervalLabel}`;
     if (state.builder.emomMode === 'sequence') {
@@ -3727,16 +3718,6 @@ function renderPlanCard(plan) {
   const badgeClass = type.toLowerCase();
   const descLine = buildWorkoutSummaryLine(type, plan.structure || {});
 
-  function formatLoad(m) {
-    if (m.weightMode === 'rpe' && m.rpe) {
-      return ` @ RPE ${m.rpe}`;
-    }
-    if (m.weightMode === 'pct' && m.pct) {
-      return ` @ ${Math.round(m.pct)}%`;
-    }
-    return m.weight ? ` @ ${m.weight}kg` : '';
-  }
-
   let movementsHtml = '';
   const structure = plan.structure || {};
 
@@ -3745,12 +3726,12 @@ function renderPlanCard(plan) {
     movementsHtml = minutes.map((m, idx) => {
       const mov = m.movements?.[0];
       if (!mov) return '';
-      return `<span class="movement-chip">${idx + 1}: ${escapeHtml(mov.exerciseId)} \u00D7 ${mov.reps}${formatLoad(mov)}</span>`;
+      return `<span class="movement-chip">${idx + 1}: ${escapeHtml(mov.exerciseId)} \u00D7 ${mov.reps}${formatMovementLoad(mov)}</span>`;
     }).join('');
   } else {
     const movements = structure.movements || [];
     movementsHtml = movements.map(m => {
-      return `<span class="movement-chip">${escapeHtml(m.exerciseId)} \u00D7 ${m.reps}${formatLoad(m)}</span>`;
+      return `<span class="movement-chip">${escapeHtml(m.exerciseId)} \u00D7 ${m.reps}${formatMovementLoad(m)}</span>`;
     }).join('');
   }
 
