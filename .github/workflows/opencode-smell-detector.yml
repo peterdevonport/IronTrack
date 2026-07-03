@@ -1,0 +1,50 @@
+name: OpenCode Code Smell Reviewer
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    branches: [main, master]
+
+jobs:
+  review-smells:
+    # 🛑 LOOP PROTECTION: Ensures the AI analyzer completely ignores any commits 
+    # pushed by GitHub bots or branches created by OpenCode itself.
+    if: |
+      github.actor != 'github-actions[bot]' && 
+      !startsWith(github.head_ref, 'opencode/')
+    
+    timeout-minutes: 10
+    
+    concurrency:
+      group: code-smell-review-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+
+    runs-on: ubuntu-latest
+    
+    # 🔑 CLOUD PERMISSIONS: Only needs PR read access to view the diff,
+    # and issues write access to log findings.
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: read
+      id-token: write
+      
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read prompt
+        id: prompt
+        run: echo "PROMPT<<EOF" >> $GITHUB_OUTPUT && cat .github/prompts/code-smell-review.md >> $GITHUB_OUTPUT && echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Analyze Code Smells with Qwen 3.7 Plus
+        uses: anomalyco/opencode/github@latest
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          model: opencode-go/qwen3.7-plus
+          use_github_token: true
+          prompt: ${{ steps.prompt.outputs.PROMPT }}
