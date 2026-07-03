@@ -8,39 +8,57 @@ on:
 
 jobs:
   review-smells:
-    # 🛑 LOOP PROTECTION: Ensures the AI analyzer completely ignores any commits 
-    # pushed by GitHub bots or branches created by OpenCode itself.
-    if: |
-      github.actor != 'github-actions[bot]' && 
-      !startsWith(github.head_ref, 'opencode/')
+    # 🔒 CONSTRAINT 1: Ensures this automated analysis strictly targets your master branch
+    if: github.ref == 'refs/heads/master'
     
     timeout-minutes: 10
     
     concurrency:
-      group: code-smell-review-${{ github.event.pull_request.number }}
+      group: code-smell-review-${{ github.ref_name }}
       cancel-in-progress: true
 
     runs-on: ubuntu-latest
     
-    # 🔑 CLOUD PERMISSIONS: Only needs PR read access to view the diff,
+    # 🔑 CLOUD PERMISSIONS: Only needs repository content read access,
     # and issues write access to log findings.
     permissions:
       contents: read
       issues: write
-      #pull-requests: write
-      #id-token: write
       
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # Fetches full history so Git logs can accurately check timestamps
+
+      - name: Check for Fresh Commits
+        id: check_changes
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Manual trigger detected. Forcing analysis to run."
+            echo "SHOULD_RUN=true" >> $GITHUB_OUTPUT
+          else
+            # Checks for commits on master in the last 25 hours (provides a small latency buffer)
+            RECENT_COMMITS=$(git log --since="25 hours ago" --oneline)
+            
+            if [ -z "$RECENT_COMMITS" ]; then
+              echo "No new commits found on master in the last 24 hours. Skipping run."
+              echo "SHOULD_RUN=false" >> $GITHUB_OUTPUT
+            else
+              echo "Fresh commits detected! Initializing code smell review."
+              echo "SHOULD_RUN=true" >> $GITHUB_OUTPUT
+            fi
+          fi
 
       - name: Read prompt
+        # 🔒 CONSTRAINT 2: Skip reading the prompt if there are no new commits
+        if: steps.check_changes.outputs.SHOULD_RUN == 'true'
         id: prompt
         run: echo "PROMPT<<EOF" >> $GITHUB_OUTPUT && cat .github/prompts/code-smell-review.md >> $GITHUB_OUTPUT && echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Analyze Code Smells with Mimo 2.5
+        # 🔒 CONSTRAINT 2: Only spin up the OpenCode runner if fresh code exists or manually bypassed
+        if: steps.check_changes.outputs.SHOULD_RUN == 'true'
         uses: anomalyco/opencode/github@v1.17.13
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
