@@ -1271,19 +1271,19 @@ function processWorkoutSnapshot(docs, getEffectiveLoad, estimate1RM) {
     const reps = parseInt(data.reps, 10);
     const calculated1RM = estimate1RM(effectiveWeight, reps);
 
-    if (!state.cache.activeRecords[data.exercise] || calculated1RM > state.cache.activeRecords[data.exercise]) {
-      state.cache.activeRecords[data.exercise] = calculated1RM;
+    if (!activeRecords[data.exercise] || calculated1RM > activeRecords[data.exercise]) {
+      activeRecords[data.exercise] = calculated1RM;
     }
 
-    if (!state.cache.cachedMaxLoadByExercise[data.exercise] || effectiveWeight > state.cache.cachedMaxLoadByExercise[data.exercise]) {
-      state.cache.cachedMaxLoadByExercise[data.exercise] = effectiveWeight;
+    if (!cachedMaxLoadByExercise[data.exercise] || effectiveWeight > cachedMaxLoadByExercise[data.exercise]) {
+      cachedMaxLoadByExercise[data.exercise] = effectiveWeight;
     }
-    if (!state.cache.cachedMax1RMByExercise[data.exercise] || calculated1RM > state.cache.cachedMax1RMByExercise[data.exercise]) {
-      state.cache.cachedMax1RMByExercise[data.exercise] = calculated1RM;
+    if (!cachedMax1RMByExercise[data.exercise] || calculated1RM > cachedMax1RMByExercise[data.exercise]) {
+      cachedMax1RMByExercise[data.exercise] = calculated1RM;
     }
 
-    if (!state.cache.cachedMaxRepsByExercise[data.exercise] || reps > state.cache.cachedMaxRepsByExercise[data.exercise]) {
-      state.cache.cachedMaxRepsByExercise[data.exercise] = reps;
+    if (!cachedMaxRepsByExercise[data.exercise] || reps > cachedMaxRepsByExercise[data.exercise]) {
+      cachedMaxRepsByExercise[data.exercise] = reps;
     }
   });
 
