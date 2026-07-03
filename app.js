@@ -1330,7 +1330,7 @@ function listenToDataStream(uid) {
         collection(db, "workouts"),
         where("userId", "==", uid),
         orderBy("timestamp", "desc"),
-        limit(100)
+        limit(500)
     );
     unsubscribeLogs = onSnapshot(q, async (snapshot) => {
         const processed = processWorkoutSnapshot(snapshot.docs, getEffectiveLoad, estimate1RM);
@@ -3427,7 +3427,7 @@ function listenToStructuredWorkouts(uid) {
     collection(db, "structured_workouts"),
     where("userId", "==", uid),
     orderBy("timestamp", "desc"),
-    limit(100)
+    limit(500)
   );
   unsubscribeStructured = onSnapshot(q, (snapshot) => {
     const workouts = [];
