@@ -526,6 +526,8 @@ let unsubscribeStructured = null;
 let unsubscribePlans = null;
 let unsubscribeSharedPlans = null;
 let activeDates = new Set();
+let listenersAttached = false;
+let _favDebounce = {};
 
 const tabContents = document.querySelectorAll('.tab-content');
 const navTabs = document.querySelectorAll('.nav-tab');
@@ -583,10 +585,12 @@ onAuthStateChanged(auth, async (user) => {
         }
 
         syncLeaderboardFeed();
+        if (listenersAttached) return;
         listenToDataStream(user.uid);
         listenToStructuredWorkouts(user.uid);
         listenToPlans(user.uid);
         listenToSharedPlans(user.uid);
+        listenersAttached = true;
         loadConsistencyConfig();
 
         showQRCode()
@@ -653,6 +657,7 @@ onAuthStateChanged(auth, async (user) => {
         state.calendar.selectedDate = null;
         state.calendar.compact = true;
         state.calendar.weekOffset = 0;
+        listenersAttached = false;
         window.__irontrackAuthState = 'signed-out';
     }
 });
@@ -942,9 +947,11 @@ async function saveOnboarding() {
 
         // Now start the dashboard
         syncLeaderboardFeed();
+        if (listenersAttached) return;
         listenToDataStream(currentUser.uid);
         listenToStructuredWorkouts(currentUser.uid);
         listenToPlans(currentUser.uid);
+        listenersAttached = true;
         loadConsistencyConfig();
         showQRCode();
 
@@ -4654,6 +4661,9 @@ function updateStarIcon(id, isFav) {
 }
 
 async function toggleFavorite(shareId) {
+  if (_favDebounce[shareId]) return;
+  _favDebounce[shareId] = true;
+  setTimeout(() => delete _favDebounce[shareId], 300);
   if (!currentUser) return;
   const share = state.data.lastSharedPlans.find(s => s.id === shareId);
   if (!share) return;
@@ -4672,6 +4682,9 @@ async function toggleFavorite(shareId) {
 }
 
 async function togglePlanFavorite(planId) {
+  if (_favDebounce[planId]) return;
+  _favDebounce[planId] = true;
+  setTimeout(() => delete _favDebounce[planId], 300);
   if (!currentUser) return;
   const plan = state.data.lastWorkoutPlans.find(p => p.id === planId);
   if (!plan) return;
@@ -4690,6 +4703,9 @@ async function togglePlanFavorite(planId) {
 }
 
 async function toggleStructuredFavorite(swId) {
+  if (_favDebounce[swId]) return;
+  _favDebounce[swId] = true;
+  setTimeout(() => delete _favDebounce[swId], 300);
   if (!currentUser) return;
   const sw = state.data.lastStructuredWorkouts.find(w => w.id === swId);
   if (!sw) return;
@@ -5618,40 +5634,28 @@ async function renderActiveFriendsList() {
   }
 
   try {
-    const friendResults = await Promise.allSettled(
-      state.social.userFriendsList.map(fUid => getProfileDocument(fUid))
-    );
-
-    state.social.friendDisplayCache = {};
-    friendResults.forEach((result, i) => {
-      if (result.status === 'fulfilled' && result.value.exists()) {
-        state.social.friendDisplayCache[state.social.userFriendsList[i]] = result.value.data();
-      }
-    });
-
     const perPage = 3;
     const totalPages = Math.max(1, Math.ceil(state.social.userFriendsList.length / perPage));
     state.pagination.friends = Math.min(state.pagination.friends, totalPages);
     const start = (state.pagination.friends - 1) * perPage;
     const pageItems = state.social.userFriendsList.slice(start, start + perPage);
 
+    // Only fetch uncached profiles for the visible page
+    const uncached = pageItems.filter(fUid => !state.social.friendDisplayCache[fUid]);
+    if (uncached.length > 0) {
+      const results = await Promise.allSettled(uncached.map(fUid => getProfileDocument(fUid)));
+      results.forEach((result, i) => {
+        if (result.status === 'fulfilled' && result.value.exists()) {
+          state.social.friendDisplayCache[uncached[i]] = result.value.data();
+        }
+      });
+    }
+
     let html = '';
     pageItems.forEach((fUid, i) => {
-      const globalIdx = start + i;
-      const result = friendResults[globalIdx];
+      const data = state.social.friendDisplayCache[fUid];
 
-      if (result.status === 'rejected') {
-        html += `
-          <div class="flex justify-between items-center bg-slate-900/50 p-2 border border-slate-800 rounded">
-            <span class="font-medium text-slate-300 truncate max-w-[120px]">Locked Friend</span>
-            <span class="text-xs font-mono text-yellow-400">Permission denied</span>
-          </div>`;
-        return;
-      }
-
-      const fDoc = result.value;
-      if (fDoc && fDoc.exists()) {
-        const data = fDoc.data();
+      if (data) {
         html += `
           <div class="flex justify-between items-center bg-slate-900/50 p-2 border border-slate-800 rounded">
             <span class="font-medium text-slate-300 truncate max-w-[120px]">${getDisplayName(data, fUid)}</span>
