@@ -525,6 +525,7 @@ const state = {
 let unsubscribeStructured = null;
 let unsubscribePlans = null;
 let unsubscribeSharedPlans = null;
+let activeDates = new Set();
 
 const tabContents = document.querySelectorAll('.tab-content');
 const navTabs = document.querySelectorAll('.nav-tab');
@@ -647,7 +648,7 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('leaderboardRows').innerHTML = '';
         currentUser = null;
         urlParamsProcessed = false;
-        window.__irontrackActiveDates = undefined;
+        activeDates = undefined;
         state.calendar.month = new Date();
         state.calendar.selectedDate = null;
         state.calendar.compact = true;
@@ -2535,7 +2536,7 @@ async function savePlan() {
     type,
     structure,
     status: 'active',
-    createdAt: Date.now()
+    createdAt: serverTimestamp()
   };
 
   addDoc(collection(db, "workout_plans"), planDoc).then(() => {
@@ -2902,7 +2903,7 @@ async function computeAndSyncDailyActivity() {
         activeDates.add(dateStr);
     });
     
-    window.__irontrackActiveDates = activeDates;
+    activeDates = activeDates;
     
     renderConsistencyUI();
 }
@@ -2917,7 +2918,7 @@ function renderConsistencyUI() {
 }
 
 function calculateChallengeProgress() {
-    const activeDates = window.__irontrackActiveDates || new Set();
+    const activeDates = activeDates || new Set();
     const today = new Date();
     const currentYear = today.getFullYear();
     const currentMonth = today.getMonth();
@@ -3085,7 +3086,7 @@ function renderCalendar() {
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const shortMonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-    const activeDates = window.__irontrackActiveDates || new Set();
+    const activeDates = activeDates || new Set();
     const today = new Date();
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
@@ -3164,7 +3165,7 @@ function renderCalendar() {
 }
 
 function updateConsistencyMetrics() {
-    const activeDates = window.__irontrackActiveDates || new Set();
+    const activeDates = activeDates || new Set();
     const today = new Date();
     
     function countActiveDays(daysBack) {
@@ -3340,7 +3341,7 @@ function applyCalendarNav(delta) {
 }
 
 function autoSelectFirstActiveDay() {
-    const activeDates = window.__irontrackActiveDates || new Set();
+    const activeDates = activeDates || new Set();
     if (activeDates.size === 0) return;
     let startDate, endDate;
     if (state.calendar.compact) {
