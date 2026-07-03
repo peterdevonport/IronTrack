@@ -39,12 +39,12 @@ jobs:
         id: prompt
         run: echo "PROMPT<<EOF" >> $GITHUB_OUTPUT && cat .github/prompts/code-smell-review.md >> $GITHUB_OUTPUT && echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Analyze Code Smells with Qwen 3.7 Plus
-        uses: anomalyco/opencode/github@latest
+      - name: Analyze Code Smells with Mimo 2.5
+        uses: anomalyco/opencode/github@v1.17.13
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          model: opencode-go/qwen3.7-plus
+          model: opencode-go/mimo-v2.5
           use_github_token: true
           prompt: ${{ steps.prompt.outputs.PROMPT }}
