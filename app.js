@@ -652,7 +652,7 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('leaderboardRows').innerHTML = '';
         currentUser = null;
         urlParamsProcessed = false;
-        activeDates = undefined;
+        activeDates = new Set();
         state.calendar.month = new Date();
         state.calendar.selectedDate = null;
         state.calendar.compact = true;
@@ -4671,6 +4671,7 @@ async function toggleFavorite(shareId) {
   } catch (err) {
     share.favorite = !newVal;
     updateStarIcon(shareId, !newVal);
+    delete _favDebounce[shareId];
     console.error('Toggle favorite failed', err.code, err.message);
   }
 }
@@ -4692,6 +4693,7 @@ async function togglePlanFavorite(planId) {
   } catch (err) {
     plan.favorite = !newVal;
     updateStarIcon(planId, !newVal);
+    delete _favDebounce[planId];
     console.error('Toggle plan favorite failed', err.code, err.message);
   }
 }
@@ -4713,6 +4715,7 @@ async function toggleStructuredFavorite(swId) {
   } catch (err) {
     sw.favorite = !newVal;
     updateStarIcon(swId, !newVal);
+    delete _favDebounce[swId];
     console.error('Toggle structured favorite failed', err.code, err.message);
   }
 }
