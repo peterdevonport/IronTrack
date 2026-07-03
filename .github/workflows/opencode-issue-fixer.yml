@@ -1,0 +1,84 @@
+name: OpenCode On-Demand Issue Fixer
+
+on:
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to fix manually'
+        required: true
+
+jobs:
+  fix-issue:
+    # 🛑 GUARD: Only trigger if it's a manual run OR a comment starting with "/fix" on an active issue
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.issue.pull_request == null && startsWith(github.event.comment.body, '/fix'))
+    
+    runs-on: ubuntu-latest
+    
+    concurrency:
+      group: fix-issue-${{ github.event.issue.number || github.event.inputs.issue_number }}
+      cancel-in-progress: true
+
+    # 🔑 CLOUD PERMISSIONS: Needs write access to push branches, comment on issues, and apply labels
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch Issue Context & Compile Prompt
+        id: compile_context
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ISSUE_NUM="${{ github.event.inputs.issue_number || github.event.issue.number }}"
+          
+          # Fetch issue details via GitHub CLI
+          ISSUE_DATA=$(gh issue view "$ISSUE_NUM" --json title,body)
+          ISSUE_TITLE=$(echo "$ISSUE_DATA" | jq -r .title)
+          
+          echo "ISSUE_NUM=$ISSUE_NUM" >> $GITHUB_OUTPUT
+          
+          # Build our intelligent scratchpad instruction file
+          echo "You are an autonomous Senior Software Engineer evaluating an on-demand code refactor request." > open_code_prompt.txt
+          echo "Target Issue: #$ISSUE_NUM - $ISSUE_TITLE" >> open_code_prompt.txt
+          echo -e "\n### REFACTOR BLUEPRINT REPORTED:\n" >> open_code_prompt.txt
+          echo "$ISSUE_DATA" | jq -r .body >> open_code_prompt.txt
+          
+          echo -e "\n### YOUR MISSION:" >> open_code_prompt.txt
+          echo "Analyze the corresponding source files in the current repository. Determine if this reported code smell is a genuine defect/anti-pattern that needs correcting, OR if this structure is intentional (e.g., required for performance, compliance with third-party APIs, or an explicitly guarded architectural design)." >> open_code_prompt.txt
+          
+          echo -e "\n### EXECUTION DIRECTIONS (CHOOSE EXACTLY ONE PATH):" >> open_code_prompt.txt
+          
+          echo -e "\nPATH A: [VALID CODE SMELL - FIX IT]" >> open_code_prompt.txt
+          echo "If the issue is correct and should be refactored:" >> open_code_prompt.txt
+          echo "1. Checkout a new branch named 'opencode/fix-issue-$ISSUE_NUM'." >> open_code_prompt.txt
+          echo "2. Apply precise modifications to the master branch files to resolve the tech debt." >> open_code_prompt.txt
+          echo "3. Open a high-quality Pull Request targeting 'master' that contains 'Closes #$ISSUE_NUM' in its body description." >> open_code_prompt.txt
+          
+          echo -e "\nPATH B: [INTENTIONAL DESIGN - REJECT IT]" >> open_code_prompt.txt
+          echo "If you evaluate that the code is intentional, optimal, or should remain unchanged, do NOT edit any repository code or open a PR. Instead, run these terminal commands immediately:" >> open_code_prompt.txt
+          echo "1. gh issue edit $ISSUE_NUM --add-label \"wontfix\"" >> open_code_prompt.txt
+          echo "2. gh issue comment $ISSUE_NUM --body \"### 🛑 Architectural Review: Intentional Design\nI have deeply analyzed the codebase regarding this report. I recommend **against** changing this code for the following reasons:\n\n<Provide a highly detailed, professional engineering justification explaining why this code pattern is correct, necessary, or optimal given your context.>\"" >> open_code_prompt.txt
+
+      - name: Read generated prompt
+        id: prompt
+        run: echo "PROMPT<<EOF" >> $GITHUB_OUTPUT && cat open_code_prompt.txt >> $GITHUB_OUTPUT && echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Process Issue with DeepSeek V4 Flash
+        uses: anomalyco/opencode/github@v1.17.13
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          model: opencode-go/deepseek-v4-flash
+          use_github_token: true
+          prompt: ${{ steps.prompt.outputs.PROMPT }}
