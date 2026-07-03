@@ -4656,8 +4656,7 @@ function updateStarIcon(id, isFav) {
 
 async function toggleFavorite(shareId) {
   if (_favDebounce[shareId]) return;
-  _favDebounce[shareId] = true;
-  setTimeout(() => delete _favDebounce[shareId], 300);
+  _favDebounce[shareId] = setTimeout(() => delete _favDebounce[shareId], 300);
   if (!currentUser) return;
   const share = state.data.lastSharedPlans.find(s => s.id === shareId);
   if (!share) return;
@@ -4671,6 +4670,7 @@ async function toggleFavorite(shareId) {
   } catch (err) {
     share.favorite = !newVal;
     updateStarIcon(shareId, !newVal);
+    clearTimeout(_favDebounce[shareId]);
     delete _favDebounce[shareId];
     console.error('Toggle favorite failed', err.code, err.message);
   }
@@ -4678,8 +4678,7 @@ async function toggleFavorite(shareId) {
 
 async function togglePlanFavorite(planId) {
   if (_favDebounce[planId]) return;
-  _favDebounce[planId] = true;
-  setTimeout(() => delete _favDebounce[planId], 300);
+  _favDebounce[planId] = setTimeout(() => delete _favDebounce[planId], 300);
   if (!currentUser) return;
   const plan = state.data.lastWorkoutPlans.find(p => p.id === planId);
   if (!plan) return;
@@ -4693,6 +4692,7 @@ async function togglePlanFavorite(planId) {
   } catch (err) {
     plan.favorite = !newVal;
     updateStarIcon(planId, !newVal);
+    clearTimeout(_favDebounce[planId]);
     delete _favDebounce[planId];
     console.error('Toggle plan favorite failed', err.code, err.message);
   }
@@ -4700,8 +4700,7 @@ async function togglePlanFavorite(planId) {
 
 async function toggleStructuredFavorite(swId) {
   if (_favDebounce[swId]) return;
-  _favDebounce[swId] = true;
-  setTimeout(() => delete _favDebounce[swId], 300);
+  _favDebounce[swId] = setTimeout(() => delete _favDebounce[swId], 300);
   if (!currentUser) return;
   const sw = state.data.lastStructuredWorkouts.find(w => w.id === swId);
   if (!sw) return;
@@ -4715,6 +4714,7 @@ async function toggleStructuredFavorite(swId) {
   } catch (err) {
     sw.favorite = !newVal;
     updateStarIcon(swId, !newVal);
+    clearTimeout(_favDebounce[swId]);
     delete _favDebounce[swId];
     console.error('Toggle structured favorite failed', err.code, err.message);
   }
