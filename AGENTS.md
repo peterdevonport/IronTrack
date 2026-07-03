@@ -1,81 +1,31 @@
-# Work Summary
+# OpenCode System Instructions & Guardrails
 
-## What was done
+## 1. Critical Git Workflow
+- **ALWAYS** run `git checkout master && git pull origin master` before starting any new task.
+- **ALWAYS** create a new feature or bugfix branch from `master` for all work.
+- **NEVER** commit, modify, or push code directly to the `master` branch.
+- **Branch Naming Convention:** Use `feature/short-description` or `bugfix/short-description`.
+- **Pull Requests:** Push the completed branch to the remote repository. Do not attempt to merge into `master` via CLI.
 
-### AGENTS.md (this file)
-Created a persistent work session summary so state is never lost.
+## 2. Development & Coding Standards
+- **Write Clean Code:** Prioritize readability, modularity, and adherence to established project patterns.
+- **Do Not Guess:** If a dependency, API, or architectural pattern is ambiguous, stop and ask the user for clarification.
+- **No Ghost Code:** Delete or refactor unused variables, dead code, and temporary logging statements before finalizing a task.
+- **Comments & Docs:** Add meaningful inline comments for complex logic, and update relevant documentation (`README.md`, etc.) if system behavior changes.
 
-### Bug fix — `redoWorkout()` feedback target (issue: `app.js`)
-- Fixed `showFeedback` call to reference `'planFeedback'` instead of dynamically computed `${sw.type.toLowerCase()}Feedback` (line 3591)
+## 3. Commit Message Guidelines
+- **ALWAYS** use Conventional Commits formatting for all commit messages. 
+- **Format:** `<type>(<scope>): <short description in imperative mood>`
+  - *Examples:* `feat(auth): add JWT validation middleware`, `fix(api): resolve null pointer in user payload`
+- **Allowed Types:** `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`.
 
-### Bug fix — `loadPlan()` feedback target (issue: `app.js`)
-- Fixed `showFeedback` call to reference `'planFeedback'` instead of dynamically computed `${plan.type.toLowerCase()}Feedback` (line 3566)
+## 4. Execution & Safety Guardrails
+- **NEVER** run destructive commands (e.g., `rm -rf`, `git reset --hard`) without explicit, sequential confirmation from the user.
+- **Incremental Progress:** Break large tasks into smaller, logical steps. Verify each step before moving to the next.
 
-### Bug fix — `loadSharedPlan()` feedback target (issue: `app.js`)
-- Fixed `showFeedback` call to reference `'planFeedback'` instead of dynamically computed `${plan.type.toLowerCase()}Feedback` (line 4355)
-
-### Missing `onclick` handler — `#plan-add-btn` (issue: `index.html`)
-- Added `onclick="handlePlanAdd()"` to the button element (line 814)
-
-### Dead initialization code (issue: `app.js`)
-- Replaced `addMovementRow('fortime-movement-list')` with comment (line ~4909)
-- Replaced `addMovementRow('interval-movement-list')` with comment
-- Replaced `addMinuteSlot()` with comment (line ~4941)
-- Replaced `addMovementRow()` inside `#movement-list` check with comment (line ~5004)
-- Replaced old per-type event listeners for `.movement-weight` with unified `#plan-weight` / `#plan-reps` listener
-
-### Dead window exports (issue: `app.js`)
-- Removed `window.addMovementRow` / `window.removeMovementRow`
-- Removed `window.addMinuteSlot` / `window.handleMovementExerciseChange`
-- Removed `window.saveAmrapPlan`, `saveEmomPlan`, `saveForTimePlan`, `saveIntervalPlan`
-- Added `window.handlePlanExerciseChange`, `window.addPlanMinuteSlot`, `window.handlePlanAdd`, `window.togglePlanWms`, `window.savePlan`
-
-### `togglePlanWms()` fix (issue: `app.js`)
-- Now always calls `updatePlanCalcPreview()` after mode change, even when switching to absolute (kg) mode (line ~1925)
-- Fixes stale button disabled state when switching modes
-
-## Files changed
-- `app.js` — cleanup of dead initialization code, window exports, feedback targets
-- `index.html` — added `onclick="handlePlanAdd()"` to `#plan-add-btn`
-- `AGENTS.md` — created this file for persistent state
-
-## Remaining dead code — OK to leave
-`submitAmrapWorkout`, `submitEmomWorkout`, `submitForTimeWorkout`, `submitIntervalWorkout` — still reference `addMinuteSlot`, `getMovementData`, `addMovementRow`, and per-type feedback elements. No callers anywhere. Harmless dead code.
-
-### Debugging — empty `workoutMovements` on "Do Workout"
-- User confirmed no docs from today in Firestore `workouts` collection. `writeStructuredLogEntry` was never reached.
-- `structure.movements` was empty when captured, so `generateForTimeContributions` loop had 0 iterations.
-- Most likely cause: `handleWorkoutTypeChange()` (on `#workout-type` `onchange`) clears `workoutMovements` between adding movements and clicking "Do Workout".
-
-#### Fixes applied (`app.js`)
-1. **`doWorkout()`** — added validation after `capturePlanStructure()`: checks movements/minutes non-empty. Shows feedback and returns without switching tab if empty. `switchTab('training')` moved after this check.
-2. **All 4 generators** — added `console.log` with `[contrib]` prefix showing `workoutId`, counts, key params.
-3. **`writeStructuredLogEntry()`** — added `console.log` with `[contrib]` showing exercise, sets, reps, `estimatedLoad`, `totalVolume`.
-4. **`submitPendingWorkout()`** — added `console.log` with `[submitPending]` prefix before each generator call showing movements/minutes length.
-
-### Debugging — `writeStructuredLogEntry` confirm write
-- User confirmed `[contrib] writeStructuredLogEntry` logs appear but no docs in Firestore `workouts` collection.
-- `window.__lastWorkouts` exposed at line 963 for console inspection.
-- **Fix applied:** `writeStructuredLogEntry` now wraps `addDoc` in try-catch with `[contrib] addDoc SUCCESS/FAILED` log, re-throws on failure.
-
-### Bug fix — timestamp type mismatch (root cause)
-- Discovered existing `workouts` docs have Firestore **Timestamp** objects while new structured contributions used plain **number** (`Date.now()`).
-- Firestore sorts numbers **before** timestamps in ascending order, so in DESC order all Timestamp entries sort above number entries. The `limit(100)` query returned only Timestamp-type (old) entries, hiding all new structured contributions from `lastWorkouts` → volume chart appeared blank.
-- **Fix:** Added `Timestamp` to Firebase import. Changed `writeStructuredLogEntry`, manual log form, PB log, and onboarding entry to use `Timestamp.now()` instead of `Date.now()`. Removed unused `now` param from `writeStructuredLogEntry` and cleaned up all generator call sites.
-
-### Schema-driven form refactoring (feat/schema-driven-forms)
-- Created FORM_SCHEMAS registry with 9 schemas (3 contexts × 3 exercise types: standard, bodyweight, weighted)
-- Added renderFormFields() building 12-column grid from schema, handling number, readonly-calc, and wms field types
-- Added getSchemaKey() exercise → schema variant mapping
-- Added computeTotalLoad() with context-aware prefix
-- Replaced hardcoded Log a Lift inputs with #log-set-fields rendered by refreshLogSetForm()
-- Replaced hardcoded PB inputs with #pb-log-fields rendered by refreshPBForm()
-- Replaced hardcoded Plan inputs with #plan-movement-fields rendered by refreshPlanForm()
-- refreshLogSetForm/PB/Plan all render standard schema on page load (no exercise) and correct schema on exercise change
-- handlePlanAdd() now handles bodyweight (reads bodyweight) and weighted (reads bodyweight + ext-load) exercises
-- updatePlanCalcPreview() handles bodyweight/weighted (just checks reps > 0, enables Add button)
-- All three forms wired with input event delegation for real-time total-load computation
-- Removed dead code: toggleBWFields(), updateEstimatedLoadDisplay(), stale DOM refs
-- Calls to refreshLogSetForm() and refreshPBForm() on page load after populateExerciseDropdown()
-- Calls to refreshPlanForm() on page load after populateMovementDropdowns()
-- computeTotalLoad(label) ref removed — function now returns plain string; callers updated
+## 5. Verification Checklist (Definition of Done)
+Before declaring a task finished, you must successfully execute:
+1. Run `git status` to ensure no untracked, accidental, or sensitive files (like `.env`) are being staged.
+2. Stage and commit the changes locally using the prescribed Conventional Commit format.
+3. Push the feature/bugfix branch to the GitHub remote repository to trigger the GitHub workflows.
+4. Output a summary of the changes made and provide the exact branch name so the user can open a Pull Request.
