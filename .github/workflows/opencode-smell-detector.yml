@@ -1,9 +1,10 @@
-name: OpenCode Code Smell Reviewer
+name: OpenCode Daily Code Smell Reviewer
 
 on:
-  pull_request:
-    types: [opened, synchronize]
-    branches: [main, master]
+  schedule:
+    # Runs exactly at 04:00 UTC every single day
+    - cron: '0 4 * * *'
+  workflow_dispatch: # Allows you to trigger it manually anytime via the Actions tab
 
 jobs:
   review-smells:
@@ -26,8 +27,8 @@ jobs:
     permissions:
       contents: read
       issues: write
-      pull-requests: write
-      id-token: write
+      #pull-requests: write
+      #id-token: write
       
     steps:
       - name: Checkout Code
