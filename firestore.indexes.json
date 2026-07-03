@@ -9,6 +9,14 @@
       ]
     },
     {
+      "collectionGroup": "workout_plans",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "structured_workouts",
       "queryScope": "COLLECTION",
       "fields": [

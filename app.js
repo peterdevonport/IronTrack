@@ -525,6 +525,9 @@ const state = {
 let unsubscribeStructured = null;
 let unsubscribePlans = null;
 let unsubscribeSharedPlans = null;
+let activeDates = new Set();
+let listenersAttached = false;
+let _favDebounce = {};
 
 const tabContents = document.querySelectorAll('.tab-content');
 const navTabs = document.querySelectorAll('.nav-tab');
@@ -582,10 +585,12 @@ onAuthStateChanged(auth, async (user) => {
         }
 
         syncLeaderboardFeed();
+        if (listenersAttached) return;
         listenToDataStream(user.uid);
         listenToStructuredWorkouts(user.uid);
         listenToPlans(user.uid);
         listenToSharedPlans(user.uid);
+        listenersAttached = true;
         loadConsistencyConfig();
 
         showQRCode()
@@ -647,11 +652,12 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('leaderboardRows').innerHTML = '';
         currentUser = null;
         urlParamsProcessed = false;
-        window.__irontrackActiveDates = undefined;
+        activeDates = undefined;
         state.calendar.month = new Date();
         state.calendar.selectedDate = null;
         state.calendar.compact = true;
         state.calendar.weekOffset = 0;
+        listenersAttached = false;
         window.__irontrackAuthState = 'signed-out';
     }
 });
@@ -941,9 +947,11 @@ async function saveOnboarding() {
 
         // Now start the dashboard
         syncLeaderboardFeed();
+        if (listenersAttached) return;
         listenToDataStream(currentUser.uid);
         listenToStructuredWorkouts(currentUser.uid);
         listenToPlans(currentUser.uid);
+        listenersAttached = true;
         loadConsistencyConfig();
         showQRCode();
 
@@ -1263,19 +1271,19 @@ function processWorkoutSnapshot(docs, getEffectiveLoad, estimate1RM) {
     const reps = parseInt(data.reps, 10);
     const calculated1RM = estimate1RM(effectiveWeight, reps);
 
-    if (!state.cache.activeRecords[data.exercise] || calculated1RM > state.cache.activeRecords[data.exercise]) {
-      state.cache.activeRecords[data.exercise] = calculated1RM;
+    if (!activeRecords[data.exercise] || calculated1RM > activeRecords[data.exercise]) {
+      activeRecords[data.exercise] = calculated1RM;
     }
 
-    if (!state.cache.cachedMaxLoadByExercise[data.exercise] || effectiveWeight > state.cache.cachedMaxLoadByExercise[data.exercise]) {
-      state.cache.cachedMaxLoadByExercise[data.exercise] = effectiveWeight;
+    if (!cachedMaxLoadByExercise[data.exercise] || effectiveWeight > cachedMaxLoadByExercise[data.exercise]) {
+      cachedMaxLoadByExercise[data.exercise] = effectiveWeight;
     }
-    if (!state.cache.cachedMax1RMByExercise[data.exercise] || calculated1RM > state.cache.cachedMax1RMByExercise[data.exercise]) {
-      state.cache.cachedMax1RMByExercise[data.exercise] = calculated1RM;
+    if (!cachedMax1RMByExercise[data.exercise] || calculated1RM > cachedMax1RMByExercise[data.exercise]) {
+      cachedMax1RMByExercise[data.exercise] = calculated1RM;
     }
 
-    if (!state.cache.cachedMaxRepsByExercise[data.exercise] || reps > state.cache.cachedMaxRepsByExercise[data.exercise]) {
-      state.cache.cachedMaxRepsByExercise[data.exercise] = reps;
+    if (!cachedMaxRepsByExercise[data.exercise] || reps > cachedMaxRepsByExercise[data.exercise]) {
+      cachedMaxRepsByExercise[data.exercise] = reps;
     }
   });
 
@@ -1322,7 +1330,7 @@ function listenToDataStream(uid) {
         collection(db, "workouts"),
         where("userId", "==", uid),
         orderBy("timestamp", "desc"),
-        limit(100)
+        limit(500)
     );
     unsubscribeLogs = onSnapshot(q, async (snapshot) => {
         const processed = processWorkoutSnapshot(snapshot.docs, getEffectiveLoad, estimate1RM);
@@ -2535,7 +2543,7 @@ async function savePlan() {
     type,
     structure,
     status: 'active',
-    createdAt: Date.now()
+    createdAt: serverTimestamp()
   };
 
   addDoc(collection(db, "workout_plans"), planDoc).then(() => {
@@ -2895,14 +2903,12 @@ async function computeAndSyncDailyActivity() {
     state.data.lastWorkouts.forEach(w => allTimestamps.push(w.timestamp));
     state.data.lastStructuredWorkouts.forEach(sw => allTimestamps.push(sw.timestamp));
     
-    const activeDates = new Set();
+    activeDates = new Set();
     allTimestamps.forEach(ts => {
         const d = new Date(ts);
         const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         activeDates.add(dateStr);
     });
-    
-    window.__irontrackActiveDates = activeDates;
     
     renderConsistencyUI();
 }
@@ -2917,7 +2923,6 @@ function renderConsistencyUI() {
 }
 
 function calculateChallengeProgress() {
-    const activeDates = window.__irontrackActiveDates || new Set();
     const today = new Date();
     const currentYear = today.getFullYear();
     const currentMonth = today.getMonth();
@@ -3085,7 +3090,6 @@ function renderCalendar() {
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const shortMonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-    const activeDates = window.__irontrackActiveDates || new Set();
     const today = new Date();
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
@@ -3164,7 +3168,6 @@ function renderCalendar() {
 }
 
 function updateConsistencyMetrics() {
-    const activeDates = window.__irontrackActiveDates || new Set();
     const today = new Date();
     
     function countActiveDays(daysBack) {
@@ -3340,7 +3343,6 @@ function applyCalendarNav(delta) {
 }
 
 function autoSelectFirstActiveDay() {
-    const activeDates = window.__irontrackActiveDates || new Set();
     if (activeDates.size === 0) return;
     let startDate, endDate;
     if (state.calendar.compact) {
@@ -3419,7 +3421,7 @@ function listenToStructuredWorkouts(uid) {
     collection(db, "structured_workouts"),
     where("userId", "==", uid),
     orderBy("timestamp", "desc"),
-    limit(100)
+    limit(500)
   );
   unsubscribeStructured = onSnapshot(q, (snapshot) => {
     const workouts = [];
@@ -4653,6 +4655,9 @@ function updateStarIcon(id, isFav) {
 }
 
 async function toggleFavorite(shareId) {
+  if (_favDebounce[shareId]) return;
+  _favDebounce[shareId] = true;
+  setTimeout(() => delete _favDebounce[shareId], 300);
   if (!currentUser) return;
   const share = state.data.lastSharedPlans.find(s => s.id === shareId);
   if (!share) return;
@@ -4671,6 +4676,9 @@ async function toggleFavorite(shareId) {
 }
 
 async function togglePlanFavorite(planId) {
+  if (_favDebounce[planId]) return;
+  _favDebounce[planId] = true;
+  setTimeout(() => delete _favDebounce[planId], 300);
   if (!currentUser) return;
   const plan = state.data.lastWorkoutPlans.find(p => p.id === planId);
   if (!plan) return;
@@ -4689,6 +4697,9 @@ async function togglePlanFavorite(planId) {
 }
 
 async function toggleStructuredFavorite(swId) {
+  if (_favDebounce[swId]) return;
+  _favDebounce[swId] = true;
+  setTimeout(() => delete _favDebounce[swId], 300);
   if (!currentUser) return;
   const sw = state.data.lastStructuredWorkouts.find(w => w.id === swId);
   if (!sw) return;
@@ -5617,40 +5628,28 @@ async function renderActiveFriendsList() {
   }
 
   try {
-    const friendResults = await Promise.allSettled(
-      state.social.userFriendsList.map(fUid => getProfileDocument(fUid))
-    );
-
-    state.social.friendDisplayCache = {};
-    friendResults.forEach((result, i) => {
-      if (result.status === 'fulfilled' && result.value.exists()) {
-        state.social.friendDisplayCache[state.social.userFriendsList[i]] = result.value.data();
-      }
-    });
-
     const perPage = 3;
     const totalPages = Math.max(1, Math.ceil(state.social.userFriendsList.length / perPage));
     state.pagination.friends = Math.min(state.pagination.friends, totalPages);
     const start = (state.pagination.friends - 1) * perPage;
     const pageItems = state.social.userFriendsList.slice(start, start + perPage);
 
+    // Only fetch uncached profiles for the visible page
+    const uncached = pageItems.filter(fUid => !state.social.friendDisplayCache[fUid]);
+    if (uncached.length > 0) {
+      const results = await Promise.allSettled(uncached.map(fUid => getProfileDocument(fUid)));
+      results.forEach((result, i) => {
+        if (result.status === 'fulfilled' && result.value.exists()) {
+          state.social.friendDisplayCache[uncached[i]] = result.value.data();
+        }
+      });
+    }
+
     let html = '';
     pageItems.forEach((fUid, i) => {
-      const globalIdx = start + i;
-      const result = friendResults[globalIdx];
+      const data = state.social.friendDisplayCache[fUid];
 
-      if (result.status === 'rejected') {
-        html += `
-          <div class="flex justify-between items-center bg-slate-900/50 p-2 border border-slate-800 rounded">
-            <span class="font-medium text-slate-300 truncate max-w-[120px]">Locked Friend</span>
-            <span class="text-xs font-mono text-yellow-400">Permission denied</span>
-          </div>`;
-        return;
-      }
-
-      const fDoc = result.value;
-      if (fDoc && fDoc.exists()) {
-        const data = fDoc.data();
+      if (data) {
         html += `
           <div class="flex justify-between items-center bg-slate-900/50 p-2 border border-slate-800 rounded">
             <span class="font-medium text-slate-300 truncate max-w-[120px]">${getDisplayName(data, fUid)}</span>
