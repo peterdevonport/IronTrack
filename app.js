@@ -357,9 +357,15 @@ function computeEffectiveLoad(exercise, weight, externalLoad, bodyweight) {
   return weight || 0;
 }
 
+const EPLEY_CONSTANT = 30;
+
 function estimate1RM(load, reps) {
   if (reps === 1) return load;
-  return load * (1 + reps / 30);
+  return load * (1 + reps / EPLEY_CONSTANT);
+}
+
+function estimateWeightForReps(oneRM, reps) {
+  return oneRM / (1 + reps / EPLEY_CONSTANT);
 }
 
 function getEffectiveLoad(workout) {
@@ -1486,8 +1492,7 @@ function updateCalcPreview() {
 
         const rir = 10 - rpe;
         const totalRepsPossible = reps + rir;
-        const pct1RM = 100 / (1 + totalRepsPossible / 30);
-        weight = oneRM * pct1RM / 100;
+        weight = estimateWeightForReps(oneRM, totalRepsPossible);
         detail = `${reps} reps @ RPE ${rpe}  ·  ${rir} RIR  ·  Based on est. 1RM: ${Math.round(oneRM)} kg`;
     }
 
@@ -1568,7 +1573,7 @@ function renderCalcEntries() {
             source = `${entry.exercise} ${entry.pct}%`;
         } else {
             const rir = 10 - entry.rpe;
-            weight = Math.round(oneRM * (100 / (1 + (entry.reps + rir) / 30)) / 100);
+            weight = Math.round(estimateWeightForReps(oneRM, entry.reps + rir));
             source = `${entry.exercise} ${entry.reps} reps @ RPE ${entry.rpe}`;
         }
         html += `
@@ -2030,7 +2035,7 @@ async function writeStructuredLogEntry({ workoutId, movement, sets, totalReps, e
     if (oneRM > 0) {
       const rir = 10 - movement.rpe;
       const totalRepsPossible = movement.reps + rir;
-      estimatedLoad = Math.round(oneRM / (1 + totalRepsPossible / 30));
+      estimatedLoad = Math.round(estimateWeightForReps(oneRM, totalRepsPossible));
       weight = estimatedLoad;
     }
   }
@@ -2201,7 +2206,7 @@ function addPlanMinuteSlot(data) {
     } else if (data.weightMode === 'rpe' && data.rpe) {
       const rir = 10 - data.rpe;
       const totalRepsPossible = data.reps + rir;
-      weightDisplay = oneRM > 0 ? Math.round(oneRM / (1 + totalRepsPossible / 30)) : data.weight;
+      weightDisplay = oneRM > 0 ? Math.round(estimateWeightForReps(oneRM, totalRepsPossible)) : data.weight;
       source = `${data.exerciseId} \u00D7 ${data.reps} @ ${weightDisplay} kg (RPE ${data.rpe})`;
     } else {
       source = `${data.exerciseId} \u00D7 ${data.reps} @ ${data.weight} kg`;
@@ -2309,7 +2314,7 @@ function previewRpeMode(rpe, reps, oneRM, calcSpan) {
   if (!isNaN(rpe) && rpe >= 1 && rpe <= 10 && reps && reps >= 1) {
     const rir = 10 - rpe;
     const totalRepsPossible = reps + rir;
-    const targetWeight = Math.round(oneRM / (1 + totalRepsPossible / 30));
+    const targetWeight = Math.round(estimateWeightForReps(oneRM, totalRepsPossible));
     calcSpan.textContent = '\u2192 ' + targetWeight + ' kg';
     calcSpan.className = 'text-emerald-400 font-mono text-xs';
     return true;
@@ -2435,8 +2440,7 @@ function renderPlanMovements() {
       source = `${m.reps}x ${m.exerciseId} @ ${m.pct}% 1RM (${weight}kg)`;
     } else if (m.weightMode === 'rpe' && m.rpe) {
       const rir = 10 - m.rpe;
-      const pct1RM = 100 / (1 + (m.reps + rir) / 30);
-      weight = oneRM > 0 ? Math.round(oneRM * pct1RM / 100) : m.weight;
+      weight = oneRM > 0 ? Math.round(estimateWeightForReps(oneRM, m.reps + rir)) : m.weight;
       source = `${m.reps}x ${m.exerciseId} @ RPE ${m.rpe} (${weight}kg)`;
     } else {
       weight = m.weight;
@@ -3842,8 +3846,7 @@ function formatMovementWeight(m) {
   }
   if (m.weightMode === 'rpe' && m.rpe) {
     const rir = 10 - m.rpe;
-    const pct1RM = 100 / (1 + (reps + rir) / 30);
-    const computed = oneRM > 0 ? Math.round(oneRM * pct1RM / 100) : m.weight;
+    const computed = oneRM > 0 ? Math.round(estimateWeightForReps(oneRM, reps + rir)) : m.weight;
     return ` @ RPE ${m.rpe} (${computed}kg)`;
   }
   if (m.weight) return ` @ ${m.weight}kg`;
@@ -4893,7 +4896,7 @@ function renderLogs(workouts) {
         const load = getEffectiveLoad(workout);
         workout._isPB = load >= (state.cache.cachedMaxLoadByExercise[workout.exercise] || 0) && load > 0;
         const reps = parseInt(workout.reps, 10) || 1;
-        const oneRM = Math.round(load * (1 + reps / 30));
+        const oneRM = Math.round(estimate1RM(load, reps));
         workout._isMax1RM = oneRM >= (state.cache.cachedMax1RMByExercise[workout.exercise] || 0) && oneRM > 0;
     });
 
@@ -4930,7 +4933,7 @@ function renderLogs(workouts) {
         const isPB = !!workout._isPB;
         const isMax1RM = !!workout._isMax1RM;
         const is1RMOnly = isMax1RM && !isPB;
-        const oneRM = Math.round(load * (1 + reps / 30));
+        const oneRM = Math.round(estimate1RM(load, reps));
         const totalWorkReps = workout.totalWorkReps || (reps * sets);
         const totalVolume = Math.round(load * totalWorkReps);
         let borderClass;
