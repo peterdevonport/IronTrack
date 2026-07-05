@@ -715,6 +715,7 @@ if (togglePasswordBtn) {
     passwordInput.type = isPassword ? 'text' : 'password';
     eyeIcon.classList.toggle('hidden', !isPassword);
     eyeOffIcon.classList.toggle('hidden', isPassword);
+    togglePasswordBtn.setAttribute('aria-pressed', String(!isPassword));
   });
 }
 
@@ -726,6 +727,7 @@ document.querySelectorAll('.toggle-pw-btn').forEach(btn => {
     target.type = isPassword ? 'text' : 'password';
     btn.querySelector('.eye-icon').classList.toggle('hidden', !isPassword);
     btn.querySelector('.eye-off-icon').classList.toggle('hidden', isPassword);
+    btn.setAttribute('aria-pressed', String(!isPassword));
   });
 });
 
@@ -1590,7 +1592,7 @@ function renderCalcEntries() {
             <span class="text-slate-200 font-mono text-sm">${escapeHtml(source)}</span>
             <div class="flex items-center gap-2">
                 <span class="text-slate-200 font-mono text-sm">${weight} kg</span>
-                <button onclick="handleCalcRemove(this)" data-exercise="${escapeHtml(entry.exercise)}" data-index="${entry.idx}" class="text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"><i data-lucide="circle-minus" size="18"></i></button>
+                <button data-action="calc-remove" data-exercise="${escapeHtml(entry.exercise)}" data-index="${entry.idx}" class="text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"><i data-lucide="circle-minus" size="18"></i></button>
             </div>
         </div>`;
     });
@@ -2211,7 +2213,7 @@ function addPlanMinuteSlot(data) {
     row.innerHTML = `
       <span class="minute-label text-xs text-slate-500 font-mono w-12 shrink-0">${label}</span>
       <span class="text-slate-200 font-mono text-sm flex-1">${source}</span>
-      <button onclick="removeMinuteSlot(this)" class="text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer shrink-0"><i data-lucide="circle-minus" size="18"></i></button>
+      <button data-action="remove-minute-slot" class="text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer shrink-0"><i data-lucide="circle-minus" size="18"></i></button>
     `;
     row.dataset.exerciseId = data.exerciseId;
     row.dataset.reps = data.reps;
@@ -2223,7 +2225,7 @@ function addPlanMinuteSlot(data) {
     row.innerHTML = `
       <span class="minute-label text-xs text-slate-500 font-mono w-12 shrink-0">${label}</span>
       <span class="text-slate-500 font-mono text-sm flex-1 italic">(empty)</span>
-      <button onclick="removeMinuteSlot(this)" class="text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer shrink-0"><i data-lucide="circle-minus" size="18"></i></button>
+      <button data-action="remove-minute-slot" class="text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer shrink-0"><i data-lucide="circle-minus" size="18"></i></button>
     `;
   }
 
@@ -2445,7 +2447,7 @@ function renderPlanMovements() {
     html += `
     <div class="flex justify-between items-center py-1.5 px-1 rounded-lg hover:bg-slate-800/40">
       <span class="text-slate-200 font-mono text-sm truncate">${escapeHtml(source)}</span>
-      <button type="button" onclick="removePlanMovement(${i})" class="plan-movement-remove shrink-0 hover:!text-rose-400 transition-colors" title="Remove">
+      <button type="button" data-action="remove-plan-movement" data-index="${i}" class="plan-movement-remove shrink-0 hover:!text-rose-400 transition-colors" title="Remove">
         <i data-lucide="trash-2" size="18"></i>
       </button>
     </div>`;
@@ -2984,6 +2986,7 @@ function setChallengeCard(idPrefix, current, target, pct, completed) {
 
     progressEl.textContent = completed ? `${current} / ${target} \u{1F3C6}` : `${current} / ${target}`;
     barEl.style.width = `${pct}%`;
+    barEl.setAttribute('aria-valuenow', Math.round(pct));
 }
 
 async function loadConsistencyConfig() {
@@ -3101,7 +3104,7 @@ function buildCalendarDayHtml(dateStr, day, isActive, isToday, isSelected, isThi
   if (isActive) cls += ' cal-day-active';
   if (isToday) cls += ' cal-day-today';
   if (isSelected) cls += ' cal-day-selected';
-  return `<div class="${cls}" onclick="selectCalendarDay('${dateStr}')" data-date="${dateStr}">${day}</div>`;
+  return `<div class="${cls}" data-action="select-calendar-day" data-date="${dateStr}">${day}</div>`;
 }
 
 function renderCalendar() {
@@ -3211,8 +3214,8 @@ function updateConsistencyMetrics() {
     
     if (el7) el7.textContent = `${d7} / 7`;
     if (el28) el28.textContent = `${d28} / 28`;
-    if (bar7) bar7.style.width = `${Math.min(100, (d7 / 7) * 100)}%`;
-    if (bar28) bar28.style.width = `${Math.min(100, (d28 / 28) * 100)}%`;
+    if (bar7) { bar7.style.width = `${Math.min(100, (d7 / 7) * 100)}%`; bar7.setAttribute('aria-valuenow', Math.min(100, Math.round((d7 / 7) * 100))); }
+    if (bar28) { bar28.style.width = `${Math.min(100, (d28 / 28) * 100)}%`; bar28.setAttribute('aria-valuenow', Math.min(100, Math.round((d28 / 28) * 100))); }
     
     const streak = countConsecutiveDays(today, activeDates);
     if (streak7) {
@@ -3476,7 +3479,7 @@ function renderWorkoutCard(id, name, type, badgeClass, descLine, metadataHtml, m
   const hasMovements = movementsHtml.trim().length > 0;
 
   return `<div class="structured-card p-4 rounded-2xl mb-3 shadow-2xl shadow-slate-950/60 transition-all duration-200" style="background-color: var(--slate-900);" data-workout-id="${id}">
-    <div class="flex justify-between items-stretch gap-3 ${hasMovements ? 'structured-header-clickable cursor-pointer' : ''}"${hasMovements ? ` onclick="toggleWorkoutCard(this)"` : ''}>
+    <div class="flex justify-between items-stretch gap-3 ${hasMovements ? 'structured-header-clickable cursor-pointer' : ''}"${hasMovements ? ` data-action="toggle-workout-card"` : ''}>
       <div class="flex flex-col justify-start gap-1.5 min-w-0 flex-1">
         <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm truncate">${escapeHtml(name)}</h4>
         ${metadataHtml}
@@ -3484,7 +3487,7 @@ function renderWorkoutCard(id, name, type, badgeClass, descLine, metadataHtml, m
         ${descLine ? `<span class="text-xs text-slate-400 font-mono mt-0.5">${escapeHtml(descLine)}</span>` : ''}
       </div>
       <div class="flex flex-col justify-between items-end shrink-0">
-        <button type="button" onclick="event.stopPropagation(); ${favCallback}" class="${favColorClass} hover:scale-110 transition-transform btn-fav-star" title="Favorite">
+        <button type="button" data-action="${favCallback}" data-id="${id}" class="${favColorClass} hover:scale-110 transition-transform btn-fav-star" title="Favorite">
           ${starIcon}
         </button>
       </div>
@@ -3495,7 +3498,7 @@ function renderWorkoutCard(id, name, type, badgeClass, descLine, metadataHtml, m
     </div>
     ${hasMovements ? `
     <div class="flex justify-end mt-3">
-      <span class="text-xs text-slate-500 font-medium hover:text-slate-300 transition-colors cursor-pointer show-more-text" onclick="event.stopPropagation(); toggleWorkoutCard(this)">Show more</span>
+      <span class="text-xs text-slate-500 font-medium hover:text-slate-300 transition-colors cursor-pointer show-more-text" data-action="toggle-workout-card">Show more</span>
     </div>` : ''}
 </div>`;
 }
@@ -3542,13 +3545,13 @@ function renderStructuredWorkoutCard(sw) {
   ].filter(Boolean).join('\n');
 
   const actionsHtml = [
-    `<button type="button" onclick="event.stopPropagation(); doStructuredWorkout('${sw.id}')" class="flex-1 btn-core is-primary-ghost btn-card-action" title="Do Workout"><i data-lucide="dumbbell" size="18"></i><span>Train</span></button>`,
-    `<button type="button" onclick="event.stopPropagation(); redoWorkout('${sw.id}')" class="flex-1 btn-core is-ghost btn-card-action" title="Load"><i data-lucide="clipboard-pen-line" size="18"></i><span>Plan</span></button>`,
-    `<button type="button" onclick="event.stopPropagation(); openShareModal('${sw.id}', true)" class="flex-1 btn-core is-ghost btn-card-action" title="Share"><i data-lucide="share-2" size="18"></i><span>Share</span></button>`,
-    `<button type="button" onclick="event.stopPropagation(); deleteStructuredWorkout('${sw.id}')" class="flex-1 btn-core is-ghost btn-card-action hover:!text-rose-400 hover:!border-rose-400" title="Delete"><i data-lucide="trash-2" size="18"></i><span>Delete</span></button>`
+    `<button type="button" data-action="do-structured-workout" data-id="${sw.id}" class="flex-1 btn-core is-primary-ghost btn-card-action" title="Do Workout"><i data-lucide="dumbbell" size="18"></i><span>Train</span></button>`,
+    `<button type="button" data-action="redo-workout" data-id="${sw.id}" class="flex-1 btn-core is-ghost btn-card-action" title="Load"><i data-lucide="clipboard-pen-line" size="18"></i><span>Plan</span></button>`,
+    `<button type="button" data-action="open-share-modal-workout" data-id="${sw.id}" class="flex-1 btn-core is-ghost btn-card-action" title="Share"><i data-lucide="share-2" size="18"></i><span>Share</span></button>`,
+    `<button type="button" data-action="delete-structured-workout" data-id="${sw.id}" class="flex-1 btn-core is-ghost btn-card-action hover:!text-rose-400 hover:!border-rose-400" title="Delete"><i data-lucide="trash-2" size="18"></i><span>Delete</span></button>`
   ].join('\n');
 
-  return renderWorkoutCard(sw.id, sw.name, type, badgeClass, descLine, metadataHtml, movementsHtml, actionsHtml, sw.favorite, `toggleStructuredFavorite('${sw.id}')`);
+  return renderWorkoutCard(sw.id, sw.name, type, badgeClass, descLine, metadataHtml, movementsHtml, actionsHtml, sw.favorite, 'toggle-structured-favorite');
 }
 
 function saveExpandedCardIds() {
@@ -3748,13 +3751,13 @@ function renderPlanCard(plan) {
     : '';
 
   const actionsHtml = [
-    `<button type="button" onclick="doPlanWorkout('${plan.id}')" class="flex-1 btn-core is-primary-ghost btn-card-action"><i data-lucide="dumbbell" size="18"></i><span>Train</span></button>`,
-    `<button type="button" onclick="loadPlan('${plan.id}')" class="flex-1 btn-core is-ghost btn-card-action"><i data-lucide="clipboard-pen-line" size="18"></i><span>Plan</span></button>`,
-    `<button type="button" onclick="openShareModal('${plan.id}')" class="flex-1 btn-core is-ghost btn-card-action"><i data-lucide="share-2" size="18"></i><span>Share</span></button>`,
-    `<button type="button" onclick="deletePlan('${plan.id}')" class="flex-1 btn-core is-ghost btn-card-action hover:!text-rose-400 hover:!border-rose-400"><i data-lucide="trash-2" size="18"></i><span>Delete</span></button>`
+    `<button type="button" data-action="do-plan-workout" data-id="${plan.id}" class="flex-1 btn-core is-primary-ghost btn-card-action"><i data-lucide="dumbbell" size="18"></i><span>Train</span></button>`,
+    `<button type="button" data-action="load-plan" data-id="${plan.id}" class="flex-1 btn-core is-ghost btn-card-action"><i data-lucide="clipboard-pen-line" size="18"></i><span>Plan</span></button>`,
+    `<button type="button" data-action="open-share-modal-plan" data-id="${plan.id}" class="flex-1 btn-core is-ghost btn-card-action"><i data-lucide="share-2" size="18"></i><span>Share</span></button>`,
+    `<button type="button" data-action="delete-plan" data-id="${plan.id}" class="flex-1 btn-core is-ghost btn-card-action hover:!text-rose-400 hover:!border-rose-400"><i data-lucide="trash-2" size="18"></i><span>Delete</span></button>`
   ].join('\n');
 
-  return renderWorkoutCard(plan.id, plan.name, type, badgeClass, descLine, metadataHtml, movementsHtml, actionsHtml, plan.favorite, `togglePlanFavorite('${plan.id}')`);
+  return renderWorkoutCard(plan.id, plan.name, type, badgeClass, descLine, metadataHtml, movementsHtml, actionsHtml, plan.favorite, 'toggle-plan-favorite');
 }
 
 async function deletePlan(planId) {
@@ -4595,12 +4598,12 @@ function renderSharedPlanCard(share) {
   ].filter(Boolean).join('\n');
 
   const actionsHtml = [
-    `<button type="button" onclick="doSharedPlan('${share.id}')" class="flex-1 btn-core is-primary-ghost btn-card-action"><i data-lucide="dumbbell" size="18"></i><span>Train</span></button>`,
-    `<button type="button" onclick="loadSharedPlan('${share.id}')" class="flex-1 btn-core is-ghost btn-card-action"><i data-lucide="clipboard-pen-line" size="18"></i><span>Plan</span></button>`,
-    `<button type="button" onclick="dismissSharedPlan('${share.id}')" class="flex-1 btn-core is-ghost btn-card-action hover:!text-rose-400 hover:!border-rose-400"><i data-lucide="trash-2" size="18"></i><span>Delete</span></button>`
+    `<button type="button" data-action="do-shared-plan" data-id="${share.id}" class="flex-1 btn-core is-primary-ghost btn-card-action"><i data-lucide="dumbbell" size="18"></i><span>Train</span></button>`,
+    `<button type="button" data-action="load-shared-plan" data-id="${share.id}" class="flex-1 btn-core is-ghost btn-card-action"><i data-lucide="clipboard-pen-line" size="18"></i><span>Plan</span></button>`,
+    `<button type="button" data-action="dismiss-shared-plan" data-id="${share.id}" class="flex-1 btn-core is-ghost btn-card-action hover:!text-rose-400 hover:!border-rose-400"><i data-lucide="trash-2" size="18"></i><span>Delete</span></button>`
   ].join('\n');
 
-  return renderWorkoutCard(share.id, share.content?.name || '', type, badgeClass, descLine, metadataHtml, displayMovements, actionsHtml, share.favorite, `toggleFavorite('${share.id}')`);
+  return renderWorkoutCard(share.id, share.content?.name || '', type, badgeClass, descLine, metadataHtml, displayMovements, actionsHtml, share.favorite, 'toggle-shared-favorite');
 }
 
 function changeSharedPlansPage(direction) {
@@ -5645,7 +5648,7 @@ function friendToHtml(fUid, data) {
       <div class="flex justify-between items-center bg-slate-900/50 p-2 border border-slate-800 rounded">
         <span class="font-medium text-slate-300 truncate max-w-[120px]">${getDisplayName(data, fUid)}</span>
         <div class="flex items-center gap-2">
-          <button type="button" onclick="removeFriend('${fUid}')" 
+          <button type="button" data-action="remove-friend" data-uid="${fUid}" 
           class="items-center justify-center rounded-full px-2 py-0.5 btn-core is-ghost text-xs hover:!text-rose-400 hover:!border-rose-400">
           <i data-lucide="user-minus" size="18"></i>
           </button>
@@ -5752,11 +5755,11 @@ function buildLeaderboardRow(profile, rank, isMe, isFriend) {
     ? ''
     : isFriend
       ? `<button type="button" class="${badgeBaseClasses} border border-slate-700 bg-slate-900 text-slate-200 transition hover:bg-rose-500/10 hover:text-rose-400 hover:border-rose-400/30" 
-      onclick="removeFriend('${profile.uid}')">
+      data-action="remove-friend" data-uid="${profile.uid}">
       <i data-lucide="user-minus" size="18"></i>
       </button>`
       : `<button type="button" class="${badgeBaseClasses} border border-slate-700 bg-slate-900 text-slate-200 transition hover:bg-slate-800" 
-      onclick="addFriendFromLeaderboard('${profile.uid}')">
+      data-action="add-friend" data-uid="${profile.uid}">
       <i data-lucide="user-plus" size="18"></i>
       </button>`;
 
@@ -5801,6 +5804,7 @@ function renderLeaderboardView() {
     if (expandBtn) {
       expandBtn.classList.toggle('hidden', filtered.length <= (slice.end - slice.start));
       expandBtn.textContent = 'Show All';
+      expandBtn.setAttribute('aria-expanded', 'false');
     }
   } else {
     filtered.forEach((f, i) => {
@@ -5812,6 +5816,7 @@ function renderLeaderboardView() {
     if (expandBtn) {
       expandBtn.classList.toggle('hidden', filtered.length <= 3 || !state.social.leaderboardShowAll);
       expandBtn.textContent = state.social.leaderboardShowAll ? 'Show Compact' : 'Show All';
+      expandBtn.setAttribute('aria-expanded', String(!!state.social.leaderboardShowAll));
     }
   }
 }
@@ -6074,59 +6079,39 @@ async function processClaimedPlan(claimId) {
     }
 }
 
-window.copyCyberTag = copyCyberTag;
-window.handleAddFriend = handleAddFriend;
-window.addFriendFromLeaderboard = addFriendFromLeaderboard;
-window.removeFriend = removeFriend;
-window.switchLeaderboardScope = switchLeaderboardScope;
-window.switchLeaderboardFormula = switchLeaderboardFormula;
-window.logRound = logRound;
-window.logRep = logRep;
-window.toggleLeaderboardExpand = toggleLeaderboardExpand;
-window.showQRCode = showQRCode;
-window.handleCalcRemove = handleCalcRemove;
-window.switchCalcMode = switchCalcMode;
-// addMovementRow and removeMovementRow removed - using unified Add Movement form
-window.handlePlanExerciseChange = handlePlanExerciseChange;
-window.handleWorkoutTypeChange = handleWorkoutTypeChange;
-window.addPlanMinuteSlot = addPlanMinuteSlot;
-window.removeMinuteSlot = removeMinuteSlot;
-window.handlePlanAdd = handlePlanAdd;
-window.togglePlanWms = togglePlanWms;
-window.toggleForTimeDnf = toggleForTimeDnf;
-window.selectCalendarDay = selectCalendarDay;
-window.changeCalendarNav = changeCalendarNav;
-window.goToCalendarToday = goToCalendarToday;
-window.toggleCalendarView = toggleCalendarView;
-window.closeCalendarDayDetail = closeCalendarDayDetail;
-window.savePlan = savePlan;
-window.loadPlan = loadPlan;
-window.toggleWorkoutCard = toggleWorkoutCard;
-window.redoWorkout = redoWorkout;
-window.deletePlan = deletePlan;
-window.removePlanMovement = removePlanMovement;
-window.deleteStructuredWorkout = deleteStructuredWorkout;
-window.openShareModal = openShareModal;
-window.saveSharedPlanToMyPlans = saveSharedPlanToMyPlans;
-window.dismissSharedPlan = dismissSharedPlan;
-window.switchPlansFilter = switchPlansFilter;
-window.toggleSelectAllFriends = toggleSelectAllFriends;
-window.toggleFavorite = toggleFavorite;
-window.togglePlanFavorite = togglePlanFavorite;
-window.toggleStructuredFavorite = toggleStructuredFavorite;
-window.doWorkout = doWorkout;
-window.doStructuredWorkout = doStructuredWorkout;
-window.doPlanWorkout = doPlanWorkout;
-window.doSharedPlan = doSharedPlan;
-window.submitPendingWorkout = submitPendingWorkout;
-window.loadSharedPlan = loadSharedPlan;
-window.switchShareMode = switchShareMode;
-window.shareByQR = shareByQR;
-window.updatePillActive = updatePillActive;
-window.switchVolumePeriod = switchVolumePeriod;
-window.shiftVolumePeriod = shiftVolumePeriod;
-window.goToCurrentPeriod = goToCurrentPeriod;
-window.onVolumeFilterChange = onVolumeFilterChange;
+// ── Action Handler Registry (replaces window.* inline onclick exports) ──
+const actionHandlers = {
+  'calc-remove':                (el) => handleCalcRemove(el),
+  'remove-minute-slot':         (el) => removeMinuteSlot(el),
+  'remove-plan-movement':       (el) => removePlanMovement(parseInt(el.dataset.index, 10)),
+  'select-calendar-day':        (el) => selectCalendarDay(el.dataset.date),
+  'toggle-workout-card':        (el) => toggleWorkoutCard(el),
+  'toggle-structured-favorite': (el) => toggleStructuredFavorite(el.dataset.id),
+  'toggle-plan-favorite':       (el) => togglePlanFavorite(el.dataset.id),
+  'toggle-shared-favorite':     (el) => toggleFavorite(el.dataset.id),
+  'do-structured-workout':      (el) => doStructuredWorkout(el.dataset.id),
+  'redo-workout':               (el) => redoWorkout(el.dataset.id),
+  'open-share-modal-workout':   (el) => openShareModal(el.dataset.id, true),
+  'delete-structured-workout':  (el) => deleteStructuredWorkout(el.dataset.id),
+  'do-plan-workout':            (el) => doPlanWorkout(el.dataset.id),
+  'load-plan':                  (el) => loadPlan(el.dataset.id),
+  'open-share-modal-plan':      (el) => openShareModal(el.dataset.id),
+  'delete-plan':                (el) => deletePlan(el.dataset.id),
+  'do-shared-plan':             (el) => doSharedPlan(el.dataset.id),
+  'load-shared-plan':           (el) => loadSharedPlan(el.dataset.id),
+  'dismiss-shared-plan':        (el) => dismissSharedPlan(el.dataset.id),
+  'remove-friend':              (el) => removeFriend(el.dataset.uid),
+  'add-friend':                 (el) => addFriendFromLeaderboard(el.dataset.uid),
+};
+
+function initActionDispatcher() {
+  document.body.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-action]');
+    if (!el) return;
+    const handler = actionHandlers[el.dataset.action];
+    if (handler) handler(el, e);
+  });
+}
 
 // Volume Chart Touch Swipe
 (function setupVolumeSwipe() {
@@ -6285,6 +6270,9 @@ function initCSPHandlers() {
   // Social
   bind('btnCopyCyberTag', 'click', copyCyberTag);
   bind('btnAddFriend', 'click', handleAddFriend);
+
+  // Event delegation for dynamic content
+  initActionDispatcher();
 }
 
 // Initialize CSP handlers after DOM is ready
