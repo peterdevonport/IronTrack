@@ -189,6 +189,100 @@ function computeTotalLoad(fieldValues, exerciseName, prefix) {
   return '\u2014';
 }
 
+function buildWmsField(wrapper, fields, grid) {
+  const labelRow = document.createElement('div');
+  labelRow.className = 'hidden sm:flex gap-3 items-center flex-nowrap mb-0.5';
+  const repsLabel = document.createElement('span');
+  repsLabel.className = 'form-label text-xs flex-1';
+  repsLabel.textContent = 'Reps';
+  labelRow.appendChild(repsLabel);
+  const labelSpacer = document.createElement('span');
+  labelSpacer.className = 'w-4 shrink-0';
+  labelRow.appendChild(labelSpacer);
+  const loadLabel = document.createElement('span');
+  loadLabel.className = 'form-label text-xs flex-1';
+  loadLabel.textContent = 'Load';
+  labelRow.appendChild(loadLabel);
+  const pillSpacer = document.createElement('span');
+  pillSpacer.className = 'w-24 shrink-0';
+  labelRow.appendChild(pillSpacer);
+  wrapper.appendChild(labelRow);
+
+  const inputRow = document.createElement('div');
+  inputRow.className = 'flex gap-3 items-center flex-nowrap';
+
+  const repsInput = document.createElement('input');
+  repsInput.type = 'number';
+  repsInput.id = 'plan-reps';
+  repsInput.placeholder = 'Reps';
+  repsInput.min = 1;
+  repsInput.step = 1;
+  repsInput.className = INPUT_CLASS + ' min-w-0 flex-1';
+  inputRow.appendChild(repsInput);
+  fields['plan-reps'] = repsInput;
+
+  const sep = document.createElement('span');
+  sep.className = 'text-slate-500 text-xs font-mono shrink-0';
+  sep.textContent = '@';
+  inputRow.appendChild(sep);
+
+  const loadInput = document.createElement('input');
+  loadInput.type = 'number';
+  loadInput.id = 'plan-weight';
+  loadInput.placeholder = 'Load';
+  loadInput.min = 0;
+  loadInput.step = 'any';
+  loadInput.className = INPUT_CLASS + ' min-w-0 flex-1';
+  inputRow.appendChild(loadInput);
+  fields['plan-weight'] = loadInput;
+
+  const pill = document.createElement('div');
+  pill.className = 'wms-pill shrink-0';
+  pill.id = 'plan-wms-pill';
+  pill.dataset.mode = 'absolute';
+  const modes = ['absolute', 'pct', 'rpe'];
+  const plabels = ['kg', '%', 'RPE'];
+  modes.forEach((m, i) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'wms-pill-btn' + (m === 'absolute' ? ' is-active' : '');
+    btn.dataset.mode = m;
+    btn.textContent = plabels[i];
+    btn.onclick = function () { togglePlanWms(this); };
+    pill.appendChild(btn);
+  });
+  fields['plan-wms-pill'] = pill;
+  inputRow.appendChild(pill);
+
+  wrapper.appendChild(inputRow);
+
+  const calcRow = document.createElement('div');
+  calcRow.className = 'flex items-center mt-1';
+  const calcSpan = document.createElement('span');
+  calcSpan.id = 'plan-calc-weight';
+  calcSpan.className = 'text-emerald-400 font-mono text-xs hidden';
+  calcSpan.textContent = '\u2192';
+  calcRow.appendChild(calcSpan);
+  fields['plan-calc-weight'] = calcSpan;
+  wrapper.appendChild(calcRow);
+
+  grid.appendChild(wrapper);
+}
+
+function applyFieldAttributes(input, fd, fieldValues) {
+  if (!fd.attrs) return;
+  Object.entries(fd.attrs).forEach(([k, v]) => {
+    if (k === 'value') {
+      input.value = v;
+      fieldValues[fd.id] = v;
+    } else if (v === true) {
+      input.setAttribute(k, '');
+    } else {
+      input.setAttribute(k, v);
+    }
+  });
+}
+
 function renderFormFields(containerId, schema, options = {}) {
   const container = document.getElementById(containerId);
   if (!container) return null;
@@ -213,92 +307,10 @@ function renderFormFields(containerId, schema, options = {}) {
         label.textContent = fd.label;
         wrapper.appendChild(label);
       }
-
-      // Label row — hidden on small screens, visible sm+
-      const labelRow = document.createElement('div');
-      labelRow.className = 'hidden sm:flex gap-3 items-center flex-nowrap mb-0.5';
-      const repsLabel = document.createElement('span');
-      repsLabel.className = 'form-label text-xs flex-1';
-      repsLabel.textContent = 'Reps';
-      labelRow.appendChild(repsLabel);
-      const labelSpacer = document.createElement('span');
-      labelSpacer.className = 'w-4 shrink-0';
-      labelRow.appendChild(labelSpacer);
-      const loadLabel = document.createElement('span');
-      loadLabel.className = 'form-label text-xs flex-1';
-      loadLabel.textContent = 'Load';
-      labelRow.appendChild(loadLabel);
-      const pillSpacer = document.createElement('span');
-      pillSpacer.className = 'w-24 shrink-0';
-      labelRow.appendChild(pillSpacer);
-      wrapper.appendChild(labelRow);
-
-      // Input row — all items vertically centered
-      const inputRow = document.createElement('div');
-      inputRow.className = 'flex gap-3 items-center flex-nowrap';
-
-      const repsInput = document.createElement('input');
-      repsInput.type = 'number';
-      repsInput.id = 'plan-reps';
-      repsInput.placeholder = 'Reps';
-      repsInput.min = 1;
-      repsInput.step = 1;
-      repsInput.className = INPUT_CLASS + ' min-w-0 flex-1';
-      inputRow.appendChild(repsInput);
-      fields['plan-reps'] = repsInput;
-
-      const sep = document.createElement('span');
-      sep.className = 'text-slate-500 text-xs font-mono shrink-0';
-      sep.textContent = '@';
-      inputRow.appendChild(sep);
-
-      const loadInput = document.createElement('input');
-      loadInput.type = 'number';
-      loadInput.id = 'plan-weight';
-      loadInput.placeholder = 'Load';
-      loadInput.min = 0;
-      loadInput.step = 'any';
-      loadInput.className = INPUT_CLASS + ' min-w-0 flex-1';
-      inputRow.appendChild(loadInput);
-      fields['plan-weight'] = loadInput;
-
-      // WMS pill
-      const pill = document.createElement('div');
-      pill.className = 'wms-pill shrink-0';
-      pill.id = 'plan-wms-pill';
-      pill.dataset.mode = 'absolute';
-      const modes = ['absolute', 'pct', 'rpe'];
-      const plabels = ['kg', '%', 'RPE'];
-      modes.forEach((m, i) => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'wms-pill-btn' + (m === 'absolute' ? ' is-active' : '');
-        btn.dataset.mode = m;
-        btn.textContent = plabels[i];
-        btn.onclick = function () { togglePlanWms(this); };
-        pill.appendChild(btn);
-      });
-      fields['plan-wms-pill'] = pill;
-      inputRow.appendChild(pill);
-
-      wrapper.appendChild(inputRow);
-
-      // Calc row
-      const calcRow = document.createElement('div');
-      calcRow.className = 'flex items-center mt-1';
-      const calcSpan = document.createElement('span');
-      calcSpan.id = 'plan-calc-weight';
-      calcSpan.className = 'text-emerald-400 font-mono text-xs hidden';
-      calcSpan.textContent = '\u2192';
-      calcRow.appendChild(calcSpan);
-      fields['plan-calc-weight'] = calcSpan;
-      wrapper.appendChild(calcRow);
-
-      grid.appendChild(wrapper);
+      buildWmsField(wrapper, fields, grid);
       return;
     }
 
-    // Label for all non-wms fields
     const label = document.createElement('label');
     label.className = 'form-label';
     label.textContent = fd.label;
@@ -317,18 +329,7 @@ function renderFormFields(containerId, schema, options = {}) {
       input.type = 'number';
       input.id = fd.id;
       input.className = INPUT_CLASS;
-      if (fd.attrs) {
-        Object.entries(fd.attrs).forEach(([k, v]) => {
-          if (k === 'value') {
-            input.value = v;
-            fieldValues[fd.id] = v;
-          } else if (v === true) {
-            input.setAttribute(k, '');
-          } else {
-            input.setAttribute(k, v);
-          }
-        });
-      }
+      applyFieldAttributes(input, fd, fieldValues);
       input.addEventListener('input', () => {
         fieldValues[fd.id] = input.value;
         if (options.onFieldChange) options.onFieldChange(fieldValues);
@@ -891,67 +892,75 @@ function addOnboarding1RM() {
     document.getElementById('onboarding-feedback').textContent = '';
 }
 
+function collectOnboardingFormValues() {
+  return {
+    gender: onboardingGender?.value || 'male',
+    bodyweight: parseFloat(onboardingWeight?.value) || 75,
+    day0Monthly: parseInt(onboardingDaysMonthly?.value, 10) || 0,
+    day0Yearly: parseInt(onboardingDaysYearly?.value, 10) || 0,
+    day0Lifetime: parseInt(onboardingDaysLifetime?.value, 10) || 0
+  };
+}
+
+function buildOnboardingProfileData(values, pending1RMs) {
+  const profileData = {
+    gender: values.gender,
+    bodyweight: values.bodyweight,
+    day0TrainingDays: { monthly: values.day0Monthly, yearly: values.day0Yearly, lifetime: values.day0Lifetime },
+    onboardingComplete: true,
+    onboardedAt: serverTimestamp()
+  };
+  if (pending1RMs.length > 0) {
+    const startingMaxes = {};
+    pending1RMs.forEach(item => { startingMaxes[item.exercise] = item.weight; });
+    profileData.startingMaxes = startingMaxes;
+  }
+  return profileData;
+}
+
+function buildOnboardingLogEntry(item, userId) {
+  return {
+    userId,
+    exercise: item.exercise,
+    sets: 1,
+    reps: item.reps,
+    weight: item.weight,
+    externalLoad: 0,
+    estimatedLoad: item.weight,
+    totalVolume: item.weight * item.reps,
+    timestamp: Timestamp.now(),
+    source: 'onboarding',
+    isInitialMax: true
+  };
+}
+
 async function saveOnboarding() {
     if (!currentUser) return;
 
-    const gender = onboardingGender?.value || 'male';
-    const bodyweight = parseFloat(onboardingWeight?.value) || 75;
-    const day0Monthly = parseInt(onboardingDaysMonthly?.value, 10) || 0;
-    const day0Yearly = parseInt(onboardingDaysYearly?.value, 10) || 0;
-    const day0Lifetime = parseInt(onboardingDaysLifetime?.value, 10) || 0;
+    const values = collectOnboardingFormValues();
 
     if (onboardingSaveBtn) onboardingSaveBtn.disabled = true;
 
     try {
-        // Save biometrics + day0 + onboarding flag to profile
         const profileRef = doc(db, "profiles", currentUser.uid);
-        const profileData = {
-            gender,
-            bodyweight,
-            day0TrainingDays: { monthly: day0Monthly, yearly: day0Yearly, lifetime: day0Lifetime },
-            onboardingComplete: true,
-            onboardedAt: serverTimestamp()
-        };
-        // Also store startingMaxes as a map for reference
-        if (pendingOnboarding1RMs.length > 0) {
-            const startingMaxes = {};
-            pendingOnboarding1RMs.forEach(item => { startingMaxes[item.exercise] = item.weight; });
-            profileData.startingMaxes = startingMaxes;
-        }
+        const profileData = buildOnboardingProfileData(values, pendingOnboarding1RMs);
         await setDoc(profileRef, profileData, { merge: true });
 
-        // Update local state.user.userBiometrics
-        state.user.userBiometrics.gender = gender;
-        state.user.userBiometrics.bodyweight = bodyweight;
-        state.user.userBiometrics.day0TrainingDays = { monthly: day0Monthly, yearly: day0Yearly, lifetime: day0Lifetime };
+        state.user.userBiometrics.gender = values.gender;
+        state.user.userBiometrics.bodyweight = values.bodyweight;
+        state.user.userBiometrics.day0TrainingDays = { monthly: values.day0Monthly, yearly: values.day0Yearly, lifetime: values.day0Lifetime };
         state.user.userBiometrics.onboardingComplete = true;
 
-        // Also update the sidebar profile form
-        document.getElementById('profile-gender').value = gender;
-        document.getElementById('profile-weight').value = bodyweight;
+        document.getElementById('profile-gender').value = values.gender;
+        document.getElementById('profile-weight').value = values.bodyweight;
 
-        // Create synthetic workout entries for each 1RM
         for (const item of pendingOnboarding1RMs) {
-            const logEntry = {
-                userId: currentUser.uid,
-                exercise: item.exercise,
-                sets: 1,
-                reps: item.reps,
-                weight: item.weight,
-                externalLoad: 0,
-                estimatedLoad: item.weight,
-                totalVolume: item.weight * item.reps,
-    timestamp: Timestamp.now(),
-                source: 'onboarding',
-                isInitialMax: true
-            };
-            await addDoc(collection(db, "workouts"), logEntry);
+            await addDoc(collection(db, "workouts"), buildOnboardingLogEntry(item, currentUser.uid));
         }
 
         hideOnboarding();
         showFeedback('Profile initialized! Welcome to IronTrack.', 'emerald');
 
-        // Now start the dashboard
         syncLeaderboardFeed();
         if (listenersAttached) return;
         listenToDataStream(currentUser.uid);
@@ -1874,19 +1883,38 @@ function populateLiftSelectors() {
     if (calcSelect) calcSelect.innerHTML = html;
 }
 
-// Mathematical Engine Implementations
+function computeDotsScore(squatRec, benchRec, deadliftRec, bw, gender) {
+  const plTotal = squatRec + benchRec + deadliftRec;
+  if (plTotal <= 0 || bw <= 0) return { dots: 0, plTotal: 0 };
+
+  const c = gender === 'male'
+    ? [47.46178854, 8.472061379, -0.07369410346, 0.0002586110512, -0.0000003634089054, 0.000000001790898013]
+    : [-125.4255398, 13.71219419, -0.03307250631, 0.00004809990691, -0.00000003622531999, 0.000000000105123006];
+
+  const denominator = c[0] + (c[1] * bw) + (c[2] * Math.pow(bw, 2)) + (c[3] * Math.pow(bw, 3)) + (c[4] * Math.pow(bw, 4)) + (c[5] * Math.pow(bw, 5));
+  return { dots: (plTotal * 500) / denominator, plTotal };
+}
+
+function computeSinclairScore(snatchRec, cleanRec, bw, gender) {
+  const olyTotal = snatchRec + cleanRec;
+  if (olyTotal <= 0 || bw <= 0) return { sinclair: 0, olyTotal: 0 };
+
+  const A = gender === 'male' ? 0.722762521 : 0.787004341;
+  const b = gender === 'male' ? 193.609 : 153.757;
+  if (bw >= b) return { sinclair: olyTotal, olyTotal };
+
+  const coeff = Math.pow(10, A * Math.pow(Math.log10(bw / b), 2));
+  return { sinclair: olyTotal * coeff, olyTotal };
+}
+
 async function processAnalytics() {
     const bw = state.user.userBiometrics.bodyweight;
     const gender = state.user.userBiometrics.gender;
 
-    // ==========================================
-    // 1. DOTS Calculation & Lift Breakdown
-    // ==========================================
     const squatRec = state.cache.activeRecords['Back Squat'] || 0;
     const benchRec = state.cache.activeRecords['Bench Press'] || 0;
     const deadliftRec = state.cache.activeRecords['Deadlift'] || 0;
 
-    // Inject individual Powerlifting 1RMs into the DOTS side-breakdown view
     const dotsSquatEl = document.getElementById('dots-breakdown-squat');
     const dotsBenchEl = document.getElementById('dots-breakdown-bench');
     const dotsDeadliftEl = document.getElementById('dots-breakdown-deadlift');
@@ -1895,56 +1923,29 @@ async function processAnalytics() {
     if (dotsBenchEl) dotsBenchEl.innerText = `${Math.round(benchRec)} kg`;
     if (dotsDeadliftEl) dotsDeadliftEl.innerText = `${Math.round(deadliftRec)} kg`;
 
-    const plTotal = squatRec + benchRec + deadliftRec;
-    let dots = 0;
-    if (plTotal > 0 && bw > 0) {
-        const c = gender === 'male' 
-            ? [47.46178854, 8.472061379, -0.07369410346, 0.0002586110512, -0.0000003634089054, 0.000000001790898013]
-            : [-125.4255398, 13.71219419, -0.03307250631, 0.00004809990691, -0.00000003622531999, 0.000000000105123006];
-        
-        const denominator = c[0] + (c[1] * bw) + (c[2] * Math.pow(bw, 2)) + (c[3] * Math.pow(bw, 3)) + (c[4] * Math.pow(bw, 4)) + (c[5] * Math.pow(bw, 5));
-        dots = (plTotal * 500) / denominator;
-    }
-    
+    const { dots, plTotal } = computeDotsScore(squatRec, benchRec, deadliftRec, bw, gender);
+
     const dotsDisplayEl = document.getElementById('dots-display');
     const dotsTierEl = document.getElementById('dots-tier');
     if (dotsDisplayEl) dotsDisplayEl.innerText = dots > 0 ? dots.toFixed(1) : "0.0";
     if (dotsTierEl) dotsTierEl.innerText = getRankingTier(dots, 'dots', gender);
 
-    // ==========================================
-    // 2. Sinclair Calculation & Lift Breakdown
-    // ==========================================
     const snatchRec = state.cache.activeRecords['Snatch'] || 0;
     const cleanRec = state.cache.activeRecords['Clean & Jerk'] || 0;
 
-    // Inject individual Olympic Weightlifting 1RMs into the Sinclair side-breakdown view
     const sinclairSnatchEl = document.getElementById('sinclair-breakdown-snatch');
     const sinclairCleanEl = document.getElementById('sinclair-breakdown-clean');
 
     if (sinclairSnatchEl) sinclairSnatchEl.innerText = `${Math.round(snatchRec)} kg`;
     if (sinclairCleanEl) sinclairCleanEl.innerText = `${Math.round(cleanRec)} kg`;
 
-    const olyTotal = snatchRec + cleanRec;
-    let sinclair = 0;
-    if (olyTotal > 0 && bw > 0) {
-        const A = gender === 'male' ? 0.722762521 : 0.787004341;
-        const b = gender === 'male' ? 193.609 : 153.757;
-        if (bw >= b) {
-            sinclair = olyTotal;
-        } else {
-            const coeff = Math.pow(10, A * Math.pow(Math.log10(bw / b), 2));
-            sinclair = olyTotal * coeff;
-        }
-    }
-    
+    const { sinclair, olyTotal } = computeSinclairScore(snatchRec, cleanRec, bw, gender);
+
     const sinclairDisplayEl = document.getElementById('sinclair-display');
     const sinclairTierEl = document.getElementById('sinclair-tier');
     if (sinclairDisplayEl) sinclairDisplayEl.innerText = sinclair > 0 ? sinclair.toFixed(1) : "0.0";
     if (sinclairTierEl) sinclairTierEl.innerText = getRankingTier(sinclair, 'sinclair', gender);
 
-    // ==========================================
-    // 3. Social Sync Integration
-    // ==========================================
     if (currentUser) {
         debouncedUpdateLeaderboard(currentUser.uid, dots, sinclair);
     }
@@ -2483,6 +2484,63 @@ async function formatIntervalLabel(intervalMin, intervalSec) {
   return `Every :${String(intervalSec).padStart(2, '0')}`;
 }
 
+function validatePlanInputs(type) {
+  if (!currentUser) { alert('Please sign in first.'); return false; }
+  if (!type) { showFeedback('Select a workout type first.', 'rose', 'planFeedback'); return false; }
+
+  if (type === 'AMRAP') {
+    const durationMin = parseInt(document.getElementById('amrap-duration')?.value, 10);
+    if (!durationMin || durationMin < 1) { showFeedback('Enter a valid duration.', 'rose', 'planFeedback'); return false; }
+  } else if (type === 'EMOM') {
+    const intervalMin = parseInt(document.getElementById('emom-interval-min')?.value, 10) || 0;
+    const intervalSec = parseInt(document.getElementById('emom-interval-sec')?.value, 10) || 0;
+    const intervalSeconds = intervalMin * 60 + intervalSec;
+    const rounds = parseInt(document.getElementById('emom-rounds')?.value, 10) || 0;
+    if (intervalSeconds < 1) { showFeedback('Enter a valid interval.', 'rose', 'planFeedback'); return false; }
+    if (rounds < 1) { showFeedback('Enter a valid number of rounds.', 'rose', 'planFeedback'); return false; }
+  } else if (type === 'FOR_TIME') {
+    const rounds = parseInt(document.getElementById('fortime-rounds')?.value, 10);
+    if (!rounds || rounds < 1) { showFeedback('Enter a valid round count.', 'rose', 'planFeedback'); return false; }
+  } else if (type === 'INTERVAL') {
+    const rounds = parseInt(document.getElementById('interval-rounds')?.value, 10);
+    if (!rounds || rounds < 1) { showFeedback('Enter a valid round count.', 'rose', 'planFeedback'); return false; }
+  }
+  return true;
+}
+
+function generateAutoPlanName(type) {
+  if (type === 'AMRAP') {
+    const d = parseInt(document.getElementById('amrap-duration')?.value, 10) || 0;
+    return `${d} Min AMRAP`;
+  }
+  if (type === 'EMOM') {
+    const intervalMin = parseInt(document.getElementById('emom-interval-min')?.value, 10) || 0;
+    const intervalSec = parseInt(document.getElementById('emom-interval-sec')?.value, 10) || 0;
+    const intervalSeconds = intervalMin * 60 + intervalSec;
+    const rounds = state.builder.emomMode === 'by_round' ? (document.querySelectorAll('#emom-minute-slots .minute-row').length) : (parseInt(document.getElementById('emom-rounds')?.value, 10) || 0);
+    const durationSeconds = rounds * intervalSeconds;
+    const intervalLabel = formatIntervalLabel(intervalMin, intervalSec);
+    const prefix = durationSeconds % 60 === 0 ? `${durationSeconds / 60} Min ` : '';
+    return `${prefix}${intervalLabel} \u00D7 ${rounds} rounds`;
+  }
+  if (type === 'FOR_TIME') {
+    const timeCap = parseInt(document.getElementById('fortime-cap')?.value, 10) || 0;
+    return timeCap ? `${timeCap} Min For Time` : 'For Time';
+  }
+  return 'Interval Workout';
+}
+
+function buildPlanDocument(userId, name, type, structure) {
+  return {
+    userId,
+    name,
+    type,
+    structure,
+    status: 'active',
+    createdAt: serverTimestamp()
+  };
+}
+
 async function savePlan() {
   if (!currentUser) return alert('Please sign in first.');
   const type = document.getElementById('workout-type')?.value;
@@ -2495,55 +2553,13 @@ async function savePlan() {
     return showFeedback(err.message, 'rose', 'planFeedback');
   }
 
-  if (type === 'AMRAP') {
-    const durationMin = parseInt(document.getElementById('amrap-duration')?.value, 10);
-    if (!durationMin || durationMin < 1) return showFeedback('Enter a valid duration.', 'rose', 'planFeedback');
-  } else if (type === 'EMOM') {
-    const intervalMin = parseInt(document.getElementById('emom-interval-min')?.value, 10) || 0;
-    const intervalSec = parseInt(document.getElementById('emom-interval-sec')?.value, 10) || 0;
-    const intervalSeconds = intervalMin * 60 + intervalSec;
-    const rounds = parseInt(document.getElementById('emom-rounds')?.value, 10) || 0;
-    if (intervalSeconds < 1) return showFeedback('Enter a valid interval.', 'rose', 'planFeedback');
-    if (rounds < 1) return showFeedback('Enter a valid number of rounds.', 'rose', 'planFeedback');
-  } else if (type === 'FOR_TIME') {
-    const rounds = parseInt(document.getElementById('fortime-rounds')?.value, 10);
-    if (!rounds || rounds < 1) return showFeedback('Enter a valid round count.', 'rose', 'planFeedback');
-  } else if (type === 'INTERVAL') {
-    const rounds = parseInt(document.getElementById('interval-rounds')?.value, 10);
-    if (!rounds || rounds < 1) return showFeedback('Enter a valid round count.', 'rose', 'planFeedback');
-  }
+  if (!validatePlanInputs(type)) return;
 
-  let autoName;
-  if (type === 'AMRAP') {
-    const d = parseInt(document.getElementById('amrap-duration')?.value, 10) || 0;
-    autoName = `${d} Min AMRAP`;
-  } else if (type === 'EMOM') {
-    const intervalMin = parseInt(document.getElementById('emom-interval-min')?.value, 10) || 0;
-    const intervalSec = parseInt(document.getElementById('emom-interval-sec')?.value, 10) || 0;
-    const intervalSeconds = intervalMin * 60 + intervalSec;
-    const rounds = state.builder.emomMode === 'by_round' ? (document.querySelectorAll('#emom-minute-slots .minute-row').length) : (parseInt(document.getElementById('emom-rounds')?.value, 10) || 0);
-    const durationSeconds = rounds * intervalSeconds;
-    const intervalLabel = formatIntervalLabel(intervalMin, intervalSec);
-    const prefix = durationSeconds % 60 === 0 ? `${durationSeconds / 60} Min ` : '';
-    autoName = `${prefix}${intervalLabel} \u00D7 ${rounds} rounds`;
-  } else if (type === 'FOR_TIME') {
-    const timeCap = parseInt(document.getElementById('fortime-cap')?.value, 10) || 0;
-    autoName = timeCap ? `${timeCap} Min For Time` : 'For Time';
-  } else {
-    autoName = 'Interval Workout';
-  }
-
+  const autoName = generateAutoPlanName(type);
   const name = await showPlanNameModal(autoName);
   if (!name) return;
 
-  const planDoc = {
-    userId: currentUser.uid,
-    name: name.trim() || autoName,
-    type,
-    structure,
-    status: 'active',
-    createdAt: serverTimestamp()
-  };
+  const planDoc = buildPlanDocument(currentUser.uid, name.trim() || autoName, type, structure);
 
   addDoc(collection(db, "workout_plans"), planDoc).then(() => {
     showFeedback('Plan saved!', 'emerald', 'planFeedback');
@@ -3077,6 +3093,17 @@ function getMonday(date) {
     return d;
 }
 
+function buildCalendarDayHtml(dateStr, day, isActive, isToday, isSelected, isThisMonth = true) {
+  if (!isThisMonth) {
+    return `<div class="cal-day cal-day-other-month">${day}</div>`;
+  }
+  let cls = 'cal-day';
+  if (isActive) cls += ' cal-day-active';
+  if (isToday) cls += ' cal-day-today';
+  if (isSelected) cls += ' cal-day-selected';
+  return `<div class="${cls}" onclick="selectCalendarDay('${dateStr}')" data-date="${dateStr}">${day}</div>`;
+}
+
 function renderCalendar() {
     const grid = document.getElementById('calendar-grid');
     const label = document.getElementById('cal-month-label');
@@ -3110,16 +3137,7 @@ function renderCalendar() {
             const isToday = dateStr === todayStr;
             const isSelected = state.calendar.selectedDate === dateStr;
             const isThisMonth = date.getMonth() === state.calendar.month.getMonth() && date.getFullYear() === state.calendar.month.getFullYear();
-
-            if (isThisMonth) {
-                let cls = 'cal-day';
-                if (isActive) cls += ' cal-day-active';
-                if (isToday) cls += ' cal-day-today';
-                if (isSelected) cls += ' cal-day-selected';
-                html += `<div class="${cls}" onclick="selectCalendarDay('${dateStr}')" data-date="${dateStr}">${date.getDate()}</div>`;
-            } else {
-                html += `<div class="cal-day cal-day-other-month">${date.getDate()}</div>`;
-            }
+            html += buildCalendarDayHtml(dateStr, date.getDate(), isActive, isToday, isSelected, isThisMonth);
         }
     } else {
         const year = state.calendar.month.getFullYear();
@@ -3142,13 +3160,7 @@ function renderCalendar() {
             const isActive = activeDates.has(dateStr);
             const isToday = dateStr === todayStr;
             const isSelected = state.calendar.selectedDate === dateStr;
-
-            let cls = 'cal-day';
-            if (isActive) cls += ' cal-day-active';
-            if (isToday) cls += ' cal-day-today';
-            if (isSelected) cls += ' cal-day-selected';
-
-            html += `<div class="${cls}" onclick="selectCalendarDay('${dateStr}')" data-date="${dateStr}">${day}</div>`;
+            html += buildCalendarDayHtml(dateStr, day, isActive, isToday, isSelected);
         }
 
         const totalCells = startDay + daysInMonth;
@@ -3162,31 +3174,33 @@ function renderCalendar() {
     updateCalTodayBtnState();
 }
 
+function countActiveDays(daysBack, today, activeDates) {
+  let count = 0;
+  for (let i = 0; i < daysBack; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    if (activeDates.has(dateStr)) count++;
+  }
+  return count;
+}
+
+function countConsecutiveDays(today, activeDates) {
+  let streak = 0;
+  for (let i = 0; ; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    if (activeDates.has(dateStr)) streak++;
+    else break;
+  }
+  return streak;
+}
+
 function updateConsistencyMetrics() {
     const today = new Date();
-    
-    function countActiveDays(daysBack) {
-        let count = 0;
-        for (let i = 0; i < daysBack; i++) {
-            const d = new Date(today);
-            d.setDate(d.getDate() - i);
-            const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-            if (activeDates.has(dateStr)) count++;
-        }
-        return count;
-    }
-    
-    function countConsecutiveDays() {
-        let streak = 0;
-        for (let i = 0; ; i++) {
-            const d = new Date(today);
-            d.setDate(d.getDate() - i);
-            const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-            if (activeDates.has(dateStr)) streak++;
-            else break;
-        }
-        return streak;
-    }
+    const d7 = countActiveDays(7, today, activeDates);
+    const d28 = countActiveDays(28, today, activeDates);
     
     const el7 = document.getElementById('consistency-7day');
     const el28 = document.getElementById('consistency-28day');
@@ -3195,15 +3209,12 @@ function updateConsistencyMetrics() {
     const streak7 = document.getElementById('consistency-7day-streak');
     const streak28 = document.getElementById('consistency-28day-streak');
     
-    const d7 = countActiveDays(7);
-    const d28 = countActiveDays(28);
-    
     if (el7) el7.textContent = `${d7} / 7`;
     if (el28) el28.textContent = `${d28} / 28`;
     if (bar7) bar7.style.width = `${Math.min(100, (d7 / 7) * 100)}%`;
     if (bar28) bar28.style.width = `${Math.min(100, (d28 / 28) * 100)}%`;
     
-    const streak = countConsecutiveDays();
+    const streak = countConsecutiveDays(today, activeDates);
     if (streak7) {
         if (streak > 1) {
             streak7.textContent = `\u{1F525} ${streak}-day streak`;
@@ -3844,61 +3855,69 @@ function formatMovementWeight(m) {
   return '';
 }
 
+function describeAmrap(structure) {
+  const mins = Math.round((structure.durationSeconds || 0) / 60);
+  const lines = [`${mins}:00`];
+  (structure.movements || []).forEach(m =>
+    lines.push(`\u2022 ${m.reps || '?'}x ${m.movement}${formatMovementWeight(m)}`)
+  );
+  return lines.join('<br>');
+}
+
+function describeEmom(structure) {
+  const lines = [];
+  const totalSec = structure.intervalSeconds || 0;
+  const mins = Math.floor(totalSec / 60);
+  const secs = totalSec % 60;
+  const isStandardEmom = totalSec === 60;
+  if (!isStandardEmom) {
+    lines.push(`Every ${mins}:${String(secs).padStart(2, '0')} min \u00D7 ${structure.rounds || 0} rounds`);
+  } else {
+    lines.push(`\u00D7 ${structure.rounds || 0} rounds`);
+  }
+  (structure.minutes || []).forEach((m, i) => {
+    const mov = m.movements?.[0];
+    if (mov) lines.push(`Round ${i + 1}: ${mov.reps || '?'}x ${mov.exerciseId || ''}${formatMovementWeight(mov)}`);
+  });
+  return lines.join('<br>');
+}
+
+function describeForTime(structure) {
+  const lines = [];
+  const parts = [];
+  if (structure.durationMinutes) parts.push(`${structure.durationMinutes}:00 cap`);
+  parts.push(`${structure.rounds || 0} rounds`);
+  lines.push(parts.join(' \u00B7 '));
+  const uniqueMovements = structure.movements || [];
+  if (uniqueMovements.length) {
+    lines.push('Each round:');
+    uniqueMovements.forEach(m =>
+      lines.push(`  ${m.reps || '?'}x ${m.movement}${formatMovementWeight(m)}`)
+    );
+  }
+  return lines.join('<br>');
+}
+
+function describeInterval(structure) {
+  const lines = [];
+  const wMin = Math.floor((structure.workSeconds || 0) / 60);
+  const rMin = Math.floor((structure.restSeconds || 0) / 60);
+  lines.push(`Work ${wMin}:00 \u00B7 Rest ${rMin}:00 \u00B7 ${structure.rounds || 0} rounds`);
+  (structure.movements || []).forEach(m =>
+    lines.push(`  ${m.reps || '?'}x ${m.movement}${formatMovementWeight(m)}`)
+  );
+  return lines.join('<br>');
+}
+
 function buildWorkoutDescription(workout) {
   const { type, structure } = workout;
-  const lines = [];
-
   switch (type) {
-    case 'AMRAP': {
-      const mins = Math.round((structure.durationSeconds || 0) / 60);
-      lines.push(`${mins}:00`);
-      (structure.movements || []).forEach(m =>
-        lines.push(`\u2022 ${m.reps || '?'}x ${m.movement}${formatMovementWeight(m)}`)
-      );
-      break;
-    }
-    case 'EMOM': {
-      const totalSec = structure.intervalSeconds || 0;
-      const mins = Math.floor(totalSec / 60);
-      const secs = totalSec % 60;
-      const isStandardEmom = totalSec === 60;
-      if (!isStandardEmom) {
-        lines.push(`Every ${mins}:${String(secs).padStart(2, '0')} min \u00D7 ${structure.rounds || 0} rounds`);
-      } else {
-        lines.push(`\u00D7 ${structure.rounds || 0} rounds`);
-      }
-      (structure.minutes || []).forEach((m, i) => {
-        const mov = m.movements?.[0];
-        if (mov) lines.push(`Round ${i + 1}: ${mov.reps || '?'}x ${mov.exerciseId || ''}${formatMovementWeight(mov)}`);
-      });
-      break;
-    }
-    case 'FOR_TIME': {
-      const parts = [];
-      if (structure.durationMinutes) parts.push(`${structure.durationMinutes}:00 cap`);
-      parts.push(`${structure.rounds || 0} rounds`);
-      lines.push(parts.join(' \u00B7 '));
-      const uniqueMovements = structure.movements || [];
-      if (uniqueMovements.length) {
-        lines.push('Each round:');
-        uniqueMovements.forEach(m =>
-          lines.push(`  ${m.reps || '?'}x ${m.movement}${formatMovementWeight(m)}`)
-        );
-      }
-      break;
-    }
-    case 'INTERVAL': {
-      const wMin = Math.floor((structure.workSeconds || 0) / 60);
-      const rMin = Math.floor((structure.restSeconds || 0) / 60);
-      lines.push(`Work ${wMin}:00 \u00B7 Rest ${rMin}:00 \u00B7 ${structure.rounds || 0} rounds`);
-      (structure.movements || []).forEach(m =>
-        lines.push(`  ${m.reps || '?'}x ${m.movement}${formatMovementWeight(m)}`)
-      );
-      break;
-    }
+    case 'AMRAP': return describeAmrap(structure);
+    case 'EMOM': return describeEmom(structure);
+    case 'FOR_TIME': return describeForTime(structure);
+    case 'INTERVAL': return describeInterval(structure);
+    default: return '';
   }
-
-  return lines.join('<br>');
 }
 
 function formatWorkoutType(type) {
@@ -4354,6 +4373,52 @@ function toggleSelectAllFriends() {
   document.querySelectorAll('.share-friend-checkbox').forEach(cb => cb.checked = checked);
 }
 
+function resolveShareContent() {
+  if (state.share.shareIsWorkout) {
+    const w = state.data.lastStructuredWorkouts.find(w => w.id === state.share.sharePlanId);
+    if (!w) return null;
+    return { name: w.name, type: w.type, structure: w.structure };
+  }
+  const p = state.data.lastWorkoutPlans.find(p => p.id === state.share.sharePlanId);
+  if (!p) return null;
+  return { name: p.name, type: p.type, structure: p.structure };
+}
+
+function buildSharedPlanDocument(fUid, content, displayName) {
+  return {
+    sharedBy: currentUser.uid,
+    sharedByDisplayName: displayName,
+    sharedWith: fUid,
+    planId: state.share.sharePlanId,
+    contentType: state.share.shareIsWorkout ? 'workout' : 'plan',
+    content,
+    status: 'pending',
+    createdAt: serverTimestamp()
+  };
+}
+
+function buildQrShareUrl(docRefId) {
+  const base = window.location.pathname.replace(/\/?[^\/]*$/, '/');
+  return window.location.origin + base + '?claimPlan=' + docRefId;
+}
+
+function buildQrCodeConfig(url) {
+  return {
+    type: "canvas",
+    shape: "square",
+    width: 300,
+    height: 300,
+    data: url,
+    margin: 0,
+    qrOptions: { typeNumber: 0, mode: "Byte", errorCorrectionLevel: "Q" },
+    imageOptions: { saveAsBlob: true, hideBackgroundDots: true, imageSize: 0.4, margin: 0 },
+    dotsOptions: { type: "dots", color: "#f8fafc", roundSize: true, gradient: null },
+    backgroundOptions: { round: 0, color: "#0f172a" },
+    cornersSquareOptions: { type: "extra-rounded", color: "#34d399" },
+    cornersDotOptions: { type: "", color: "#f8fafc" }
+  };
+}
+
 async function shareWithFriends() {
   const modal = document.getElementById('share-plan-modal');
   const feedback = document.getElementById('share-plan-feedback');
@@ -4363,29 +4428,10 @@ async function shareWithFriends() {
     return;
   }
 
-  let content;
-  if (state.share.shareIsWorkout) {
-    const workout = state.data.lastStructuredWorkouts.find(w => w.id === state.share.sharePlanId);
-    if (!workout) {
-      feedback.textContent = 'Workout not found.';
-      return;
-    }
-    content = {
-      name: workout.name,
-      type: workout.type,
-      structure: workout.structure
-    };
-  } else {
-    const plan = state.data.lastWorkoutPlans.find(p => p.id === state.share.sharePlanId);
-    if (!plan) {
-      feedback.textContent = 'Plan not found.';
-      return;
-    }
-    content = {
-      name: plan.name,
-      type: plan.type,
-      structure: plan.structure
-    };
+  const content = resolveShareContent();
+  if (!content) {
+    feedback.textContent = 'Plan/workout not found.';
+    return;
   }
 
   const selectedUids = Array.from(checked).map(cb => cb.value);
@@ -4395,16 +4441,7 @@ async function shareWithFriends() {
 
   try {
     await Promise.all(selectedUids.map(fUid =>
-      addDoc(collection(db, "shared_plans"), {
-        sharedBy: currentUser.uid,
-        sharedByDisplayName: displayName,
-        sharedWith: fUid,
-        planId: state.share.sharePlanId,
-        contentType: state.share.shareIsWorkout ? 'workout' : 'plan',
-        content,
-        status: 'pending',
-        createdAt: serverTimestamp()
-      })
+      addDoc(collection(db, "shared_plans"), buildSharedPlanDocument(fUid, content, displayName))
     ));
     modal.classList.add('hidden');
     showFeedback(`Shared with ${selectedUids.length} friend${selectedUids.length > 1 ? 's' : ''}!`, 'emerald');
@@ -4420,19 +4457,10 @@ async function shareByQR() {
   const qrDisplay = document.getElementById('share-qr-display');
   if (!qrDisplay) return;
 
-  let plan;
-  if (state.share.shareIsWorkout) {
-    plan = state.data.lastStructuredWorkouts.find(w => w.id === state.share.sharePlanId);
-    if (!plan) {
-      feedback.textContent = 'Workout not found.';
-      return;
-    }
-  } else {
-    plan = state.data.lastWorkoutPlans.find(p => p.id === state.share.sharePlanId);
-    if (!plan) {
-      feedback.textContent = 'Plan not found.';
-      return;
-    }
+  const plan = resolveShareContent();
+  if (!plan) {
+    feedback.textContent = 'Plan/workout not found.';
+    return;
   }
 
   try {
@@ -4443,7 +4471,7 @@ async function shareByQR() {
     const existing = await getDocs(query(
       collection(db, "shared_plans"),
       where("sharedBy", "==", currentUser.uid),
-      where("planId", "==", plan.id),
+      where("planId", "==", state.share.sharePlanId),
       where("shareMethod", "==", "qr")
     ));
 
@@ -4456,29 +4484,14 @@ async function shareByQR() {
         sharedByDisplayName: displayName,
         sharedWith: '__qr__',
         shareMethod: 'qr',
-        planId: plan.id,
+        planId: state.share.sharePlanId,
         createdAt: serverTimestamp()
       });
     }
 
-    const base = window.location.pathname.replace(/\/?[^\/]*$/, '/');
-    const qrUrl = window.location.origin + base + '?claimPlan=' + docRef.id;
+    const qrUrl = buildQrShareUrl(docRef.id);
     qrDisplay.innerHTML = '';
-    const qrConfig = {
-      type: "canvas",
-      shape: "square",
-      width: 300,
-      height: 300,
-      data: qrUrl,
-      margin: 0,
-      qrOptions: { typeNumber: 0, mode: "Byte", errorCorrectionLevel: "Q" },
-      imageOptions: { saveAsBlob: true, hideBackgroundDots: true, imageSize: 0.4, margin: 0 },
-      dotsOptions: { type: "dots", color: "#f8fafc", roundSize: true, gradient: null },
-      backgroundOptions: { round: 0, color: "#0f172a" },
-      cornersSquareOptions: { type: "extra-rounded", color: "#34d399" },
-      cornersDotOptions: { type: "", color: "#f8fafc" }
-    };
-    const qrCode = new QRCodeStyling(qrConfig);
+    const qrCode = new QRCodeStyling(buildQrCodeConfig(qrUrl));
     qrCode.append(qrDisplay);
     feedback.textContent = 'QR code generated! Friend scans to import.';
     haptic(HAPTIC.confirm);
@@ -4865,6 +4878,55 @@ function showPlanNameModal(defaultName) {
 // ==========================================
 
 // Render Existing Logs
+function workoutToLogHtml(workout, chipPBActive, chip1RMActive) {
+  const load = getEffectiveLoad(workout);
+  const reps = parseInt(workout.reps, 10) || 1;
+  const sets = workout.sets || 1;
+  const isPB = !!workout._isPB;
+  const isMax1RM = !!workout._isMax1RM;
+  const is1RMOnly = isMax1RM && !isPB;
+  const oneRM = Math.round(estimate1RM(load, reps));
+  const totalWorkReps = workout.totalWorkReps || (reps * sets);
+  const totalVolume = Math.round(load * totalWorkReps);
+
+  let borderClass;
+  if (chipPBActive && !chip1RMActive) {
+    borderClass = 'log-entry-pb';
+  } else if (chip1RMActive && !chipPBActive) {
+    borderClass = 'log-entry-1rm';
+  } else {
+    borderClass = isPB ? 'log-entry-pb' : is1RMOnly ? 'log-entry-1rm' : 'log-entry';
+  }
+
+  const secondLine = `Est. 1RM: ${oneRM}kg  <span class="text-slate-600">|</span>  Vol: ${totalVolume.toLocaleString()}kg`;
+  const repDisplay = workout.partialReps ? `${sets} × ${reps} + ${workout.partialReps} reps` : `${sets} × ${reps}`;
+
+  return `
+<div class="${borderClass} p-4 rounded-2xl mb-3 flex justify-between items-center shadow-2xl shadow-slate-950/60 transition-all duration-200" style="background-color: var(--slate-900);">
+    <div>
+        <div class="flex items-center gap-2">
+            <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm">${escapeHtml(workout.exercise)}</h4>
+            ${isPB ? '<span class="bg-purple-950/50 text-purple-400 border border-purple-800/60 text-[9px] px-1.5 rounded font-black">PB</span>' : ''}
+            ${isMax1RM ? '<span class="bg-emerald-950/50 text-emerald-400 border border-emerald-800/60 text-[9px] px-1.5 rounded font-extrabold">1RM</span>' : ''}
+        </div>
+        <p class="text-slate-400 text-xs font-mono mt-0.5">
+            ${new Date(workout.timestamp).toLocaleDateString()}
+        </p>
+    </div>
+    <div class="text-right">
+        <span class="text-white font-mono text-base font-semibold">
+            ${repDisplay} 
+            <span class="text-slate-500 text-xs">@</span> 
+            ${Math.round(load)}kg
+        </span>
+        <p class="text-slate-400 text-xs font-mono mt-0.5">
+            ${secondLine}
+        </p>
+    </div>
+</div>
+  `;
+}
+
 function renderLogs(workouts) {
     const logContainer = document.getElementById('workout-list');
     if (!logContainer) return;
@@ -4889,14 +4951,12 @@ function renderLogs(workouts) {
 
     let displayList = (selected === 'All') ? state.data.paginatedWorkouts : state.data.paginatedWorkouts.filter(w => w.exercise === selected);
 
-    // Apply PB / 1RM chip filters if enabled (read state from DOM dataset)
     const chipPBActive = document.getElementById('chip-pb')?.dataset?.active === 'true';
     const chip1RMActive = document.getElementById('chip-1rm')?.dataset?.active === 'true';
     if (chipPBActive || chip1RMActive) {
       displayList = displayList.filter(w => (chipPBActive && w._isPB) || (chip1RMActive && w._isMax1RM));
     }
 
-    // Expose render debug info for testing
     try { window.__lastRenderInfo = { chipPBActive, chip1RMActive, displayListLength: displayList.length, totalWorkouts: state.data.paginatedWorkouts.length }; } catch (e) {}
 
     const totalPages = Math.max(1, Math.ceil(displayList.length / entriesPerPage));
@@ -4912,53 +4972,9 @@ function renderLogs(workouts) {
 
     updatePaginationControls(totalPages);
 
-    // 2. Render logic
-    logContainer.innerHTML = pageItems.map(workout => {
-        const load = getEffectiveLoad(workout);
-        const reps = parseInt(workout.reps, 10) || 1;
-        const sets = workout.sets || 1;
-        const isPB = !!workout._isPB;
-        const isMax1RM = !!workout._isMax1RM;
-        const is1RMOnly = isMax1RM && !isPB;
-        const oneRM = Math.round(estimate1RM(load, reps));
-        const totalWorkReps = workout.totalWorkReps || (reps * sets);
-        const totalVolume = Math.round(load * totalWorkReps);
-        let borderClass;
-        if (chipPBActive && !chip1RMActive) {
-          borderClass = 'log-entry-pb';
-        } else if (chip1RMActive && !chipPBActive) {
-          borderClass = 'log-entry-1rm';
-        } else {
-          borderClass = isPB ? 'log-entry-pb' : is1RMOnly ? 'log-entry-1rm' : 'log-entry';
-        }
-        const secondLine = `Est. 1RM: ${oneRM}kg  <span class="text-slate-600">|</span>  Vol: ${totalVolume.toLocaleString()}kg`;
-        const repDisplay = workout.partialReps ? `${sets} × ${reps} + ${workout.partialReps} reps` : `${sets} × ${reps}`;
-
-        return `
-<div class="${borderClass} p-4 rounded-2xl mb-3 flex justify-between items-center shadow-2xl shadow-slate-950/60 transition-all duration-200" style="background-color: var(--slate-900);">
-    <div>
-        <div class="flex items-center gap-2">
-            <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm">${escapeHtml(workout.exercise)}</h4>
-            ${isPB ? '<span class="bg-purple-950/50 text-purple-400 border border-purple-800/60 text-[9px] px-1.5 rounded font-black">PB</span>' : ''}
-            ${isMax1RM ? '<span class="bg-emerald-950/50 text-emerald-400 border border-emerald-800/60 text-[9px] px-1.5 rounded font-extrabold">1RM</span>' : ''}
-        </div>
-        <p class="text-slate-400 text-xs font-mono mt-0.5">
-            ${new Date(workout.timestamp).toLocaleDateString()}
-        </p>
-    </div>
-    <div class="text-right">
-        <span class="text-white font-mono text-base font-semibold">
-            ${repDisplay} 
-            <span class="text-slate-500 text-xs">@</span> 
-            ${Math.round(load)}kg
-        </span>
-        <p class="text-slate-400 text-xs font-mono mt-0.5">
-            ${secondLine}
-        </p>
-    </div>
-</div>
-        `;
-    }).join('');
+    logContainer.innerHTML = pageItems.map(workout =>
+      workoutToLogHtml(workout, chipPBActive, chip1RMActive)
+    ).join('');
 }
 
 // ==========================================
@@ -5611,6 +5627,37 @@ async function removeFriend(friendUid) {
 /**
  * Render the side panel showing friends' names and current scores (paginated, 3 per page)
  */
+async function cacheUncachedProfiles(fUids) {
+  const uncached = fUids.filter(fUid => !state.social.friendDisplayCache[fUid]);
+  if (uncached.length === 0) return;
+
+  const results = await Promise.allSettled(uncached.map(fUid => getProfileDocument(fUid)));
+  results.forEach((result, i) => {
+    if (result.status === 'fulfilled' && result.value.exists()) {
+      state.social.friendDisplayCache[uncached[i]] = result.value.data();
+    }
+  });
+}
+
+function friendToHtml(fUid, data) {
+  if (data) {
+    return `
+      <div class="flex justify-between items-center bg-slate-900/50 p-2 border border-slate-800 rounded">
+        <span class="font-medium text-slate-300 truncate max-w-[120px]">${getDisplayName(data, fUid)}</span>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="removeFriend('${fUid}')" 
+          class="items-center justify-center rounded-full px-2 py-0.5 btn-core is-ghost text-xs hover:!text-rose-400 hover:!border-rose-400">
+          <i data-lucide="user-minus" size="18"></i>
+          </button>
+        </div>
+      </div>`;
+  }
+  return `
+    <div class="flex justify-between items-center bg-slate-900/50 p-2 border border-slate-800 rounded">
+      <span class="font-medium text-slate-300 truncate max-w-[120px]">Unknown Friend</span>
+      <span class="text-xs font-mono text-slate-500">${fUid}</span>
+    </div>`;
+}
 async function renderActiveFriendsList() {
   const container = document.getElementById('friendsListContainer');
   const pagination = document.getElementById('friends-pagination');
@@ -5627,39 +5674,11 @@ async function renderActiveFriendsList() {
     const start = (state.pagination.friends - 1) * perPage;
     const pageItems = state.social.userFriendsList.slice(start, start + perPage);
 
-    // Only fetch uncached profiles for the visible page
-    const uncached = pageItems.filter(fUid => !state.social.friendDisplayCache[fUid]);
-    if (uncached.length > 0) {
-      const results = await Promise.allSettled(uncached.map(fUid => getProfileDocument(fUid)));
-      results.forEach((result, i) => {
-        if (result.status === 'fulfilled' && result.value.exists()) {
-          state.social.friendDisplayCache[uncached[i]] = result.value.data();
-        }
-      });
-    }
+    await cacheUncachedProfiles(pageItems);
 
     let html = '';
-    pageItems.forEach((fUid, i) => {
-      const data = state.social.friendDisplayCache[fUid];
-
-      if (data) {
-        html += `
-          <div class="flex justify-between items-center bg-slate-900/50 p-2 border border-slate-800 rounded">
-            <span class="font-medium text-slate-300 truncate max-w-[120px]">${getDisplayName(data, fUid)}</span>
-            <div class="flex items-center gap-2">
-              <button type="button" onclick="removeFriend('${fUid}')" 
-              class="items-center justify-center rounded-full px-2 py-0.5 btn-core is-ghost text-xs hover:!text-rose-400 hover:!border-rose-400">
-              <i data-lucide="user-minus" size="18"></i>
-              </button>
-            </div>
-          </div>`;
-      } else {
-        html += `
-          <div class="flex justify-between items-center bg-slate-900/50 p-2 border border-slate-800 rounded">
-            <span class="font-medium text-slate-300 truncate max-w-[120px]">Unknown Friend</span>
-            <span class="text-xs font-mono text-slate-500">${fUid}</span>
-          </div>`;
-      }
+    pageItems.forEach(fUid => {
+      html += friendToHtml(fUid, state.social.friendDisplayCache[fUid]);
     });
 
     if (html) {
@@ -5684,6 +5703,24 @@ function changeFriendsPage(direction) {
     state.pagination.friends++;
   }
   renderActiveFriendsList();
+}
+
+function filterLeaderboardProfiles() {
+  const filtered = [];
+  state.social.leaderboardCache.forEach(profile => {
+    const isMe = currentUser && profile.uid === currentUser.uid;
+    const isFriend = state.social.userFriendsList.includes(profile.uid);
+    if (state.social.currentScope === 'friends' && !isMe && !isFriend) return;
+    filtered.push({ profile, isMe, isFriend });
+  });
+  return filtered;
+}
+
+function computeLeaderboardSlice(filtered) {
+  if (state.social.leaderboardShowAll || filtered.length === 0) return null;
+  const meIdx = filtered.findIndex(f => f.isMe);
+  if (meIdx === -1) return { start: 0, end: 1 };
+  return { start: Math.max(0, meIdx - 1), end: Math.min(filtered.length, meIdx + 2) };
 }
 
 /**
@@ -5749,46 +5786,23 @@ function renderLeaderboardView() {
   const rowsContainer = document.getElementById('leaderboardRows');
   const expandBtn = document.getElementById('leaderboard-expand-btn');
   if (!rowsContainer) return;
-  const currentUser = auth.currentUser;
 
-  const filtered = [];
-  state.social.leaderboardCache.forEach(profile => {
-    const isMe = currentUser && profile.uid === currentUser.uid;
-    const isFriend = state.social.userFriendsList.includes(profile.uid);
+  const filtered = filterLeaderboardProfiles();
+  const slice = computeLeaderboardSlice(filtered);
+  let html = '';
 
-    if (state.social.currentScope === 'friends' && !isMe && !isFriend) {
-      return;
-    }
-
-    filtered.push({ profile, isMe, isFriend });
-  });
-
-  if (!state.social.leaderboardShowAll && filtered.length > 0) {
-    const meIdx = filtered.findIndex(f => f.isMe);
-    let sliceStart, sliceEnd;
-
-    if (meIdx === -1) {
-      sliceStart = 0;
-      sliceEnd = 1;
-    } else {
-      sliceStart = Math.max(0, meIdx - 1);
-      sliceEnd = Math.min(filtered.length, meIdx + 2);
-    }
-
-    const subset = filtered.slice(sliceStart, sliceEnd);
-    let html = '';
-    subset.forEach((f, i) => {
-      html += buildLeaderboardRow(f.profile, sliceStart + i + 1, f.isMe, f.isFriend);
+  if (slice) {
+    filtered.slice(slice.start, slice.end).forEach((f, i) => {
+      html += buildLeaderboardRow(f.profile, slice.start + i + 1, f.isMe, f.isFriend);
     });
     rowsContainer.innerHTML = html;
     if (typeof lucide !== 'undefined') lucide.createIcons();
 
     if (expandBtn) {
-      expandBtn.classList.toggle('hidden', filtered.length <= subset.length);
+      expandBtn.classList.toggle('hidden', filtered.length <= (slice.end - slice.start));
       expandBtn.textContent = 'Show All';
     }
   } else {
-    let html = '';
     filtered.forEach((f, i) => {
       html += buildLeaderboardRow(f.profile, i + 1, f.isMe, f.isFriend);
     });
@@ -5797,11 +5811,7 @@ function renderLeaderboardView() {
 
     if (expandBtn) {
       expandBtn.classList.toggle('hidden', filtered.length <= 3 || !state.social.leaderboardShowAll);
-      if (state.social.leaderboardShowAll) {
-        expandBtn.textContent = 'Show Compact';
-      } else {
-        expandBtn.textContent = 'Show All';
-      }
+      expandBtn.textContent = state.social.leaderboardShowAll ? 'Show Compact' : 'Show All';
     }
   }
 }
