@@ -631,11 +631,11 @@ onAuthStateChanged(auth, async (user) => {
         authBtn.innerText = "Sign In";
         greeting.innerText = "Analytics Dashboard";
         document.getElementById('workout-list').innerHTML = '';
-        document.getElementById('structured-workout-list').innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">No structured workouts logged yet.</p>';
+        renderEmptyState(document.getElementById('structured-workout-list'), 'No structured workouts logged yet.');
         document.getElementById('registry-table-body').innerHTML = '';
         state.data.calcEntriesByLift = {};
         const calcEntriesList = document.getElementById('calc-entries-list');
-        if (calcEntriesList) calcEntriesList.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">Select a lift with data to get started.</p>';
+        if (calcEntriesList) renderEmptyState(calcEntriesList, 'Select a lift with data to get started.');
         const calcOneRm = document.getElementById('calc-one-rm-display');
         if (calcOneRm) calcOneRm.textContent = '—';
         document.getElementById('dots-display').innerText = '0.0';
@@ -1360,7 +1360,7 @@ function update1RMRegistryUI() {
     const uniqueExercises = Array.from(new Set(manualWorkouts.map(w => w.exercise))).filter(Boolean).sort();
 
     if (uniqueExercises.length === 0) {
-        tableBody.innerHTML = `<p class="col-span-3 text-xs text-slate-500 italic py-2 text-center">No logs recorded yet.</p>`;
+        renderEmptyState(tableBody, 'No logs recorded yet.', 'col-span-3');
         const pagination = document.getElementById('records-pagination');
         if (pagination) pagination.classList.add('hidden');
         return;
@@ -1560,7 +1560,7 @@ function renderCalcEntries() {
     }
 
     if (allEntries.length === 0) {
-        entriesList.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">Enter values above and click Add to save working weights.</p>';
+        renderEmptyState(entriesList, 'Enter values above and click Add to save working weights.');
         return;
     }
 
@@ -2103,9 +2103,9 @@ function handleWorkoutTypeChange() {
   // Clear movements on type switch
   state.builder.workoutMovements = [];
   const movementsList = document.getElementById('plan-movements-list');
-  if (movementsList) movementsList.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">Add movements above.</p>';
+  if (movementsList) renderEmptyState(movementsList, 'Add movements above.');
   const slots = document.getElementById('emom-minute-slots');
-  if (slots) slots.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">Add a movement to create the first slot.</p>';
+  if (slots) renderEmptyState(slots, 'Add a movement to create the first slot.');
 
   // Hide all metadata sections
   ['amrap-fields', 'emom-fields', 'fortime-fields', 'interval-fields'].forEach(id => {
@@ -2420,7 +2420,7 @@ function renderPlanMovements() {
   if (!list) return;
 
   if (state.builder.workoutMovements.length === 0) {
-    list.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">Add movements above.</p>';
+    renderEmptyState(list, 'Add movements above.');
     const addBtn = document.getElementById('plan-add-btn');
     if (addBtn) addBtn.disabled = true;
     return;
@@ -3257,7 +3257,7 @@ function selectCalendarDay(dateStr) {
     const items = getWorkoutsForDate(dateStr);
     
     if (items.length === 0) {
-        workoutsContainer.innerHTML = '<p class="text-xs text-slate-500 italic">No workouts logged this day.</p>';
+        renderEmptyState(workoutsContainer, 'No workouts logged this day.');
         return;
     }
     
@@ -3584,7 +3584,7 @@ function renderStructuredWorkoutHistory() {
   const workouts = state.data.lastStructuredWorkouts;
 
   if (!workouts.length) {
-    container.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">No structured workouts logged yet.</p>';
+    renderEmptyState(container, 'No structured workouts logged yet.');
     if (pagination) pagination.classList.add('hidden');
     return;
   }
@@ -3650,7 +3650,7 @@ function renderPlansUI() {
   const expandedIds = saveExpandedCardIds();
 
   if (!state.data.lastWorkoutPlans.length) {
-    container.innerHTML = '<p class="text-xs text-slate-500 italic py-2 text-center">No saved plans yet.</p>';
+    renderEmptyState(container, 'No saved plans yet.');
     if (pagination) pagination.classList.add('hidden');
     return;
   }
@@ -4316,7 +4316,7 @@ async function openShareModal(planId, isWorkout = false) {
   document.getElementById('share-qr-display').innerHTML = '';
   document.getElementById('share-select-all-container').classList.add('hidden');
   if (!state.social.userFriendsList.length) {
-    list.innerHTML = '<p class="text-xs text-slate-500 italic text-center py-2">No friends linked yet. Add friends in the Friends section first.</p>';
+    renderEmptyState(list, 'No friends linked yet. Add friends in the Friends section first.');
     modal.classList.remove('hidden');
     return;
   }
@@ -4535,9 +4535,9 @@ function renderSharedPlansUI() {
 
   if (!items.length) {
     const msg = state.ui.plansFilter === 'favorites'
-      ? '<p class="text-xs text-slate-500 italic py-2 text-center">No favorited plans yet. Star a plan to add it here.</p>'
-      : '<p class="text-xs text-slate-500 italic py-2 text-center">No shared plans yet.</p>';
-    container.innerHTML = msg;
+      ? 'No favorited plans yet. Star a plan to add it here.'
+      : 'No shared plans yet.';
+    renderEmptyState(container, msg);
     if (pagination) pagination.classList.add('hidden');
     return;
   }
@@ -5615,7 +5615,7 @@ async function renderActiveFriendsList() {
   const container = document.getElementById('friendsListContainer');
   const pagination = document.getElementById('friends-pagination');
   if (state.social.userFriendsList.length === 0) {
-    container.innerHTML = `<p class="text-xs text-slate-500 italic">No allies linked yet. Share your Cyber-Tag!</p>`;
+    renderEmptyState(container, 'No allies linked yet. Share your Cyber-Tag!');
     if (pagination) pagination.classList.add('hidden');
     return;
   }
@@ -5662,7 +5662,11 @@ async function renderActiveFriendsList() {
       }
     });
 
-    container.innerHTML = html || `<p class="text-xs text-slate-500 italic">No valid allies found for the linked Cyber-Tags.</p>`;
+    if (html) {
+      container.innerHTML = html;
+    } else {
+      renderEmptyState(container, 'No valid allies found for the linked Cyber-Tags.');
+    }
     if (typeof lucide !== 'undefined') lucide.createIcons();
 
     updatePagination('friends', state.pagination.friends, totalPages);
@@ -5877,55 +5881,43 @@ const debouncedSyncActivity = debounce(() => {
 }, 3000);
 
 
-// Visual Alert helper (Updated with dynamic target and optional auto-vanish delay)
-function showFeedback(msg, color, targetId = 'socialFeedback', delay = 2000) {
+function renderEmptyState(container, message, extraClass = '') {
+  if (!container) return;
+  container.innerHTML = `<p class="text-xs text-slate-500 italic py-2 text-center${extraClass ? ' ' + extraClass : ''}">${message}</p>`;
+}
+
+const NOTIFICATION_COLORS = {
+  emerald: 'text-emerald-400',
+  red: 'text-red-400',
+  yellow: 'text-yellow-400',
+  slate: 'text-slate-400'
+};
+
+function showFeedback(msg, color, targetId = 'socialFeedback', delay = 2000, extraClass = '') {
   const el = document.getElementById(targetId);
   if (!el) return;
 
-  const colorClasses = {
-    emerald: 'text-emerald-400',
-    red: 'text-red-400',
-    yellow: 'text-yellow-400',
-    slate: 'text-slate-400'
-  };
-
-  // 1. Set the text and colors
   el.innerText = msg;
-  el.className = `text-xs font-medium transition-all duration-500 opacity-100 ${colorClasses[color] || 'text-slate-400'}`;
+  el.className = `${extraClass} text-xs font-medium transition-all duration-500 opacity-100 ${NOTIFICATION_COLORS[color] || 'text-slate-400'}`;
 
-  // 2. If a delay (in ms) is passed, clear the text after that delay
   if (delay) {
-    // Optional: Clear any existing timeout attached to this element to prevent overlapping animations
     if (el.dataset.timeoutId) {
       clearTimeout(Number(el.dataset.timeoutId));
     }
 
     const timeoutId = setTimeout(() => {
-      // Smoothly fade out using CSS opacity before clearing text
       el.classList.replace('opacity-100', 'opacity-0');
-      
-      // Wait for the 500ms transition animation to finish, then clear the text completely
       setTimeout(() => {
         el.innerText = '\u00A0';
       }, 500);
     }, delay);
 
-    // Save the timeout ID on the element's dataset so we can track it
     el.dataset.timeoutId = timeoutId.toString();
   }
 }
 
 function showToast(msg, color) {
-    const inner = document.getElementById('toast-notification-inner');
-    if (!inner) return;
-    const colorClasses = { emerald: 'text-emerald-400', red: 'text-red-400', yellow: 'text-yellow-400', slate: 'text-slate-400' };
-    inner.innerText = msg;
-    inner.className = `px-4 py-2 rounded-lg bg-slate-800/90 backdrop-blur-sm border border-slate-700 shadow-xl text-xs font-medium transition-all duration-500 opacity-100 ${colorClasses[color] || 'text-slate-400'}`;
-    if (inner.dataset.timeoutId) clearTimeout(Number(inner.dataset.timeoutId));
-    inner.dataset.timeoutId = String(setTimeout(() => {
-        inner.classList.replace('opacity-100', 'opacity-0');
-        setTimeout(() => { inner.innerText = ''; }, 500);
-    }, 3000));
+  showFeedback(msg, color, 'toast-notification-inner', 3000, 'px-4 py-2 rounded-lg bg-slate-800/90 backdrop-blur-sm border border-slate-700 shadow-xl');
 }
 
 function showQRCode() {
