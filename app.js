@@ -1,113 +1,26 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential, updatePassword, deleteUser } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, where, onSnapshot, deleteDoc, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, serverTimestamp, orderBy, limit, Timestamp, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { auth, db, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential, updatePassword, deleteUser, collection, addDoc, query, where, onSnapshot, deleteDoc, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, serverTimestamp, orderBy, limit, Timestamp, getDocs } from './firebase.js';
+import { state, EPLEY_CONSTANT, HAPTIC, CONSISTENCY_CONFIG, RPE_RIR_MAP, entriesPerPage, loginView, appView, bottomNav, authBtn, profileBtn, profileModal, emailInput, passwordInput, loginBtn, signupBtn, greeting, profileForm, workoutForm, workoutList, paginationControls, prevPageBtn, nextPageBtn, currentPageDisplay, totalPagesDisplay, workoutFilter, exerciseSelect, onboardingView, onboardingGender, onboardingWeight, onboardingDaysMonthly, onboardingDaysYearly, onboardingDaysLifetime, onboardingExerciseSelect, onboardingWeightInput, onboardingRepsInput, onboardingAddBtn, onboardingList, onboardingEmpty, onboardingSaveBtn, onboardingFeedback, pbLogExercise, pbLogBtn, pbLogFeedback, tabContents, navTabs } from './state.js';
+import { estimate1RM, estimateWeightForReps, computeEffectiveLoad, getEffectiveLoad, debounce, escapeHtml, haptic, getExerciseInfo, getMonday, formatMovementLoad, formatCardDate, formatWorkoutType, formatDotsScore, formatMovementWeight, getDisplayName, countActiveDays, countConsecutiveDays, EXERCISE_CATALOG, LOAD_FACTORS } from './utils.js';
 
-// Integrated Unique Firebase App Configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyAJNl8NIZB9UGnqUOXPjWcRgFOiroEbPUY",
-    authDomain: "irontrack-f4b19.firebaseapp.com",
-    projectId: "irontrack-f4b19",
-    storageBucket: "irontrack-f4b19.firebasestorage.app",
-    messagingSenderId: "576459465985",
-    appId: "1:576459465985:web:c5e387990eabf0c840a700"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+let currentUser = null;
+let unsubscribeLogs = null;
+let pendingOnboarding1RMs = [];
+let unsubscribeProfile = null;
+let leaderboardUnsubscribe = null;
+let urlParamsProcessed = false;
+let unsubscribeStructured = null;
+let unsubscribePlans = null;
+let unsubscribeSharedPlans = null;
+let activeDates = new Set();
+let listenersAttached = false;
+let _favDebounce = {};
 
 // Initialize Lucide icons
 if (typeof lucide !== 'undefined' && lucide.createIcons) {
   lucide.createIcons();
 }
 
-window.__irontrackAppLoaded = true;
-window.__irontrackAuthState = 'pending';
-window.__irontrackWorkoutCount = 0;
-
 // Volume History State (Issue #38)
-
-// Exercise Catalog & Load Factors
-const EXERCISE_CATALOG = [
-  // ── Barbell ──
-  { name: 'Back Squat', category: 'barbell', type: 'weighted', movement: 'squat' },
-  { name: 'Bench Press', category: 'barbell', type: 'weighted', movement: 'push' },
-  { name: 'Clean & Jerk', category: 'barbell', type: 'weighted', movement: 'push' },
-  { name: 'Deadlift', category: 'barbell', type: 'weighted', movement: 'pull' },
-  { name: 'Front Squat', category: 'barbell', type: 'weighted', movement: 'squat' },
-  { name: 'Hang Clean', category: 'barbell', type: 'weighted', movement: 'pull' },
-  { name: 'Hang Power Clean', category: 'barbell', type: 'weighted', movement: 'pull' },
-  { name: 'Hang Power Snatch', category: 'barbell', type: 'weighted', movement: 'pull' },
-  { name: 'Hang Snatch', category: 'barbell', type: 'weighted', movement: 'pull' },
-  { name: 'Overhead Squat', category: 'barbell', type: 'weighted', movement: 'squat' },
-  { name: 'Power Clean', category: 'barbell', type: 'weighted', movement: 'pull' },
-  { name: 'Power Snatch', category: 'barbell', type: 'weighted', movement: 'pull' },
-  { name: 'Push Press', category: 'barbell', type: 'weighted', movement: 'push' },
-  { name: 'Push Jerk', category: 'barbell', type: 'weighted', movement: 'push' },
-  { name: 'Romanian Deadlift', category: 'barbell', type: 'weighted', movement: 'pull' },
-  { name: 'Shoulder Press', category: 'barbell', type: 'weighted', movement: 'push' },
-  { name: 'Snatch', category: 'barbell', type: 'weighted', movement: 'pull' },
-  { name: 'Squat Clean', category: 'barbell', type: 'weighted', movement: 'pull' },
-  { name: 'Sumo Deadlift', category: 'barbell', type: 'weighted', movement: 'pull' },
-  { name: 'Thruster', category: 'barbell', type: 'weighted', movement: 'squat' },
-  { name: 'Wall Ball', category: 'barbell', type: 'weighted', movement: 'squat' },
-
-  // ── Dumbbell ──
-  { name: 'DB Bench Press', category: 'dumbbell', type: 'weighted', movement: 'push' },
-  { name: 'DB Box Step-up', category: 'dumbbell', type: 'weighted', movement: 'squat' },
-  { name: 'DB Clean', category: 'dumbbell', type: 'weighted', movement: 'pull' },
-  { name: 'DB Deadlift', category: 'dumbbell', type: 'weighted', movement: 'pull' },
-  { name: 'DB Goblet Squat', category: 'dumbbell', type: 'weighted', movement: 'squat' },
-  { name: 'DB Hang Clean', category: 'dumbbell', type: 'weighted', movement: 'pull' },
-  { name: 'DB Lunge', category: 'dumbbell', type: 'weighted', movement: 'squat' },
-  { name: 'DB Push Press', category: 'dumbbell', type: 'weighted', movement: 'push' },
-  { name: 'DB Row', category: 'dumbbell', type: 'weighted', movement: 'pull' },
-  { name: 'DB Shoulder Press', category: 'dumbbell', type: 'weighted', movement: 'push' },
-  { name: 'DB Snatch', category: 'dumbbell', type: 'weighted', movement: 'pull' },
-  { name: 'DB Thruster', category: 'dumbbell', type: 'weighted', movement: 'squat' },
-
-  // ── Kettlebell ──
-  { name: 'Kettlebell Clean', category: 'kettlebell', type: 'weighted', movement: 'pull' },
-  { name: 'Kettlebell Goblet Squat', category: 'kettlebell', type: 'weighted', movement: 'squat' },
-  { name: 'Kettlebell High Pull', category: 'kettlebell', type: 'weighted', movement: 'pull' },
-  { name: 'Kettlebell Snatch', category: 'kettlebell', type: 'weighted', movement: 'pull' },
-  { name: 'Kettlebell Swing', category: 'kettlebell', type: 'weighted', movement: 'pull' },
-
-  // ── Cardio ──
-  { name: 'Assault Bike', category: 'cardio', type: 'cardio', movement: 'pull' },
-  { name: 'Bike', category: 'cardio', type: 'cardio', movement: 'pull' },
-  { name: 'Double Under', category: 'cardio', type: 'cardio', movement: 'pull' },
-  { name: 'Row', category: 'cardio', type: 'cardio', movement: 'pull' },
-  { name: 'Run', category: 'cardio', type: 'cardio', movement: 'pull' },
-  { name: 'SkiErg', category: 'cardio', type: 'cardio', movement: 'pull' },
-
-  // ── Bodyweight ──
-  { name: 'Air Squat', category: 'bodyweight', type: 'bodyweight', movement: 'squat', loadFactor: 0.65 },
-  { name: 'Box Jump', category: 'bodyweight', type: 'bodyweight', movement: 'squat', loadFactor: 1.00 },
-  { name: 'Burpee', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 0.80 },
-  { name: 'Chin-up', category: 'bodyweight', type: 'bodyweight', movement: 'pull', loadFactor: 1.00 },
-  { name: 'Dip', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 0.95 },
-  { name: 'Elevated Push-up', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 0.55 },
-  { name: 'Handstand Push-up', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 1.00 },
-  { name: 'Knee Push-up', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 0.49 },
-  { name: 'L-sit', category: 'bodyweight', type: 'bodyweight', movement: 'pull', loadFactor: 1.00 },
-  { name: 'Muscle-up', category: 'bodyweight', type: 'bodyweight', movement: 'pull', loadFactor: 1.00 },
-  { name: 'Pike Push-up', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 0.75 },
-  { name: 'Pistol', category: 'bodyweight', type: 'bodyweight', movement: 'squat', loadFactor: 1.00 },
-  { name: 'Pull Up', category: 'bodyweight', type: 'bodyweight', movement: 'pull', loadFactor: 1.00 },
-  { name: 'Pull Up (Weighted)', category: 'bodyweight', type: 'weighted', movement: 'pull', loadFactor: 1.00, hidden: true },
-  { name: 'Push-up', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 0.67 },
-  { name: 'Ring Dip', category: 'bodyweight', type: 'bodyweight', movement: 'push', loadFactor: 1.00 },
-  { name: 'Ring Row', category: 'bodyweight', type: 'bodyweight', movement: 'pull', loadFactor: 0.80 },
-  { name: 'Sit-up', category: 'bodyweight', type: 'bodyweight', movement: 'pull', loadFactor: 0.50 },
-  { name: 'Step-up', category: 'bodyweight', type: 'bodyweight', movement: 'squat', loadFactor: 1.00 },
-  { name: 'Strict Pull-up', category: 'bodyweight', type: 'bodyweight', movement: 'pull', loadFactor: 1.00 },
-  { name: 'Toes-to-bar', category: 'bodyweight', type: 'bodyweight', movement: 'pull', loadFactor: 0.60 },
-  { name: 'Walking Lunge', category: 'bodyweight', type: 'bodyweight', movement: 'squat', loadFactor: 1.00 },
-];
-
-const LOAD_FACTORS = {};
-EXERCISE_CATALOG.forEach(ex => { if (ex.loadFactor) LOAD_FACTORS[ex.name] = ex.loadFactor; });
 
 // ─── Schema-Driven Form Layouts ──────────────────────────────────────────────
 
@@ -346,41 +259,6 @@ function renderFormFields(containerId, schema, options = {}) {
 
 // ─── End Schema-Driven Form Layouts ──────────────────────────────────────────
 
-function getExerciseInfo(name) {
-  return EXERCISE_CATALOG.find(ex => ex.name === name) || { category: 'barbell', type: 'weighted' };
-}
-
-function computeEffectiveLoad(exercise, weight, externalLoad, bodyweight) {
-  const loadFactor = LOAD_FACTORS[exercise];
-  if (loadFactor !== undefined) {
-    return (bodyweight || 0) * loadFactor + (externalLoad || 0);
-  }
-  return weight || 0;
-}
-
-const EPLEY_CONSTANT = 30;
-
-function estimate1RM(load, reps) {
-  if (reps === 1) return load;
-  return load * (1 + reps / EPLEY_CONSTANT);
-}
-
-function estimateWeightForReps(oneRM, reps) {
-  return oneRM / (1 + reps / EPLEY_CONSTANT);
-}
-
-function getEffectiveLoad(workout) {
-  if (workout.estimatedLoad !== undefined && workout.estimatedLoad !== null) {
-    return workout.estimatedLoad;
-  }
-  return computeEffectiveLoad(
-    workout.exercise,
-    parseFloat(workout.weight),
-    parseFloat(workout.externalLoad),
-    state.user.userBiometrics.bodyweight
-  );
-}
-
 function updatePagination(name, page, totalPages) {
   const pagination = document.getElementById(`${name}-pagination`);
   if (!pagination) return;
@@ -394,150 +272,6 @@ function updatePagination(name, page, totalPages) {
   if (nextBtn) nextBtn.disabled = page >= totalPages;
   pagination.classList.toggle('hidden', totalPages <= 1);
 }
-
-// UI Selectors
-const loginView = document.getElementById('login-view');
-const appView = document.getElementById('app-view');
-const bottomNav = document.getElementById('bottom-nav');
-const authBtn = document.getElementById('auth-btn');
-const profileBtn = document.getElementById('profile-btn');
-const profileModal = document.getElementById('profile-modal');
-const emailInput = document.getElementById('auth-email');
-const passwordInput = document.getElementById('auth-password');
-const loginBtn = document.getElementById('email-login-btn');
-const signupBtn = document.getElementById('email-signup-btn');
-const greeting = document.getElementById('user-greeting');
-const profileForm = document.getElementById('profile-form');
-const workoutForm = document.getElementById('workout-form');
-const workoutList = document.getElementById('workout-list');
-const paginationControls = document.getElementById('pagination-controls');
-const prevPageBtn = document.getElementById('prev-page-btn');
-const nextPageBtn = document.getElementById('next-page-btn');
-const currentPageDisplay = document.getElementById('current-page');
-const totalPagesDisplay = document.getElementById('total-pages');
-const workoutFilter = document.getElementById('workout-filter');
-const entriesPerPage = 5;
-const exerciseSelect = document.getElementById('exercise');
-
-
-// Onboarding
-const onboardingView = document.getElementById('onboarding-view');
-const onboardingGender = document.getElementById('onboarding-gender');
-const onboardingWeight = document.getElementById('onboarding-weight');
-const onboardingDaysMonthly = document.getElementById('onboarding-days-monthly');
-const onboardingDaysYearly = document.getElementById('onboarding-days-yearly');
-const onboardingDaysLifetime = document.getElementById('onboarding-days-lifetime');
-const onboardingExerciseSelect = document.getElementById('onboarding-1rm-exercise');
-const onboardingWeightInput = document.getElementById('onboarding-1rm-weight');
-const onboardingRepsInput = document.getElementById('onboarding-1rm-reps');
-const onboardingAddBtn = document.getElementById('onboarding-add-1rm');
-const onboardingList = document.getElementById('onboarding-1rm-list');
-const onboardingEmpty = document.getElementById('onboarding-1rm-empty');
-const onboardingSaveBtn = document.getElementById('onboarding-save-btn');
-const onboardingFeedback = document.getElementById('onboarding-feedback');
-
-// PB Log
-const pbLogExercise = document.getElementById('pb-log-exercise');
-const pbLogBtn = document.getElementById('pb-log-btn');
-const pbLogFeedback = document.getElementById('pb-log-feedback');
-
-const HAPTIC = {
-    tap: 15,
-    confirm: 30,
-    achievement: [50, 30, 50],
-    error: [40, 50, 40]
-};
-
-const CONSISTENCY_CONFIG = {
-    monthlyUniqueDays: 14,
-    yearlyUniqueDays: 150,
-    lifetimeUniqueDays: 3000
-};
-
-const RPE_RIR_MAP = { 10: 0, 9: 1, 8: 2, 7: 3, 6: 4 };
-
-let currentUser = null;
-let unsubscribeLogs = null;
-let pendingOnboarding1RMs = [];
-let unsubscribeProfile = null;
-let leaderboardUnsubscribe = null;
-let urlParamsProcessed = false;
-
-const state = {
-  user: {
-    userBiometrics: { gender: 'male', bodyweight: 75 },
-    userChallengeStreaks: {
-      monthly: { completedPeriods: [], currentStreak: 0, bestStreak: 0 },
-      yearly: { completedPeriods: [], currentStreak: 0, bestStreak: 0 }
-    },
-    userSignupTs: 0
-  },
-  cache: {
-    activeRecords: {},
-    cachedMaxLoadByExercise: {},
-    cachedMax1RMByExercise: {},
-    cachedMaxRepsByExercise: {}
-  },
-  data: {
-    lastWorkouts: [],
-    lastStructuredWorkouts: [],
-    lastWorkoutPlans: [],
-    lastSharedPlans: [],
-    paginatedWorkouts: [],
-    calcEntriesByLift: {}
-  },
-  pagination: {
-    workouts: 1,
-    structured: 1,
-    plans: 1,
-    sharedPlans: 1,
-    records: 1,
-    friends: 1
-  },
-  calendar: {
-    month: new Date(),
-    selectedDate: null,
-    compact: true,
-    weekOffset: 0
-  },
-  volume: {
-    period: 'daily',
-    offset: 0,
-    filter: 'All'
-  },
-  builder: {
-    workoutMovements: [],
-    pendingPlannedWorkout: null,
-    emomMode: 'sequence'
-  },
-  social: {
-    currentScope: 'global',
-    currentFormula: 'dots',
-    userFriendsList: [],
-    friendDisplayCache: {},
-    leaderboardCache: [],
-    leaderboardShowAll: false
-  },
-  share: {
-    sharePlanId: null,
-    shareIsWorkout: false,
-    shareMode: 'friends'
-  },
-  ui: {
-    plansFilter: 'mine',
-    currentTab: 'dashboard'
-  }
-};
-
-let unsubscribeStructured = null;
-let unsubscribePlans = null;
-let unsubscribeSharedPlans = null;
-let activeDates = new Set();
-let listenersAttached = false;
-let _favDebounce = {};
-
-const tabContents = document.querySelectorAll('.tab-content');
-const navTabs = document.querySelectorAll('.nav-tab');
 
 function switchTab(tabName) {
   if (tabName === 'profile') {
@@ -1599,27 +1333,6 @@ function renderCalcEntries() {
 
     entriesList.innerHTML = html;
     if (typeof lucide !== 'undefined') lucide.createIcons();
-}
-
-function debounce(fn, wait) {
-    let timer;
-    return function (...args) {
-        clearTimeout(timer);
-        timer = setTimeout(() => fn.apply(this, args), wait);
-    };
-}
-
-function escapeHtml(text) {
-    return String(text)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-}
-
-function haptic(pattern) {
-    try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (_) {}
 }
 
 function updatePaginationControls(totalPages) {
@@ -3087,15 +2800,6 @@ async function updateChallengeStreaks(monthlyDone, yearlyDone) {
     }
 }
 
-function getMonday(date) {
-    const d = new Date(date);
-    const day = d.getDay();
-    const diff = day === 0 ? -6 : 1 - day;
-    d.setDate(d.getDate() + diff);
-    d.setHours(0, 0, 0, 0);
-    return d;
-}
-
 function buildCalendarDayHtml(dateStr, day, isActive, isToday, isSelected, isThisMonth = true) {
   if (!isThisMonth) {
     return `<div class="cal-day cal-day-other-month">${day}</div>`;
@@ -3175,29 +2879,6 @@ function renderCalendar() {
 
     grid.innerHTML = html;
     updateCalTodayBtnState();
-}
-
-function countActiveDays(daysBack, today, activeDates) {
-  let count = 0;
-  for (let i = 0; i < daysBack; i++) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    if (activeDates.has(dateStr)) count++;
-  }
-  return count;
-}
-
-function countConsecutiveDays(today, activeDates) {
-  let streak = 0;
-  for (let i = 0; ; i++) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    if (activeDates.has(dateStr)) streak++;
-    else break;
-  }
-  return streak;
 }
 
 function updateConsistencyMetrics() {
@@ -3453,23 +3134,6 @@ function listenToStructuredWorkouts(uid) {
       container.prepend(hint);
     }
   });
-}
-
-function formatMovementLoad(m) {
-  if (m.weightMode === 'rpe' && m.rpe) {
-    return ` @ RPE ${m.rpe}`;
-  }
-  if (m.weightMode === 'pct' && m.pct) {
-    return ` @ ${Math.round(m.pct)}%`;
-  }
-  return m.weight ? ` @ ${m.weight}kg` : '';
-}
-
-function formatCardDate(ts) {
-  if (!ts) return '';
-  const d = new Date(ts);
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return `${d.getDate()} ${months[d.getMonth()]} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
 
 function renderWorkoutCard(id, name, type, badgeClass, descLine, metadataHtml, movementsHtml, actionsHtml, isFavorite, favCallback) {
@@ -3842,22 +3506,6 @@ const WORKOUT_TYPE_TO_RESULT_ID = {
   INTERVAL: 'interval'
 };
 
-function formatMovementWeight(m) {
-  const oneRM = state.cache.activeRecords[m.exerciseId || m.movement] || 0;
-  const reps = parseInt(m.reps, 10) || 1;
-  if (m.weightMode === 'pct' && m.pct) {
-    const computed = oneRM > 0 ? Math.round(oneRM * m.pct / 100) : m.weight;
-    return ` @ ${m.pct}% 1RM (${computed}kg)`;
-  }
-  if (m.weightMode === 'rpe' && m.rpe) {
-    const rir = 10 - m.rpe;
-    const computed = oneRM > 0 ? Math.round(estimateWeightForReps(oneRM, reps + rir)) : m.weight;
-    return ` @ RPE ${m.rpe} (${computed}kg)`;
-  }
-  if (m.weight) return ` @ ${m.weight}kg`;
-  return '';
-}
-
 function describeAmrap(structure) {
   const mins = Math.round((structure.durationSeconds || 0) / 60);
   const lines = [`${mins}:00`];
@@ -3921,10 +3569,6 @@ function buildWorkoutDescription(workout) {
     case 'INTERVAL': return describeInterval(structure);
     default: return '';
   }
-}
-
-function formatWorkoutType(type) {
-  return type === 'FOR_TIME' ? 'For Time' : type;
 }
 
 function buildWorkoutSummaryLine(type, structure) {
@@ -5451,15 +5095,6 @@ if (document.getElementById('movement-list')) {
 
 function getProfileDocRef(uid) {
   return doc(db, "profiles", uid);
-}
-
-function getDisplayName(profile, fallbackUid) {
-  return profile?.displayName || profile?.uid || fallbackUid || 'Unknown';
-}
-
-function formatDotsScore(value) {
-  const number = Number(value);
-  return Number.isFinite(number) ? number : 0;
 }
 
 /**
