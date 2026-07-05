@@ -2042,8 +2042,6 @@ async function writeStructuredLogEntry({ workoutId, movement, sets, totalReps, e
 
   const totalVolume = estimatedLoad * totalReps;
 
-  console.log(`[contrib] writeStructuredLogEntry: exercise=${movement.exerciseId}, sets=${sets}, reps=${movement.reps}, totalReps=${totalReps}, weight=${weight}, estimatedLoad=${estimatedLoad}, totalVolume=${totalVolume}, source=structured`);
-
   const logEntry = {
     userId: currentUser.uid,
     exercise: movement.exerciseId,
@@ -2065,7 +2063,6 @@ async function writeStructuredLogEntry({ workoutId, movement, sets, totalReps, e
 
   try {
     const docRef = await addDoc(collection(db, "workouts"), logEntry);
-    console.log(`[contrib] addDoc SUCCESS: exercise=${movement.exerciseId}, docId=${docRef.id}, totalVolume=${totalVolume}`);
   } catch (err) {
     console.error(`[contrib] addDoc FAILED: exercise=${movement.exerciseId}, code=${err.code}, message=${err.message}`);
     throw err;
@@ -2090,8 +2087,6 @@ async function generateContributionsBase(workoutId, movements, processMovement) 
 }
 
 async function generateAmrapContributions(workoutId, movements, roundsCompleted, additionalReps) {
-  console.log(`[contrib] generateAmrapContributions: workoutId=${workoutId}, movements=${movements.length}, rounds=${roundsCompleted}, addReps=${additionalReps}`);
-
   await generateContributionsBase(workoutId, movements, (movement) => {
     const totalReps = roundsCompleted * movement.reps + additionalReps;
     return { totalReps, sets: roundsCompleted, extraFields: { additionalReps } };
@@ -2668,8 +2663,6 @@ function formatScore_COMPLETED_MINUTES(completed, total) {
 async function generateEmomContributions(workoutId, minutes, minutesCompleted, mode) {
   const numMinutes = minutes.length;
   const isByRound = mode === 'by_round';
-  console.log(`[contrib] generateEmomContributions: workoutId=${workoutId}, minutes=${numMinutes}, completed=${minutesCompleted}, mode=${mode}`);
-
   if (numMinutes === 0 || minutesCompleted <= 0) return;
 
   for (let i = 0; i < minutes.length; i++) {
@@ -2744,7 +2737,6 @@ function formatScore_TIME_SECONDS(totalSeconds) {
 
 
 async function generateForTimeContributions(workoutId, movements, rounds, remainingReps = 0) {
-  console.log(`[contrib] generateForTimeContributions: workoutId=${workoutId}, movements=${movements.length}, rounds=${rounds}, remainingReps=${remainingReps}`);
   const repsPerRound = movements.reduce((sum, m) => sum + (m.reps || 0), 0);
   const totalPlanned = repsPerRound * rounds;
   const totalCompleted = Math.max(0, totalPlanned - remainingReps);
@@ -2881,7 +2873,6 @@ function updateLogWorkoutButtonState() {
 
 
 async function generateIntervalContributions(workoutId, movements, roundsCompleted, partialReps = 0) {
-  console.log(`[contrib] generateIntervalContributions: workoutId=${workoutId}, movements=${movements.length}, rounds=${roundsCompleted}, partialReps=${partialReps}`);
   let remainingPartial = partialReps;
 
   await generateContributionsBase(workoutId, movements, (movement) => {
@@ -4090,7 +4081,6 @@ async function submitAmrapWorkout(name, structure, now) {
     timestamp: now
   };
   const docRef = await addDoc(collection(db, "structured_workouts"), workoutDoc);
-  console.log(`[submitPending] AMRAP: movements=${structure.movements?.length}, rounds=${roundsCompleted}, addReps=${additionalReps}`);
   await generateAmrapContributions(docRef.id, structure.movements, roundsCompleted, additionalReps);
 }
 
@@ -4113,7 +4103,6 @@ async function submitEmomWorkout(name, structure, now) {
     timestamp: now
   };
   const docRef = await addDoc(collection(db, "structured_workouts"), workoutDoc);
-  console.log(`[submitPending] EMOM: minutes=${structure.minutes?.length}, completed=${roundsCompleted}, mode=${structure.mode}`);
   await generateEmomContributions(docRef.id, structure.minutes, roundsCompleted, structure.mode);
 }
 
@@ -4140,7 +4129,6 @@ async function submitForTimeWorkout(name, structure, now) {
     timestamp: now
   };
   const docRef = await addDoc(collection(db, "structured_workouts"), workoutDoc);
-  console.log(`[submitPending] FOR_TIME: movements=${structure.movements?.length}, rounds=${structure.rounds}, remainingReps=${remainingReps}`);
   await generateForTimeContributions(docRef.id, structure.movements, structure.rounds, remainingReps);
 }
 
@@ -4164,7 +4152,6 @@ async function submitIntervalWorkout(name, structure, now) {
     timestamp: now
   };
   const docRef = await addDoc(collection(db, "structured_workouts"), workoutDoc);
-  console.log(`[submitPending] INTERVAL: movements=${structure.movements?.length}, rounds=${roundsCompleted}, partialReps=${partialReps}`);
   await generateIntervalContributions(docRef.id, structure.movements, roundsCompleted, partialReps);
 }
 
@@ -6002,7 +5989,6 @@ async function processFriendRequest(friendId) {
 
     // Check if already friends to prevent unnecessary updates
     if (state.social.userFriendsList.includes(friendId)) {
-        console.log("Friend already linked.");
         return;
     }
 
@@ -6040,7 +6026,6 @@ async function processClaimedPlan(claimId) {
         }
 
         if (data.sharedBy === currentUser.uid) {
-            console.log("Cannot claim your own QR share.");
             return;
         }
 
