@@ -41,7 +41,7 @@
     </header>
 
     <section id="login-view" class="surface-card text-center my-12 space-y-4 max-w-sm mx-auto">
-      <div class="text-5xl">⚡️</div>
+       <div class="text-5xl" aria-hidden="true">⚡️</div>
       <div>
         <h2 class="text-xl font-bold mb-1">Unlock Cloud Analytics</h2>
         <p class="text-sm text-slate-400">
@@ -59,7 +59,7 @@
             <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Password</label>
             <div class="relative">
               <input type="password" id="auth-password" placeholder="••••••••" required minlength="6" autocomplete="current-password" class="input-core pr-10" />
-              <button id="toggle-password-btn" type="button" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" tabindex="-1">
+              <button id="toggle-password-btn" type="button" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" aria-label="Toggle password visibility" aria-pressed="false">
                 <i data-lucide="eye" id="eye-icon" size="18"></i>
                 <i data-lucide="eye-off" id="eye-off-icon" size="18" class="hidden"></i>
               </button>
@@ -85,7 +85,7 @@
 
       <div id="forgot-password-section" class="hidden space-y-3 pt-2 border-t border-slate-800 mt-3">
         <p class="text-xs text-slate-400 text-center">Enter your email and we'll send a reset link.</p>
-        <input type="email" id="forgot-password-email" placeholder="athlete@irontrack.com" class="input-core" />
+        <input type="email" id="forgot-password-email" placeholder="athlete@irontrack.com" class="input-core" aria-label="Email for password reset" />
         <div class="grid grid-cols-2 gap-3">
           <button id="forgot-password-cancel" type="button" class="btn-core is-ghost btn-size-input">
             Back
@@ -190,10 +190,10 @@
 
             <div class="mt-4">
               <div class="flex items-center justify-between mb-2">
-                <button id="cal-prev-month" type="button" class="btn-core is-secondary btn-size-row">&lt;</button>
+                <button id="cal-prev-month" type="button" class="btn-core is-secondary btn-size-row" aria-label="Previous month">&lt;</button>
                 <span id="cal-month-label" class="text-sm font-bold text-slate-200"></span>
                 <button id="cal-today" type="button" class="btn-core is-ghost btn-size-row" disabled>Today</button>
-                <button id="cal-next-month" type="button" class="btn-core is-secondary btn-size-row">&gt;</button>
+                <button id="cal-next-month" type="button" class="btn-core is-secondary btn-size-row" aria-label="Next month">&gt;</button>
               </div>
               <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
                 <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
@@ -226,7 +226,7 @@
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Last 7 Days</p>
                 <div class="text-xs font-black text-emerald-400 mb-0.5" id="consistency-7day">0 / 7</div>
                 <div class="mt-1.5 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                  <div id="consistency-7day-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" style="width: 0%"></div>
+                  <div id="consistency-7day-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="7-day consistency" style="width: 0%"></div>
                 </div>
                 <p class="text-[10px] text-amber-400 font-bold hidden" id="consistency-7day-streak"></p>
               </div>
@@ -234,7 +234,7 @@
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Last 28 Days</p>
                 <div class="text-xs font-black text-emerald-400 mb-0.5" id="consistency-28day">0 / 30</div>
                 <div class="mt-1.5 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                  <div id="consistency-28day-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" style="width: 0%"></div>
+                  <div id="consistency-28day-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="28-day consistency" style="width: 0%"></div>
                 </div>
                 <p class="text-[10px] text-amber-400 font-bold hidden" id="consistency-28day-streak"></p>
               </div>
@@ -245,7 +245,7 @@
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">This Month</p>
                 <div class="text-xs font-black text-emerald-400 mb-0.5" id="challenge-monthly-progress">0 / 14</div>
                 <div class="mt-1.5 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                  <div id="challenge-monthly-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" style="width: 0%"></div>
+                  <div id="challenge-monthly-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Monthly progress" style="width: 0%"></div>
                 </div>
                 <p class="text-[10px] text-amber-400 font-bold hidden" id="challenge-monthly-streak"></p>
               </div>
@@ -253,7 +253,7 @@
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">This Year</p>
                 <div class="text-xs font-black text-emerald-400 mb-0.5" id="challenge-yearly-progress">0 / 150</div>
                 <div class="mt-1.5 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                  <div id="challenge-yearly-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" style="width: 0%"></div>
+                  <div id="challenge-yearly-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Yearly progress" style="width: 0%"></div>
                 </div>
                 <p class="text-[10px] text-amber-400 font-bold hidden" id="challenge-yearly-streak"></p>
               </div>
@@ -261,7 +261,7 @@
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Lifetime</p>
                 <div class="text-xs font-black text-emerald-400 mb-0.5" id="challenge-lifetime-progress">0 / 3000</div>
                 <div class="mt-1.5 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                  <div id="challenge-lifetime-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" style="width: 0%"></div>
+                  <div id="challenge-lifetime-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Lifetime progress" style="width: 0%"></div>
                 </div>
               </div>
             </div>
@@ -541,7 +541,7 @@
       <div id="plan-name-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80" style="backdrop-filter: blur(4px);" role="dialog" aria-modal="true" aria-labelledby="plan-name-modal-title">
         <div class="surface-card w-full max-w-sm mx-4 space-y-4">
           <p id="plan-name-modal-title" class="form-label text-base">Name Your Plan</p>
-          <input type="text" id="plan-name-input" class="input-core" placeholder="e.g. Monday Push Day" required />
+          <input type="text" id="plan-name-input" class="input-core" placeholder="e.g. Monday Push Day" aria-label="Plan name" required />
           <div class="flex gap-2">
             <button type="button" id="plan-name-cancel" class="btn-core is-ghost btn-size-input">Cancel</button>
             <button type="button" id="plan-name-save" class="btn-core is-primary btn-size-input">Save Plan</button>
@@ -755,8 +755,8 @@
 
             <!-- Shared action buttons -->
             <div class="flex gap-2">
-              <button type="button" id="btn-do-workout" class="flex-1 btn-core is-primary-ghost btn-card-action h-11" title="Do Workout"><i data-lucide="dumbbell" size="18"></i></button>
-              <button type="button" id="btn-save-plan" class="flex-1 btn-core is-ghost btn-card-action h-11" title="Save for Later"><i data-lucide="save" size="18"></i></button>
+              <button type="button" id="btn-do-workout" class="flex-1 btn-core is-primary-ghost btn-card-action h-11" title="Do Workout" aria-label="Do Workout"><i data-lucide="dumbbell" size="18"></i></button>
+              <button type="button" id="btn-save-plan" class="flex-1 btn-core is-ghost btn-card-action h-11" title="Save for Later" aria-label="Save Plan"><i data-lucide="save" size="18"></i></button>
             </div>
             <p id="planFeedback" aria-live="polite" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
           </section>
@@ -785,10 +785,10 @@
             </div>
 
             <div id="vh-nav-row" class="flex items-center justify-between mb-3">
-              <button type="button" id="vh-prev" class="btn-core is-secondary btn-size-row">&lt;</button>
+              <button type="button" id="vh-prev" class="btn-core is-secondary btn-size-row" aria-label="Previous period">&lt;</button>
               <span id="vh-range-label" class="text-xs text-slate-400 font-mono"></span>
               <button type="button" id="vh-today" class="btn-core is-ghost btn-size-row" disabled>Today</button>
-              <button type="button" id="vh-next" class="btn-core is-secondary btn-size-row">&gt;</button>
+              <button type="button" id="vh-next" class="btn-core is-secondary btn-size-row" aria-label="Next period">&gt;</button>
             </div>
 
             <div id="vh-bars-container" class="flex items-end gap-1.5" style="overflow: hidden;">
@@ -875,7 +875,7 @@
           <div class="surface-card rounded-xl overflow-hidden">
             <div class="flex items-center justify-between px-6 pt-6 pb-2">
               <h2 id="profile-modal-title" class="text-lg font-bold text-slate-200">Your Profile</h2>
-              <button id="profile-modal-close" class="text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" type="button">
+              <button id="profile-modal-close" class="text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" type="button" aria-label="Close profile">
                 <i data-lucide="circle-x" size="18"></i>
               </button>
             </div>
@@ -903,7 +903,7 @@
                     <label for="cp-current" class="form-label">Current Password</label>
                     <div class="relative">
                       <input type="password" id="cp-current" placeholder="Current password" required minlength="6" autocomplete="current-password" class="input-core pr-10" />
-                      <button type="button" class="toggle-pw-btn absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" tabindex="-1" data-target="cp-current" aria-label="Toggle password visibility">
+                      <button type="button" class="toggle-pw-btn absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" data-target="cp-current" aria-label="Toggle password visibility">
                         <i data-lucide="eye" class="eye-icon" size="18"></i>
                         <i data-lucide="eye-off" class="eye-off-icon hidden" size="18"></i>
                       </button>
@@ -913,7 +913,7 @@
                     <label for="cp-new" class="form-label">New Password</label>
                     <div class="relative">
                       <input type="password" id="cp-new" placeholder="New password (min 6 chars)" required minlength="6" autocomplete="new-password" class="input-core pr-10" />
-                      <button type="button" class="toggle-pw-btn absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" tabindex="-1" data-target="cp-new" aria-label="Toggle password visibility">
+                      <button type="button" class="toggle-pw-btn absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" data-target="cp-new" aria-label="Toggle password visibility">
                         <i data-lucide="eye" class="eye-icon" size="18"></i>
                         <i data-lucide="eye-off" class="eye-off-icon hidden" size="18"></i>
                       </button>
@@ -923,7 +923,7 @@
                     <label for="cp-confirm" class="form-label">Confirm Password</label>
                     <div class="relative">
                       <input type="password" id="cp-confirm" placeholder="Confirm new password" required minlength="6" autocomplete="new-password" class="input-core pr-10" />
-                      <button type="button" class="toggle-pw-btn absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" tabindex="-1" data-target="cp-confirm" aria-label="Toggle password visibility">
+                      <button type="button" class="toggle-pw-btn absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" data-target="cp-confirm" aria-label="Toggle password visibility">
                         <i data-lucide="eye" class="eye-icon" size="18"></i>
                         <i data-lucide="eye-off" class="eye-off-icon hidden" size="18"></i>
                       </button>
@@ -985,7 +985,7 @@
               </div>
 
               <div class="space-y-2 mb-6">
-                <label class="form-label">Your Cyber-Tag</label>
+                <label class="form-label" for="myCyberTag">Your Cyber-Tag</label>
 
                 <div class="flex gap-2">
                   <input id="myCyberTag" type="text" readonly class="input-core" value="connecting to network..." />
@@ -997,7 +997,7 @@
                 <p id="socialFeedback" class="text-xs text-slate-500 font-medium h-4"></p>
 
                 <div class="space-y-2 mb-6">
-                  <label class="form-label">Add Friend</label>
+                  <label class="form-label" for="friendUidInput">Add Friend</label>
 
                   <div class="flex gap-2">
                     <input type="text" id="friendUidInput" placeholder="Paste friend's Cyber-Tag here..." class="input-core" />

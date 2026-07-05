@@ -290,7 +290,7 @@ body {
 }
 
 .input-core::placeholder {
-  color: var(--slate-500);
+  color: var(--slate-400);
 }
 
 /* --- Structured Workout Card Styles --- */
