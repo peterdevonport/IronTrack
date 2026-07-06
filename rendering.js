@@ -1,4 +1,4 @@
-import { state, INPUT_CLASS, CALC_CLASS, onboardingList, pendingOnboarding1RMs } from './state.js';
+import { state, INPUT_CLASS, CALC_CLASS, onboardingList } from './state.js';
 import { escapeHtml } from './dom.js';
 import { estimate1RM, estimateWeightForReps, getEffectiveLoad } from './math.js';
 import { formatMovementLoad, formatCardDate, formatWorkoutType, formatDotsScore } from './formatting.js';
@@ -155,22 +155,22 @@ function renderOnboarding1RMItem(item, index) {
             </div>`;
 }
 
-function renderOnboarding1RMList() {
+function renderOnboarding1RMList(pendingItems) {
     if (!onboardingList) return;
-    if (pendingOnboarding1RMs.length === 0) {
+    if (pendingItems.length === 0) {
         renderEmptyState(onboardingList, 'No lifts added yet.');
         return;
     }
     let html = '';
-    pendingOnboarding1RMs.forEach((item, index) => {
+    pendingItems.forEach((item, index) => {
         html += renderOnboarding1RMItem(item, index);
     });
     onboardingList.innerHTML = html;
     onboardingList.querySelectorAll('[data-index]').forEach(btn => {
         btn.addEventListener('click', () => {
             const idx = parseInt(btn.dataset.index, 10);
-            pendingOnboarding1RMs.splice(idx, 1);
-            renderOnboarding1RMList();
+            pendingItems.splice(idx, 1);
+            renderOnboarding1RMList(pendingItems);
         });
     });
     if (typeof lucide !== 'undefined') lucide.createIcons();
