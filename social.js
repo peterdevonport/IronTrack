@@ -238,7 +238,7 @@ function changeFriendsPage(direction) {
 function filterLeaderboardProfiles() {
   const filtered = [];
   state.social.leaderboardCache.forEach(profile => {
-    const isMe = currentUser && profile.uid === auth.currentUser.uid;
+    const isMe = auth.currentUser && profile.uid === auth.currentUser.uid;
     const isFriend = state.social.userFriendsList.includes(profile.uid);
     if (state.social.currentScope === 'friends' && !isMe && !isFriend) return;
     filtered.push({ profile, isMe, isFriend });
@@ -443,7 +443,7 @@ function showQRCode() {
 
 // --- QR add friend  ---
 async function processFriendRequest(friendId) {
-    if (!currentUser || friendId === auth.currentUser.uid) return;
+    if (!auth.currentUser || friendId === auth.currentUser.uid) return;
 
     // Check if already friends to prevent unnecessary updates
     if (state.social.userFriendsList.includes(friendId)) {
