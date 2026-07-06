@@ -1,5 +1,5 @@
 import { auth, db, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential, updatePassword, deleteUser, collection, addDoc, query, where, onSnapshot, deleteDoc, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, serverTimestamp, orderBy, limit, Timestamp, getDocs } from './firebase.js';
-import { state, EPLEY_CONSTANT, HAPTIC, CONSISTENCY_CONFIG, RPE_RIR_MAP, entriesPerPage, INPUT_CLASS, CALC_CLASS, loginView, appView, bottomNav, authBtn, profileBtn, profileModal, emailInput, passwordInput, loginBtn, signupBtn, greeting, profileForm, workoutForm, workoutList, paginationControls, prevPageBtn, nextPageBtn, currentPageDisplay, totalPagesDisplay, workoutFilter, exerciseSelect, onboardingView, onboardingGender, onboardingWeight, onboardingDaysMonthly, onboardingDaysYearly, onboardingDaysLifetime, onboardingExerciseSelect, onboardingWeightInput, onboardingRepsInput, onboardingAddBtn, onboardingList, onboardingEmpty, onboardingSaveBtn, onboardingFeedback, pbLogExercise, pbLogBtn, pbLogFeedback, tabContents, navTabs } from './state.js';
+import { state, EPLEY_CONSTANT, HAPTIC, CONSISTENCY_CONFIG, RPE_RIR_MAP, entriesPerPage, INPUT_CLASS, CALC_CLASS, activeDates, loginView, appView, bottomNav, authBtn, profileBtn, profileModal, emailInput, passwordInput, loginBtn, signupBtn, greeting, profileForm, workoutForm, workoutList, paginationControls, prevPageBtn, nextPageBtn, currentPageDisplay, totalPagesDisplay, workoutFilter, exerciseSelect, onboardingView, onboardingGender, onboardingWeight, onboardingDaysMonthly, onboardingDaysYearly, onboardingDaysLifetime, onboardingExerciseSelect, onboardingWeightInput, onboardingRepsInput, onboardingAddBtn, onboardingList, onboardingEmpty, onboardingSaveBtn, onboardingFeedback, pbLogExercise, pbLogBtn, pbLogFeedback, tabContents, navTabs } from './state.js';
 import { estimate1RM, estimateWeightForReps, computeEffectiveLoad, getEffectiveLoad } from './math.js';
 import { debounce, escapeHtml, haptic } from './dom.js';
 import { getExerciseInfo, getDisplayName, EXERCISE_CATALOG, LOAD_FACTORS } from './exercise-data.js';
@@ -10,6 +10,8 @@ import { clearChildren, renderEmptyState, renderMessage, updatePagination, updat
 import { buildWmsField, applyFieldAttributes, renderFormFields, renderOnboarding1RMItem, renderOnboarding1RMList, renderCalcEntry, renderCalcEntries, renderPlanMovementItem, renderPlanMovements, renderMovementChips, renderEmomChips, renderCalendarWorkoutItem, renderVolumeBar, renderMinuteSlotInner, renderShareFriendItem, renderRegistryRow, renderLeaderboardEmptyRow, buildCalendarDayHtml, workoutToLogHtml, renderWorkoutCard, renderStructuredWorkoutCard, renderPlanCard, renderSharedPlanCard, friendToHtml, buildLeaderboardRow } from './rendering.js';
 import { getSchemaKey, computeTotalLoad, pullProfileMetrics, refreshPBForm, processWorkoutSnapshot, updateCaches } from './auth.js';
 import { showOnboarding, hideOnboarding, addOnboarding1RM } from './onboarding.js';
+import { computeAndSyncDailyActivity, renderConsistencyUI, calculateChallengeProgress, renderChallengeCards, loadConsistencyConfig, getPreviousPeriodId, calculateStreakFromPeriods, renderStreakUI, updateChallengeStreaks, renderCalendar, updateConsistencyMetrics, getWorkoutsForDate, selectCalendarDay, changeCalendarNav, applyCalendarNav, autoSelectFirstActiveDay, goToCalendarToday, toggleCalendarView, closeCalendarDayDetail } from './calendar.js';
+import { renderLogs, getWeekStart, getWeekEnd, computeDailyBuckets, computeWeeklyBuckets, computeMonthlyBuckets, computeYearlyBuckets, computeVolumeHistory, formatRangeLabel, renderVolumeHistory, switchVolumePeriod, shiftVolumePeriod, goToCurrentPeriod, populateVolumeFilter, onVolumeFilterChange } from './volume.js';
 
 let currentUser = null;
 let unsubscribeLogs = null;
@@ -20,7 +22,6 @@ let urlParamsProcessed = false;
 let unsubscribeStructured = null;
 let unsubscribePlans = null;
 let unsubscribeSharedPlans = null;
-let activeDates = new Set();
 let listenersAttached = false;
 let _favDebounce = {};
 
@@ -88,10 +89,6 @@ const FORM_SCHEMAS = {
     ],
   },
 };
-
-
-
-
 
 function switchTab(tabName) {
   if (tabName === 'profile') {
@@ -201,7 +198,7 @@ function handleSignedOut() {
   clearChildren(document.getElementById('leaderboardRows'));
   currentUser = null;
   urlParamsProcessed = false;
-  activeDates = new Set();
+  activeDates.clear();
   state.calendar.month = new Date();
   state.calendar.selectedDate = null;
   state.calendar.compact = true;
@@ -231,8 +228,6 @@ async function processUrlParams() {
     window.history.replaceState({}, document.title, window.location.pathname);
   }
 }
-
-
 
 // Email Core Auth Handlers
 loginBtn.addEventListener('click', async () => {
@@ -357,14 +352,6 @@ if (forgotPasswordSend) {
   });
 }
 
-
-
-
-
-
-
-
-
 function collectOnboardingFormValues() {
   return {
     gender: onboardingGender?.value || 'male',
@@ -450,8 +437,6 @@ async function saveOnboarding() {
         if (onboardingSaveBtn) onboardingSaveBtn.disabled = false;
     }
 }
-
-
 
 async function logPB() {
     if (!currentUser) return;
@@ -718,10 +703,6 @@ document.addEventListener('keydown', (e) => {
         logPB();
     }
 });
-
-
-
-
 
 function renderFromWorkouts(workouts) {
   try {
@@ -1073,8 +1054,6 @@ if (chip1RMEl) {
   });
 }
 
-
-
 function populateExerciseDropdown() {
   const groups = ['barbell', 'dumbbell', 'kettlebell', 'cardio', 'bodyweight'];
   const html = buildExerciseOptionsHtml(groups, '<option value="" disabled selected>Select exercise...</option>');
@@ -1157,7 +1136,6 @@ function refreshLogSetForm() {
 
   updateLogSetButtonState();
 }
-
 
 function populateWorkoutFilter(exercises) {
   if (!workoutFilter) return;
@@ -2055,7 +2033,6 @@ function updateLogWorkoutButtonState() {
   }
 }
 
-
 async function generateIntervalContributions(workoutId, movements, roundsCompleted, partialReps = 0) {
   let remainingPartial = partialReps;
 
@@ -2069,414 +2046,6 @@ async function generateIntervalContributions(workoutId, movements, roundsComplet
     if (displayPartialReps > 0) extraFields.partialReps = displayPartialReps;
     return { totalReps, sets: effectiveSets, extraFields };
   });
-}
-
-// ==========================================
-// WORKOUT CONSISTENCY SYSTEM
-// ==========================================
-
-async function computeAndSyncDailyActivity() {
-    if (!currentUser) return;
-    
-    const allTimestamps = [];
-    state.data.lastWorkouts.forEach(w => allTimestamps.push(w.timestamp));
-    state.data.lastStructuredWorkouts.forEach(sw => allTimestamps.push(sw.timestamp));
-    
-    activeDates = new Set();
-    allTimestamps.forEach(ts => {
-        const d = new Date(ts);
-        activeDates.add(toLocalDateKey(d));
-    });
-    
-    renderConsistencyUI();
-}
-
-function renderConsistencyUI() {
-    renderCalendar();
-    updateConsistencyMetrics();
-    renderChallengeCards();
-    const today = new Date();
-    selectCalendarDay(toLocalDateKey(today));
-}
-
-function calculateChallengeProgress() {
-    const today = new Date();
-    const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth();
-
-    const dateArray = Array.from(activeDates);
-
-    const monthlyActive = dateArray.filter(d => {
-        const [y, m] = d.split('-');
-        return parseInt(y) === currentYear && (parseInt(m) - 1) === currentMonth;
-    }).length;
-
-    const yearlyActive = dateArray.filter(d => {
-        return d.startsWith(String(currentYear));
-    }).length;
-
-    const lifetimeActive = activeDates.size;
-
-    // Add day0 offsets from onboarding
-    const day0 = state.user.userBiometrics?.day0TrainingDays || { monthly: 0, yearly: 0, lifetime: 0 };
-
-    return { monthly: monthlyActive + (day0.monthly || 0), yearly: yearlyActive + (day0.yearly || 0), lifetime: lifetimeActive + (day0.lifetime || 0) };
-}
-
-function renderChallengeCards() {
-    const progress = calculateChallengeProgress();
-    const cfg = CONSISTENCY_CONFIG;
-
-    const monthlyPct = Math.min(100, (progress.monthly / cfg.monthlyUniqueDays) * 100);
-    const yearlyPct = Math.min(100, (progress.yearly / cfg.yearlyUniqueDays) * 100);
-    const lifetimePct = Math.min(100, (progress.lifetime / cfg.lifetimeUniqueDays) * 100);
-
-    const monthlyDone = progress.monthly >= cfg.monthlyUniqueDays;
-    const yearlyDone = progress.yearly >= cfg.yearlyUniqueDays;
-    const lifetimeDone = progress.lifetime >= cfg.lifetimeUniqueDays;
-
-    setChallengeCard('challenge-monthly', progress.monthly, cfg.monthlyUniqueDays, monthlyPct, monthlyDone);
-    setChallengeCard('challenge-yearly', progress.yearly, cfg.yearlyUniqueDays, yearlyPct, yearlyDone);
-    setChallengeCard('challenge-lifetime', progress.lifetime, cfg.lifetimeUniqueDays, lifetimePct, lifetimeDone);
-
-    updateChallengeStreaks(monthlyDone, yearlyDone);
-}
-
-async function loadConsistencyConfig() {
-    try {
-        const docSnap = await getDoc(doc(db, "config", "consistency"));
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            if (data.monthlyUniqueDays) CONSISTENCY_CONFIG.monthlyUniqueDays = data.monthlyUniqueDays;
-            if (data.yearlyUniqueDays) CONSISTENCY_CONFIG.yearlyUniqueDays = data.yearlyUniqueDays;
-            if (data.lifetimeUniqueDays) CONSISTENCY_CONFIG.lifetimeUniqueDays = data.lifetimeUniqueDays;
-        }
-    } catch (e) {
-        // Config doc may not exist or permission-denied; use defaults
-    }
-    renderChallengeCards();
-}
-
-function getPreviousPeriodId(periodId, type) {
-    if (type === 'monthly') {
-        const [y, m] = periodId.split('-').map(Number);
-        const d = new Date(y, m - 2, 1);
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    }
-    return String(parseInt(periodId) - 1);
-}
-
-function calculateStreakFromPeriods(completedPeriods, type) {
-    if (!completedPeriods || completedPeriods.length === 0) return 0;
-    const sorted = [...completedPeriods].sort().reverse();
-    let streak = 1;
-    let current = sorted[0];
-    for (let i = 1; i < sorted.length; i++) {
-        if (sorted[i] === getPreviousPeriodId(current, type)) {
-            streak++;
-            current = sorted[i];
-        } else {
-            break;
-        }
-    }
-    return streak;
-}
-
-function renderStreakUI(monthlyStreak, yearlyStreak) {
-    const monthlyEl = document.getElementById('challenge-monthly-streak');
-    const yearlyEl = document.getElementById('challenge-yearly-streak');
-    if (monthlyEl) {
-        if (monthlyStreak > 0) {
-            monthlyEl.textContent = `\u{1F525} ${monthlyStreak}-month streak`;
-            monthlyEl.classList.remove('hidden');
-        } else {
-            monthlyEl.classList.add('hidden');
-        }
-    }
-    if (yearlyEl) {
-        if (yearlyStreak > 0) {
-            yearlyEl.textContent = `\u{1F525} ${yearlyStreak}-year streak`;
-            yearlyEl.classList.remove('hidden');
-        } else {
-            yearlyEl.classList.add('hidden');
-        }
-    }
-}
-
-async function updateChallengeStreaks(monthlyDone, yearlyDone) {
-    if (!currentUser) return;
-    const now = new Date();
-    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    const currentYear = String(now.getFullYear());
-
-    let updated = false;
-    const monthly = { completedPeriods: [...state.user.userChallengeStreaks.monthly.completedPeriods], currentStreak: 0, bestStreak: state.user.userChallengeStreaks.monthly.bestStreak || 0 };
-    const yearly = { completedPeriods: [...state.user.userChallengeStreaks.yearly.completedPeriods], currentStreak: 0, bestStreak: state.user.userChallengeStreaks.yearly.bestStreak || 0 };
-
-    if (monthlyDone && !monthly.completedPeriods.includes(currentMonth)) {
-        monthly.completedPeriods.push(currentMonth);
-        updated = true;
-    }
-    if (yearlyDone && !yearly.completedPeriods.includes(currentYear)) {
-        yearly.completedPeriods.push(currentYear);
-        updated = true;
-    }
-
-    monthly.currentStreak = calculateStreakFromPeriods(monthly.completedPeriods, 'monthly');
-    yearly.currentStreak = calculateStreakFromPeriods(yearly.completedPeriods, 'yearly');
-    monthly.bestStreak = Math.max(monthly.bestStreak, monthly.currentStreak);
-    yearly.bestStreak = Math.max(yearly.bestStreak, yearly.currentStreak);
-
-    state.user.userChallengeStreaks = { monthly, yearly };
-
-    renderStreakUI(monthly.currentStreak, yearly.currentStreak);
-
-    if (updated) {
-        try {
-            await setDoc(doc(db, "profiles", currentUser.uid), { challengeStreaks: state.user.userChallengeStreaks }, { merge: true });
-        } catch (e) {
-            console.error('Failed to sync challenge streaks', e);
-        }
-    }
-}
-
-function renderCalendar() {
-    const grid = document.getElementById('calendar-grid');
-    const label = document.getElementById('cal-month-label');
-    if (!grid || !label) return;
-
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    const shortMonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-    const today = new Date();
-    const todayStr = toLocalDateKey(today);
-
-    let html = '';
-
-    if (state.calendar.compact) {
-        const monday = getMonday(today);
-        monday.setDate(monday.getDate() + state.calendar.weekOffset * 7);
-        const sunday = new Date(monday);
-        sunday.setDate(sunday.getDate() + 6);
-
-        if (monday.getMonth() === sunday.getMonth() && monday.getFullYear() === sunday.getFullYear()) {
-            label.textContent = `${shortMonthNames[monday.getMonth()]} ${monday.getDate()} – ${sunday.getDate()}, ${sunday.getFullYear()}`;
-        } else {
-            label.textContent = `${shortMonthNames[monday.getMonth()]} ${monday.getDate()} – ${shortMonthNames[sunday.getMonth()]} ${sunday.getDate()}, ${sunday.getFullYear()}`;
-        }
-
-        for (let i = 0; i < 7; i++) {
-            const date = new Date(monday);
-            date.setDate(monday.getDate() + i);
-            const dateStr = toLocalDateKey(date);
-            const isActive = activeDates.has(dateStr);
-            const isToday = dateStr === todayStr;
-            const isSelected = state.calendar.selectedDate === dateStr;
-            const isThisMonth = date.getMonth() === state.calendar.month.getMonth() && date.getFullYear() === state.calendar.month.getFullYear();
-            html += buildCalendarDayHtml(dateStr, date.getDate(), isActive, isToday, isSelected, isThisMonth);
-        }
-    } else {
-        const year = state.calendar.month.getFullYear();
-        const month = state.calendar.month.getMonth();
-
-        label.textContent = `${monthNames[month]} ${year}`;
-
-        const firstDay = new Date(year, month, 1);
-        let startDay = firstDay.getDay() - 1;
-        if (startDay < 0) startDay = 6;
-
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-        for (let i = 0; i < startDay; i++) {
-            html += '<div class="cal-day cal-day-empty"></div>';
-        }
-
-        for (let day = 1; day <= daysInMonth; day++) {
-            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const isActive = activeDates.has(dateStr);
-            const isToday = dateStr === todayStr;
-            const isSelected = state.calendar.selectedDate === dateStr;
-            html += buildCalendarDayHtml(dateStr, day, isActive, isToday, isSelected);
-        }
-
-        const totalCells = startDay + daysInMonth;
-        const remainingCells = (7 - (totalCells % 7)) % 7;
-        for (let i = 0; i < remainingCells; i++) {
-            html += '<div class="cal-day cal-day-empty"></div>';
-        }
-    }
-
-    grid.innerHTML = html;
-    updateCalTodayBtnState();
-}
-
-function updateConsistencyMetrics() {
-    const today = new Date();
-    const d7 = countActiveDays(7, today, activeDates);
-    const d28 = countActiveDays(28, today, activeDates);
-    
-    const el7 = document.getElementById('consistency-7day');
-    const el28 = document.getElementById('consistency-28day');
-    const bar7 = document.getElementById('consistency-7day-bar');
-    const bar28 = document.getElementById('consistency-28day-bar');
-    const streak7 = document.getElementById('consistency-7day-streak');
-    const streak28 = document.getElementById('consistency-28day-streak');
-    
-    if (el7) el7.textContent = `${d7} / 7`;
-    if (el28) el28.textContent = `${d28} / 28`;
-    if (bar7) { bar7.style.width = `${Math.min(100, (d7 / 7) * 100)}%`; bar7.setAttribute('aria-valuenow', Math.min(100, Math.round((d7 / 7) * 100))); }
-    if (bar28) { bar28.style.width = `${Math.min(100, (d28 / 28) * 100)}%`; bar28.setAttribute('aria-valuenow', Math.min(100, Math.round((d28 / 28) * 100))); }
-    
-    const streak = countConsecutiveDays(today, activeDates);
-    if (streak7) {
-        if (streak > 1) {
-            streak7.textContent = `\u{1F525} ${streak}-day streak`;
-            streak7.classList.remove('hidden');
-        } else {
-            streak7.classList.add('hidden');
-        }
-    }
-    if (streak28) {
-        if (streak > 1) {
-            streak28.textContent = `\u{1F525} ${streak}-day streak`;
-            streak28.classList.remove('hidden');
-        } else {
-            streak28.classList.add('hidden');
-        }
-    }
-}
-
-function getWorkoutsForDate(dateStr) {
-    const results = [];
-    
-    function addIfMatches(item) {
-        const d = new Date(item.timestamp);
-        if (toLocalDateKey(d) === dateStr) results.push(item);
-    }
-    
-    state.data.lastWorkouts.forEach(addIfMatches);
-    state.data.lastStructuredWorkouts.forEach(addIfMatches);
-    
-    results.sort((a, b) => a.timestamp - b.timestamp);
-    return results;
-}
-
-function selectCalendarDay(dateStr) {
-    state.calendar.selectedDate = dateStr;
-    renderCalendar();
-    
-    const detail = document.getElementById('cal-day-detail');
-    const dateLabel = document.getElementById('cal-day-detail-date');
-    const workoutsContainer = document.getElementById('cal-day-workouts');
-    
-    if (!detail || !dateLabel || !workoutsContainer) return;
-    
-    detail.classList.remove('hidden');
-    
-    const parts = dateStr.split('-');
-    const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-    dateLabel.textContent = d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    
-    const items = getWorkoutsForDate(dateStr);
-    
-    if (items.length === 0) {
-        renderEmptyState(workoutsContainer, 'No workouts logged this day.');
-        return;
-    }
-    
-    workoutsContainer.innerHTML = items.map(item => renderCalendarWorkoutItem(item)).join('');
-}
-
-function changeCalendarNav(delta) {
-    const inner = document.getElementById('cal-grid-inner');
-    if (!inner) {
-        applyCalendarNav(delta);
-        renderCalendar();
-        return;
-    }
-    const outClass = delta > 0 ? 'slide-out-left' : 'slide-out-right';
-    const inClass = delta > 0 ? 'slide-in-left' : 'slide-in-right';
-    inner.classList.add(outClass);
-    inner.addEventListener('animationend', function handlerOut() {
-        inner.removeEventListener('animationend', handlerOut);
-        inner.classList.remove(outClass);
-        applyCalendarNav(delta);
-        renderCalendar();
-        inner.classList.add(inClass);
-        inner.addEventListener('animationend', function handlerIn() {
-            inner.removeEventListener('animationend', handlerIn);
-            inner.classList.remove(inClass);
-        }, { once: true });
-    }, { once: true });
-}
-
-function applyCalendarNav(delta) {
-    if (state.calendar.compact) {
-        state.calendar.weekOffset += delta;
-        const monday = getMonday(new Date());
-        monday.setDate(monday.getDate() + state.calendar.weekOffset * 7);
-        state.calendar.month = new Date(monday);
-    } else {
-        state.calendar.month.setMonth(state.calendar.month.getMonth() + delta);
-    }
-    state.calendar.selectedDate = null;
-    const detail = document.getElementById('cal-day-detail');
-    if (detail) detail.classList.add('hidden');
-    autoSelectFirstActiveDay();
-}
-
-function autoSelectFirstActiveDay() {
-    if (activeDates.size === 0) return;
-    let startDate, endDate;
-    if (state.calendar.compact) {
-        const monday = getMonday(new Date());
-        monday.setDate(monday.getDate() + state.calendar.weekOffset * 7);
-        startDate = new Date(monday);
-        endDate = new Date(monday);
-        endDate.setDate(endDate.getDate() + 6);
-    } else {
-        const year = state.calendar.month.getFullYear();
-        const month = state.calendar.month.getMonth();
-        startDate = new Date(year, month, 1);
-        endDate = new Date(year, month + 1, 0);
-    }
-    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-        const dateStr = toLocalDateKey(d);
-        if (activeDates.has(dateStr)) {
-            selectCalendarDay(dateStr);
-            return;
-        }
-    }
-}
-
-function goToCalendarToday() {
-    state.calendar.weekOffset = 0;
-    state.calendar.month = new Date();
-    const now = new Date();
-    selectCalendarDay(toLocalDateKey(now));
-}
-
-function toggleCalendarView() {
-    state.calendar.compact = !state.calendar.compact;
-    if (state.calendar.compact) {
-        state.calendar.weekOffset = 0;
-        const monday = getMonday(new Date());
-        state.calendar.month = new Date(monday);
-    } else {
-        const monday = getMonday(new Date());
-        monday.setDate(monday.getDate() + state.calendar.weekOffset * 7);
-        state.calendar.month = new Date(monday);
-    }
-    const btn = document.getElementById('cal-toggle-view');
-    if (btn) btn.textContent = state.calendar.compact ? 'Month View ▽' : 'Week View △';
-    renderCalendar();
-}
-
-function closeCalendarDayDetail() {
-    state.calendar.selectedDate = null;
-    const detail = document.getElementById('cal-day-detail');
-    if (detail) detail.classList.add('hidden');
-    renderCalendar();
 }
 
 function listenToStructuredWorkouts(uid) {
@@ -3445,339 +3014,6 @@ function populateIntervalForm(structure) {
   populatePlanMovements(structure.movements || []);
 }
 
-
-
-// ==========================================
-// END WORKOUT PLAN SYSTEM
-// ==========================================
-
-
-
-function renderLogs(workouts) {
-    const logContainer = document.getElementById('workout-list');
-    if (!logContainer) return;
-
-    if (!workouts.length) {
-        renderMessage(logContainer, 'No workout logs yet. Add a set to start tracking your training history.', 'slate', 'sm');
-        if (paginationControls) paginationControls.classList.add('hidden');
-        return;
-    }
-
-    state.data.paginatedWorkouts = workouts;
-    const selected = workoutFilter ? workoutFilter.value : 'All';
-
-    state.data.paginatedWorkouts.forEach(workout => {
-        if (workout.source === 'structured' || workout.source === 'onboarding' || workout.source === 'pb-log') return;
-        const load = getEffectiveLoad(workout);
-        workout._isPB = load >= (state.cache.cachedMaxLoadByExercise[workout.exercise] || 0) && load > 0;
-        const reps = parseInt(workout.reps, 10) || 1;
-        const oneRM = Math.round(estimate1RM(load, reps));
-        workout._isMax1RM = oneRM >= (state.cache.cachedMax1RMByExercise[workout.exercise] || 0) && oneRM > 0;
-    });
-
-    let displayList = (selected === 'All') ? state.data.paginatedWorkouts : state.data.paginatedWorkouts.filter(w => w.exercise === selected);
-
-    const chipPBActive = document.getElementById('chip-pb')?.dataset?.active === 'true';
-    const chip1RMActive = document.getElementById('chip-1rm')?.dataset?.active === 'true';
-    if (chipPBActive || chip1RMActive) {
-      displayList = displayList.filter(w => (chipPBActive && w._isPB) || (chip1RMActive && w._isMax1RM));
-    }
-
-    try { window.__lastRenderInfo = { chipPBActive, chip1RMActive, displayListLength: displayList.length, totalWorkouts: state.data.paginatedWorkouts.length }; } catch (e) {}
-
-    const totalPages = Math.max(1, Math.ceil(displayList.length / entriesPerPage));
-    state.pagination.workouts = Math.min(state.pagination.workouts, totalPages);
-    let startIndex = (state.pagination.workouts - 1) * entriesPerPage;
-    let pageItems = displayList.slice(startIndex, startIndex + entriesPerPage);
-
-    if (!pageItems.length && displayList.length) {
-      state.pagination.workouts = 1;
-      startIndex = 0;
-      pageItems = displayList.slice(0, entriesPerPage);
-    }
-
-    updatePaginationControls(totalPages);
-
-    logContainer.innerHTML = pageItems.map(workout =>
-      workoutToLogHtml(workout, chipPBActive, chip1RMActive)
-    ).join('');
-}
-
-// ==========================================
-// VOLUME HISTORY (Issue #38)
-// ==========================================
-
-function getWeekStart(date) {
-  const d = new Date(date);
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  d.setDate(diff);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-function getWeekEnd(date) {
-  const d = getWeekStart(date);
-  d.setDate(d.getDate() + 6);
-  d.setHours(23, 59, 59, 999);
-  return d;
-}
-
-function computeDailyBuckets(workouts, now, filterExercise) {
-  const buckets = {};
-  const ref = new Date(now);
-  ref.setDate(ref.getDate() + state.volume.offset * 7);
-  const weekStart = getWeekStart(ref);
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(weekStart);
-    d.setDate(d.getDate() + i);
-    const key = toLocalDateKey(d);
-    const periodStart = new Date(d);
-    const periodEnd = new Date(d);
-    periodEnd.setHours(23, 59, 59, 999);
-    const periodEndMs = periodEnd.getTime();
-    buckets[key] = { label: periodEndMs < state.user.userSignupTs ? '' : d.toLocaleDateString('en-US', { weekday: 'short' }), volume: 0, periodStart: periodStart.getTime(), periodEnd: periodEndMs };
-  }
-  const weekEnd = getWeekEnd(ref);
-  workouts.forEach(w => {
-    const d = new Date(w.timestamp);
-    if (isNaN(d.getTime())) return;
-    if (d < weekStart || d > weekEnd) return;
-    if (filterExercise !== 'All' && w.exercise !== filterExercise) return;
-    const volume = parseFloat(w.totalVolume) || 0;
-    if (volume <= 0) return;
-    const key = toLocalDateKey(d);
-    if (buckets[key] !== undefined) buckets[key].volume += volume;
-  });
-  return Object.values(buckets);
-}
-
-function computeWeeklyBuckets(workouts, now, filterExercise) {
-  const buckets = {};
-  const monthRef = new Date(now.getFullYear(), now.getMonth() + state.volume.offset, 1);
-  const monthEnd = new Date(monthRef.getFullYear(), monthRef.getMonth() + 1, 0, 23, 59, 59, 999);
-  const firstWeekStart = getWeekStart(monthRef);
-  const lastWeekStart = getWeekStart(monthEnd);
-  let cursor = new Date(firstWeekStart);
-  while (cursor <= lastWeekStart) {
-    const weekEnd = getWeekEnd(cursor);
-    const key = toLocalDateKey(cursor);
-    const weekEndMs = weekEnd.getTime();
-    const label = weekEndMs < state.user.userSignupTs ? '' : cursor.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    buckets[key] = { label, volume: 0, weekStart: new Date(cursor), weekEnd: new Date(weekEnd), periodStart: cursor.getTime(), periodEnd: weekEndMs };
-    cursor.setDate(cursor.getDate() + 7);
-  }
-  workouts.forEach(w => {
-    const d = new Date(w.timestamp);
-    if (isNaN(d.getTime()) || d < monthRef || d > monthEnd) return;
-    if (filterExercise !== 'All' && w.exercise !== filterExercise) return;
-    const volume = parseFloat(w.totalVolume) || 0;
-    if (volume <= 0) return;
-    for (const key in buckets) {
-      if (d >= buckets[key].weekStart && d <= buckets[key].weekEnd) {
-        buckets[key].volume += volume;
-        break;
-      }
-    }
-  });
-  return Object.values(buckets);
-}
-
-function computeMonthlyBuckets(workouts, now, filterExercise) {
-  const buckets = {};
-  const year = now.getFullYear() + state.volume.offset;
-  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  for (let i = 0; i < 12; i++) {
-    const key = `${year}-${String(i + 1).padStart(2, '0')}`;
-    const monthEnd = new Date(year, i + 1, 0, 23, 59, 59, 999);
-    const monthStart = new Date(year, i, 1);
-    const monthEndMs = monthEnd.getTime();
-    buckets[key] = { label: monthEndMs < state.user.userSignupTs ? '' : monthNames[i], volume: 0, periodStart: monthStart.getTime(), periodEnd: monthEndMs };
-  }
-  workouts.forEach(w => {
-    const d = new Date(w.timestamp);
-    if (isNaN(d.getTime()) || d.getFullYear() !== year) return;
-    if (filterExercise !== 'All' && w.exercise !== filterExercise) return;
-    const volume = parseFloat(w.totalVolume) || 0;
-    if (volume <= 0) return;
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    if (buckets[key] !== undefined) buckets[key].volume += volume;
-  });
-  return Object.values(buckets);
-}
-
-function computeYearlyBuckets(workouts, now, filterExercise) {
-  const buckets = {};
-  const baseYear = now.getFullYear() + state.volume.offset * 5;
-  const startYear = baseYear - 4;
-  for (let i = 0; i < 5; i++) {
-    const yr = startYear + i;
-    const key = String(yr);
-    const yearEnd = new Date(yr + 1, 0, 0, 23, 59, 59, 999);
-    const yearStart = new Date(yr, 0, 1);
-    const yearEndMs = yearEnd.getTime();
-    buckets[key] = { label: yearEndMs < state.user.userSignupTs ? '' : String(yr), volume: 0, periodStart: yearStart.getTime(), periodEnd: yearEndMs };
-  }
-  workouts.forEach(w => {
-    const d = new Date(w.timestamp);
-    if (isNaN(d.getTime())) return;
-    if (d.getFullYear() < startYear || d.getFullYear() > baseYear) return;
-    if (filterExercise !== 'All' && w.exercise !== filterExercise) return;
-    const volume = parseFloat(w.totalVolume) || 0;
-    if (volume <= 0) return;
-    const key = String(d.getFullYear());
-    if (buckets[key] !== undefined) buckets[key].volume += volume;
-  });
-  return Object.values(buckets);
-}
-
-function computeVolumeHistory(workouts, period, filterExercise) {
-  const now = new Date();
-  switch (period) {
-    case 'daily': return computeDailyBuckets(workouts, now, filterExercise);
-    case 'weekly': return computeWeeklyBuckets(workouts, now, filterExercise);
-    case 'monthly': return computeMonthlyBuckets(workouts, now, filterExercise);
-    default: return computeYearlyBuckets(workouts, now, filterExercise);
-  }
-}
-
-function formatRangeLabel(period, offset) {
-  const now = new Date();
-  if (period === 'daily') {
-    const ref = new Date(now);
-    ref.setDate(ref.getDate() + offset * 7);
-    const start = getWeekStart(ref);
-    const end = getWeekEnd(ref);
-    const opts = { month: 'short', day: 'numeric' };
-    return `${start.toLocaleDateString('en-US', opts)} - ${end.toLocaleDateString('en-US', opts)}`;
-  }
-  if (period === 'weekly') {
-    const d = new Date(now.getFullYear(), now.getMonth() + offset, 1);
-    return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-  }
-  if (period === 'monthly') {
-    return String(now.getFullYear() + offset);
-  }
-  const baseYear = now.getFullYear() + offset * 5;
-  return `${baseYear - 4} - ${baseYear}`;
-}
-
-function renderVolumeHistory() {
-  const inner = document.getElementById('vh-bars-inner');
-  const totalEl = document.getElementById('vh-total');
-  const rangeLabel = document.getElementById('vh-range-label');
-  if (!inner) return;
-
-  if (!state.data.lastWorkouts || state.data.lastWorkouts.length === 0) {
-    renderEmptyState(inner, 'Log some workouts to see your volume history.', 'py-8 w-full');
-    if (totalEl) totalEl.textContent = '';
-    if (rangeLabel) rangeLabel.textContent = '';
-    updateTodayBtnState();
-    return;
-  }
-
-  if (rangeLabel) {
-    rangeLabel.textContent = formatRangeLabel(state.volume.period, state.volume.offset);
-  }
-
-  const buckets = computeVolumeHistory(state.data.lastWorkouts, state.volume.period, state.volume.filter);
-
-  const maxVolume = Math.max(...buckets.map(b => b.volume), 1);
-  const totalVolume = buckets.reduce((sum, b) => sum + b.volume, 0);
-
-  if (totalEl) {
-    totalEl.textContent = `Total Volume: ${Math.round(totalVolume).toLocaleString()} kg`;
-  }
-
-  const avgEl = document.getElementById('vh-avg');
-  const activeCount = buckets.filter(b => b.volume > 0).length;
-  const avgVolume = activeCount >= 2 ? totalVolume / activeCount : 0;
-  if (avgEl) {
-    avgEl.textContent = avgVolume > 0 ? `Average Training Day Vol: ${Math.round(avgVolume).toLocaleString()} kg` : '';
-  }
-
-  const chartHeight = 104;
-  const avgHeight = maxVolume > 0 ? (avgVolume / maxVolume) * chartHeight : 0;
-
-  let barsHtml = buckets.map(b => renderVolumeBar(b, maxVolume, chartHeight)).join('');
-
-  let avgLineHtml = '';
-  if (avgVolume > 0 && avgHeight > 0) {
-    avgLineHtml = `<div class="vh-avg-line" style="bottom: ${avgHeight}px"></div>`;
-  }
-
-  inner.innerHTML = barsHtml + avgLineHtml;
-  updateTodayBtnState();
-}
-
-function switchVolumePeriod(period) {
-  state.volume.period = period;
-  state.volume.offset = 0;
-
-  ['daily', 'weekly', 'monthly', 'yearly'].forEach(p => {
-    const btn = document.getElementById(`vh-period-${p}`);
-    if (btn) {
-      btn.className = p === period ? 'btn-core is-primary btn-size-row' : 'btn-core is-ghost btn-size-row';
-    }
-  });
-
-  renderVolumeHistory();
-}
-
-function shiftVolumePeriod(delta) {
-  const inner = document.getElementById('vh-bars-inner');
-  if (!inner) {
-    state.volume.offset += delta;
-    renderVolumeHistory();
-    return;
-  }
-  const outClass = delta > 0 ? 'slide-out-left' : 'slide-out-right';
-  const inClass = delta > 0 ? 'slide-in-left' : 'slide-in-right';
-  inner.classList.add(outClass);
-  inner.addEventListener('animationend', function handlerOut() {
-    inner.removeEventListener('animationend', handlerOut);
-    inner.classList.remove(outClass);
-    state.volume.offset += delta;
-    renderVolumeHistory();
-    inner.classList.add(inClass);
-    inner.addEventListener('animationend', function handlerIn() {
-      inner.removeEventListener('animationend', handlerIn);
-      inner.classList.remove(inClass);
-    }, { once: true });
-  }, { once: true });
-}
-
-function goToCurrentPeriod() {
-  state.volume.offset = 0;
-  renderVolumeHistory();
-}
-
-function populateVolumeFilter(exercises) {
-  const select = document.getElementById('vh-filter');
-  if (!select) return;
-  const currentVal = select.value;
-  select.innerHTML = '<option value="All">All Exercises</option>';
-  exercises.sort().forEach(name => {
-    const opt = document.createElement('option');
-    opt.value = name;
-    opt.textContent = name;
-    select.appendChild(opt);
-  });
-  if (currentVal && Array.from(select.options).some(o => o.value === currentVal)) {
-    select.value = currentVal;
-    state.volume.filter = currentVal;
-  } else {
-    select.value = 'All';
-    state.volume.filter = 'All';
-  }
-}
-
-function onVolumeFilterChange() {
-  const select = document.getElementById('vh-filter');
-  state.volume.filter = select ? select.value : 'All';
-  renderVolumeHistory();
-}
-
 // Add Log Submission
 workoutForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -3941,8 +3177,6 @@ if (document.getElementById('movement-list')) {
 
 // leaderboard
 
-
-
 function getProfileDocRef(uid) {
   return doc(db, "profiles", uid);
 }
@@ -3955,8 +3189,6 @@ async function initSocialProfile(user, dotsScore = 0) {
   if (tagEl) {
     tagEl.value = user.uid;
   }
-
-
 
   const profileRef = getProfileDocRef(user.uid);
 
@@ -4328,12 +3560,7 @@ const debouncedSyncActivity = debounce(() => {
     computeAndSyncDailyActivity();
 }, 3000);
 
-
 ;
-
-
-
-
 
 function showQRCode() {
     const container = document.getElementById('qrcode-container');
@@ -4513,8 +3740,6 @@ function initActionDispatcher() {
   });
 }
 
-
-
 enableSwipe(document.getElementById('vh-bars-container'), {
   onSwipeLeft: () => shiftVolumePeriod(1),
   onSwipeRight: () => shiftVolumePeriod(-1)
@@ -4528,10 +3753,6 @@ enableSwipe(document.getElementById('cal-grid-container'), {
 // Profile Modal
 const modalClose = document.getElementById('profile-modal-close');
 const modalBackdrop = document.getElementById('profile-modal-backdrop');
-
-
-
-
 
 if (profileBtn && profileModal) {
   profileBtn.addEventListener('click', openProfileModal);
