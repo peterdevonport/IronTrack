@@ -3370,55 +3370,39 @@ async function deleteStructuredWorkout(workoutId) {
   }
 }
 
-function loadPlan(planId) {
-  const plan = state.data.lastWorkoutPlans.find(p => p.id === planId);
-  if (!plan) return;
-
+function loadWorkoutIntoBuilder(type, structure, feedbackMessage) {
   switchTab('calculator');
 
   const typeSelect = document.getElementById('workout-type');
-  if (typeSelect) typeSelect.value = plan.type;
+  if (typeSelect) typeSelect.value = type;
   handleWorkoutTypeChange();
 
-  const structure = plan.structure || {};
+  const s = structure || {};
 
-  switch (plan.type) {
-    case 'AMRAP': populateAmrapForm(structure); break;
-    case 'EMOM': populateEmomForm(structure); break;
-    case 'FOR_TIME': populateForTimeForm(structure); break;
-    case 'INTERVAL': populateIntervalForm(structure); break;
+  switch (type) {
+    case 'AMRAP': populateAmrapForm(s); break;
+    case 'EMOM': populateEmomForm(s); break;
+    case 'FOR_TIME': populateForTimeForm(s); break;
+    case 'INTERVAL': populateIntervalForm(s); break;
   }
 
   const planCard = document.getElementById('plan-workout-card');
   if (planCard) planCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  showFeedback(`Plan "${plan.name}" loaded!`, 'emerald', 'planFeedback');
+  showFeedback(feedbackMessage, 'emerald', 'planFeedback');
   haptic(HAPTIC.tap);
+}
+
+function loadPlan(planId) {
+  const plan = state.data.lastWorkoutPlans.find(p => p.id === planId);
+  if (!plan) return;
+  loadWorkoutIntoBuilder(plan.type, plan.structure, `Plan "${plan.name}" loaded!`);
 }
 
 function redoWorkout(workoutId) {
   const sw = state.data.lastStructuredWorkouts.find(w => w.id === workoutId);
   if (!sw) return;
-
-  switchTab('calculator');
-
-  const typeSelect = document.getElementById('workout-type');
-  if (typeSelect) typeSelect.value = sw.type;
-  handleWorkoutTypeChange();
-
-  const structure = sw.structure || {};
-  switch (sw.type) {
-    case 'AMRAP': populateAmrapForm(structure); break;
-    case 'EMOM': populateEmomForm(structure); break;
-    case 'FOR_TIME': populateForTimeForm(structure); break;
-    case 'INTERVAL': populateIntervalForm(structure); break;
-  }
-
-  const planCard = document.getElementById('plan-workout-card');
-  if (planCard) planCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-  showFeedback(`Workout "${sw.name}" loaded for redo!`, 'emerald', 'planFeedback');
-  haptic(HAPTIC.tap);
+  loadWorkoutIntoBuilder(sw.type, sw.structure, `Workout "${sw.name}" loaded for redo!`);
 }
 
 const WORKOUT_TYPE_TO_RESULT_ID = {
@@ -4202,27 +4186,7 @@ function loadSharedPlan(shareId) {
   if (!share) return;
   const plan = share.content;
   if (!plan) return;
-
-  switchTab('calculator');
-
-  const typeSelect = document.getElementById('workout-type');
-  if (typeSelect) typeSelect.value = plan.type;
-  handleWorkoutTypeChange();
-
-  const structure = plan.structure || {};
-
-  switch (plan.type) {
-    case 'AMRAP': populateAmrapForm(structure); break;
-    case 'EMOM': populateEmomForm(structure); break;
-    case 'FOR_TIME': populateForTimeForm(structure); break;
-    case 'INTERVAL': populateIntervalForm(structure); break;
-  }
-
-  const planCard = document.getElementById('plan-workout-card');
-  if (planCard) planCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-  showFeedback(`Plan "${plan.name}" loaded!`, 'emerald', 'planFeedback');
-  haptic(HAPTIC.tap);
+  loadWorkoutIntoBuilder(plan.type, plan.structure, `Plan "${plan.name}" loaded!`);
 }
 
 function populateAmrapForm(structure) {
