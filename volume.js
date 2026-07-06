@@ -40,7 +40,7 @@ function renderLogs(workouts) {
       displayList = displayList.filter(w => (chipPBActive && w._isPB) || (chip1RMActive && w._isMax1RM));
     }
 
-    try { window.__lastRenderInfo = { chipPBActive, chip1RMActive, displayListLength: displayList.length, totalWorkouts: state.data.paginatedWorkouts.length }; } catch (e) {}
+    try { window.__lastRenderInfo = { chipPBActive, chip1RMActive, displayListLength: displayList.length, totalWorkouts: state.data.paginatedWorkouts.length }; } catch (e) { /* ignore */ }
 
     const totalPages = Math.max(1, Math.ceil(displayList.length / entriesPerPage));
     state.pagination.workouts = Math.min(state.pagination.workouts, totalPages);
@@ -49,7 +49,6 @@ function renderLogs(workouts) {
 
     if (!pageItems.length && displayList.length) {
       state.pagination.workouts = 1;
-      startIndex = 0;
       pageItems = displayList.slice(0, entriesPerPage);
     }
 
