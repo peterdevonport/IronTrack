@@ -145,6 +145,13 @@ function formatMovementLoad(m) {
   return m.weight ? ` @ ${m.weight}kg` : '';
 }
 
+function toLocalDateKey(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 function formatCardDate(ts) {
   if (!ts) return '';
   const d = new Date(ts);
@@ -186,7 +193,7 @@ function countActiveDays(daysBack, today, activeDates) {
   for (let i = 0; i < daysBack; i++) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
-    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const dateStr = toLocalDateKey(d);
     if (activeDates.has(dateStr)) count++;
   }
   return count;
@@ -197,11 +204,11 @@ function countConsecutiveDays(today, activeDates) {
   for (let i = 0; ; i++) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
-    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const dateStr = toLocalDateKey(d);
     if (activeDates.has(dateStr)) streak++;
     else break;
   }
   return streak;
 }
 
-export { EXERCISE_CATALOG, LOAD_FACTORS, estimate1RM, estimateWeightForReps, computeEffectiveLoad, getEffectiveLoad, debounce, escapeHtml, haptic, getExerciseInfo, getMonday, formatMovementLoad, formatCardDate, formatWorkoutType, formatDotsScore, formatMovementWeight, getDisplayName, countActiveDays, countConsecutiveDays };
+export { EXERCISE_CATALOG, LOAD_FACTORS, estimate1RM, estimateWeightForReps, computeEffectiveLoad, getEffectiveLoad, debounce, escapeHtml, haptic, getExerciseInfo, getMonday, formatMovementLoad, toLocalDateKey, formatCardDate, formatWorkoutType, formatDotsScore, formatMovementWeight, getDisplayName, countActiveDays, countConsecutiveDays };
