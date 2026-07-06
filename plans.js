@@ -5,8 +5,8 @@ import { escapeHtml, haptic } from './dom.js';
 import { getExerciseInfo, EXERCISE_CATALOG, LOAD_FACTORS } from './exercise-data.js';
 import { formatMovementLoad, formatCardDate, formatWorkoutType, formatMovementWeight } from './formatting.js';
 import { buildWorkoutDescription, formatScore_ROUNDS_AND_REPS, formatScore_COMPLETED_MINUTES, formatScore_TIME_SECONDS, getRepsPerRound } from './analytics.js';
-import { renderEmptyState, showFeedback, showToast, showPlanNameModal, updatePagination, updatePaginationControls, clearChildren, changeGenericPage, saveExpandedCardIds, restoreExpandedCardIds } from './ui.js';
-import { renderWorkoutCard, renderStructuredWorkoutCard, renderPlanCard, buildExerciseOptionsHtml, renderSharedPlanCard } from './rendering.js';
+import { renderEmptyState, showFeedback, showToast, showPlanNameModal, updatePagination, updatePaginationControls, clearChildren, changeGenericPage, saveExpandedCardIds, restoreExpandedCardIds, buildExerciseOptionsHtml } from './ui.js';
+import { renderWorkoutCard, renderStructuredWorkoutCard, renderPlanCard, renderSharedPlanCard } from './rendering.js';
 import { renderSharedPlansUI } from './social.js';
 
 let unsubscribeStructured = null;
