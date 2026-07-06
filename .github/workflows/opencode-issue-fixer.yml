@@ -82,3 +82,33 @@ jobs:
           model: opencode-go/deepseek-v4-flash
           use_github_token: true
           prompt: ${{ steps.prompt.outputs.PROMPT }}
+
+      - name: Verify bot output
+        if: success()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ISSUE_NUM="${{ steps.compile_context.outputs.ISSUE_NUM }}"
+          BRANCH="opencode/fix-issue-${ISSUE_NUM}"
+
+          # Check if bot pushed a branch (Path A completed)
+          if git ls-remote --heads origin "$BRANCH" 2>/dev/null | grep -q "refs/heads/$BRANCH"; then
+            echo "✅ Bot pushed branch $BRANCH — Path A completed."
+            exit 0
+          fi
+
+          # Check if bot rejected the issue (Path B completed — wontfix label)
+          LABELS=$(gh issue view "$ISSUE_NUM" --json labels -q '.labels[].name' 2>/dev/null || echo "")
+          if echo "$LABELS" | grep -q "wontfix"; then
+            echo "✅ Issue #$ISSUE_NUM marked wontfix — Path B completed."
+            exit 0
+          fi
+
+          # Neither: bot failed silently
+          echo "::warning::Bot did not create branch $BRANCH or mark issue as wontfix."
+          gh issue comment "$ISSUE_NUM" --body \
+            "### ⚠️ Bot Run Incomplete
+          The auto-fixer workflow ([run #${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})) completed but did not produce a branch or PR. The AI likely failed to execute the git push step.
+
+          **Next step:** Run \`/fix\` again, or tackle this one manually."
+          gh issue edit "$ISSUE_NUM" --add-label "bot-failed"
