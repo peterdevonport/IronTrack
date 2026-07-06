@@ -1,23 +1,45 @@
 import { formatMovementWeight, formatWorkoutType } from './formatting.js';
 
+// DOTS (Dynamic Objective Total Scoring) polynomial coefficients for powerlifting.
+// Reference: https://www.powerlifting.sport/
+const DOTS_COEFF_MALE = [47.46178854, 8.472061379, -0.07369410346, 0.0002586110512, -0.0000003634089054, 0.000000001790898013];
+const DOTS_COEFF_FEMALE = [-125.4255398, 13.71219419, -0.03307250631, 0.00004809990691, -0.00000003622531999, 0.000000000105123006];
+const DOTS_MULTIPLIER = 500;
+
+// Sinclair formula coefficients for Olympic weightlifting.
+// A is the log-linear coefficient, b is the bodyweight threshold (kg).
+// Reference: https://www.iwf.net/
+const SINCLAIR_A_MALE = 0.722762521;
+const SINCLAIR_A_FEMALE = 0.787004341;
+const SINCLAIR_B_MALE = 193.609;
+const SINCLAIR_B_FEMALE = 153.757;
+
+// Ranking tier cutoff thresholds for DOTS scoring (by gender).
+const DOTS_TIER_CUTOFFS_MALE = [300, 400, 500];
+const DOTS_TIER_CUTOFFS_FEMALE = [250, 325, 425];
+
+// Ranking tier cutoff thresholds for Sinclair scoring.
+const SINCLAIR_TIER_BEGINNER = 250;
+const SINCLAIR_TIER_INTERMEDIATE = 320;
+const SINCLAIR_TIER_ADVANCED = 400;
+const SINCLAIR_TIER_ELITE = 450;
+
 function computeDotsScore(squatRec, benchRec, deadliftRec, bw, gender) {
   const plTotal = squatRec + benchRec + deadliftRec;
   if (plTotal <= 0 || bw <= 0) return { dots: 0, plTotal: 0 };
 
-  const c = gender === 'male'
-    ? [47.46178854, 8.472061379, -0.07369410346, 0.0002586110512, -0.0000003634089054, 0.000000001790898013]
-    : [-125.4255398, 13.71219419, -0.03307250631, 0.00004809990691, -0.00000003622531999, 0.000000000105123006];
+  const c = gender === 'male' ? DOTS_COEFF_MALE : DOTS_COEFF_FEMALE;
 
   const denominator = c[0] + (c[1] * bw) + (c[2] * Math.pow(bw, 2)) + (c[3] * Math.pow(bw, 3)) + (c[4] * Math.pow(bw, 4)) + (c[5] * Math.pow(bw, 5));
-  return { dots: (plTotal * 500) / denominator, plTotal };
+  return { dots: (plTotal * DOTS_MULTIPLIER) / denominator, plTotal };
 }
 
 function computeSinclairScore(snatchRec, cleanRec, bw, gender) {
   const olyTotal = snatchRec + cleanRec;
   if (olyTotal <= 0 || bw <= 0) return { sinclair: 0, olyTotal: 0 };
 
-  const A = gender === 'male' ? 0.722762521 : 0.787004341;
-  const b = gender === 'male' ? 193.609 : 153.757;
+  const A = gender === 'male' ? SINCLAIR_A_MALE : SINCLAIR_A_FEMALE;
+  const b = gender === 'male' ? SINCLAIR_B_MALE : SINCLAIR_B_FEMALE;
   if (bw >= b) return { sinclair: olyTotal, olyTotal };
 
   const coeff = Math.pow(10, A * Math.pow(Math.log10(bw / b), 2));
@@ -27,16 +49,16 @@ function computeSinclairScore(snatchRec, cleanRec, bw, gender) {
 function getRankingTier(score, system, gender) {
     if (score <= 0) return "-";
     if (system === 'dots') {
-        const cutoff = gender === 'male' ? [300, 400, 500] : [250, 325, 425];
+        const cutoff = gender === 'male' ? DOTS_TIER_CUTOFFS_MALE : DOTS_TIER_CUTOFFS_FEMALE;
         if (score < cutoff[0]) return "Beginner";
         if (score < cutoff[1]) return "Intermediate";
         if (score < cutoff[2]) return "Advanced";
         return "Elite";
     } else {
-        if (score < 250) return "Beginner";
-        if (score < 320) return "Intermediate";
-        if (score < 400) return "Advanced";
-        if (score < 450) return "Elite";
+        if (score < SINCLAIR_TIER_BEGINNER) return "Beginner";
+        if (score < SINCLAIR_TIER_INTERMEDIATE) return "Intermediate";
+        if (score < SINCLAIR_TIER_ADVANCED) return "Advanced";
+        if (score < SINCLAIR_TIER_ELITE) return "Elite";
         return "World Class";
     }
 }
