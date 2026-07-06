@@ -1,6 +1,6 @@
 import { auth, db, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential, updatePassword, deleteUser, collection, addDoc, query, where, onSnapshot, deleteDoc, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, serverTimestamp, orderBy, limit, Timestamp, getDocs } from './firebase.js';
 import { state, EPLEY_CONSTANT, HAPTIC, CONSISTENCY_CONFIG, RPE_RIR_MAP, entriesPerPage, loginView, appView, bottomNav, authBtn, profileBtn, profileModal, emailInput, passwordInput, loginBtn, signupBtn, greeting, profileForm, workoutForm, workoutList, paginationControls, prevPageBtn, nextPageBtn, currentPageDisplay, totalPagesDisplay, workoutFilter, exerciseSelect, onboardingView, onboardingGender, onboardingWeight, onboardingDaysMonthly, onboardingDaysYearly, onboardingDaysLifetime, onboardingExerciseSelect, onboardingWeightInput, onboardingRepsInput, onboardingAddBtn, onboardingList, onboardingEmpty, onboardingSaveBtn, onboardingFeedback, pbLogExercise, pbLogBtn, pbLogFeedback, tabContents, navTabs } from './state.js';
-import { estimate1RM, estimateWeightForReps, computeEffectiveLoad, getEffectiveLoad, debounce, escapeHtml, haptic, getExerciseInfo, getMonday, formatMovementLoad, formatCardDate, formatWorkoutType, formatDotsScore, formatMovementWeight, getDisplayName, countActiveDays, countConsecutiveDays, EXERCISE_CATALOG, LOAD_FACTORS } from './utils.js';
+import { estimate1RM, estimateWeightForReps, computeEffectiveLoad, getEffectiveLoad, debounce, escapeHtml, haptic, getExerciseInfo, getMonday, formatMovementLoad, toLocalDateKey, formatCardDate, formatWorkoutType, formatDotsScore, formatMovementWeight, getDisplayName, countActiveDays, countConsecutiveDays, EXERCISE_CATALOG, LOAD_FACTORS } from './utils.js';
 import { computeDotsScore, computeSinclairScore, getRankingTier, formatScore_ROUNDS_AND_REPS, formatScore_COMPLETED_MINUTES, formatScore_TIME_SECONDS, describeAmrap, describeEmom, describeForTime, describeInterval, buildWorkoutDescription, buildWorkoutSummaryLine, getRepsPerRound } from './analytics.js';
 
 let currentUser = null;
@@ -2554,8 +2554,7 @@ async function computeAndSyncDailyActivity() {
     activeDates = new Set();
     allTimestamps.forEach(ts => {
         const d = new Date(ts);
-        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        activeDates.add(dateStr);
+        activeDates.add(toLocalDateKey(d));
     });
     
     renderConsistencyUI();
@@ -2566,8 +2565,7 @@ function renderConsistencyUI() {
     updateConsistencyMetrics();
     renderChallengeCards();
     const today = new Date();
-    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    selectCalendarDay(todayStr);
+    selectCalendarDay(toLocalDateKey(today));
 }
 
 function calculateChallengeProgress() {
@@ -2742,7 +2740,7 @@ function renderCalendar() {
     const shortMonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     const today = new Date();
-    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const todayStr = toLocalDateKey(today);
 
     let html = '';
 
@@ -2761,7 +2759,7 @@ function renderCalendar() {
         for (let i = 0; i < 7; i++) {
             const date = new Date(monday);
             date.setDate(monday.getDate() + i);
-            const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            const dateStr = toLocalDateKey(date);
             const isActive = activeDates.has(dateStr);
             const isToday = dateStr === todayStr;
             const isSelected = state.calendar.selectedDate === dateStr;
@@ -2844,8 +2842,7 @@ function getWorkoutsForDate(dateStr) {
     
     function addIfMatches(item) {
         const d = new Date(item.timestamp);
-        const itemDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        if (itemDate === dateStr) results.push(item);
+        if (toLocalDateKey(d) === dateStr) results.push(item);
     }
     
     state.data.lastWorkouts.forEach(addIfMatches);
@@ -2970,7 +2967,7 @@ function autoSelectFirstActiveDay() {
         endDate = new Date(year, month + 1, 0);
     }
     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        const dateStr = toLocalDateKey(d);
         if (activeDates.has(dateStr)) {
             selectCalendarDay(dateStr);
             return;
@@ -2982,8 +2979,7 @@ function goToCalendarToday() {
     state.calendar.weekOffset = 0;
     state.calendar.month = new Date();
     const now = new Date();
-    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    selectCalendarDay(todayStr);
+    selectCalendarDay(toLocalDateKey(now));
 }
 
 function updateCalTodayBtnState() {
@@ -4469,13 +4465,6 @@ function getWeekEnd(date) {
   d.setDate(d.getDate() + 6);
   d.setHours(23, 59, 59, 999);
   return d;
-}
-
-function toLocalDateKey(d) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
 }
 
 function computeDailyBuckets(workouts, now, filterExercise) {
