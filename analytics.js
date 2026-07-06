@@ -1,4 +1,4 @@
-import { formatMovementWeight, formatWorkoutType } from './utils.js';
+import { formatMovementWeight, formatWorkoutType } from './formatting.js';
 
 function computeDotsScore(squatRec, benchRec, deadliftRec, bw, gender) {
   const plTotal = squatRec + benchRec + deadliftRec;
