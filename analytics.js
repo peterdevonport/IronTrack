@@ -1,4 +1,4 @@
-import { formatMovementWeight, formatWorkoutType } from './utils.js';
+import { formatMovementWeight, formatWorkoutType } from './formatting.js';
 
 // DOTS (Dynamic Objective Total Scoring) polynomial coefficients for powerlifting.
 // Reference: https://www.powerlifting.sport/
