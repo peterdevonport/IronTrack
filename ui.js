@@ -262,4 +262,15 @@ function enableSwipe(container, { onSwipeLeft, onSwipeRight, threshold = 50 }) {
   }, { passive: true });
 }
 
-export { clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, saveExpandedCardIds, restoreExpandedCardIds, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe };
+function changeGenericPage(paginationKey, list, perPage, renderFn, direction) {
+  const totalPages = Math.max(1, Math.ceil(list.length / perPage));
+  const page = state.pagination[paginationKey];
+  if (direction === 'prev' && page > 1) {
+    state.pagination[paginationKey] = page - 1;
+  } else if (direction === 'next' && page < totalPages) {
+    state.pagination[paginationKey] = page + 1;
+  }
+  renderFn();
+}
+
+export { clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, saveExpandedCardIds, restoreExpandedCardIds, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, changeGenericPage };
