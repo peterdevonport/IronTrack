@@ -303,110 +303,119 @@ const pendingClaimPlanId = new URLSearchParams(window.location.search).get('clai
 
 // Authentication State Listener
 onAuthStateChanged(auth, async (user) => {
-    currentUser = user;
-    if (user) {
-        loginView.classList.add('hidden');
-        appView.classList.remove('hidden');
-        if (bottomNav) bottomNav.classList.remove('hidden');
-        switchTab('dashboard');
-        authBtn.innerText = "Sign Out";
-        if (profileBtn) profileBtn.classList.remove('hidden');
-        window.__irontrackAuthState = 'signed-in';
-        state.user.userSignupTs = new Date(user.metadata.creationTime).getTime() || 0;
-        
-        // ... (existing code: handle, greeting, cyberTag, pullProfileMetrics) ...
-        const handle = (user.email || user.uid).split('@')[0];
-        greeting.innerText = `Athlete: ${handle}`;
-        
-        await pullProfileMetrics(user.uid);
-        await initSocialProfile(user);
-
-        // Check if onboarding is needed (first-time user)
-        if (!state.user.userBiometrics.onboardingComplete) {
-            loginView.classList.add('hidden');
-            appView.classList.add('hidden');
-            if (bottomNav) bottomNav.classList.add('hidden');
-            showOnboarding();
-            return;
-        }
-
-        syncLeaderboardFeed();
-        if (listenersAttached) return;
-        listenToDataStream(user.uid);
-        listenToStructuredWorkouts(user.uid);
-        listenToPlans(user.uid);
-        listenToSharedPlans(user.uid);
-        listenersAttached = true;
-        loadConsistencyConfig();
-
-        showQRCode()
-
-        if (pendingFriendUid && !urlParamsProcessed) {
-            await processFriendRequest(pendingFriendUid);
-        }
-
-        if (pendingClaimPlanId && !urlParamsProcessed) {
-            await processClaimedPlan(pendingClaimPlanId);
-        }
-
-        if (pendingFriendUid || pendingClaimPlanId) {
-            urlParamsProcessed = true;
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
-
-    } else {
-        if (unsubscribeLogs) { unsubscribeLogs(); unsubscribeLogs = null; }
-        if (unsubscribeStructured) { unsubscribeStructured(); unsubscribeStructured = null; }
-        if (unsubscribePlans) { unsubscribePlans(); unsubscribePlans = null; }
-        if (unsubscribeSharedPlans) { unsubscribeSharedPlans(); unsubscribeSharedPlans = null; }
-        if (unsubscribeProfile) { unsubscribeProfile(); unsubscribeProfile = null; }
-        if (leaderboardUnsubscribe) { leaderboardUnsubscribe(); leaderboardUnsubscribe = null; }
-        loginView.classList.remove('hidden');
-        appView.classList.add('hidden');
-        if (bottomNav) bottomNav.classList.add('hidden');
-        onboardingView.classList.add('hidden');
-        pendingOnboarding1RMs = [];
-        if (profileBtn) profileBtn.classList.add('hidden');
-        if (profileModal) profileModal.classList.add('hidden');
-        authBtn.innerText = "Sign In";
-        greeting.innerText = "Analytics Dashboard";
-        document.getElementById('workout-list').innerHTML = '';
-        renderEmptyState(document.getElementById('structured-workout-list'), 'No structured workouts logged yet.');
-        document.getElementById('registry-table-body').innerHTML = '';
-        state.data.calcEntriesByLift = {};
-        const calcEntriesList = document.getElementById('calc-entries-list');
-        if (calcEntriesList) renderEmptyState(calcEntriesList, 'Select a lift with data to get started.');
-        const calcOneRm = document.getElementById('calc-one-rm-display');
-        if (calcOneRm) calcOneRm.textContent = '—';
-        document.getElementById('dots-display').innerText = '0.0';
-        document.getElementById('dots-tier').innerText = '-';
-        document.getElementById('sinclair-display').innerText = '0.0';
-        document.getElementById('sinclair-tier').innerText = '-';
-        state.social.userFriendsList = [];
-        state.social.friendDisplayCache = {};
-        sharedPlanId = null;
-        state.pagination.friends = 1;
-        state.pagination.sharedPlans = 1;
-        state.ui.plansFilter = 'mine';
-        document.getElementById('friendsListContainer').innerHTML = '';
-        const filterMineBtn = document.getElementById('plans-filter-mine');
-        const filterSharedBtn = document.getElementById('plans-filter-shared');
-        const filterFavBtn = document.getElementById('plans-filter-favorites');
-        if (filterMineBtn) filterMineBtn.className = 'btn-core is-primary btn-size-row';
-        if (filterSharedBtn) filterSharedBtn.className = 'btn-core is-ghost btn-size-row';
-        if (filterFavBtn) filterFavBtn.className = 'btn-core is-ghost btn-size-row';
-        document.getElementById('leaderboardRows').innerHTML = '';
-        currentUser = null;
-        urlParamsProcessed = false;
-        activeDates = new Set();
-        state.calendar.month = new Date();
-        state.calendar.selectedDate = null;
-        state.calendar.compact = true;
-        state.calendar.weekOffset = 0;
-        listenersAttached = false;
-        window.__irontrackAuthState = 'signed-out';
-    }
+  currentUser = user;
+  if (user) {
+    await handleSignedIn(user);
+  } else {
+    handleSignedOut();
+  }
 });
+
+async function handleSignedIn(user) {
+  loginView.classList.add('hidden');
+  appView.classList.remove('hidden');
+  if (bottomNav) bottomNav.classList.remove('hidden');
+  switchTab('dashboard');
+  authBtn.innerText = "Sign Out";
+  if (profileBtn) profileBtn.classList.remove('hidden');
+  window.__irontrackAuthState = 'signed-in';
+  state.user.userSignupTs = new Date(user.metadata.creationTime).getTime() || 0;
+
+  const handle = (user.email || user.uid).split('@')[0];
+  greeting.innerText = `Athlete: ${handle}`;
+
+  await pullProfileMetrics(user.uid);
+  await initSocialProfile(user);
+
+  if (!state.user.userBiometrics.onboardingComplete) {
+    loginView.classList.add('hidden');
+    appView.classList.add('hidden');
+    if (bottomNav) bottomNav.classList.add('hidden');
+    showOnboarding();
+    return;
+  }
+
+  syncLeaderboardFeed();
+  attachListeners(user.uid);
+  loadConsistencyConfig();
+  showQRCode();
+  await processUrlParams();
+}
+
+function handleSignedOut() {
+  if (unsubscribeLogs) { unsubscribeLogs(); unsubscribeLogs = null; }
+  if (unsubscribeStructured) { unsubscribeStructured(); unsubscribeStructured = null; }
+  if (unsubscribePlans) { unsubscribePlans(); unsubscribePlans = null; }
+  if (unsubscribeSharedPlans) { unsubscribeSharedPlans(); unsubscribeSharedPlans = null; }
+  if (unsubscribeProfile) { unsubscribeProfile(); unsubscribeProfile = null; }
+  if (leaderboardUnsubscribe) { leaderboardUnsubscribe(); leaderboardUnsubscribe = null; }
+  loginView.classList.remove('hidden');
+  appView.classList.add('hidden');
+  if (bottomNav) bottomNav.classList.add('hidden');
+  onboardingView.classList.add('hidden');
+  pendingOnboarding1RMs = [];
+  if (profileBtn) profileBtn.classList.add('hidden');
+  if (profileModal) profileModal.classList.add('hidden');
+  authBtn.innerText = "Sign In";
+  greeting.innerText = "Analytics Dashboard";
+  document.getElementById('workout-list').innerHTML = '';
+  renderEmptyState(document.getElementById('structured-workout-list'), 'No structured workouts logged yet.');
+  document.getElementById('registry-table-body').innerHTML = '';
+  state.data.calcEntriesByLift = {};
+  const calcEntriesList = document.getElementById('calc-entries-list');
+  if (calcEntriesList) renderEmptyState(calcEntriesList, 'Select a lift with data to get started.');
+  const calcOneRm = document.getElementById('calc-one-rm-display');
+  if (calcOneRm) calcOneRm.textContent = '—';
+  document.getElementById('dots-display').innerText = '0.0';
+  document.getElementById('dots-tier').innerText = '-';
+  document.getElementById('sinclair-display').innerText = '0.0';
+  document.getElementById('sinclair-tier').innerText = '-';
+  state.social.userFriendsList = [];
+  state.social.friendDisplayCache = {};
+  sharedPlanId = null;
+  state.pagination.friends = 1;
+  state.pagination.sharedPlans = 1;
+  state.ui.plansFilter = 'mine';
+  document.getElementById('friendsListContainer').innerHTML = '';
+  const filterMineBtn = document.getElementById('plans-filter-mine');
+  const filterSharedBtn = document.getElementById('plans-filter-shared');
+  const filterFavBtn = document.getElementById('plans-filter-favorites');
+  if (filterMineBtn) filterMineBtn.className = 'btn-core is-primary btn-size-row';
+  if (filterSharedBtn) filterSharedBtn.className = 'btn-core is-ghost btn-size-row';
+  if (filterFavBtn) filterFavBtn.className = 'btn-core is-ghost btn-size-row';
+  document.getElementById('leaderboardRows').innerHTML = '';
+  currentUser = null;
+  urlParamsProcessed = false;
+  activeDates = new Set();
+  state.calendar.month = new Date();
+  state.calendar.selectedDate = null;
+  state.calendar.compact = true;
+  state.calendar.weekOffset = 0;
+  listenersAttached = false;
+  window.__irontrackAuthState = 'signed-out';
+}
+
+function attachListeners(uid) {
+  if (listenersAttached) return;
+  listenToDataStream(uid);
+  listenToStructuredWorkouts(uid);
+  listenToPlans(uid);
+  listenToSharedPlans(uid);
+  listenersAttached = true;
+}
+
+async function processUrlParams() {
+  if (pendingFriendUid && !urlParamsProcessed) {
+    await processFriendRequest(pendingFriendUid);
+  }
+  if (pendingClaimPlanId && !urlParamsProcessed) {
+    await processClaimedPlan(pendingClaimPlanId);
+  }
+  if (pendingFriendUid || pendingClaimPlanId) {
+    urlParamsProcessed = true;
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+}
 
 
 
@@ -1096,7 +1105,7 @@ function listenToDataStream(uid) {
         console.error('Workout stream error', error.code, error.message);
         if (error.code === 'permission-denied') {
             const el = document.getElementById('workout-list');
-            if (el) el.innerHTML = `<div class="bg-slate-800 border border-slate-700 rounded-xl p-4 text-red-400 text-xs text-center">Workouts blocked by Firestore rules.</div>`;
+            renderMessage(el, 'Workouts blocked by Firestore rules.');
         }
     });
 }
@@ -1352,14 +1361,19 @@ function updatePaginationControls(totalPages) {
     nextPageBtn.disabled = state.pagination.workouts >= totalPages;
 }
 
+function changeGenericPage(paginationKey, list, perPage, renderFn, direction) {
+  const totalPages = Math.max(1, Math.ceil(list.length / perPage));
+  const page = state.pagination[paginationKey];
+  if (direction === 'prev' && page > 1) {
+    state.pagination[paginationKey] = page - 1;
+  } else if (direction === 'next' && page < totalPages) {
+    state.pagination[paginationKey] = page + 1;
+  }
+  renderFn();
+}
+
 function changePage(direction) {
-    const totalPages = Math.max(1, Math.ceil(state.data.paginatedWorkouts.length / entriesPerPage));
-    if (direction === 'prev' && state.pagination.workouts > 1) {
-        state.pagination.workouts -= 1;
-    } else if (direction === 'next' && state.pagination.workouts < totalPages) {
-        state.pagination.workouts += 1;
-    }
-    renderLogs(state.data.lastWorkouts);
+  changeGenericPage('workouts', state.data.paginatedWorkouts, entriesPerPage, () => renderLogs(state.data.lastWorkouts), direction);
 }
 
 if (prevPageBtn) {
@@ -1370,15 +1384,9 @@ if (nextPageBtn) {
 }
 
 function changeRecordsPage(direction) {
-    const manualWorkouts = state.data.lastWorkouts.filter(w => w.source !== 'structured');
-    const uniqueExercises = Array.from(new Set(manualWorkouts.map(w => w.exercise))).filter(Boolean).sort();
-    const totalPages = Math.max(1, Math.ceil(uniqueExercises.length / 10));
-    if (direction === 'prev' && state.pagination.records > 1) {
-        state.pagination.records--;
-    } else if (direction === 'next' && state.pagination.records < totalPages) {
-        state.pagination.records++;
-    }
-    update1RMRegistryUI();
+  const manualWorkouts = state.data.lastWorkouts.filter(w => w.source !== 'structured');
+  const uniqueExercises = Array.from(new Set(manualWorkouts.map(w => w.exercise))).filter(Boolean).sort();
+  changeGenericPage('records', uniqueExercises, 10, update1RMRegistryUI, direction);
 }
 
 const prevRecordsBtn = document.getElementById('prev-records-page-btn');
@@ -3203,13 +3211,7 @@ function renderStructuredWorkoutHistory() {
 }
 
 function changeStructuredPage(direction) {
-  const totalPages = Math.max(1, Math.ceil(state.data.lastStructuredWorkouts.length / 3));
-  if (direction === 'prev' && state.pagination.structured > 1) {
-    state.pagination.structured--;
-  } else if (direction === 'next' && state.pagination.structured < totalPages) {
-    state.pagination.structured++;
-  }
-  renderStructuredWorkoutHistory();
+  changeGenericPage('structured', state.data.lastStructuredWorkouts, 3, renderStructuredWorkoutHistory, direction);
 }
 
 // ==========================================
@@ -3301,13 +3303,7 @@ function switchPlansFilter(filter) {
 }
 
 function changePlansPage(direction) {
-  const totalPages = Math.max(1, Math.ceil(state.data.lastWorkoutPlans.length / 3));
-  if (direction === 'prev' && state.pagination.plans > 1) {
-    state.pagination.plans--;
-  } else if (direction === 'next' && state.pagination.plans < totalPages) {
-    state.pagination.plans++;
-  }
-  renderPlansUI();
+  changeGenericPage('plans', state.data.lastWorkoutPlans, 3, renderPlansUI, direction);
 }
 
 function renderPlanCard(plan) {
@@ -3538,52 +3534,54 @@ function doSharedPlan(shareId) {
 
 let isSubmittingWorkout = false;
 
-async function submitAmrapWorkout(name, structure, now) {
+async function submitStructuredWorkout(name, structure, now, config) {
+  const { type, buildResult, scoreDisplay, scoreType, scoreValue, generateContributions } = config;
+  const result = buildResult();
+  const workoutDoc = {
+    userId: currentUser.uid, name, type, structure, result,
+    scoreDisplay: scoreDisplay(result),
+    scoreType,
+    scoreValue: scoreValue(result),
+    timestamp: now
+  };
+  const docRef = await addDoc(collection(db, "structured_workouts"), workoutDoc);
+  await generateContributions(docRef.id, structure, result);
+}
+
+function submitAmrapWorkout(name, structure, now) {
   const roundsCompleted = parseInt(document.getElementById('log-rounds').value, 10);
   const additionalReps = parseInt(document.getElementById('log-partial-reps').value, 10) || 0;
   if (roundsCompleted < 0) {
     showFeedback('Enter rounds completed.', 'rose', 'log-workout-feedback');
     return;
   }
-
-  const workoutDoc = {
-    userId: currentUser.uid,
-    name,
+  return submitStructuredWorkout(name, structure, now, {
     type: 'AMRAP',
-    structure,
-    result: { roundsCompleted, additionalReps },
-    scoreDisplay: formatScore_ROUNDS_AND_REPS(roundsCompleted, additionalReps),
+    buildResult: () => ({ roundsCompleted, additionalReps }),
+    scoreDisplay: r => formatScore_ROUNDS_AND_REPS(r.roundsCompleted, r.additionalReps),
     scoreType: 'ROUNDS_AND_REPS',
-    scoreValue: roundsCompleted * 1000 + additionalReps,
-    timestamp: now
-  };
-  const docRef = await addDoc(collection(db, "structured_workouts"), workoutDoc);
-  await generateAmrapContributions(docRef.id, structure.movements, roundsCompleted, additionalReps);
+    scoreValue: r => r.roundsCompleted * 1000 + r.additionalReps,
+    generateContributions: (docId, struct, r) => generateAmrapContributions(docId, struct.movements, r.roundsCompleted, r.additionalReps)
+  });
 }
 
-async function submitEmomWorkout(name, structure, now) {
+function submitEmomWorkout(name, structure, now) {
   const roundsCompleted = parseInt(document.getElementById('log-rounds').value, 10);
   if (roundsCompleted < 0) {
     showFeedback('Enter rounds completed.', 'rose', 'log-workout-feedback');
     return;
   }
-
-  const workoutDoc = {
-    userId: currentUser.uid,
-    name,
+  return submitStructuredWorkout(name, structure, now, {
     type: 'EMOM',
-    structure,
-    result: { roundsCompleted },
-    scoreDisplay: formatScore_COMPLETED_MINUTES(roundsCompleted, structure.rounds),
+    buildResult: () => ({ roundsCompleted }),
+    scoreDisplay: r => formatScore_COMPLETED_MINUTES(r.roundsCompleted, structure.rounds),
     scoreType: 'COMPLETED_MINUTES',
-    scoreValue: roundsCompleted,
-    timestamp: now
-  };
-  const docRef = await addDoc(collection(db, "structured_workouts"), workoutDoc);
-  await generateEmomContributions(docRef.id, structure.minutes, roundsCompleted, structure.mode);
+    scoreValue: r => r.roundsCompleted,
+    generateContributions: (docId, struct, r) => generateEmomContributions(docId, struct.minutes, r.roundsCompleted, struct.mode)
+  });
 }
 
-async function submitForTimeWorkout(name, structure, now) {
+function submitForTimeWorkout(name, structure, now) {
   const dnf = document.getElementById('fortime-dnf').checked;
   const remainingReps = dnf ? (parseInt(document.getElementById('fortime-cap-reps').value, 10) || 0) : 0;
   const resultMins = dnf ? 0 : (parseInt(document.getElementById('fortime-minutes').value, 10) || 0);
@@ -3593,43 +3591,31 @@ async function submitForTimeWorkout(name, structure, now) {
     showFeedback('Seconds must be 0–59.', 'rose', 'log-workout-feedback');
     return;
   }
-
-  const workoutDoc = {
-    userId: currentUser.uid,
-    name,
+  return submitStructuredWorkout(name, structure, now, {
     type: 'FOR_TIME',
-    structure,
-    result: { timeSeconds, completed: !dnf, ...(dnf && { remainingReps }) },
-    scoreDisplay: dnf ? `Cap ${remainingReps}` : formatScore_TIME_SECONDS(timeSeconds),
+    buildResult: () => ({ timeSeconds, completed: !dnf, ...(dnf && { remainingReps }) }),
+    scoreDisplay: r => dnf ? `Cap ${remainingReps}` : formatScore_TIME_SECONDS(r.timeSeconds),
     scoreType: 'TIME_SECONDS',
-    scoreValue: dnf ? remainingReps : timeSeconds,
-    timestamp: now
-  };
-  const docRef = await addDoc(collection(db, "structured_workouts"), workoutDoc);
-  await generateForTimeContributions(docRef.id, structure.movements, structure.rounds, remainingReps);
+    scoreValue: r => dnf ? r.remainingReps : r.timeSeconds,
+    generateContributions: (docId, struct, r) => generateForTimeContributions(docId, struct.movements, struct.rounds, r.remainingReps || 0)
+  });
 }
 
-async function submitIntervalWorkout(name, structure, now) {
+function submitIntervalWorkout(name, structure, now) {
   const roundsCompleted = parseInt(document.getElementById('log-rounds').value, 10);
   const partialReps = parseInt(document.getElementById('log-partial-reps').value, 10) || 0;
   if (roundsCompleted < 0) {
     showFeedback('Enter rounds completed.', 'rose', 'log-workout-feedback');
     return;
   }
-
-  const workoutDoc = {
-    userId: currentUser.uid,
-    name,
+  return submitStructuredWorkout(name, structure, now, {
     type: 'INTERVAL',
-    structure,
-    result: { roundsCompleted, partialReps, completed: roundsCompleted >= structure.rounds },
-    scoreDisplay: formatScore_ROUNDS_AND_REPS(roundsCompleted, partialReps),
+    buildResult: () => ({ roundsCompleted, partialReps, completed: roundsCompleted >= structure.rounds }),
+    scoreDisplay: r => formatScore_ROUNDS_AND_REPS(r.roundsCompleted, r.partialReps),
     scoreType: 'ROUNDS_AND_REPS',
-    scoreValue: roundsCompleted * 1000 + partialReps,
-    timestamp: now
-  };
-  const docRef = await addDoc(collection(db, "structured_workouts"), workoutDoc);
-  await generateIntervalContributions(docRef.id, structure.movements, roundsCompleted, partialReps);
+    scoreValue: r => r.roundsCompleted * 1000 + r.partialReps,
+    generateContributions: (docId, struct, r) => generateIntervalContributions(docId, struct.movements, r.roundsCompleted, r.partialReps)
+  });
 }
 
 function resetTrainingTab() {
@@ -4062,13 +4048,7 @@ function renderSharedPlanCard(share) {
 }
 
 function changeSharedPlansPage(direction) {
-  const totalPages = Math.max(1, Math.ceil(state.data.lastSharedPlans.length / 3));
-  if (direction === 'prev' && state.pagination.sharedPlans > 1) {
-    state.pagination.sharedPlans--;
-  } else if (direction === 'next' && state.pagination.sharedPlans < totalPages) {
-    state.pagination.sharedPlans++;
-  }
-  renderSharedPlansUI();
+  changeGenericPage('sharedPlans', state.data.lastSharedPlans, 3, renderSharedPlansUI, direction);
 }
 
 async function saveSharedPlanToMyPlans(shareId) {
@@ -4115,70 +4095,38 @@ function updateStarIcon(id, isFav) {
   btn.className = `${isFav ? 'text-amber-400' : 'text-slate-500'} hover:scale-110 transition-transform btn-fav-star`;
 }
 
-async function toggleFavorite(shareId) {
-  if (_favDebounce[shareId]) return;
-  _favDebounce[shareId] = setTimeout(() => delete _favDebounce[shareId], 300);
+async function toggleFavoriteGeneric(collection, dataArray, id) {
+  if (_favDebounce[id]) return;
+  _favDebounce[id] = setTimeout(() => delete _favDebounce[id], 300);
   if (!currentUser) return;
-  const share = state.data.lastSharedPlans.find(s => s.id === shareId);
-  if (!share) return;
-  const newVal = !(share.favorite === true);
-  share.favorite = newVal;
-  updateStarIcon(shareId, newVal);
+  const item = dataArray.find(i => i.id === id);
+  if (!item) return;
+  const newVal = !(item.favorite === true);
+  item.favorite = newVal;
+  updateStarIcon(id, newVal);
   try {
-    await updateDoc(doc(db, "shared_plans", shareId), { favorite: newVal });
+    await updateDoc(doc(db, collection, id), { favorite: newVal });
     haptic(HAPTIC.tap);
     if (state.ui.plansFilter === 'favorites') renderSharedPlansUI();
   } catch (err) {
-    share.favorite = !newVal;
-    updateStarIcon(shareId, !newVal);
-    clearTimeout(_favDebounce[shareId]);
-    delete _favDebounce[shareId];
+    item.favorite = !newVal;
+    updateStarIcon(id, !newVal);
+    clearTimeout(_favDebounce[id]);
+    delete _favDebounce[id];
     console.error('Toggle favorite failed', err.code, err.message);
   }
 }
 
-async function togglePlanFavorite(planId) {
-  if (_favDebounce[planId]) return;
-  _favDebounce[planId] = setTimeout(() => delete _favDebounce[planId], 300);
-  if (!currentUser) return;
-  const plan = state.data.lastWorkoutPlans.find(p => p.id === planId);
-  if (!plan) return;
-  const newVal = !(plan.favorite === true);
-  plan.favorite = newVal;
-  updateStarIcon(planId, newVal);
-  try {
-    await updateDoc(doc(db, "workout_plans", planId), { favorite: newVal });
-    haptic(HAPTIC.tap);
-    if (state.ui.plansFilter === 'favorites') renderSharedPlansUI();
-  } catch (err) {
-    plan.favorite = !newVal;
-    updateStarIcon(planId, !newVal);
-    clearTimeout(_favDebounce[planId]);
-    delete _favDebounce[planId];
-    console.error('Toggle plan favorite failed', err.code, err.message);
-  }
+function toggleFavorite(shareId) {
+  toggleFavoriteGeneric("shared_plans", state.data.lastSharedPlans, shareId);
 }
 
-async function toggleStructuredFavorite(swId) {
-  if (_favDebounce[swId]) return;
-  _favDebounce[swId] = setTimeout(() => delete _favDebounce[swId], 300);
-  if (!currentUser) return;
-  const sw = state.data.lastStructuredWorkouts.find(w => w.id === swId);
-  if (!sw) return;
-  const newVal = !(sw.favorite === true);
-  sw.favorite = newVal;
-  updateStarIcon(swId, newVal);
-  try {
-    await updateDoc(doc(db, "structured_workouts", swId), { favorite: newVal });
-    haptic(HAPTIC.tap);
-    if (state.ui.plansFilter === 'favorites') renderSharedPlansUI();
-  } catch (err) {
-    sw.favorite = !newVal;
-    updateStarIcon(swId, !newVal);
-    clearTimeout(_favDebounce[swId]);
-    delete _favDebounce[swId];
-    console.error('Toggle structured favorite failed', err.code, err.message);
-  }
+function togglePlanFavorite(planId) {
+  toggleFavoriteGeneric("workout_plans", state.data.lastWorkoutPlans, planId);
+}
+
+function toggleStructuredFavorite(swId) {
+  toggleFavoriteGeneric("structured_workouts", state.data.lastStructuredWorkouts, swId);
 }
 
 function loadSharedPlan(shareId) {
@@ -4370,7 +4318,7 @@ function renderLogs(workouts) {
     if (!logContainer) return;
 
     if (!workouts.length) {
-        logContainer.innerHTML = `<div class="bg-slate-800 border border-slate-700 rounded-xl p-4 text-slate-500 text-sm text-center">No workout logs yet. Add a set to start tracking your training history.</div>`;
+        renderMessage(logContainer, 'No workout logs yet. Add a set to start tracking your training history.', 'slate', 'sm');
         if (paginationControls) paginationControls.classList.add('hidden');
         return;
     }
@@ -5118,13 +5066,7 @@ async function renderActiveFriendsList() {
 }
 
 function changeFriendsPage(direction) {
-  const totalPages = Math.max(1, Math.ceil(state.social.userFriendsList.length / 3));
-  if (direction === 'prev' && state.pagination.friends > 1) {
-    state.pagination.friends--;
-  } else if (direction === 'next' && state.pagination.friends < totalPages) {
-    state.pagination.friends++;
-  }
-  renderActiveFriendsList();
+  changeGenericPage('friends', state.social.userFriendsList, 3, renderActiveFriendsList, direction);
 }
 
 function filterLeaderboardProfiles() {
@@ -5317,7 +5259,12 @@ const debouncedSyncActivity = debounce(() => {
 
 function renderEmptyState(container, message, extraClass = '') {
   if (!container) return;
-  container.innerHTML = `<p class="text-xs text-slate-500 italic py-2 text-center${extraClass ? ' ' + extraClass : ''}">${message}</p>`;
+  container.innerHTML = `<p class="text-xs text-slate-500 italic py-2 text-center${extraClass ? ' ' + extraClass : ''}">${escapeHtml(message)}</p>`;
+}
+
+function renderMessage(container, message, color = 'red', size = 'xs') {
+  if (!container) return;
+  container.innerHTML = `<div class="bg-slate-800 border border-slate-700 rounded-xl p-4 text-${color}-${size} text-center">${escapeHtml(message)}</div>`;
 }
 
 const NOTIFICATION_COLORS = {
@@ -5532,9 +5479,7 @@ function initActionDispatcher() {
   });
 }
 
-// Volume Chart Touch Swipe
-(function setupVolumeSwipe() {
-  const container = document.getElementById('vh-bars-container');
+function enableSwipe(container, { onSwipeLeft, onSwipeRight, threshold = 50 }) {
   if (!container) return;
   let startX = 0, startY = 0, startTime = 0;
   container.addEventListener('touchstart', function(e) {
@@ -5553,38 +5498,21 @@ function initActionDispatcher() {
     const dx = e.changedTouches[0].clientX - startX;
     const dy = e.changedTouches[0].clientY - startY;
     const elapsed = Date.now() - startTime;
-    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5 && elapsed < 500) {
-      shiftVolumePeriod(dx < 0 ? 1 : -1);
+    if (Math.abs(dx) > threshold && Math.abs(dx) > Math.abs(dy) * 1.5 && elapsed < 500) {
+      dx < 0 ? onSwipeLeft?.() : onSwipeRight?.();
     }
   }, { passive: true });
-})();
+}
 
-// Calendar Touch Swipe
-(function setupCalendarSwipe() {
-  const container = document.getElementById('cal-grid-container');
-  if (!container) return;
-  let startX = 0, startY = 0, startTime = 0;
-  container.addEventListener('touchstart', function(e) {
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-    startTime = Date.now();
-  }, { passive: true });
-  container.addEventListener('touchmove', function(e) {
-    const dx = e.touches[0].clientX - startX;
-    const dy = e.touches[0].clientY - startY;
-    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10) {
-      e.preventDefault();
-    }
-  }, { passive: false });
-  container.addEventListener('touchend', function(e) {
-    const dx = e.changedTouches[0].clientX - startX;
-    const dy = e.changedTouches[0].clientY - startY;
-    const elapsed = Date.now() - startTime;
-    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5 && elapsed < 500) {
-      changeCalendarNav(dx < 0 ? 1 : -1);
-    }
-  }, { passive: true });
-})();
+enableSwipe(document.getElementById('vh-bars-container'), {
+  onSwipeLeft: () => shiftVolumePeriod(1),
+  onSwipeRight: () => shiftVolumePeriod(-1)
+});
+
+enableSwipe(document.getElementById('cal-grid-container'), {
+  onSwipeLeft: () => changeCalendarNav(1),
+  onSwipeRight: () => changeCalendarNav(-1)
+});
 
 // Profile Modal
 const modalClose = document.getElementById('profile-modal-close');
