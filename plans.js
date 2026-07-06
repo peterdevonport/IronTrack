@@ -1,13 +1,14 @@
 import { auth, db, collection, query, where, onSnapshot, doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc, serverTimestamp, orderBy, limit, Timestamp, getDocs } from './firebase.js';
-import { state, EPLEY_CONSTANT, entriesPerPage, HAPTIC } from './state.js';
+import { state, EPLEY_CONSTANT, entriesPerPage, HAPTIC, FORM_SCHEMAS } from './state.js';
 import { estimate1RM, estimateWeightForReps, getEffectiveLoad, computeEffectiveLoad } from './math.js';
-import { escapeHtml, haptic } from './dom.js';
+import { escapeHtml, haptic, debounce } from './dom.js';
 import { getExerciseInfo, EXERCISE_CATALOG, LOAD_FACTORS } from './exercise-data.js';
 import { formatMovementLoad, formatCardDate, formatWorkoutType, formatMovementWeight } from './formatting.js';
 import { buildWorkoutDescription, formatScore_ROUNDS_AND_REPS, formatScore_COMPLETED_MINUTES, formatScore_TIME_SECONDS, getRepsPerRound } from './analytics.js';
 import { renderEmptyState, showFeedback, showToast, showPlanNameModal, updatePagination, updatePaginationControls, clearChildren, changeGenericPage, saveExpandedCardIds, restoreExpandedCardIds, buildExerciseOptionsHtml } from './ui.js';
 import { renderWorkoutCard, renderStructuredWorkoutCard, renderPlanCard, renderSharedPlanCard } from './rendering.js';
 import { renderSharedPlansUI } from './social.js';
+import { computeAndSyncDailyActivity } from './calendar.js';
 
 let unsubscribeStructured = null;
 let unsubscribePlans = null;
@@ -835,6 +836,10 @@ async function generateIntervalContributions(workoutId, movements, roundsComplet
   });
 }
 
+const debouncedSyncActivity = debounce(() => {
+    computeAndSyncDailyActivity();
+}, 3000);
+
 function listenToStructuredWorkouts(uid) {
   const q = query(
     collection(db, "structured_workouts"),
@@ -1477,4 +1482,4 @@ function cleanupWorkoutSubscriptions() {
   if (unsubscribePlans) { unsubscribePlans(); unsubscribePlans = null; }
 }
 
-export { writeStructuredLogEntry, generateContributionsBase, generateAmrapContributions, handleWorkoutTypeChange, switchEmomMode, addPlanMinuteSlot, refreshPlanForm, handlePlanExerciseChange, togglePlanWms, previewPctMode, previewRpeMode, previewAbsoluteMode, updatePlanCalcPreview, handlePlanAdd, removePlanMovement, populatePlanMovements, formatIntervalLabel, validatePlanInputs, generateAutoPlanName, buildPlanDocument, savePlan, removeMinuteSlot, updateEmomDurationDisplay, updateEmomSummary, getEmomMovementData, updateEmomScorePreview, generateEmomContributions, toggleForTimeDnf, updateForTimeScorePreview, generateForTimeContributions, updateIntervalScorePreview, recalcForTimeRemaining, logRound, logRep, updateLogScorePreview, updateLogWorkoutButtonState, generateIntervalContributions, listenToStructuredWorkouts, renderStructuredWorkoutHistory, changeStructuredPage, listenToPlans, renderPlansUI, switchPlansFilter, changePlansPage, deletePlan, deleteStructuredWorkout, loadWorkoutIntoBuilder, loadPlan, redoWorkout, setupTrainingTab, doWorkout, doStructuredWorkout, doPlanWorkout, doSharedPlan, submitStructuredWorkout, submitAmrapWorkout, submitEmomWorkout, submitForTimeWorkout, submitIntervalWorkout, resetTrainingTab, submitPendingWorkout, capturePlanStructure, populateAmrapForm, populateEmomForm, populateForTimeForm, populateIntervalForm, populateMovementDropdowns, updateAmrapScorePreview, cleanupWorkoutSubscriptions };
+export { writeStructuredLogEntry, generateContributionsBase, generateAmrapContributions, handleWorkoutTypeChange, switchEmomMode, addPlanMinuteSlot, refreshPlanForm, handlePlanExerciseChange, togglePlanWms, previewPctMode, previewRpeMode, previewAbsoluteMode, updatePlanCalcPreview, handlePlanAdd, removePlanMovement, populatePlanMovements, formatIntervalLabel, validatePlanInputs, generateAutoPlanName, buildPlanDocument, savePlan, removeMinuteSlot, updateEmomDurationDisplay, updateEmomSummary, getEmomMovementData, updateEmomScorePreview, generateEmomContributions, toggleForTimeDnf, updateForTimeScorePreview, generateForTimeContributions, updateIntervalScorePreview, recalcForTimeRemaining, logRound, logRep, updateLogScorePreview, updateLogWorkoutButtonState, generateIntervalContributions, listenToStructuredWorkouts, renderStructuredWorkoutHistory, changeStructuredPage, listenToPlans, renderPlansUI, switchPlansFilter, changePlansPage, deletePlan, deleteStructuredWorkout, loadWorkoutIntoBuilder, loadPlan, redoWorkout, setupTrainingTab, doWorkout, doStructuredWorkout, doPlanWorkout, doSharedPlan, submitStructuredWorkout, submitAmrapWorkout, submitEmomWorkout, submitForTimeWorkout, submitIntervalWorkout, resetTrainingTab, submitPendingWorkout, capturePlanStructure, populateAmrapForm, populateEmomForm, populateForTimeForm, populateIntervalForm, populateMovementDropdowns, updateAmrapScorePreview, cleanupWorkoutSubscriptions, debouncedSyncActivity };
