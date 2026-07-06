@@ -2,4 +2,4 @@ export { EXERCISE_CATALOG, LOAD_FACTORS, getExerciseInfo, getDisplayName } from 
 export { estimate1RM, estimateWeightForReps, computeEffectiveLoad, getEffectiveLoad } from './math.js';
 export { debounce, escapeHtml, haptic } from './dom.js';
 export { formatMovementLoad, formatCardDate, formatWorkoutType, formatDotsScore, formatMovementWeight } from './formatting.js';
-export { getMonday, countActiveDays, countConsecutiveDays } from './date.js';
+export { getMonday, countActiveDays, countConsecutiveDays, toLocalDateKey } from './date.js';

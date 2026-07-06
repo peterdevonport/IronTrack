@@ -1,3 +1,10 @@
+function toLocalDateKey(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 function getMonday(date) {
     const d = new Date(date);
     const day = d.getDay();
@@ -12,8 +19,7 @@ function countActiveDays(daysBack, today, activeDates) {
   for (let i = 0; i < daysBack; i++) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
-    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    if (activeDates.has(dateStr)) count++;
+    if (activeDates.has(toLocalDateKey(d))) count++;
   }
   return count;
 }
@@ -23,11 +29,10 @@ function countConsecutiveDays(today, activeDates) {
   for (let i = 0; ; i++) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
-    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    if (activeDates.has(dateStr)) streak++;
+    if (activeDates.has(toLocalDateKey(d))) streak++;
     else break;
   }
   return streak;
 }
 
-export { getMonday, countActiveDays, countConsecutiveDays };
+export { getMonday, countActiveDays, countConsecutiveDays, toLocalDateKey };
