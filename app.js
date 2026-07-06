@@ -358,9 +358,9 @@ function handleSignedOut() {
   if (profileModal) profileModal.classList.add('hidden');
   authBtn.innerText = "Sign In";
   greeting.innerText = "Analytics Dashboard";
-  document.getElementById('workout-list').innerHTML = '';
+  clearChildren(document.getElementById('workout-list'));
   renderEmptyState(document.getElementById('structured-workout-list'), 'No structured workouts logged yet.');
-  document.getElementById('registry-table-body').innerHTML = '';
+  clearChildren(document.getElementById('registry-table-body'));
   state.data.calcEntriesByLift = {};
   const calcEntriesList = document.getElementById('calc-entries-list');
   if (calcEntriesList) renderEmptyState(calcEntriesList, 'Select a lift with data to get started.');
@@ -376,14 +376,14 @@ function handleSignedOut() {
   state.pagination.friends = 1;
   state.pagination.sharedPlans = 1;
   state.ui.plansFilter = 'mine';
-  document.getElementById('friendsListContainer').innerHTML = '';
+  clearChildren(document.getElementById('friendsListContainer'));
   const filterMineBtn = document.getElementById('plans-filter-mine');
   const filterSharedBtn = document.getElementById('plans-filter-shared');
   const filterFavBtn = document.getElementById('plans-filter-favorites');
   if (filterMineBtn) filterMineBtn.className = 'btn-core is-primary btn-size-row';
   if (filterSharedBtn) filterSharedBtn.className = 'btn-core is-ghost btn-size-row';
   if (filterFavBtn) filterFavBtn.className = 'btn-core is-ghost btn-size-row';
-  document.getElementById('leaderboardRows').innerHTML = '';
+  clearChildren(document.getElementById('leaderboardRows'));
   currentUser = null;
   urlParamsProcessed = false;
   activeDates = new Set();
@@ -586,20 +586,14 @@ function hideOnboarding() {
 }
 
 function renderOnboarding1RMList() {
-    if (!onboardingList || !onboardingEmpty) return;
+    if (!onboardingList) return;
     if (pendingOnboarding1RMs.length === 0) {
-        onboardingList.innerHTML = `<p class="text-xs text-slate-500 italic py-2 text-center" id="onboarding-1rm-empty">No lifts added yet.</p>`;
+        renderEmptyState(onboardingList, 'No lifts added yet.');
         return;
     }
     let html = '';
     pendingOnboarding1RMs.forEach((item, index) => {
-        const repLabel = item.reps > 1 ? ` @ ${item.reps} reps` : '';
-        html += `
-            <div class="flex items-center justify-between bg-slate-800 rounded-xl px-3 py-2">
-                <span class="text-sm text-slate-200 font-medium">${escapeHtml(item.exercise)}</span>
-                <span class="text-sm text-emerald-400 font-mono font-bold">${item.weight} kg${repLabel}</span>
-                <button type="button" class="text-rose-400 hover:text-rose-300 text-xs font-bold cursor-pointer bg-transparent border-none" data-index="${index}"><i data-lucide="circle-minus" size="18"></i></button>
-            </div>`;
+        html += renderOnboarding1RMItem(item, index);
     });
     onboardingList.innerHTML = html;
 
@@ -1135,22 +1129,13 @@ function update1RMRegistryUI() {
     pageExercises.forEach(exercise => {
         const info = getExerciseInfo(exercise);
         const isBodyweight = info.type === 'bodyweight';
-
         if (isBodyweight) {
             const maxReps = state.cache.cachedMaxRepsByExercise[exercise] || 0;
-            html += `
-                <span class="text-slate-400 font-medium truncate">${escapeHtml(exercise)}</span>
-                <span class="text-slate-200 font-mono text-right">—</span>
-                <span class="text-slate-200 font-mono text-right">${maxReps} reps</span>
-            `;
+            html += renderRegistryRow(exercise, true, maxReps, 0, 0);
         } else {
             const maxEstimated1RM = state.cache.cachedMax1RMByExercise[exercise] || 0;
             const absolutePB = state.cache.cachedMaxLoadByExercise[exercise] || 0;
-            html += `
-                <span class="text-slate-400 font-medium truncate">${escapeHtml(exercise)}</span>
-                <span class="text-slate-200 font-mono text-right">${Math.round(maxEstimated1RM)} kg</span>
-                <span class="text-slate-200 font-mono text-right">${Math.round(absolutePB)} kg</span>
-            `;
+            html += renderRegistryRow(exercise, false, 0, maxEstimated1RM, absolutePB);
         }
     });
 
@@ -1335,14 +1320,7 @@ function renderCalcEntries() {
             weight = Math.round(estimateWeightForReps(oneRM, entry.reps + rir));
             source = `${entry.exercise} ${entry.reps} reps @ RPE ${entry.rpe}`;
         }
-        html += `
-        <div class="flex justify-between items-center py-1.5 px-1 rounded-lg hover:bg-slate-800/40">
-            <span class="text-slate-200 font-mono text-sm">${escapeHtml(source)}</span>
-            <div class="flex items-center gap-2">
-                <span class="text-slate-200 font-mono text-sm">${weight} kg</span>
-                <button data-action="calc-remove" data-exercise="${escapeHtml(entry.exercise)}" data-index="${entry.idx}" class="text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"><i data-lucide="circle-minus" size="18"></i></button>
-            </div>
-        </div>`;
+        html += renderCalcEntry(source, weight, entry.exercise, entry.idx);
     });
 
     entriesList.innerHTML = html;
@@ -1856,7 +1834,7 @@ function addPlanMinuteSlot(data) {
   const container = document.getElementById('emom-minute-slots');
   if (!container) return;
   if (!container.dataset.planBootstrapped) {
-    container.innerHTML = '';
+    clearChildren(container);
     container.dataset.planBootstrapped = 'true';
   }
   const count = container.children.length + 1;
@@ -1880,11 +1858,7 @@ function addPlanMinuteSlot(data) {
       source = `${data.exerciseId} \u00D7 ${data.reps} @ ${data.weight} kg`;
     }
 
-    row.innerHTML = `
-      <span class="minute-label text-xs text-slate-500 font-mono w-12 shrink-0">${label}</span>
-      <span class="text-slate-200 font-mono text-sm flex-1">${source}</span>
-      <button data-action="remove-minute-slot" class="text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer shrink-0"><i data-lucide="circle-minus" size="18"></i></button>
-    `;
+    row.innerHTML = renderMinuteSlotInner(label, source);
     row.dataset.exerciseId = data.exerciseId;
     row.dataset.reps = data.reps;
     row.dataset.weight = data.weight;
@@ -1892,11 +1866,7 @@ function addPlanMinuteSlot(data) {
     if (data.pct) row.dataset.pct = data.pct;
     if (data.rpe) row.dataset.rpe = data.rpe;
   } else {
-    row.innerHTML = `
-      <span class="minute-label text-xs text-slate-500 font-mono w-12 shrink-0">${label}</span>
-      <span class="text-slate-500 font-mono text-sm flex-1 italic">(empty)</span>
-      <button data-action="remove-minute-slot" class="text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer shrink-0"><i data-lucide="circle-minus" size="18"></i></button>
-    `;
+    row.innerHTML = renderMinuteSlotInner(label, '<span class="text-slate-500 font-mono text-sm italic">(empty)</span>');
   }
 
   container.appendChild(row);
@@ -2114,13 +2084,7 @@ function renderPlanMovements() {
       weight = m.weight;
       source = `${m.reps}x ${m.exerciseId} @ ${m.weight}kg`;
     }
-    html += `
-    <div class="flex justify-between items-center py-1.5 px-1 rounded-lg hover:bg-slate-800/40">
-      <span class="text-slate-200 font-mono text-sm truncate">${escapeHtml(source)}</span>
-      <button type="button" data-action="remove-plan-movement" data-index="${i}" class="plan-movement-remove shrink-0 hover:!text-rose-400 transition-colors" title="Remove">
-        <i data-lucide="trash-2" size="18"></i>
-      </button>
-    </div>`;
+    html += renderPlanMovementItem(source, i);
   });
 
   list.innerHTML = html;
@@ -2887,42 +2851,7 @@ function selectCalendarDay(dateStr) {
         return;
     }
     
-    workoutsContainer.innerHTML = items.map(item => {
-        if (item.type) {
-            const badgeClass = (item.type || '').toLowerCase();
-            const descLine = buildWorkoutSummaryLine(item.type, item.structure || {});
-            return `
-<div class="bg-slate-900 border border-slate-700 rounded-xl p-2.5">
-    <div class="flex justify-between items-center">
-        <span class="workout-type-badge ${badgeClass}">${escapeHtml(formatWorkoutType(item.type))}</span>
-        <span class="text-emerald-400 font-bold font-mono text-xs">${escapeHtml(item.scoreDisplay || '—')}</span>
-    </div>
-    ${descLine ? `<p class="text-[10px] text-slate-400 font-mono mt-1">${escapeHtml(descLine)}</p>` : ''}
-</div>`;
-        } else {
-            const load = getEffectiveLoad(item);
-            const reps = parseInt(item.reps, 10) || 1;
-            const sets = item.sets || 1;
-            const oneRM = Math.round(estimate1RM(load, reps));
-            const repDisplay = item.partialReps ? `${sets} × ${reps} + ${item.partialReps} reps` : `${sets} × ${reps}`;
-            let loadDisplay;
-            if (item.weightMode === 'pct' && item.pct) {
-                loadDisplay = `${item.pct}% 1RM (${Math.round(load)}kg)`;
-            } else if (item.weightMode === 'rpe' && item.rpe) {
-                loadDisplay = `RPE ${item.rpe} (${Math.round(load)}kg)`;
-            } else {
-                loadDisplay = `${Math.round(load)}kg`;
-            }
-            return `
-<div class="bg-slate-900 border border-slate-700 rounded-xl p-2.5">
-    <div class="flex justify-between items-center">
-        <span class="text-emerald-300 font-bold text-xs uppercase tracking-wider">${escapeHtml(item.exercise)}</span>
-        <span class="text-slate-200 font-mono text-xs">${repDisplay} @ ${loadDisplay}</span>
-    </div>
-    <p class="text-slate-500 text-[10px] font-mono mt-0.5">Est. 1RM: ${oneRM}kg</p>
-</div>`;
-        }
-    }).join('');
+    workoutsContainer.innerHTML = items.map(item => renderCalendarWorkoutItem(item)).join('');
 }
 
 function changeCalendarNav(delta) {
@@ -3101,32 +3030,13 @@ function renderStructuredWorkoutCard(sw) {
   const type = sw.type || 'AMRAP';
   const badgeClass = type.toLowerCase();
   const descLine = buildWorkoutSummaryLine(type, sw.structure || {});
-  let movementsHtml = '';
-
+  const structure = sw.structure || {};
+  let movementsHtml;
   if (type === 'EMOM') {
-    const minutes = sw.structure?.minutes || [];
-    const isByRound = sw.structure?.mode === 'by_round';
-    movementsHtml = minutes.map((m, idx) => {
-      const mov = m.movements?.[0];
-      if (!mov) return '';
-      const label = isByRound ? `Round ${idx + 1}: ` : '';
-      return `<span class="movement-chip">${label}${escapeHtml(mov.exerciseId)} × ${mov.reps}${formatMovementLoad(mov)}</span>`;
-    }).join('');
-  } else if (type === 'FOR_TIME') {
-    const movements = sw.structure?.movements || [];
-    movementsHtml = movements.map(m => {
-      return `<span class="movement-chip">${escapeHtml(m.exerciseId)} × ${m.reps}${formatMovementLoad(m)}</span>`;
-    }).join('');
-  } else if (type === 'INTERVAL') {
-    const movements = sw.structure?.movements || [];
-    movementsHtml = movements.map(m => {
-      return `<span class="movement-chip">${escapeHtml(m.exerciseId)} × ${m.reps}${formatMovementLoad(m)}</span>`;
-    }).join('');
+    const isByRound = structure.mode === 'by_round';
+    movementsHtml = renderEmomChips(structure.minutes, (m, idx) => isByRound ? `Round ${idx + 1}: ` : '');
   } else {
-    const movements = sw.structure?.movements || [];
-    movementsHtml = movements.map(m => {
-      return `<span class="movement-chip">${escapeHtml(m.exerciseId)} × ${m.reps}${formatMovementLoad(m)}</span>`;
-    }).join('');
+    movementsHtml = renderMovementChips(structure.movements);
   }
 
   if (movementsHtml.trim().length > 0) {
@@ -3311,22 +3221,10 @@ function renderPlanCard(plan) {
   const badgeClass = type.toLowerCase();
   const descLine = buildWorkoutSummaryLine(type, plan.structure || {});
 
-  let movementsHtml = '';
   const structure = plan.structure || {};
-
-  if (type === 'EMOM') {
-    const minutes = structure.minutes || [];
-    movementsHtml = minutes.map((m, idx) => {
-      const mov = m.movements?.[0];
-      if (!mov) return '';
-      return `<span class="movement-chip">${idx + 1}: ${escapeHtml(mov.exerciseId)} \u00D7 ${mov.reps}${formatMovementLoad(mov)}</span>`;
-    }).join('');
-  } else {
-    const movements = structure.movements || [];
-    movementsHtml = movements.map(m => {
-      return `<span class="movement-chip">${escapeHtml(m.exerciseId)} \u00D7 ${m.reps}${formatMovementLoad(m)}</span>`;
-    }).join('');
-  }
+  const movementsHtml = type === 'EMOM'
+    ? renderEmomChips(structure.minutes, (m, idx) => `${idx + 1}: `)
+    : renderMovementChips(structure.movements);
 
   const metadataHtml = plan.createdAt
     ? `<div class="flex items-center gap-1.5 text-xs text-slate-400"><i data-lucide="calendar" class="w-3.5 h-3.5 shrink-0"></i><span>${formatCardDate(plan.createdAt)}</span></div>`
@@ -3625,7 +3523,7 @@ function resetTrainingTab() {
   const pwPlaceholder = document.getElementById('log-workout-placeholder');
   if (pwPlaceholder) pwPlaceholder.classList.remove('hidden');
   const pwDesc = document.getElementById('workout-description');
-  if (pwDesc) { pwDesc.classList.add('hidden'); pwDesc.innerHTML = ''; }
+  if (pwDesc) { pwDesc.classList.add('hidden'); clearChildren(pwDesc); }
   document.querySelectorAll('[id^="log-result-"]').forEach(el => el.classList.add('hidden'));
   const logRoundsReset = document.getElementById('log-rounds');
   const logPartialReset = document.getElementById('log-partial-reps');
@@ -3776,7 +3674,7 @@ async function openShareModal(planId, isWorkout = false) {
   feedback.textContent = '';
 
   switchShareMode('qr');
-  document.getElementById('share-qr-display').innerHTML = '';
+  clearChildren(document.getElementById('share-qr-display'));
   document.getElementById('share-select-all-container').classList.add('hidden');
   if (!state.social.userFriendsList.length) {
     renderEmptyState(list, 'No friends linked yet. Add friends in the Friends section first.');
@@ -3801,11 +3699,7 @@ async function openShareModal(planId, isWorkout = false) {
   state.social.userFriendsList.forEach((fUid) => {
     const fDoc = state.social.friendDisplayCache[fUid];
     const name = fDoc ? getDisplayName(fDoc, fUid) : fUid;
-    html += `
-      <label class="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-800 cursor-pointer">
-        <input type="checkbox" class="share-friend-checkbox" value="${fUid}" />
-        <span class="text-sm text-slate-200">${escapeHtml(name)}</span>
-      </label>`;
+    html += renderShareFriendItem(fUid, name);
   });
   list.innerHTML = html;
   modal.classList.remove('hidden');
@@ -3934,7 +3828,7 @@ async function shareByQR() {
     }
 
     const qrUrl = buildQrShareUrl(docRef.id);
-    qrDisplay.innerHTML = '';
+    clearChildren(qrDisplay);
     const qrCode = new QRCodeStyling(buildQrCodeConfig(qrUrl));
     qrCode.append(qrDisplay);
     feedback.textContent = 'QR code generated! Friend scans to import.';
@@ -4019,19 +3913,9 @@ function renderSharedPlanCard(share) {
   const badgeClass = type.toLowerCase();
   const structure = share.content?.structure || {};
   const descLine = buildWorkoutSummaryLine(type, structure);
-  const movements = structure.movements || [];
-  const movementsHtml = movements.map(m =>
-    `<span class="movement-chip">${escapeHtml(m.exerciseId)} \u00D7 ${m.reps}${m.weight ? ' @ ' + m.weight + 'kg' : ''}</span>`
-  ).join('');
-
-  const emomMinutes = share.content?.structure?.minutes || [];
-  const emomHtml = emomMinutes.map((m, idx) => {
-    const mov = m.movements?.[0];
-    if (!mov) return '';
-    return `<span class="movement-chip">${idx + 1}: ${escapeHtml(mov.exerciseId)} \u00D7 ${mov.reps}${mov.weight ? ' @ ' + mov.weight + 'kg' : ''}</span>`;
-  }).join('');
-
-  const displayMovements = type === 'EMOM' ? emomHtml : movementsHtml;
+  const displayMovements = type === 'EMOM'
+    ? renderEmomChips(share.content?.structure?.minutes, (m, idx) => `${idx + 1}: `)
+    : renderMovementChips(structure.movements);
 
   const metadataHtml = [
     `<div class="flex items-center gap-1.5 text-xs text-slate-300"><i data-lucide="share-2" class="w-3.5 h-3.5 shrink-0"></i><span class="truncate">${escapeHtml(share.sharedByDisplayName || 'Unknown')}</span></div>`,
@@ -4158,7 +4042,7 @@ function populateEmomForm(structure) {
   }
   const slots = document.getElementById('emom-minute-slots');
   if (slots) {
-    slots.innerHTML = '';
+    clearChildren(slots);
     delete slots.dataset.planBootstrapped;
   }
   (structure.minutes || []).forEach(m => {
@@ -4529,7 +4413,7 @@ function renderVolumeHistory() {
   if (!inner) return;
 
   if (!state.data.lastWorkouts || state.data.lastWorkouts.length === 0) {
-    inner.innerHTML = '<p class="text-xs text-slate-500 italic py-8 text-center w-full">Log some workouts to see your volume history.</p>';
+    renderEmptyState(inner, 'Log some workouts to see your volume history.', 'py-8 w-full');
     if (totalEl) totalEl.textContent = '';
     if (rangeLabel) rangeLabel.textContent = '';
     updateTodayBtnState();
@@ -4559,17 +4443,7 @@ function renderVolumeHistory() {
   const chartHeight = 104;
   const avgHeight = maxVolume > 0 ? (avgVolume / maxVolume) * chartHeight : 0;
 
-  let barsHtml = buckets.map(b => {
-    const volStr = Math.round(b.volume).toLocaleString();
-    const hasVol = b.volume > 0;
-    const h = hasVol ? Math.max(4, (b.volume / maxVolume) * chartHeight) : 0;
-    return `
-      <div class="vh-bar-wrap">
-        ${hasVol ? `<div class="vh-bar" style="height: ${h}px"><div class="vh-bar-tooltip">${volStr} kg</div></div>` : '<div class="vh-bar is-zero"></div>'}
-        <span class="vh-bar-label">${b.label || ''}</span>
-      </div>
-    `;
-  }).join('');
+  let barsHtml = buckets.map(b => renderVolumeBar(b, maxVolume, chartHeight)).join('');
 
   let avgLineHtml = '';
   if (avgVolume > 0 && avgHeight > 0) {
@@ -4806,7 +4680,7 @@ if (shareSendBtn) shareSendBtn.addEventListener('click', () => shareWithFriends(
 if (shareCancelBtn) shareCancelBtn.addEventListener('click', () => {
   document.getElementById('share-plan-modal').classList.add('hidden');
   document.getElementById('share-plan-feedback').textContent = '';
-  document.getElementById('share-qr-display').innerHTML = '';
+  clearChildren(document.getElementById('share-qr-display'));
   state.share.sharePlanId = null;
 });
 
@@ -5171,7 +5045,7 @@ function renderLeaderboardView() {
     filtered.forEach((f, i) => {
       html += buildLeaderboardRow(f.profile, i + 1, f.isMe, f.isFriend);
     });
-    rowsContainer.innerHTML = html || `<tr><td colspan="4" class="py-4 text-center text-xs text-slate-500 italic">No network entries visible in this grid scope.</td></tr>`;
+    rowsContainer.innerHTML = html || renderLeaderboardEmptyRow();
     if (typeof lucide !== 'undefined') lucide.createIcons();
 
     if (expandBtn) {
@@ -5257,6 +5131,10 @@ const debouncedSyncActivity = debounce(() => {
 }, 3000);
 
 
+function clearChildren(el) {
+  if (el) el.textContent = '';
+}
+
 function renderEmptyState(container, message, extraClass = '') {
   if (!container) return;
   container.innerHTML = `<p class="text-xs text-slate-500 italic py-2 text-center${extraClass ? ' ' + extraClass : ''}">${escapeHtml(message)}</p>`;
@@ -5265,6 +5143,133 @@ function renderEmptyState(container, message, extraClass = '') {
 function renderMessage(container, message, color = 'red', size = 'xs') {
   if (!container) return;
   container.innerHTML = `<div class="bg-slate-800 border border-slate-700 rounded-xl p-4 text-${color}-${size} text-center">${escapeHtml(message)}</div>`;
+}
+
+function renderMovementChips(movements) {
+  if (!movements) return '';
+  return movements.map(m =>
+    `<span class="movement-chip">${escapeHtml(m.exerciseId)} \u00D7 ${m.reps}${formatMovementLoad(m)}</span>`
+  ).join('');
+}
+
+function renderEmomChips(minutes, labelFn) {
+  if (!minutes) return '';
+  return minutes.map((m, idx) => {
+    const mov = m.movements?.[0];
+    if (!mov) return '';
+    const label = labelFn ? labelFn(m, idx) : '';
+    return `<span class="movement-chip">${label}${escapeHtml(mov.exerciseId)} \u00D7 ${mov.reps}${formatMovementLoad(mov)}</span>`;
+  }).join('');
+}
+
+function renderCalendarWorkoutItem(item) {
+  if (item.type) {
+    const badgeClass = (item.type || '').toLowerCase();
+    const descLine = buildWorkoutSummaryLine(item.type, item.structure || {});
+    return `
+<div class="bg-slate-900 border border-slate-700 rounded-xl p-2.5">
+    <div class="flex justify-between items-center">
+        <span class="workout-type-badge ${badgeClass}">${escapeHtml(formatWorkoutType(item.type))}</span>
+        <span class="text-emerald-400 font-bold font-mono text-xs">${escapeHtml(item.scoreDisplay || '—')}</span>
+    </div>
+    ${descLine ? `<p class="text-[10px] text-slate-400 font-mono mt-1">${escapeHtml(descLine)}</p>` : ''}
+</div>`;
+  }
+  const load = getEffectiveLoad(item);
+  const reps = parseInt(item.reps, 10) || 1;
+  const sets = item.sets || 1;
+  const oneRM = Math.round(estimate1RM(load, reps));
+  const repDisplay = item.partialReps ? `${sets} \u00D7 ${reps} + ${item.partialReps} reps` : `${sets} \u00D7 ${reps}`;
+  let loadDisplay;
+  if (item.weightMode === 'pct' && item.pct) {
+    loadDisplay = `${item.pct}% 1RM (${Math.round(load)}kg)`;
+  } else if (item.weightMode === 'rpe' && item.rpe) {
+    loadDisplay = `RPE ${item.rpe} (${Math.round(load)}kg)`;
+  } else {
+    loadDisplay = `${Math.round(load)}kg`;
+  }
+  return `
+<div class="bg-slate-900 border border-slate-700 rounded-xl p-2.5">
+    <div class="flex justify-between items-center">
+        <span class="text-emerald-300 font-bold text-xs uppercase tracking-wider">${escapeHtml(item.exercise)}</span>
+        <span class="text-slate-200 font-mono text-xs">${repDisplay} @ ${loadDisplay}</span>
+    </div>
+    <p class="text-slate-500 text-[10px] font-mono mt-0.5">Est. 1RM: ${oneRM}kg</p>
+</div>`;
+}
+
+function renderVolumeBar(bucket, maxVolume, chartHeight) {
+  const volStr = Math.round(bucket.volume).toLocaleString();
+  const hasVol = bucket.volume > 0;
+  const h = hasVol ? Math.max(4, (bucket.volume / maxVolume) * chartHeight) : 0;
+  return `
+      <div class="vh-bar-wrap">
+        ${hasVol ? `<div class="vh-bar" style="height: ${h}px"><div class="vh-bar-tooltip">${volStr} kg</div></div>` : '<div class="vh-bar is-zero"></div>'}
+        <span class="vh-bar-label">${bucket.label || ''}</span>
+      </div>`;
+}
+
+function renderOnboarding1RMItem(item, index) {
+  const repLabel = item.reps > 1 ? ` @ ${item.reps} reps` : '';
+  return `
+            <div class="flex items-center justify-between bg-slate-800 rounded-xl px-3 py-2">
+                <span class="text-sm text-slate-200 font-medium">${escapeHtml(item.exercise)}</span>
+                <span class="text-sm text-emerald-400 font-mono font-bold">${item.weight} kg${repLabel}</span>
+                <button type="button" class="text-rose-400 hover:text-rose-300 text-xs font-bold cursor-pointer bg-transparent border-none" data-index="${index}"><i data-lucide="circle-minus" size="18"></i></button>
+            </div>`;
+}
+
+function renderMinuteSlotInner(label, contentHtml) {
+  return `
+      <span class="minute-label text-xs text-slate-500 font-mono w-12 shrink-0">${label}</span>
+      <span class="text-slate-200 font-mono text-sm flex-1">${contentHtml}</span>
+      <button data-action="remove-minute-slot" class="text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer shrink-0"><i data-lucide="circle-minus" size="18"></i></button>`;
+}
+
+function renderShareFriendItem(fUid, name) {
+  return `
+      <label class="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-800 cursor-pointer">
+        <input type="checkbox" class="share-friend-checkbox" value="${fUid}" />
+        <span class="text-sm text-slate-200">${escapeHtml(name)}</span>
+      </label>`;
+}
+
+function renderRegistryRow(exercise, isBodyweight, maxReps, max1RM, maxLoad) {
+  if (isBodyweight) {
+    return `
+                <span class="text-slate-400 font-medium truncate">${escapeHtml(exercise)}</span>
+                <span class="text-slate-200 font-mono text-right">—</span>
+                <span class="text-slate-200 font-mono text-right">${maxReps} reps</span>`;
+  }
+  return `
+                <span class="text-slate-400 font-medium truncate">${escapeHtml(exercise)}</span>
+                <span class="text-slate-200 font-mono text-right">${Math.round(max1RM)} kg</span>
+                <span class="text-slate-200 font-mono text-right">${Math.round(maxLoad)} kg</span>`;
+}
+
+function renderCalcEntry(source, weight, exercise, idx) {
+  return `
+        <div class="flex justify-between items-center py-1.5 px-1 rounded-lg hover:bg-slate-800/40">
+            <span class="text-slate-200 font-mono text-sm">${escapeHtml(source)}</span>
+            <div class="flex items-center gap-2">
+                <span class="text-slate-200 font-mono text-sm">${weight} kg</span>
+                <button data-action="calc-remove" data-exercise="${escapeHtml(exercise)}" data-index="${idx}" class="text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"><i data-lucide="circle-minus" size="18"></i></button>
+            </div>
+        </div>`;
+}
+
+function renderPlanMovementItem(source, index) {
+  return `
+    <div class="flex justify-between items-center py-1.5 px-1 rounded-lg hover:bg-slate-800/40">
+      <span class="text-slate-200 font-mono text-sm truncate">${escapeHtml(source)}</span>
+      <button type="button" data-action="remove-plan-movement" data-index="${index}" class="plan-movement-remove shrink-0 hover:!text-rose-400 transition-colors" title="Remove">
+        <i data-lucide="trash-2" size="18"></i>
+      </button>
+    </div>`;
+}
+
+function renderLeaderboardEmptyRow() {
+  return `<tr><td colspan="4" class="py-4 text-center text-xs text-slate-500 italic">No network entries visible in this grid scope.</td></tr>`;
 }
 
 const NOTIFICATION_COLORS = {
@@ -5306,7 +5311,7 @@ function showQRCode() {
     const qrDiv = document.getElementById('qrcode');
 
     // Clear previous
-    qrDiv.innerHTML = "";
+    clearChildren(qrDiv);
     
     // Generate QR (assuming `currentUser` is your global auth object)
     const qrUrl = new URL(window.location.href);
