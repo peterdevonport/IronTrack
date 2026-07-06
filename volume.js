@@ -2,6 +2,7 @@ import { state, entriesPerPage, paginationControls, workoutFilter } from './stat
 import { getEffectiveLoad, estimate1RM } from './math.js';
 import { escapeHtml } from './dom.js';
 import { EXERCISE_CATALOG } from './exercise-data.js';
+import { toLocalDateKey } from './date.js';
 import { workoutToLogHtml, renderVolumeBar } from './rendering.js';
 import { updatePagination, updatePaginationControls, updateTodayBtnState, showFeedback, renderMessage, renderEmptyState } from './ui.js';
 
