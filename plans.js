@@ -5,8 +5,8 @@ import { escapeHtml, haptic, debounce } from './dom.js';
 import { getExerciseInfo, EXERCISE_CATALOG, LOAD_FACTORS } from './exercise-data.js';
 import { formatMovementLoad, formatCardDate, formatWorkoutType, formatMovementWeight } from './formatting.js';
 import { buildWorkoutDescription, formatScore_ROUNDS_AND_REPS, formatScore_COMPLETED_MINUTES, formatScore_TIME_SECONDS, getRepsPerRound } from './analytics.js';
-import { renderEmptyState, showFeedback, showToast, showPlanNameModal, updatePagination, updatePaginationControls, clearChildren, changeGenericPage, saveExpandedCardIds, restoreExpandedCardIds, buildExerciseOptionsHtml } from './ui.js';
-import { renderWorkoutCard, renderStructuredWorkoutCard, renderPlanCard, renderSharedPlanCard, renderFormFields } from './rendering.js';
+import { renderEmptyState, showFeedback, showToast, showPlanNameModal, updatePagination, updatePaginationControls, clearChildren, changeGenericPage, saveExpandedCardIds, restoreExpandedCardIds, buildExerciseOptionsHtml, updatePillActive, switchTab } from './ui.js';
+import { renderWorkoutCard, renderStructuredWorkoutCard, renderPlanCard, renderSharedPlanCard, renderFormFields, renderPlanMovements, renderMinuteSlotInner } from './rendering.js';
 import { renderSharedPlansUI } from './social.js';
 import { computeAndSyncDailyActivity } from './calendar.js';
 import { getSchemaKey, computeTotalLoad } from './auth.js';
@@ -19,8 +19,8 @@ const WORKOUT_TYPE_TO_RESULT_ID = { AMRAP: 'amrap', EMOM: 'emom', FOR_TIME: 'for
 async function writeStructuredLogEntry({ workoutId, movement, sets, totalReps, extraFields = {} }) {
   const bw = state.user.userBiometrics.bodyweight || 0;
   const loadFactor = LOAD_FACTORS[movement.exerciseId];
-  let estimatedLoad = 0;
-  let weight = 0;
+  let estimatedLoad;
+  let weight;
 
   if (loadFactor !== undefined) {
     estimatedLoad = computeEffectiveLoad(movement.exerciseId, bw, 0, bw);
@@ -199,7 +199,7 @@ function addPlanMinuteSlot(data) {
 
   if (data) {
     const oneRM = state.cache.activeRecords[data.exerciseId] || 0;
-    let weightDisplay = data.weight;
+    let weightDisplay;
     let source;
     if (data.weightMode === 'pct' && data.pct) {
       weightDisplay = oneRM > 0 ? Math.round(oneRM * data.pct / 100) : data.weight;
@@ -358,7 +358,7 @@ function updatePlanCalcPreview() {
     return;
   }
 
-  let valid = false;
+  let valid;
   if (mode === 'pct') {
     valid = previewPctMode(parseFloat(weightInput.value), oneRM, calcSpan, addBtn);
   } else if (mode === 'rpe') {
@@ -376,7 +376,7 @@ function handlePlanAdd() {
   if (!exercise || !reps || reps < 1) return;
 
   const schemaKey = getSchemaKey(exercise);
-  let weight = 0, weightMode = 'absolute', pct = null, rpe = null;
+  let weight, weightMode = 'absolute', pct = null, rpe = null;
 
   if (schemaKey === 'bodyweight') {
     weight = parseFloat(document.getElementById('plan-bodyweight')?.value) || state.user.userBiometrics.bodyweight || 0;

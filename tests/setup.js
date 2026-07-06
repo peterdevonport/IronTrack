@@ -48,9 +48,9 @@ global.getEffectiveLoad = vi.fn((workout) => {
   if (workout.estimatedLoad !== undefined && workout.estimatedLoad !== null) {
     return workout.estimatedLoad;
   }
-  const loadFactor = LOAD_FACTORS[workout.exercise];
+  const loadFactor = global.LOAD_FACTORS[workout.exercise];
   if (loadFactor !== undefined) {
-    return (userBiometrics.bodyweight || 0) * loadFactor + (parseFloat(workout.externalLoad) || 0);
+    return (global.userBiometrics.bodyweight || 0) * loadFactor + (parseFloat(workout.externalLoad) || 0);
   }
   return parseFloat(workout.weight) || 0;
 });

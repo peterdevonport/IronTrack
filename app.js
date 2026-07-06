@@ -6,7 +6,7 @@ import { getExerciseInfo, getDisplayName, EXERCISE_CATALOG, LOAD_FACTORS } from 
 import { getMonday, countActiveDays, countConsecutiveDays, toLocalDateKey } from './date.js';
 import { formatMovementLoad, formatCardDate, formatWorkoutType, formatDotsScore, formatMovementWeight } from './formatting.js';
 import { computeDotsScore, computeSinclairScore, getRankingTier, formatScore_ROUNDS_AND_REPS, formatScore_COMPLETED_MINUTES, formatScore_TIME_SECONDS, describeAmrap, describeEmom, describeForTime, describeInterval, buildWorkoutDescription, buildWorkoutSummaryLine, getRepsPerRound } from './analytics.js';
-import { clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, saveExpandedCardIds, restoreExpandedCardIds, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, changeGenericPage } from './ui.js';
+import { clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, saveExpandedCardIds, restoreExpandedCardIds, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, changeGenericPage, switchTab } from './ui.js';
 import { buildWmsField, applyFieldAttributes, renderFormFields, renderOnboarding1RMItem, renderOnboarding1RMList, renderCalcEntry, renderCalcEntries, renderPlanMovementItem, renderPlanMovements, renderMovementChips, renderEmomChips, renderCalendarWorkoutItem, renderVolumeBar, renderMinuteSlotInner, renderShareFriendItem, renderRegistryRow, renderLeaderboardEmptyRow, buildCalendarDayHtml, workoutToLogHtml, renderWorkoutCard, renderStructuredWorkoutCard, renderPlanCard, renderSharedPlanCard, friendToHtml, buildLeaderboardRow } from './rendering.js';
 import { getSchemaKey, computeTotalLoad, pullProfileMetrics, refreshPBForm, processWorkoutSnapshot, updateCaches } from './auth.js';
 import { showOnboarding, hideOnboarding, addOnboarding1RM } from './onboarding.js';
@@ -29,21 +29,6 @@ if (typeof lucide !== 'undefined' && lucide.createIcons) {
 // Volume History State (Issue #38)
 
 // ─── Schema-Driven Form Layouts ──────────────────────────────────────────────
-
-function switchTab(tabName) {
-  if (tabName === 'profile') {
-    openProfileModal();
-    return;
-  }
-  tabContents.forEach(el => el.classList.remove('active'));
-  const target = document.getElementById('tab-' + tabName);
-  if (target) target.classList.add('active');
-  navTabs.forEach(el => el.classList.remove('active'));
-  const btn = document.querySelector('.nav-tab[data-tab="' + tabName + '"]');
-  if (btn) btn.classList.add('active');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-  state.ui.currentTab = tabName;
-}
 
 navTabs.forEach(btn => {
   btn.addEventListener('click', () => switchTab(btn.dataset.tab));
@@ -121,7 +106,6 @@ function handleSignedOut() {
   document.getElementById('sinclair-tier').innerText = '-';
   state.social.userFriendsList = [];
   state.social.friendDisplayCache = {};
-  sharedPlanId = null;
   state.pagination.friends = 1;
   state.pagination.sharedPlans = 1;
   state.ui.plansFilter = 'mine';
@@ -781,8 +765,8 @@ function updateCalcPreview() {
         return;
     }
 
-    let weight = null;
-    let detail = '';
+    let weight;
+    let detail;
 
     if (currentCalcMode === 'pct') {
         const pctInput = document.getElementById('calc-pct-input');

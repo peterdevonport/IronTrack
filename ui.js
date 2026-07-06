@@ -1,4 +1,4 @@
-import { state, paginationControls, currentPageDisplay, totalPagesDisplay, prevPageBtn, nextPageBtn, profileModal } from './state.js';
+import { state, paginationControls, currentPageDisplay, totalPagesDisplay, prevPageBtn, nextPageBtn, profileModal, tabContents, navTabs } from './state.js';
 import { escapeHtml } from './dom.js';
 import { EXERCISE_CATALOG } from './exercise-data.js';
 
@@ -67,7 +67,7 @@ function updateCalTodayBtnState() {
     const btn = document.getElementById('cal-today');
     if (!btn) return;
     const now = new Date();
-    let isCurrent = false;
+    let isCurrent;
     if (state.calendar.compact) {
         isCurrent = state.calendar.weekOffset === 0;
     } else {
@@ -273,4 +273,19 @@ function changeGenericPage(paginationKey, list, perPage, renderFn, direction) {
   renderFn();
 }
 
-export { clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, saveExpandedCardIds, restoreExpandedCardIds, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, changeGenericPage };
+function switchTab(tabName) {
+  if (tabName === 'profile') {
+    openProfileModal();
+    return;
+  }
+  tabContents.forEach(el => el.classList.remove('active'));
+  const target = document.getElementById('tab-' + tabName);
+  if (target) target.classList.add('active');
+  navTabs.forEach(el => el.classList.remove('active'));
+  const btn = document.querySelector('.nav-tab[data-tab="' + tabName + '"]');
+  if (btn) btn.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  state.ui.currentTab = tabName;
+}
+
+export { clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, saveExpandedCardIds, restoreExpandedCardIds, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, changeGenericPage, switchTab };

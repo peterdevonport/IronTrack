@@ -5,6 +5,7 @@ import { formatMovementLoad, formatCardDate, formatWorkoutType, formatDotsScore 
 import { getDisplayName, EXERCISE_CATALOG } from './exercise-data.js';
 import { buildWorkoutSummaryLine } from './analytics.js';
 import { renderEmptyState } from './ui.js';
+import { togglePlanWms } from './plans.js';
 
 function buildWmsField(wrapper, fields, grid) {
   const labelRow = document.createElement('div');
@@ -249,7 +250,6 @@ function renderPlanMovements() {
       weight = oneRM > 0 ? Math.round(estimateWeightForReps(oneRM, m.reps + rir)) : m.weight;
       source = `${m.reps}x ${m.exerciseId} @ RPE ${m.rpe} (${weight}kg)`;
     } else {
-      weight = m.weight;
       source = `${m.reps}x ${m.exerciseId} @ ${m.weight}kg`;
     }
     html += renderPlanMovementItem(source, i);

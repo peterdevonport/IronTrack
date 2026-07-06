@@ -16,7 +16,7 @@ function escapeHtml(text) {
 }
 
 function haptic(pattern) {
-    try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (_) {}
+    try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (_) { /* ignore */ }
 }
 
 export { debounce, escapeHtml, haptic };

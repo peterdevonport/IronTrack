@@ -619,7 +619,7 @@ function buildSharedPlanDocument(fUid, content, displayName) {
 }
 
 function buildQrShareUrl(docRefId) {
-  const base = window.location.pathname.replace(/\/?[^\/]*$/, '/');
+  const base = window.location.pathname.replace(/\/?[^/]*$/, '/');
   return window.location.origin + base + '?claimPlan=' + docRefId;
 }
 
@@ -752,7 +752,7 @@ function renderSharedPlansUI() {
 
   const expandedIds = saveExpandedCardIds();
 
-  let items = [];
+  let items;
   if (state.ui.plansFilter === 'favorites') {
     const favoritedOwn = state.data.lastWorkoutPlans.filter(p => p.favorite === true).map(p => ({ type: 'own', plan: p }));
     const favoritedShared = state.data.lastSharedPlans.filter(s => s.favorite === true).map(s => ({ type: 'shared', share: s }));
