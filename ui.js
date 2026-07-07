@@ -113,7 +113,7 @@ function updateStarIcon(id, isFav) {
 function toggleSelectAllFriends() {
   const selectAll = document.getElementById('share-select-all');
   const checked = selectAll?.checked ?? false;
-  document.querySelectorAll('.share-friend-checkbox').forEach(cb => cb.checked = checked);
+  document.querySelectorAll('.share-friend-checkbox').forEach(cb => { cb.checked = checked; });
 }
 
 function buildExerciseOptionsHtml(categories, placeholder) {
@@ -257,7 +257,7 @@ function enableSwipe(container, { onSwipeLeft, onSwipeRight, threshold = 50 }) {
     const dy = e.changedTouches[0].clientY - startY;
     const elapsed = Date.now() - startTime;
     if (Math.abs(dx) > threshold && Math.abs(dx) > Math.abs(dy) * 1.5 && elapsed < 500) {
-      dx < 0 ? onSwipeLeft?.() : onSwipeRight?.();
+      if (dx < 0) onSwipeLeft?.(); else onSwipeRight?.();
     }
   }, { passive: true });
 }

@@ -182,7 +182,8 @@ function setupTrainingTab(w) {
   const fortimeEl = document.getElementById('log-result-fortime');
   if (fortimeEl) fortimeEl.classList.toggle('hidden', type !== 'FOR_TIME');
   if (type === 'FOR_TIME') {
-    document.getElementById('fortime-dnf') && (document.getElementById('fortime-dnf').checked = false);
+    const fortimeDnf = document.getElementById('fortime-dnf');
+    if (fortimeDnf) fortimeDnf.checked = false;
     document.getElementById('fortime-cap-reps-container')?.classList.add('hidden');
     document.getElementById('fortime-minutes')?.toggleAttribute('required', true);
     document.getElementById('fortime-seconds')?.toggleAttribute('required', true);

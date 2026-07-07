@@ -52,7 +52,7 @@ function renderCalcEntry(source, weight, exercise, idx) {
 function renderCalcEntries() {
     const entriesList = document.getElementById('calc-entries-list');
     if (!entriesList) return;
-    let allEntries = [];
+    const allEntries = [];
     for (const [exercise, entries] of Object.entries(state.data.calcEntriesByLift)) {
         entries.forEach((entry, idx) => {
             allEntries.push({ ...entry, exercise, idx });
