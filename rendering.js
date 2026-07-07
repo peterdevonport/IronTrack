@@ -5,7 +5,6 @@ import { formatMovementLoad, formatCardDate, formatWorkoutType, formatDotsScore 
 import { getDisplayName, EXERCISE_CATALOG } from './exercise-data.js';
 import { buildWorkoutSummaryLine } from './analytics.js';
 import { renderEmptyState } from './ui.js';
-import { togglePlanWms } from './plans.js';
 
 function renderOnboarding1RMItem(item, index) {
   const repLabel = item.reps > 1 ? ` @ ${item.reps} reps` : '';
