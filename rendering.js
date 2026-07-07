@@ -1,6 +1,6 @@
 import { state, INPUT_CLASS, CALC_CLASS, onboardingList } from './state.js';
 import { escapeHtml } from './dom.js';
-import { estimate1RM, estimateWeightForReps, getEffectiveLoad } from './math.js';
+import { estimate1RM, estimateWeightForReps, getEffectiveLoad, computeDisplayWeight } from './math.js';
 import { formatMovementLoad, formatCardDate, formatWorkoutType, formatDotsScore } from './formatting.js';
 import { getDisplayName, EXERCISE_CATALOG } from './exercise-data.js';
 import { buildWorkoutSummaryLine } from './analytics.js';
@@ -102,13 +102,11 @@ function renderPlanMovements() {
   let html = '';
   state.builder.workoutMovements.forEach((m, i) => {
     const oneRM = state.cache.activeRecords[m.exerciseId] || 0;
-    let source, weight;
+    const weight = computeDisplayWeight(m, oneRM);
+    let source;
     if (m.weightMode === 'pct' && m.pct) {
-      weight = oneRM > 0 ? Math.round(oneRM * m.pct / 100) : m.weight;
       source = `${m.reps}x ${m.exerciseId} @ ${m.pct}% 1RM (${weight}kg)`;
     } else if (m.weightMode === 'rpe' && m.rpe) {
-      const rir = 10 - m.rpe;
-      weight = oneRM > 0 ? Math.round(estimateWeightForReps(oneRM, m.reps + rir)) : m.weight;
       source = `${m.reps}x ${m.exerciseId} @ RPE ${m.rpe} (${weight}kg)`;
     } else {
       source = `${m.reps}x ${m.exerciseId} @ ${m.weight}kg`;

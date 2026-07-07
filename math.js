@@ -10,6 +10,17 @@ function estimateWeightForReps(oneRM, reps) {
   return oneRM / (1 + reps / EPLEY_CONSTANT);
 }
 
+function computeDisplayWeight(movement, oneRM) {
+  if (movement.weightMode === 'pct' && movement.pct) {
+    return oneRM > 0 ? Math.round(oneRM * movement.pct / 100) : movement.weight;
+  }
+  if (movement.weightMode === 'rpe' && movement.rpe) {
+    const rir = 10 - movement.rpe;
+    return oneRM > 0 ? Math.round(estimateWeightForReps(oneRM, movement.reps + rir)) : movement.weight;
+  }
+  return movement.weight;
+}
+
 function computeEffectiveLoad(exercise, weight, externalLoad, bodyweight) {
   const loadFactor = LOAD_FACTORS[exercise];
   if (loadFactor !== undefined) {
@@ -30,4 +41,4 @@ function getEffectiveLoad(workout) {
   );
 }
 
-export { estimate1RM, estimateWeightForReps, computeEffectiveLoad, getEffectiveLoad };
+export { estimate1RM, estimateWeightForReps, computeEffectiveLoad, getEffectiveLoad, computeDisplayWeight };
