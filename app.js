@@ -9,7 +9,7 @@ import { computeDotsScore, computeSinclairScore, getRankingTier, formatScore_ROU
 import { clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, saveExpandedCardIds, restoreExpandedCardIds, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, changeGenericPage, switchTab } from './ui.js';
 import { buildWmsField, applyFieldAttributes, renderFormFields } from './forms.js';
 import { renderOnboarding1RMItem, renderOnboarding1RMList, renderCalcEntry, renderCalcEntries, renderPlanMovementItem, renderPlanMovements, renderMovementChips, renderEmomChips, renderCalendarWorkoutItem, renderVolumeBar, renderMinuteSlotInner, renderShareFriendItem, renderRegistryRow, renderLeaderboardEmptyRow, buildCalendarDayHtml, workoutToLogHtml, renderWorkoutCard, renderStructuredWorkoutCard, renderPlanCard, renderSharedPlanCard, friendToHtml, buildLeaderboardRow } from './rendering.js';
-import { getSchemaKey, computeTotalLoad, pullProfileMetrics, refreshPBForm, processWorkoutSnapshot, updateCaches } from './auth.js';
+import { getSchemaKey, computeTotalLoad, pullProfileMetrics, refreshPBForm, processWorkoutSnapshot, updateCaches, logPB } from './auth.js';
 import { showOnboarding, hideOnboarding, addOnboarding1RM } from './onboarding.js';
 import { computeAndSyncDailyActivity, renderConsistencyUI, calculateChallengeProgress, renderChallengeCards, loadConsistencyConfig, getPreviousPeriodId, calculateStreakFromPeriods, renderStreakUI, updateChallengeStreaks, renderCalendar, updateConsistencyMetrics, getWorkoutsForDate, selectCalendarDay, changeCalendarNav, applyCalendarNav, autoSelectFirstActiveDay, goToCalendarToday, toggleCalendarView, closeCalendarDayDetail } from './calendar.js';
 import { renderLogs, getWeekStart, getWeekEnd, computeDailyBuckets, computeWeeklyBuckets, computeMonthlyBuckets, computeYearlyBuckets, computeVolumeHistory, formatRangeLabel, renderVolumeHistory, switchVolumePeriod, shiftVolumePeriod, goToCurrentPeriod, populateVolumeFilter, onVolumeFilterChange } from './volume.js';
@@ -24,6 +24,26 @@ let unsubscribeLogs = null;
 let pendingOnboarding1RMs = [];
 let urlParamsProcessed = false;
 let listenersAttached = false;
+
+
+function showForgotPassword() {
+  authFormContainer.classList.add('hidden');
+  forgotPasswordSection.classList.remove('hidden');
+  forgotPasswordEmail.value = emailInput.value || '';
+  forgotPasswordEmail.focus();
+  forgotPasswordFeedback.textContent = '';
+  forgotPasswordFeedback.className = 'text-xs text-slate-500 font-medium text-center h-4';
+}
+
+function showAuthForm() {
+  forgotPasswordSection.classList.add('hidden');
+  authFormContainer.classList.remove('hidden');
+  forgotPasswordFeedback.textContent = '';
+  forgotPasswordFeedback.className = 'text-xs text-slate-500 font-medium text-center h-4';
+}
+
+function enableSaveOnDirty() { saveProfileBtn.disabled = false; }
+
 
 // Initialize Lucide icons
 if (typeof lucide !== 'undefined' && lucide.createIcons) {
@@ -223,22 +243,6 @@ const forgotPasswordCancel = document.getElementById('forgot-password-cancel');
 const forgotPasswordFeedback = document.getElementById('forgot-password-feedback');
 const authFormContainer = document.getElementById('auth-form-container');
 
-function showForgotPassword() {
-  authFormContainer.classList.add('hidden');
-  forgotPasswordSection.classList.remove('hidden');
-  forgotPasswordEmail.value = emailInput.value || '';
-  forgotPasswordEmail.focus();
-  forgotPasswordFeedback.textContent = '';
-  forgotPasswordFeedback.className = 'text-xs text-slate-500 font-medium text-center h-4';
-}
-
-function showAuthForm() {
-  forgotPasswordSection.classList.add('hidden');
-  authFormContainer.classList.remove('hidden');
-  forgotPasswordFeedback.textContent = '';
-  forgotPasswordFeedback.className = 'text-xs text-slate-500 font-medium text-center h-4';
-}
-
 if (forgotPasswordBtn) {
   forgotPasswordBtn.addEventListener('click', showForgotPassword);
 }
@@ -363,70 +367,6 @@ async function saveOnboarding() {
     }
 }
 
-async function logPB() {
-    if (!currentUser) return;
-    const exercise = pbLogExercise?.value;
-    if (!exercise) {
-        showFeedback('Please select an exercise.', 'red', 'pb-log-feedback');
-        return;
-    }
-    const schemaKey = getSchemaKey(exercise);
-    let weight, externalLoad = 0, estimatedLoad;
-    const bw = state.user.userBiometrics.bodyweight || 0;
-    if (schemaKey === 'bodyweight') {
-      weight = parseFloat(document.getElementById('pb-bodyweight')?.value) || bw;
-      estimatedLoad = computeEffectiveLoad(exercise, weight, 0, bw);
-    } else if (schemaKey === 'weighted') {
-      weight = parseFloat(document.getElementById('pb-bodyweight')?.value) || bw;
-      externalLoad = parseFloat(document.getElementById('pb-ext-load')?.value) || 0;
-      estimatedLoad = computeEffectiveLoad(exercise, weight, externalLoad, bw);
-      weight += externalLoad;
-    } else {
-      weight = parseFloat(document.getElementById('pb-weight')?.value);
-      estimatedLoad = computeEffectiveLoad(exercise, weight, 0, bw);
-    }
-    const reps = parseInt(document.getElementById('pb-reps')?.value, 10) || 1;
-
-    let storedExercise = exercise;
-    if (exercise === 'Pull Up' && externalLoad > 0) {
-        storedExercise = 'Pull Up (Weighted)';
-    }
-
-    if (!weight || weight <= 0) {
-        showFeedback('Please enter a valid weight.', 'red', 'pb-log-feedback');
-        return;
-    }
-
-    if (pbLogBtn) pbLogBtn.disabled = true;
-
-    try {
-        const logEntry = {
-            userId: currentUser.uid,
-            exercise: storedExercise,
-            sets: 1,
-            reps,
-            weight,
-            externalLoad,
-            estimatedLoad,
-            totalVolume: estimatedLoad * reps,
-            timestamp: Timestamp.now(),
-            source: 'pb-log',
-            isInitialMax: false
-        };
-        await addDoc(collection(db, "workouts"), logEntry);
-
-        pbLogExercise.value = '';
-        refreshPBForm(FORM_SCHEMAS);
-        showFeedback('Record logged! It will appear in your records.', 'emerald', 'pb-log-feedback');
-        haptic(HAPTIC.confirm);
-    } catch (err) {
-        console.error('Failed to log record', err.code, err.message);
-        showFeedback('Failed to log record: ' + err.message, 'red', 'pb-log-feedback');
-    } finally {
-        if (pbLogBtn) pbLogBtn.disabled = false;
-    }
-}
-
 profileForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!currentUser) return;
@@ -457,7 +397,7 @@ profileForm.addEventListener('submit', async (e) => {
 // ── Profile form dirty-state tracking ────────────────────────
 const saveProfileBtn = document.getElementById('save-profile-btn');
 const profileFields = ['profile-display-name', 'profile-gender', 'profile-weight'];
-function enableSaveOnDirty() { saveProfileBtn.disabled = false; }
+
 profileFields.forEach(id => {
   const el = document.getElementById(id);
   if (el) {
