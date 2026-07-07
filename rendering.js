@@ -1,7 +1,7 @@
 import { state, INPUT_CLASS, CALC_CLASS, onboardingList } from './state.js';
 import { escapeHtml } from './dom.js';
-import { estimate1RM, estimateWeightForReps, getEffectiveLoad, computeDisplayWeight } from './math.js';
-import { formatMovementLoad, formatCardDate, formatWorkoutType, formatDotsScore } from './formatting.js';
+import { estimate1RM, estimateWeightForReps, getEffectiveLoad } from './math.js';
+import { formatMovementLoad, formatCardDate, formatWorkoutType, formatDotsScore, formatMovementDisplay } from './formatting.js';
 import { getDisplayName, EXERCISE_CATALOG } from './exercise-data.js';
 import { buildWorkoutSummaryLine } from './analytics.js';
 import { renderEmptyState } from './ui.js';
@@ -101,16 +101,7 @@ function renderPlanMovements() {
   let html = '';
   state.builder.workoutMovements.forEach((m, i) => {
     const oneRM = state.cache.activeRecords[m.exerciseId] || 0;
-    const weight = computeDisplayWeight(m, oneRM);
-    let source;
-    if (m.weightMode === 'pct' && m.pct) {
-      source = `${m.reps}x ${m.exerciseId} @ ${m.pct}% 1RM (${weight}kg)`;
-    } else if (m.weightMode === 'rpe' && m.rpe) {
-      source = `${m.reps}x ${m.exerciseId} @ RPE ${m.rpe} (${weight}kg)`;
-    } else {
-      source = `${m.reps}x ${m.exerciseId} @ ${m.weight}kg`;
-    }
-    html += renderPlanMovementItem(source, i);
+    html += renderPlanMovementItem(formatMovementDisplay(m, oneRM), i);
   });
   list.innerHTML = html;
   if (typeof lucide !== 'undefined') lucide.createIcons();

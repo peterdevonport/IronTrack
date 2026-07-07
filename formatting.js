@@ -40,4 +40,15 @@ function formatMovementWeight(m) {
   return '';
 }
 
-export { formatMovementLoad, formatCardDate, formatWorkoutType, formatDotsScore, formatMovementWeight };
+function formatMovementDisplay(m, oneRM) {
+  const weight = computeDisplayWeight(m, oneRM);
+  if (m.weightMode === 'pct' && m.pct) {
+    return `${m.reps}x ${m.exerciseId} @ ${m.pct}% 1RM (${weight}kg)`;
+  }
+  if (m.weightMode === 'rpe' && m.rpe) {
+    return `${m.reps}x ${m.exerciseId} @ RPE ${m.rpe} (${weight}kg)`;
+  }
+  return `${m.reps}x ${m.exerciseId} @ ${m.weight}kg`;
+}
+
+export { formatMovementLoad, formatCardDate, formatWorkoutType, formatDotsScore, formatMovementWeight, formatMovementDisplay };
