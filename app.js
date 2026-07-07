@@ -25,7 +25,6 @@ let pendingOnboarding1RMs = [];
 let urlParamsProcessed = false;
 let listenersAttached = false;
 
-
 function showForgotPassword() {
   authFormContainer.classList.add('hidden');
   forgotPasswordSection.classList.remove('hidden');
@@ -43,26 +42,15 @@ function showAuthForm() {
 }
 
 function enableSaveOnDirty() { saveProfileBtn.disabled = false; }
-
-
-// Initialize Lucide icons
 if (typeof lucide !== 'undefined' && lucide.createIcons) {
   lucide.createIcons();
 }
 
-// Volume History State (Issue #38)
-
-// ─── Schema-Driven Form Layouts ──────────────────────────────────────────────
-
 navTabs.forEach(btn => {
   btn.addEventListener('click', () => switchTab(btn.dataset.tab));
 });
-
-// Extract pending friend request from URL before any auth redirect clears it
 const pendingFriendUid = new URLSearchParams(window.location.search).get('addFriend');
 const pendingClaimPlanId = new URLSearchParams(window.location.search).get('claimPlan');
-
-// Authentication State Listener
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
   if (user) {
@@ -173,8 +161,6 @@ async function processUrlParams() {
     window.history.replaceState({}, document.title, window.location.pathname);
   }
 }
-
-// Email Core Auth Handlers
 loginBtn.addEventListener('click', async () => {
     const email = emailInput.value.trim();
     const password = passwordInput.value;
@@ -206,8 +192,6 @@ signupBtn.addEventListener('click', async () => {
 });
 
 authBtn.addEventListener('click', () => { if (currentUser && confirm("Sign out?")) signOut(auth); });
-
-// Toggle Password Visibility
 const togglePasswordBtn = document.getElementById('toggle-password-btn');
 const eyeIcon = document.getElementById('eye-icon');
 const eyeOffIcon = document.getElementById('eye-off-icon');
@@ -233,8 +217,6 @@ document.querySelectorAll('.toggle-pw-btn').forEach(btn => {
     btn.setAttribute('aria-pressed', String(!isPassword));
   });
 });
-
-// Forgot Password Flow
 const forgotPasswordBtn = document.getElementById('forgot-password-btn');
 const forgotPasswordSection = document.getElementById('forgot-password-section');
 const forgotPasswordEmail = document.getElementById('forgot-password-email');
@@ -393,8 +375,6 @@ profileForm.addEventListener('submit', async (e) => {
         showFeedback('Unable to update profile: ' + err.message, 'red', 'profileFeedback');
     }
 });
-
-// ── Profile form dirty-state tracking ────────────────────────
 const saveProfileBtn = document.getElementById('save-profile-btn');
 const profileFields = ['profile-display-name', 'profile-gender', 'profile-weight'];
 
@@ -405,8 +385,6 @@ profileFields.forEach(id => {
     el.addEventListener('change', enableSaveOnDirty);
   }
 });
-
-// ── Change Password ────────────────────────────────────────────
 const changePasswordBtn = document.getElementById('change-password-btn');
 const changePasswordForm = document.getElementById('change-password-form');
 const cpCurrent = document.getElementById('cp-current');
@@ -496,8 +474,6 @@ if (cpUpdate) {
     }
   });
 }
-
-// ── Delete Account ─────────────────────────────────────────────
 const deleteAccountBtn = document.getElementById('delete-account-btn');
 
 if (deleteAccountBtn) {
@@ -531,15 +507,12 @@ if (deleteAccountBtn) {
     }
   });
 }
-
-// Onboarding Event Listeners
 if (onboardingAddBtn) {
     onboardingAddBtn.addEventListener('click', () => addOnboarding1RM(pendingOnboarding1RMs));
 }
 if (onboardingSaveBtn) {
     onboardingSaveBtn.addEventListener('click', saveOnboarding);
 }
-// Allow pressing Enter in weight input to trigger add
 if (onboardingWeightInput) {
     onboardingWeightInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') { e.preventDefault(); addOnboarding1RM(pendingOnboarding1RMs); }
@@ -550,8 +523,6 @@ if (onboardingExerciseSelect) {
         if (e.key === 'Enter') { e.preventDefault(); addOnboarding1RM(pendingOnboarding1RMs); }
     });
 }
-
-// PB Log Event Listeners
 if (pbLogBtn) {
     pbLogBtn.addEventListener('click', logPB);
 }
@@ -561,7 +532,6 @@ if (pbLogExercise) {
         if (e.key === 'Enter') { e.preventDefault(); logPB(); }
     });
 }
-// Delegate Enter key on recreated PB inputs
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && e.target.closest('#pb-log-fields')) {
         e.preventDefault();
@@ -590,19 +560,13 @@ if (workoutFilter) {
     renderLogs(state.data.lastWorkouts);
   });
 }
-
-// Wire exercise dropdown change
 if (exerciseSelect) {
   exerciseSelect.addEventListener('change', refreshLogSetForm);
 }
-
-// Populate exercise dropdown on load
 populateExerciseDropdown();
 populateLiftSelectors();
 refreshLogSetForm();
 refreshPBForm(FORM_SCHEMAS);
-
-// Wire calculator events
 const calcLiftSelect = document.getElementById('calc-lift-select');
 const calcPctInput = document.getElementById('calc-pct-input');
 const calcRpeReps = document.getElementById('calc-rpe-reps');
@@ -640,8 +604,6 @@ if (calcAddBtn) {
 if (calcClearBtn) {
     calcClearBtn.addEventListener('click', handleCalcClear);
 }
-
-// Wire PB / 1RM chips (toggle buttons) - use dataset.active as single source of truth
 const chipPBEl = document.getElementById('chip-pb'); //
 const chip1RMEl = document.getElementById('chip-1rm'); //
 
@@ -650,8 +612,6 @@ if (chipPBEl) {
   chipPBEl.addEventListener('click', () => {
     const active = chipPBEl.dataset.active !== 'true'; //
     chipPBEl.dataset.active = active ? 'true' : 'false'; //
-    
-    // Toggle class state cleanly based on status
     chipPBEl.classList.toggle('is-active', active);
     
     state.pagination.workouts = 1; //
@@ -664,16 +624,12 @@ if (chip1RMEl) {
   chip1RMEl.addEventListener('click', () => {
     const active = chip1RMEl.dataset.active !== 'true'; //
     chip1RMEl.dataset.active = active ? 'true' : 'false'; //
-    
-    // Toggle class state cleanly based on status
     chip1RMEl.classList.toggle('is-active', active);
     
     state.pagination.workouts = 1; //
     renderLogs(state.data.lastWorkouts); //
   });
 }
-
-// Add Log Submission
 workoutForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!currentUser) return alert('Please sign in before logging a workout.');
@@ -718,14 +674,10 @@ workoutForm.addEventListener('submit', async (e) => {
         alert(`Failed to save workout: ${err.message}`);
     }
 });
-
-// AMRAP Score Preview
 const amrapRounds = document.getElementById('amrap-rounds');
 const amrapAdditional = document.getElementById('amrap-additional-reps');
 if (amrapRounds) amrapRounds.addEventListener('input', updateAmrapScorePreview);
 if (amrapAdditional) amrapAdditional.addEventListener('input', updateAmrapScorePreview);
-
-// EMOM Score Preview
 const emomRoundsCompleted = document.getElementById('emom-rounds-completed');
 const emomRounds = document.getElementById('emom-rounds');
 const emomIntervalMin = document.getElementById('emom-interval-min');
@@ -734,8 +686,6 @@ if (emomRoundsCompleted) emomRoundsCompleted.addEventListener('input', updateEmo
 if (emomRounds) emomRounds.addEventListener('input', () => { updateEmomScorePreview(); updateEmomSummary(); updateEmomDurationDisplay(); });
 if (emomIntervalMin) emomIntervalMin.addEventListener('input', () => { updateEmomSummary(); updateEmomDurationDisplay(); });
 if (emomIntervalSec) emomIntervalSec.addEventListener('input', () => { updateEmomSummary(); updateEmomDurationDisplay(); });
-
-// FOR_TIME Score Preview
 const fortimeMinutes = document.getElementById('fortime-minutes');
 const fortimeSeconds = document.getElementById('fortime-seconds');
 const fortimeDnf = document.getElementById('fortime-dnf');
@@ -744,31 +694,15 @@ if (fortimeMinutes) fortimeMinutes.addEventListener('input', updateForTimeScoreP
 if (fortimeSeconds) fortimeSeconds.addEventListener('input', updateForTimeScorePreview);
 if (fortimeDnf) fortimeDnf.addEventListener('change', updateForTimeScorePreview);
 if (fortimeCapReps) fortimeCapReps.addEventListener('input', updateForTimeScorePreview);
-
-// Initial movement row for FOR_TIME
-if (document.getElementById('fortime-movement-list')) {
-    // Removed - uses unified Add Movement form
-  }
-
-  // Unified Log Score Preview
 const logRoundsInput = document.getElementById('log-rounds');
 const logPartialInput = document.getElementById('log-partial-reps');
 if (logRoundsInput) { logRoundsInput.addEventListener('input', updateLogScorePreview); logRoundsInput.addEventListener('input', updateLogWorkoutButtonState); logRoundsInput.addEventListener('input', recalcForTimeRemaining); }
 if (logPartialInput) { logPartialInput.addEventListener('input', updateLogScorePreview); logPartialInput.addEventListener('input', updateLogWorkoutButtonState); logPartialInput.addEventListener('input', recalcForTimeRemaining); }
 document.getElementById('fortime-cap-reps')?.addEventListener('input', updateLogScorePreview);
-
-// Initial movement row for INTERVAL
-if (document.getElementById('interval-movement-list')) {
-    // Removed - uses unified Add Movement form
-  }
-
-  // EMOM mode toggle
 const emomModeSeq = document.getElementById('emom-mode-seq');
 const emomModeByRound = document.getElementById('emom-mode-by-round');
 if (emomModeSeq) emomModeSeq.addEventListener('click', () => switchEmomMode('sequence'));
 if (emomModeByRound) emomModeByRound.addEventListener('click', () => switchEmomMode('by_round'));
-
-// EMOM minute slot changes re-trigger summary etc.
 const emomMinuteSlots = document.getElementById('emom-minute-slots');
 if (emomMinuteSlots) {
   emomMinuteSlots.addEventListener('change', () => {
@@ -778,12 +712,6 @@ if (emomMinuteSlots) {
   });
 }
 
-// Initial minute row for EMOM
-if (document.getElementById('emom-minute-slots')) {
-  // Removed - slots created via Add Movement form
-}
-
-// Real-time calc recalculation for the unified plan form
 document.addEventListener('input', (e) => {
   const input = e.target;
   if (input.id === 'plan-weight' || input.id === 'plan-reps') {
@@ -793,26 +721,18 @@ document.addEventListener('input', (e) => {
 
 populateMovementDropdowns();
 refreshPlanForm();
-
-// Structured Workout Pagination
 const prevStructuredBtn = document.getElementById('prev-structured-page-btn');
 const nextStructuredBtn = document.getElementById('next-structured-page-btn');
 if (prevStructuredBtn) prevStructuredBtn.addEventListener('click', () => changeStructuredPage('prev'));
 if (nextStructuredBtn) nextStructuredBtn.addEventListener('click', () => changeStructuredPage('next'));
-
-// Friends Pagination
 const prevFriendsBtn = document.getElementById('prev-friends-page-btn');
 const nextFriendsBtn = document.getElementById('next-friends-page-btn');
 if (prevFriendsBtn) prevFriendsBtn.addEventListener('click', () => changeFriendsPage('prev'));
 if (nextFriendsBtn) nextFriendsBtn.addEventListener('click', () => changeFriendsPage('next'));
-
-// Plans Pagination
 const prevPlansBtn = document.getElementById('prev-plans-page-btn');
 const nextPlansBtn = document.getElementById('next-plans-page-btn');
 if (prevPlansBtn) prevPlansBtn.addEventListener('click', () => changePlansPage('prev'));
 if (nextPlansBtn) nextPlansBtn.addEventListener('click', () => changePlansPage('next'));
-
-// Share Modal
 const shareSendBtn = document.getElementById('share-plan-send');
 const shareCancelBtn = document.getElementById('share-plan-cancel');
 if (shareSendBtn) shareSendBtn.addEventListener('click', () => shareWithFriends());
@@ -822,21 +742,12 @@ if (shareCancelBtn) shareCancelBtn.addEventListener('click', () => {
   clearChildren(document.getElementById('share-qr-display'));
   state.share.sharePlanId = null;
 });
-
-// Shared Plans Pagination
 const prevSharedPlansBtn = document.getElementById('prev-shared-plans-page-btn');
 const nextSharedPlansBtn = document.getElementById('next-shared-plans-page-btn');
 if (prevSharedPlansBtn) prevSharedPlansBtn.addEventListener('click', () => changeSharedPlansPage('prev'));
 if (nextSharedPlansBtn) nextSharedPlansBtn.addEventListener('click', () => changeSharedPlansPage('next'));
 
-// Initial movement row
-if (document.getElementById('movement-list')) {
-  // Removed - uses unified Add Movement form
-}
-
 ;
-
-// ── Action Handler Registry (replaces window.* inline onclick exports) ──
 const actionHandlers = {
   'calc-remove':                (el) => handleCalcRemove(el),
   'remove-minute-slot':         (el) => removeMinuteSlot(el),
@@ -879,8 +790,6 @@ enableSwipe(document.getElementById('cal-grid-container'), {
   onSwipeLeft: () => changeCalendarNav(1),
   onSwipeRight: () => changeCalendarNav(-1)
 });
-
-// Profile Modal
 const modalClose = document.getElementById('profile-modal-close');
 const modalBackdrop = document.getElementById('profile-modal-backdrop');
 
@@ -901,66 +810,40 @@ document.addEventListener('keydown', (e) => {
     closeProfileModal();
   }
 });
-
-// CSP-compliant event handler bindings
 function initCSPHandlers() {
   const bind = (id, event, handler) => {
     const el = document.getElementById(id);
     if (el) el.addEventListener(event, handler);
   };
-
-  // Calendar
   bind('cal-prev-month', 'click', () => changeCalendarNav(-1));
   bind('cal-today', 'click', goToCalendarToday);
   bind('cal-next-month', 'click', () => changeCalendarNav(1));
   bind('cal-toggle-view', 'click', toggleCalendarView);
   bind('cal-day-detail-close', 'click', closeCalendarDayDetail);
-
-  // Plans filters
   bind('plans-filter-mine', 'click', () => switchPlansFilter('mine'));
   bind('plans-filter-shared', 'click', () => switchPlansFilter('shared'));
   bind('plans-filter-favorites', 'click', () => switchPlansFilter('favorites'));
-
-  // Leaderboard
   bind('btnGlobalBoard', 'click', () => switchLeaderboardScope('global'));
   bind('btnFriendsBoard', 'click', () => switchLeaderboardScope('friends'));
   bind('btnFormulaDots', 'click', () => switchLeaderboardFormula('dots'));
   bind('btnFormulaSinclair', 'click', () => switchLeaderboardFormula('sinclair'));
   bind('leaderboard-expand-btn', 'click', toggleLeaderboardExpand);
-
-  // Training tab
   bind('log-round-btn', 'click', logRound);
   bind('log-rep-btn', 'click', logRep);
   bind('log-workout-btn', 'click', submitPendingWorkout);
-
-  // FOR_TIME
   bind('fortime-dnf', 'change', toggleForTimeDnf);
-
-  // Share modal
   bind('share-mode-friends', 'click', () => switchShareMode('friends'));
   bind('share-mode-qr', 'click', () => switchShareMode('qr'));
   bind('share-select-all', 'change', toggleSelectAllFriends);
-
-  // Calculator
   bind('calc-mode-pct', 'click', () => switchCalcMode('pct'));
   bind('calc-mode-rpe', 'click', () => switchCalcMode('rpe'));
-
-  // Workout type
   bind('workout-type', 'change', handleWorkoutTypeChange);
-
-  // EMOM modes
   bind('emom-mode-seq', 'click', () => switchEmomMode('sequence'));
   bind('emom-mode-by-round', 'click', () => switchEmomMode('by_round'));
-
-  // Plan exercise
   bind('plan-exercise', 'change', handlePlanExerciseChange);
   bind('plan-add-btn', 'click', handlePlanAdd);
-
-  // Plan/Save buttons in training tab
   bind('btn-do-workout', 'click', doWorkout);
   bind('btn-save-plan', 'click', savePlan);
-
-  // Volume history
   bind('vh-filter', 'change', onVolumeFilterChange);
   bind('vh-period-daily', 'click', () => switchVolumePeriod('daily'));
   bind('vh-period-weekly', 'click', () => switchVolumePeriod('weekly'));
@@ -969,16 +852,10 @@ function initCSPHandlers() {
   bind('vh-prev', 'click', () => shiftVolumePeriod(-1));
   bind('vh-today', 'click', goToCurrentPeriod);
   bind('vh-next', 'click', () => shiftVolumePeriod(1));
-
-  // Social
   bind('btnCopyCyberTag', 'click', copyCyberTag);
   bind('btnAddFriend', 'click', handleAddFriend);
-
-  // Event delegation for dynamic content
   initActionDispatcher();
 }
-
-// Initialize CSP handlers after DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initCSPHandlers);
 } else {

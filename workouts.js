@@ -38,7 +38,6 @@ function listenToStructuredWorkouts(uid) {
     debouncedSyncActivity();
   }, (error) => {
     console.error('Structured workouts stream error', error.code, error.message);
-    // Show a visible hint so users know a composite index may be needed
     const container = document.getElementById('structured-workout-list');
     if (container && !container.querySelector('.index-hint')) {
       const hint = document.createElement('p');
@@ -556,8 +555,6 @@ async function generateEmomContributions(workoutId, minutes, minutesCompleted, m
   }
 }
 
-// ─── FOR_TIME Functions ────────────────────────────────────────────────────
-
 function toggleForTimeDnf() {
   const dnf = document.getElementById('fortime-dnf')?.checked;
   const timeInputs = document.getElementById('fortime-time-inputs');
@@ -611,8 +608,6 @@ async function generateForTimeContributions(workoutId, movements, rounds, remain
     return { totalReps: performedReps, sets: effectiveSets, extraFields };
   });
 }
-
-// ─── INTERVAL Functions ───────────────────────────────────────────────────
 
 function updateIntervalScorePreview() {
   const rounds = parseInt(document.getElementById('interval-rounds-completed')?.value, 10) || 0;
@@ -669,7 +664,6 @@ function updateAmrapScorePreview() {
     preview.textContent = '—';
   }
 }
-
 
 function cleanupStructuredSubscriptions() {
   if (unsubscribeStructured) { unsubscribeStructured(); unsubscribeStructured = null; }

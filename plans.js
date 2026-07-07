@@ -14,21 +14,15 @@ import { toggleForTimeDnf, cleanupStructuredSubscriptions } from './workouts.js'
 
 let unsubscribePlans = null;
 
-// ─── EMOM Functions ───────────────────────────────────────────────────────
-
 function handleWorkoutTypeChange() {
   const type = document.getElementById('workout-type')?.value;
   const desc = document.getElementById('workout-type-desc');
   if (!desc) return;
-
-  // Clear movements on type switch
   state.builder.workoutMovements = [];
   const movementsList = document.getElementById('plan-movements-list');
   if (movementsList) renderEmptyState(movementsList, 'Add movements above.');
   const slots = document.getElementById('emom-minute-slots');
   if (slots) renderEmptyState(slots, 'Add a movement to create the first slot.');
-
-  // Hide all metadata sections
   ['amrap-fields', 'emom-fields', 'fortime-fields', 'interval-fields'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.classList.add('hidden');
@@ -61,7 +55,6 @@ function handleWorkoutTypeChange() {
     if (emomSlotsArea) emomSlotsArea.classList.add('hidden');
   }
   populateMovementDropdowns();
-  // Also populate the plan exercise dropdown
   const planExercise = document.getElementById('plan-exercise');
   if (planExercise) {
     const currentVal = planExercise.value;
@@ -145,8 +138,6 @@ function addPlanMinuteSlot(data) {
   updateEmomScorePreview();
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
-
-// ─── Unified Plan Functions ─────────────────────────────────────────────────
 
 function refreshPlanForm() {
   const exercise = document.getElementById('plan-exercise')?.value;
@@ -248,8 +239,6 @@ function updatePlanCalcPreview() {
   const reps = parseInt(document.getElementById('plan-reps')?.value, 10);
   const addBtn = document.getElementById('plan-add-btn');
   if (!addBtn) return;
-
-  // Bodyweight/weighted: just need reps
   if (exercise) {
     const schemaKey = getSchemaKey(exercise);
     if (schemaKey !== 'standard') {
@@ -543,14 +532,6 @@ function updateEmomScorePreview() {
   }
 }
 
-// ==========================================
-// END STRUCTURED WORKOUT SYSTEM
-// ==========================================
-
-// ==========================================
-// WORKOUT PLAN SYSTEM
-// ==========================================
-
 function listenToPlans(uid) {
   const q = query(
     collection(db, "workout_plans"),
@@ -789,7 +770,6 @@ function populateForTimeForm(structure) {
   if (structure.rounds) {
     document.getElementById('fortime-rounds').value = structure.rounds;
   }
-  // Reset DNF state
   const dnfCheck = document.getElementById('fortime-dnf');
   if (dnfCheck) { dnfCheck.checked = false; toggleForTimeDnf(); }
   populatePlanMovements(structure.movements || []);
