@@ -7,7 +7,7 @@ import { clearChildren, renderEmptyState, showFeedback, showToast, updatePaginat
 import { getProfileDocument, getProfileDocRef } from './friends.js';
 
 let unsubscribeSharedPlans = null;
-let _favDebounce = {};
+const _favDebounce = {};
 
 // --- QR add friend  ---
 async function processFriendRequest(friendId) {

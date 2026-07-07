@@ -586,8 +586,8 @@ function switchPlansFilter(filter) {
   const sharedSection = document.getElementById('shared-plans-inline');
   const sharedPagination = document.getElementById('shared-plans-pagination');
 
-  const setActive = (btn) => btn.className = 'btn-core is-primary btn-size-row';
-  const setInactive = (btn) => btn.className = 'btn-core is-ghost btn-size-row';
+  const setActive = (btn) => { btn.className = 'btn-core is-primary btn-size-row'; };
+  const setInactive = (btn) => { btn.className = 'btn-core is-ghost btn-size-row'; };
 
   if (filter === 'mine') {
     setActive(btnMine); setInactive(btnShared); setInactive(btnFavs);

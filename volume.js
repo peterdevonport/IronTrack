@@ -44,7 +44,7 @@ function renderLogs(workouts) {
 
     const totalPages = Math.max(1, Math.ceil(displayList.length / entriesPerPage));
     state.pagination.workouts = Math.min(state.pagination.workouts, totalPages);
-    let startIndex = (state.pagination.workouts - 1) * entriesPerPage;
+    const startIndex = (state.pagination.workouts - 1) * entriesPerPage;
     let pageItems = displayList.slice(startIndex, startIndex + entriesPerPage);
 
     if (!pageItems.length && displayList.length) {
@@ -114,7 +114,7 @@ function computeWeeklyBuckets(workouts, now, filterExercise) {
   const monthEnd = new Date(monthRef.getFullYear(), monthRef.getMonth() + 1, 0, 23, 59, 59, 999);
   const firstWeekStart = getWeekStart(monthRef);
   const lastWeekStart = getWeekStart(monthEnd);
-  let cursor = new Date(firstWeekStart);
+  const cursor = new Date(firstWeekStart);
   while (cursor <= lastWeekStart) {
     const weekEnd = getWeekEnd(cursor);
     const key = toLocalDateKey(cursor);
@@ -255,7 +255,7 @@ function renderVolumeHistory() {
   const chartHeight = 104;
   const avgHeight = maxVolume > 0 ? (avgVolume / maxVolume) * chartHeight : 0;
 
-  let barsHtml = buckets.map(b => renderVolumeBar(b, maxVolume, chartHeight)).join('');
+  const barsHtml = buckets.map(b => renderVolumeBar(b, maxVolume, chartHeight)).join('');
 
   let avgLineHtml = '';
   if (avgVolume > 0 && avgHeight > 0) {

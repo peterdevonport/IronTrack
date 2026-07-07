@@ -17,7 +17,15 @@ export default [
     rules: {
       "no-undef": "error",
       "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
-      "no-redeclare": "error"
+      "no-redeclare": "error",
+      "eqeqeq": "error",
+      "no-throw-literal": "error",
+      "prefer-const": "error",
+      "no-implicit-globals": "error",
+      "no-return-assign": "error",
+      "no-sequences": "error",
+      "no-duplicate-imports": "error",
+      "no-unused-expressions": "error"
     }
   },
   {

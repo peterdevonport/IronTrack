@@ -1,7 +1,6 @@
 import { onboardingView, appView, bottomNav, onboardingExerciseSelect, onboardingWeightInput, onboardingRepsInput } from './state.js';
-import { showFeedback } from './ui.js';
+import { showFeedback, buildExerciseOptionsHtml } from './ui.js';
 import { renderOnboarding1RMList } from './rendering.js';
-import { buildExerciseOptionsHtml } from './ui.js';
 
 function showOnboarding(pendingItems) {
     onboardingView.classList.remove('hidden');
