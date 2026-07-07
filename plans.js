@@ -6,7 +6,8 @@ import { getExerciseInfo, EXERCISE_CATALOG, LOAD_FACTORS } from './exercise-data
 import { formatMovementLoad, formatCardDate, formatWorkoutType, formatMovementWeight } from './formatting.js';
 import { buildWorkoutDescription, formatScore_ROUNDS_AND_REPS, formatScore_COMPLETED_MINUTES, formatScore_TIME_SECONDS, getRepsPerRound } from './analytics.js';
 import { renderEmptyState, showFeedback, showToast, showPlanNameModal, updatePagination, updatePaginationControls, clearChildren, changeGenericPage, saveExpandedCardIds, restoreExpandedCardIds, buildExerciseOptionsHtml, updatePillActive, switchTab } from './ui.js';
-import { renderWorkoutCard, renderStructuredWorkoutCard, renderPlanCard, renderSharedPlanCard, renderFormFields, renderPlanMovements, renderMinuteSlotInner } from './rendering.js';
+import { renderWorkoutCard, renderStructuredWorkoutCard, renderPlanCard, renderSharedPlanCard, renderPlanMovements, renderMinuteSlotInner } from './rendering.js';
+import { renderFormFields } from './forms.js';
 import { renderSharedPlansUI } from './social.js';
 import { computeAndSyncDailyActivity } from './calendar.js';
 import { getSchemaKey, computeTotalLoad } from './auth.js';

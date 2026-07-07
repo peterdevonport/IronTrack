@@ -1,7 +1,7 @@
 import { auth, db, doc, getDoc } from './firebase.js';
 import { state } from './state.js';
 import { getExerciseInfo, LOAD_FACTORS } from './exercise-data.js';
-import { renderFormFields } from './rendering.js';
+import { renderFormFields } from './forms.js';
 import { showFeedback } from './ui.js';
 
 function getSchemaKey(exerciseName) {
