@@ -276,7 +276,10 @@ function handlePlanAdd() {
   if (!exercise || !reps || reps < 1) return;
 
   const schemaKey = getSchemaKey(exercise);
-  let weight, weightMode = 'absolute', pct = null, rpe = null;
+  let weight = 0;
+  let weightMode = 'absolute';
+  let pct = null;
+  let rpe = null;
 
   if (schemaKey === 'bodyweight') {
     weight = parseFloat(document.getElementById('plan-bodyweight')?.value) || state.user.userBiometrics.bodyweight || 0;
