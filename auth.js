@@ -1,5 +1,7 @@
-import { auth, db, doc, getDoc } from './firebase.js';
-import { state } from './state.js';
+import { auth, db, doc, getDoc, addDoc, collection, Timestamp } from './firebase.js';
+import { state, HAPTIC, FORM_SCHEMAS, pbLogExercise, pbLogBtn } from './state.js';
+import { estimate1RM, getEffectiveLoad, computeEffectiveLoad } from './math.js';
+import { haptic } from './dom.js';
 import { getExerciseInfo, LOAD_FACTORS } from './exercise-data.js';
 import { renderFormFields } from './forms.js';
 import { showFeedback } from './ui.js';
@@ -126,4 +128,68 @@ function updateCaches(processed) {
   }
 }
 
-export { getSchemaKey, computeTotalLoad, pullProfileMetrics, refreshPBForm, processWorkoutSnapshot, updateCaches };
+async function logPB() {
+    if (!auth.currentUser) return;
+    const exercise = pbLogExercise?.value;
+    if (!exercise) {
+        showFeedback('Please select an exercise.', 'red', 'pb-log-feedback');
+        return;
+    }
+    const schemaKey = getSchemaKey(exercise);
+    let weight, externalLoad = 0, estimatedLoad;
+    const bw = state.user.userBiometrics.bodyweight || 0;
+    if (schemaKey === 'bodyweight') {
+      weight = parseFloat(document.getElementById('pb-bodyweight')?.value) || bw;
+      estimatedLoad = computeEffectiveLoad(exercise, weight, 0, bw);
+    } else if (schemaKey === 'weighted') {
+      weight = parseFloat(document.getElementById('pb-bodyweight')?.value) || bw;
+      externalLoad = parseFloat(document.getElementById('pb-ext-load')?.value) || 0;
+      estimatedLoad = computeEffectiveLoad(exercise, weight, externalLoad, bw);
+      weight += externalLoad;
+    } else {
+      weight = parseFloat(document.getElementById('pb-weight')?.value);
+      estimatedLoad = computeEffectiveLoad(exercise, weight, 0, bw);
+    }
+    const reps = parseInt(document.getElementById('pb-reps')?.value, 10) || 1;
+
+    let storedExercise = exercise;
+    if (exercise === 'Pull Up' && externalLoad > 0) {
+        storedExercise = 'Pull Up (Weighted)';
+    }
+
+    if (!weight || weight <= 0) {
+        showFeedback('Please enter a valid weight.', 'red', 'pb-log-feedback');
+        return;
+    }
+
+    if (pbLogBtn) pbLogBtn.disabled = true;
+
+    try {
+        const logEntry = {
+            userId: auth.currentUser.uid,
+            exercise: storedExercise,
+            sets: 1,
+            reps,
+            weight,
+            externalLoad,
+            estimatedLoad,
+            totalVolume: estimatedLoad * reps,
+            timestamp: Timestamp.now(),
+            source: 'pb-log',
+            isInitialMax: false
+        };
+        await addDoc(collection(db, "workouts"), logEntry);
+
+        pbLogExercise.value = '';
+        refreshPBForm(FORM_SCHEMAS);
+        showFeedback('Record logged! It will appear in your records.', 'emerald', 'pb-log-feedback');
+        haptic(HAPTIC.confirm);
+    } catch (err) {
+        console.error('Failed to log record', err.code, err.message);
+        showFeedback('Failed to log record: ' + err.message, 'red', 'pb-log-feedback');
+    } finally {
+        if (pbLogBtn) pbLogBtn.disabled = false;
+    }
+}
+
+export { getSchemaKey, computeTotalLoad, pullProfileMetrics, refreshPBForm, processWorkoutSnapshot, updateCaches, logPB };
