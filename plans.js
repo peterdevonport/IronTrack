@@ -1,6 +1,6 @@
 import { auth, db, collection, query, where, onSnapshot, doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc, serverTimestamp, orderBy, limit, Timestamp, getDocs } from './firebase.js';
 import { state, EPLEY_CONSTANT, entriesPerPage, HAPTIC, FORM_SCHEMAS } from './state.js';
-import { estimateWeightForReps, getEffectiveLoad } from './math.js';
+import { estimateWeightForReps, getEffectiveLoad, computeDisplayWeight } from './math.js';
 import { escapeHtml, haptic } from './dom.js';
 import { getExerciseInfo, EXERCISE_CATALOG, LOAD_FACTORS } from './exercise-data.js';
 import { formatMovementLoad, formatCardDate, formatWorkoutType } from './formatting.js';
@@ -107,15 +107,11 @@ function addPlanMinuteSlot(data) {
 
   if (data) {
     const oneRM = state.cache.activeRecords[data.exerciseId] || 0;
-    let weightDisplay;
+    const weightDisplay = computeDisplayWeight(data, oneRM);
     let source;
     if (data.weightMode === 'pct' && data.pct) {
-      weightDisplay = oneRM > 0 ? Math.round(oneRM * data.pct / 100) : data.weight;
       source = `${data.exerciseId} \u00D7 ${data.reps} @ ${weightDisplay} kg (${data.pct}%)`;
     } else if (data.weightMode === 'rpe' && data.rpe) {
-      const rir = 10 - data.rpe;
-      const totalRepsPossible = data.reps + rir;
-      weightDisplay = oneRM > 0 ? Math.round(estimateWeightForReps(oneRM, totalRepsPossible)) : data.weight;
       source = `${data.exerciseId} \u00D7 ${data.reps} @ ${weightDisplay} kg (RPE ${data.rpe})`;
     } else {
       source = `${data.exerciseId} \u00D7 ${data.reps} @ ${data.weight} kg`;

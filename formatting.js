@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { estimateWeightForReps } from './math.js';
+import { computeDisplayWeight } from './math.js';
 
 function formatMovementLoad(m) {
   if (m.weightMode === 'rpe' && m.rpe) {
@@ -29,15 +29,12 @@ function formatDotsScore(value) {
 
 function formatMovementWeight(m) {
   const oneRM = state.cache.activeRecords[m.exerciseId || m.movement] || 0;
-  const reps = parseInt(m.reps, 10) || 1;
+  const weight = computeDisplayWeight(m, oneRM);
   if (m.weightMode === 'pct' && m.pct) {
-    const computed = oneRM > 0 ? Math.round(oneRM * m.pct / 100) : m.weight;
-    return ` @ ${m.pct}% 1RM (${computed}kg)`;
+    return ` @ ${m.pct}% 1RM (${weight}kg)`;
   }
   if (m.weightMode === 'rpe' && m.rpe) {
-    const rir = 10 - m.rpe;
-    const computed = oneRM > 0 ? Math.round(estimateWeightForReps(oneRM, reps + rir)) : m.weight;
-    return ` @ RPE ${m.rpe} (${computed}kg)`;
+    return ` @ RPE ${m.rpe} (${weight}kg)`;
   }
   if (m.weight) return ` @ ${m.weight}kg`;
   return '';
