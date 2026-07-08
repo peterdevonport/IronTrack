@@ -15,10 +15,14 @@ function computeDisplayWeight(movement, oneRM) {
     return oneRM > 0 ? Math.round(oneRM * movement.pct / 100) : movement.weight;
   }
   if (movement.weightMode === 'rpe' && movement.rpe) {
-    const rir = 10 - movement.rpe;
+    const rir = rpeToRir(movement.rpe);
     return oneRM > 0 ? Math.round(estimateWeightForReps(oneRM, movement.reps + rir)) : movement.weight;
   }
   return movement.weight;
+}
+
+function rpeToRir(rpe) {
+  return 10 - rpe;
 }
 
 function computeEffectiveLoad(exercise, weight, externalLoad, bodyweight) {
@@ -41,4 +45,4 @@ function getEffectiveLoad(workout) {
   );
 }
 
-export { estimate1RM, estimateWeightForReps, computeEffectiveLoad, getEffectiveLoad, computeDisplayWeight };
+export { estimate1RM, estimateWeightForReps, computeEffectiveLoad, getEffectiveLoad, computeDisplayWeight, rpeToRir };

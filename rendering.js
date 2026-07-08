@@ -1,6 +1,6 @@
 import { state, INPUT_CLASS, CALC_CLASS, onboardingList } from './state.js';
 import { escapeHtml } from './dom.js';
-import { estimate1RM, estimateWeightForReps, getEffectiveLoad } from './math.js';
+import { estimate1RM, estimateWeightForReps, getEffectiveLoad, rpeToRir } from './math.js';
 import { formatMovementLoad, formatCardDate, formatWorkoutType, formatDotsScore, formatMovementDisplay } from './formatting.js';
 import { getDisplayName, EXERCISE_CATALOG } from './exercise-data.js';
 import { buildWorkoutSummaryLine } from './analytics.js';
@@ -69,7 +69,7 @@ function renderCalcEntries() {
             weight = Math.round(oneRM * entry.pct / 100);
             source = `${entry.exercise} ${entry.pct}%`;
         } else {
-            const rir = 10 - entry.rpe;
+            const rir = rpeToRir(entry.rpe);
             weight = Math.round(estimateWeightForReps(oneRM, entry.reps + rir));
             source = `${entry.exercise} ${entry.reps} reps @ RPE ${entry.rpe}`;
         }

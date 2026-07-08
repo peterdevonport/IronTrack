@@ -1,6 +1,6 @@
 import { state, HAPTIC, FORM_SCHEMAS, entriesPerPage, workoutFilter, pbLogExercise } from './state.js';
 import { formatDotsScore } from './formatting.js';
-import { estimate1RM, estimateWeightForReps, getEffectiveLoad, computeEffectiveLoad } from './math.js';
+import { estimate1RM, estimateWeightForReps, getEffectiveLoad, computeEffectiveLoad, rpeToRir } from './math.js';
 import { escapeHtml, haptic } from './dom.js';
 import { getExerciseInfo, EXERCISE_CATALOG, LOAD_FACTORS } from './exercise-data.js';
 import { renderEmptyState, showFeedback, updatePagination, updatePaginationControls, changeGenericPage, buildExerciseOptionsHtml } from './ui.js';
@@ -140,7 +140,7 @@ function updateCalcPreview() {
             return;
         }
 
-        const rir = 10 - rpe;
+        const rir = rpeToRir(rpe);
         const totalRepsPossible = reps + rir;
         weight = estimateWeightForReps(oneRM, totalRepsPossible);
         detail = `${reps} reps @ RPE ${rpe}  ·  ${rir} RIR  ·  Based on est. 1RM: ${Math.round(oneRM)} kg`;

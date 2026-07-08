@@ -1,6 +1,6 @@
 import { auth, db, collection, query, where, onSnapshot, doc, addDoc, deleteDoc, updateDoc, serverTimestamp, orderBy, limit, Timestamp, getDocs } from './firebase.js';
 import { state, EPLEY_CONSTANT, HAPTIC } from './state.js';
-import { estimate1RM, estimateWeightForReps, getEffectiveLoad, computeEffectiveLoad } from './math.js';
+import { estimate1RM, estimateWeightForReps, getEffectiveLoad, computeEffectiveLoad, rpeToRir } from './math.js';
 import { escapeHtml, haptic, debounce } from './dom.js';
 import { LOAD_FACTORS, getExerciseInfo } from './exercise-data.js';
 import { formatWorkoutType, formatMovementWeight } from './formatting.js';
@@ -464,7 +464,7 @@ async function writeStructuredLogEntry({ workoutId, movement, sets, totalReps, e
   } else if (movement.weightMode === 'rpe' && movement.rpe) {
     const oneRM = state.cache.activeRecords[movement.exerciseId] || 0;
     if (oneRM > 0) {
-      const rir = 10 - movement.rpe;
+      const rir = rpeToRir(movement.rpe);
       const totalRepsPossible = movement.reps + rir;
       estimatedLoad = Math.round(estimateWeightForReps(oneRM, totalRepsPossible));
       weight = estimatedLoad;
