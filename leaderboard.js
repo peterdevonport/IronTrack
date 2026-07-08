@@ -1,5 +1,5 @@
 import { auth, db, collection, query, orderBy, limit, onSnapshot, setDoc, serverTimestamp } from './firebase.js';
-import { state } from './state.js';
+import { state, FIRESTORE_LEADERBOARD_LIMIT } from './state.js';
 import { formatDotsScore } from './formatting.js';
 import { getDisplayName } from './exercise-data.js';
 import { buildLeaderboardRow, renderLeaderboardEmptyRow } from './rendering.js';
@@ -105,7 +105,7 @@ function syncLeaderboardFeed() {
 
   const sortField = state.social.currentFormula === 'dots' ? "dotsScore" : "sinclairScore";
 
-  const leaderboardQuery = query(collection(db, "profiles"), orderBy(sortField, "desc"), limit(50));
+  const leaderboardQuery = query(collection(db, "profiles"), orderBy(sortField, "desc"), limit(FIRESTORE_LEADERBOARD_LIMIT));
   
   leaderboardUnsubscribe = onSnapshot(leaderboardQuery, (snapshot) => {
     state.social.leaderboardCache = [];

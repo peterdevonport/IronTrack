@@ -1,4 +1,4 @@
-import { state, paginationControls, currentPageDisplay, totalPagesDisplay, prevPageBtn, nextPageBtn, profileModal, tabContents, navTabs } from './state.js';
+import { state, paginationControls, currentPageDisplay, totalPagesDisplay, prevPageBtn, nextPageBtn, profileModal, tabContents, navTabs, FEEDBACK_DISMISS_DEFAULT_MS, TOAST_DISMISS_MS } from './state.js';
 import { escapeHtml } from './dom.js';
 import { EXERCISE_CATALOG } from './exercise-data.js';
 
@@ -162,7 +162,7 @@ function restoreExpandedCardIds(ids) {
   });
 }
 
-function showFeedback(msg, color, targetId = 'socialFeedback', delay = 2000, extraClass = '') {
+function showFeedback(msg, color, targetId = 'socialFeedback', delay = FEEDBACK_DISMISS_DEFAULT_MS, extraClass = '') {
   const el = document.getElementById(targetId);
   if (!el) return;
   el.innerText = msg;
@@ -182,7 +182,7 @@ function showFeedback(msg, color, targetId = 'socialFeedback', delay = 2000, ext
 }
 
 function showToast(msg, color) {
-  showFeedback(msg, color, 'toast-notification-inner', 3000, 'px-4 py-2 rounded-lg bg-slate-800/90 backdrop-blur-sm border border-slate-700 shadow-xl');
+  showFeedback(msg, color, 'toast-notification-inner', TOAST_DISMISS_MS, 'px-4 py-2 rounded-lg bg-slate-800/90 backdrop-blur-sm border border-slate-700 shadow-xl');
 }
 
 function openProfileModal() {

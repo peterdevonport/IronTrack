@@ -1,5 +1,5 @@
 import { auth, db, collection, query, where, onSnapshot, doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc, serverTimestamp, orderBy, limit, Timestamp, getDocs } from './firebase.js';
-import { state, EPLEY_CONSTANT, entriesPerPage, HAPTIC, FORM_SCHEMAS } from './state.js';
+import { state, EPLEY_CONSTANT, entriesPerPage, HAPTIC, FORM_SCHEMAS, SECONDS_PER_MINUTE, PERCENT_DIVISOR } from './state.js';
 import { estimateWeightForReps, getEffectiveLoad, computeDisplayWeight, rpeToRir } from './math.js';
 import { escapeHtml, haptic } from './dom.js';
 import { getExerciseInfo, EXERCISE_CATALOG, LOAD_FACTORS } from './exercise-data.js';
@@ -195,7 +195,7 @@ function togglePlanWms(el) {
 
 function previewPctMode(pct, oneRM, calcSpan, addBtn) {
   if (!isNaN(pct) && pct > 0) {
-    const calculated = Math.round(oneRM * pct / 100);
+    const calculated = Math.round(oneRM * pct / PERCENT_DIVISOR);
     calcSpan.textContent = '\u2192 ' + calculated + ' kg';
     calcSpan.className = 'text-emerald-400 font-mono text-xs';
     return true;
@@ -336,8 +336,8 @@ function populatePlanMovements(movements) {
 }
 
 async function formatIntervalLabel(intervalMin, intervalSec) {
-  const intervalSeconds = intervalMin * 60 + intervalSec;
-  if (intervalSeconds === 60) return 'EMOM';
+  const intervalSeconds = intervalMin * SECONDS_PER_MINUTE + intervalSec;
+  if (intervalSeconds === SECONDS_PER_MINUTE) return 'EMOM';
   if (intervalSeconds === 120) return 'E2MOM';
   if (intervalSeconds === 180) return 'E3MOM';
   if (intervalMin > 0 && intervalSec === 0) return `E${intervalMin}MOM`;
@@ -355,7 +355,7 @@ function validatePlanInputs(type) {
   } else if (type === 'EMOM') {
     const intervalMin = parseInt(document.getElementById('emom-interval-min')?.value, 10) || 0;
     const intervalSec = parseInt(document.getElementById('emom-interval-sec')?.value, 10) || 0;
-    const intervalSeconds = intervalMin * 60 + intervalSec;
+    const intervalSeconds = intervalMin * SECONDS_PER_MINUTE + intervalSec;
     const rounds = parseInt(document.getElementById('emom-rounds')?.value, 10) || 0;
     if (intervalSeconds < 1) { showFeedback('Enter a valid interval.', 'rose', 'planFeedback'); return false; }
     if (rounds < 1) { showFeedback('Enter a valid number of rounds.', 'rose', 'planFeedback'); return false; }
@@ -377,11 +377,11 @@ function generateAutoPlanName(type) {
   if (type === 'EMOM') {
     const intervalMin = parseInt(document.getElementById('emom-interval-min')?.value, 10) || 0;
     const intervalSec = parseInt(document.getElementById('emom-interval-sec')?.value, 10) || 0;
-    const intervalSeconds = intervalMin * 60 + intervalSec;
+    const intervalSeconds = intervalMin * SECONDS_PER_MINUTE + intervalSec;
     const rounds = state.builder.emomMode === 'by_round' ? (document.querySelectorAll('#emom-minute-slots .minute-row').length) : (parseInt(document.getElementById('emom-rounds')?.value, 10) || 0);
     const durationSeconds = rounds * intervalSeconds;
     const intervalLabel = formatIntervalLabel(intervalMin, intervalSec);
-    const prefix = durationSeconds % 60 === 0 ? `${durationSeconds / 60} Min ` : '';
+    const prefix = durationSeconds % SECONDS_PER_MINUTE === 0 ? `${durationSeconds / SECONDS_PER_MINUTE} Min ` : '';
     return `${prefix}${intervalLabel} \u00D7 ${rounds} rounds`;
   }
   if (type === 'FOR_TIME') {
@@ -459,9 +459,9 @@ function updateEmomDurationDisplay() {
     display.textContent = '\u2014';
     return;
   }
-  const totalSec = rounds * (intervalMin * 60 + intervalSec);
-  const mins = Math.floor(totalSec / 60);
-  const secs = totalSec % 60;
+  const totalSec = rounds * (intervalMin * SECONDS_PER_MINUTE + intervalSec);
+  const mins = Math.floor(totalSec / SECONDS_PER_MINUTE);
+  const secs = totalSec % SECONDS_PER_MINUTE;
   display.textContent = `${mins}:${String(secs).padStart(2, '0')}`;
 }
 
@@ -479,7 +479,7 @@ function updateEmomSummary() {
   if (rounds > 0 && slots > 0 && intervalSeconds > 0) {
     const totalSec = rounds * intervalSeconds;
     const intervalLabel = formatIntervalLabel(intervalMin, intervalSec);
-    const prefix = totalSec % 60 === 0 ? `${totalSec / 60} Min ` : '';
+    const prefix = totalSec % SECONDS_PER_MINUTE === 0 ? `${totalSec / SECONDS_PER_MINUTE} Min ` : '';
     const name = `${prefix}${intervalLabel}`;
     if (state.builder.emomMode === 'sequence') {
       const exerciseLabel = slots === 1 ? 'exercise' : 'exercises';
@@ -673,17 +673,17 @@ function capturePlanStructure(type) {
     case 'AMRAP': {
       const durationMin = parseInt(document.getElementById('amrap-duration')?.value, 10) || 0;
       const movements = getMovementsFromWorkout();
-      return { durationSeconds: durationMin * 60, movements };
+      return { durationSeconds: durationMin * SECONDS_PER_MINUTE, movements };
     }
     case 'EMOM': {
       const intervalMin = parseInt(document.getElementById('emom-interval-min')?.value, 10) || 0;
       const intervalSec = parseInt(document.getElementById('emom-interval-sec')?.value, 10) || 0;
-      const intervalSeconds = intervalMin * 60 + intervalSec;
+      const intervalSeconds = intervalMin * SECONDS_PER_MINUTE + intervalSec;
       let minutes;
       try { minutes = getEmomMovementData(); } catch (e) { console.error('EMOM movement data error:', e); minutes = []; }
       const rounds = state.builder.emomMode === 'by_round' ? minutes.length : parseInt(document.getElementById('emom-rounds')?.value, 10) || 0;
       const durationSeconds = rounds * intervalSeconds;
-      return { mode: state.builder.emomMode, rounds, durationMinutes: Math.floor(durationSeconds / 60), intervalSeconds, minutes };
+      return { mode: state.builder.emomMode, rounds, durationMinutes: Math.floor(durationSeconds / SECONDS_PER_MINUTE), intervalSeconds, minutes };
     }
     case 'FOR_TIME': {
       const timeCap = parseInt(document.getElementById('fortime-cap')?.value, 10) || 0;
@@ -696,7 +696,7 @@ function capturePlanStructure(type) {
       const workMin = parseInt(document.getElementById('interval-work-min')?.value, 10) || 0;
       const restMin = parseInt(document.getElementById('interval-rest-min')?.value, 10) || 0;
       const movements = getMovementsFromWorkout();
-      return { rounds, workSeconds: workMin * 60, restSeconds: restMin * 60, movements };
+      return { rounds, workSeconds: workMin * SECONDS_PER_MINUTE, restSeconds: restMin * SECONDS_PER_MINUTE, movements };
     }
     default: return {};
   }
@@ -704,15 +704,15 @@ function capturePlanStructure(type) {
 
 function populateAmrapForm(structure) {
   if (structure.durationSeconds) {
-    document.getElementById('amrap-duration').value = Math.round(structure.durationSeconds / 60);
+    document.getElementById('amrap-duration').value = Math.round(structure.durationSeconds / SECONDS_PER_MINUTE);
   }
   populatePlanMovements(structure.movements || []);
 }
 
 function populateEmomForm(structure) {
   if (structure.intervalSeconds) {
-    const mins = Math.floor(structure.intervalSeconds / 60);
-    const secs = structure.intervalSeconds % 60;
+    const mins = Math.floor(structure.intervalSeconds / SECONDS_PER_MINUTE);
+    const secs = structure.intervalSeconds % SECONDS_PER_MINUTE;
     document.getElementById('emom-interval-min').value = mins || '';
     document.getElementById('emom-interval-sec').value = secs || '';
   }
@@ -760,10 +760,10 @@ function populateIntervalForm(structure) {
     document.getElementById('interval-rounds').value = structure.rounds;
   }
   if (structure.workSeconds) {
-    document.getElementById('interval-work-min').value = Math.round(structure.workSeconds / 60);
+    document.getElementById('interval-work-min').value = Math.round(structure.workSeconds / SECONDS_PER_MINUTE);
   }
   if (structure.restSeconds) {
-    document.getElementById('interval-rest-min').value = Math.round(structure.restSeconds / 60);
+    document.getElementById('interval-rest-min').value = Math.round(structure.restSeconds / SECONDS_PER_MINUTE);
   }
   populatePlanMovements(structure.movements || []);
 }

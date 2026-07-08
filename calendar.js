@@ -1,5 +1,5 @@
 import { auth, db, doc, getDoc, setDoc } from './firebase.js';
-import { state, CONSISTENCY_CONFIG, activeDates } from './state.js';
+import { state, CONSISTENCY_CONFIG, activeDates, DAYS_IN_WEEK, CONSISTENCY_WINDOW_DAYS, PERCENT_DIVISOR } from './state.js';
 import { toLocalDateKey, getMonday, countActiveDays, countConsecutiveDays } from './date.js';
 import { buildCalendarDayHtml, renderCalendarWorkoutItem } from './rendering.js';
 import { renderEmptyState, updateCalTodayBtnState, setChallengeCard } from './ui.js';
@@ -63,9 +63,9 @@ function renderChallengeCards() {
     const progress = calculateChallengeProgress();
     const cfg = CONSISTENCY_CONFIG;
 
-    const monthlyPct = Math.min(100, (progress.monthly / cfg.monthlyUniqueDays) * 100);
-    const yearlyPct = Math.min(100, (progress.yearly / cfg.yearlyUniqueDays) * 100);
-    const lifetimePct = Math.min(100, (progress.lifetime / cfg.lifetimeUniqueDays) * 100);
+    const monthlyPct = Math.min(PERCENT_DIVISOR, (progress.monthly / cfg.monthlyUniqueDays) * PERCENT_DIVISOR);
+    const yearlyPct = Math.min(PERCENT_DIVISOR, (progress.yearly / cfg.yearlyUniqueDays) * PERCENT_DIVISOR);
+    const lifetimePct = Math.min(PERCENT_DIVISOR, (progress.lifetime / cfg.lifetimeUniqueDays) * PERCENT_DIVISOR);
 
     const monthlyDone = progress.monthly >= cfg.monthlyUniqueDays;
     const yearlyDone = progress.yearly >= cfg.yearlyUniqueDays;
@@ -201,7 +201,7 @@ function renderCalendar() {
             label.textContent = `${shortMonthNames[monday.getMonth()]} ${monday.getDate()} – ${shortMonthNames[sunday.getMonth()]} ${sunday.getDate()}, ${sunday.getFullYear()}`;
         }
 
-        for (let i = 0; i < 7; i++) {
+        for (let i = 0; i < DAYS_IN_WEEK; i++) {
             const date = new Date(monday);
             date.setDate(monday.getDate() + i);
             const dateStr = toLocalDateKey(date);
@@ -236,7 +236,7 @@ function renderCalendar() {
         }
 
         const totalCells = startDay + daysInMonth;
-        const remainingCells = (7 - (totalCells % 7)) % 7;
+        const remainingCells = (DAYS_IN_WEEK - (totalCells % DAYS_IN_WEEK)) % DAYS_IN_WEEK;
         for (let i = 0; i < remainingCells; i++) {
             html += '<div class="cal-day cal-day-empty"></div>';
         }
@@ -249,7 +249,7 @@ function renderCalendar() {
 function updateConsistencyMetrics() {
     const today = new Date();
     const d7 = countActiveDays(7, today, activeDates);
-    const d28 = countActiveDays(28, today, activeDates);
+    const d28 = countActiveDays(CONSISTENCY_WINDOW_DAYS, today, activeDates);
     
     const el7 = document.getElementById('consistency-7day');
     const el28 = document.getElementById('consistency-28day');
@@ -258,10 +258,10 @@ function updateConsistencyMetrics() {
     const streak7 = document.getElementById('consistency-7day-streak');
     const streak28 = document.getElementById('consistency-28day-streak');
     
-    if (el7) el7.textContent = `${d7} / 7`;
-    if (el28) el28.textContent = `${d28} / 28`;
-    if (bar7) { bar7.style.width = `${Math.min(100, (d7 / 7) * 100)}%`; bar7.setAttribute('aria-valuenow', Math.min(100, Math.round((d7 / 7) * 100))); }
-    if (bar28) { bar28.style.width = `${Math.min(100, (d28 / 28) * 100)}%`; bar28.setAttribute('aria-valuenow', Math.min(100, Math.round((d28 / 28) * 100))); }
+    if (el7) el7.textContent = `${d7} / ${DAYS_IN_WEEK}`;
+    if (el28) el28.textContent = `${d28} / ${CONSISTENCY_WINDOW_DAYS}`;
+    if (bar7) { bar7.style.width = `${Math.min(PERCENT_DIVISOR, (d7 / DAYS_IN_WEEK) * PERCENT_DIVISOR)}%`; bar7.setAttribute('aria-valuenow', Math.min(PERCENT_DIVISOR, Math.round((d7 / DAYS_IN_WEEK) * PERCENT_DIVISOR))); }
+    if (bar28) { bar28.style.width = `${Math.min(PERCENT_DIVISOR, (d28 / CONSISTENCY_WINDOW_DAYS) * PERCENT_DIVISOR)}%`; bar28.setAttribute('aria-valuenow', Math.min(PERCENT_DIVISOR, Math.round((d28 / CONSISTENCY_WINDOW_DAYS) * PERCENT_DIVISOR))); }
     
     const streak = countConsecutiveDays(today, activeDates);
     if (streak7) {

@@ -1,4 +1,4 @@
-import { state, entriesPerPage, paginationControls, workoutFilter } from './state.js';
+import { state, entriesPerPage, paginationControls, workoutFilter, DAYS_IN_WEEK } from './state.js';
 import { getEffectiveLoad, estimate1RM } from './math.js';
 import { escapeHtml } from './dom.js';
 import { EXERCISE_CATALOG } from './exercise-data.js';
@@ -84,7 +84,7 @@ function computeDailyBuckets(workouts, now, filterExercise) {
   const ref = new Date(now);
   ref.setDate(ref.getDate() + state.volume.offset * 7);
   const weekStart = getWeekStart(ref);
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < DAYS_IN_WEEK; i++) {
     const d = new Date(weekStart);
     d.setDate(d.getDate() + i);
     const key = toLocalDateKey(d);
@@ -121,7 +121,7 @@ function computeWeeklyBuckets(workouts, now, filterExercise) {
     const weekEndMs = weekEnd.getTime();
     const label = weekEndMs < state.user.userSignupTs ? '' : cursor.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     buckets[key] = { label, volume: 0, weekStart: new Date(cursor), weekEnd: new Date(weekEnd), periodStart: cursor.getTime(), periodEnd: weekEndMs };
-    cursor.setDate(cursor.getDate() + 7);
+    cursor.setDate(cursor.getDate() + DAYS_IN_WEEK);
   }
   workouts.forEach(w => {
     const d = new Date(w.timestamp);

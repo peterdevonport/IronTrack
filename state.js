@@ -70,7 +70,28 @@ const state = {
   }
 };
 
+// Domain constants
 const EPLEY_CONSTANT = 30;
+const SECONDS_PER_MINUTE = 60;
+const PERCENT_DIVISOR = 100;
+const DAYS_IN_WEEK = 7;
+const CONSISTENCY_WINDOW_DAYS = 28;
+
+// Firestore query limits
+const FIRESTORE_WORKOUTS_LIMIT = 250;
+const FIRESTORE_STRUCTURED_LIMIT = 500;
+const FIRESTORE_LEADERBOARD_LIMIT = 50;
+
+// Timing constants (ms)
+const DEBOUNCE_DELAY_SYNC_ACTIVITY = 3000;
+const DEBOUNCE_DELAY_LEADERBOARD = 5000;
+const FEEDBACK_DISMISS_DEFAULT_MS = 2000;
+const TOAST_DISMISS_MS = 3000;
+const FRIEND_SUCCESS_CLEAR_MS = 4000;
+const FAVORITE_DEBOUNCE_MS = 300;
+
+// Pagination
+const RECORDS_PER_PAGE = 10;
 const HAPTIC = {
     tap: 15,
     confirm: 30,
@@ -184,4 +205,4 @@ const FORM_SCHEMAS = {
   },
 };
 
-export { state, EPLEY_CONSTANT, HAPTIC, CONSISTENCY_CONFIG, entriesPerPage, INPUT_CLASS, CALC_CLASS, FORM_SCHEMAS, activeDates, loginView, appView, bottomNav, authBtn, profileBtn, profileModal, emailInput, passwordInput, loginBtn, signupBtn, greeting, profileForm, workoutForm, workoutList, paginationControls, prevPageBtn, nextPageBtn, currentPageDisplay, totalPagesDisplay, workoutFilter, exerciseSelect, onboardingView, onboardingGender, onboardingWeight, onboardingDaysMonthly, onboardingDaysYearly, onboardingDaysLifetime, onboardingExerciseSelect, onboardingWeightInput, onboardingRepsInput, onboardingAddBtn, onboardingList, onboardingEmpty, onboardingSaveBtn, onboardingFeedback, pbLogExercise, pbLogBtn, pbLogFeedback, tabContents, navTabs };
+export { state, EPLEY_CONSTANT, SECONDS_PER_MINUTE, PERCENT_DIVISOR, DAYS_IN_WEEK, CONSISTENCY_WINDOW_DAYS, FIRESTORE_WORKOUTS_LIMIT, FIRESTORE_STRUCTURED_LIMIT, FIRESTORE_LEADERBOARD_LIMIT, DEBOUNCE_DELAY_SYNC_ACTIVITY, DEBOUNCE_DELAY_LEADERBOARD, FEEDBACK_DISMISS_DEFAULT_MS, TOAST_DISMISS_MS, FRIEND_SUCCESS_CLEAR_MS, FAVORITE_DEBOUNCE_MS, RECORDS_PER_PAGE, HAPTIC, CONSISTENCY_CONFIG, entriesPerPage, INPUT_CLASS, CALC_CLASS, FORM_SCHEMAS, activeDates, loginView, appView, bottomNav, authBtn, profileBtn, profileModal, emailInput, passwordInput, loginBtn, signupBtn, greeting, profileForm, workoutForm, workoutList, paginationControls, prevPageBtn, nextPageBtn, currentPageDisplay, totalPagesDisplay, workoutFilter, exerciseSelect, onboardingView, onboardingGender, onboardingWeight, onboardingDaysMonthly, onboardingDaysYearly, onboardingDaysLifetime, onboardingExerciseSelect, onboardingWeightInput, onboardingRepsInput, onboardingAddBtn, onboardingList, onboardingEmpty, onboardingSaveBtn, onboardingFeedback, pbLogExercise, pbLogBtn, pbLogFeedback, tabContents, navTabs };

@@ -1,5 +1,5 @@
 import { auth, db, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, serverTimestamp, onSnapshot } from './firebase.js';
-import { state, HAPTIC } from './state.js';
+import { state, HAPTIC, FRIEND_SUCCESS_CLEAR_MS } from './state.js';
 import { escapeHtml, haptic } from './dom.js';
 import { getDisplayName } from './exercise-data.js';
 import { friendToHtml } from './rendering.js';
@@ -114,7 +114,7 @@ async function handleAddFriend() {
       if (el && el.innerText === 'Friend link established successfully!') {
         el.innerText = '';
       }
-    }, 4000);
+    }, FRIEND_SUCCESS_CLEAR_MS);
 
   } catch (err) {
     console.error('Friend add failed', err.code, err.message);

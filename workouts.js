@@ -1,5 +1,5 @@
 import { auth, db, collection, query, where, onSnapshot, doc, addDoc, deleteDoc, updateDoc, serverTimestamp, orderBy, limit, Timestamp, getDocs } from './firebase.js';
-import { state, EPLEY_CONSTANT, HAPTIC } from './state.js';
+import { state, EPLEY_CONSTANT, HAPTIC, SECONDS_PER_MINUTE, PERCENT_DIVISOR, FIRESTORE_STRUCTURED_LIMIT, DEBOUNCE_DELAY_SYNC_ACTIVITY } from './state.js';
 import { estimate1RM, estimateWeightForReps, getEffectiveLoad, computeEffectiveLoad, rpeToRir } from './math.js';
 import { escapeHtml, haptic, debounce } from './dom.js';
 import { LOAD_FACTORS, getExerciseInfo } from './exercise-data.js';
@@ -17,14 +17,14 @@ const WORKOUT_TYPE_TO_RESULT_ID = { AMRAP: 'amrap', EMOM: 'emom', FOR_TIME: 'for
 
 const debouncedSyncActivity = debounce(() => {
     computeAndSyncDailyActivity();
-}, 3000);
+}, DEBOUNCE_DELAY_SYNC_ACTIVITY);
 
 function listenToStructuredWorkouts(uid) {
   const q = query(
     collection(db, "structured_workouts"),
     where("userId", "==", uid),
     orderBy("timestamp", "desc"),
-    limit(500)
+    limit(FIRESTORE_STRUCTURED_LIMIT)
   );
   unsubscribeStructured = onSnapshot(q, (snapshot) => {
     const workouts = [];
@@ -318,7 +318,7 @@ function submitForTimeWorkout(name, structure, now) {
   const remainingReps = dnf ? (parseInt(document.getElementById('fortime-cap-reps').value, 10) || 0) : 0;
   const resultMins = dnf ? 0 : (parseInt(document.getElementById('fortime-minutes').value, 10) || 0);
   const resultSecs = dnf ? 0 : (parseInt(document.getElementById('fortime-seconds').value, 10) || 0);
-  const timeSeconds = dnf ? 0 : resultMins * 60 + resultSecs;
+  const timeSeconds = dnf ? 0 : resultMins * SECONDS_PER_MINUTE + resultSecs;
   if (resultSecs > 59) {
     showFeedback('Seconds must be 0–59.', 'rose', 'log-workout-feedback');
     return;
@@ -445,7 +445,7 @@ async function writeStructuredLogEntry({ workoutId, movement, sets, totalReps, e
   if (movement.weightMode === 'pct' && movement.pct) {
     const oneRM = state.cache.activeRecords[movement.exerciseId] || 0;
     if (oneRM > 0) {
-      estimatedLoad = Math.round(oneRM * movement.pct / 100);
+      estimatedLoad = Math.round(oneRM * movement.pct / PERCENT_DIVISOR);
       weight = estimatedLoad;
     }
   } else if (movement.weightMode === 'rpe' && movement.rpe) {
