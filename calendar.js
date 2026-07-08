@@ -10,18 +10,21 @@ import { renderEmptyState, updateCalTodayBtnState, setChallengeCard } from './ui
 
 async function computeAndSyncDailyActivity() {
     if (!auth.currentUser) return;
-    
-    const allTimestamps = [];
-    state.data.lastWorkouts.forEach(w => allTimestamps.push(w.timestamp));
-    state.data.lastStructuredWorkouts.forEach(sw => allTimestamps.push(sw.timestamp));
-    
-    activeDates.clear();
-    allTimestamps.forEach(ts => {
-        const d = new Date(ts);
-        activeDates.add(toLocalDateKey(d));
-    });
-    
-    renderConsistencyUI();
+    try {
+        const allTimestamps = [];
+        state.data.lastWorkouts.forEach(w => allTimestamps.push(w.timestamp));
+        state.data.lastStructuredWorkouts.forEach(sw => allTimestamps.push(sw.timestamp));
+        
+        activeDates.clear();
+        allTimestamps.forEach(ts => {
+            const d = new Date(ts);
+            activeDates.add(toLocalDateKey(d));
+        });
+        
+        renderConsistencyUI();
+    } catch (err) {
+        console.error('computeAndSyncDailyActivity failed', err);
+    }
 }
 
 function renderConsistencyUI() {

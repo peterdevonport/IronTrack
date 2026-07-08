@@ -271,8 +271,13 @@ async function submitStructuredWorkout(name, structure, now, config) {
     scoreValue: scoreValue(result),
     timestamp: now
   };
-  const docRef = await addDoc(collection(db, "structured_workouts"), workoutDoc);
-  await generateContributions(docRef.id, structure, result);
+  try {
+    const docRef = await addDoc(collection(db, "structured_workouts"), workoutDoc);
+    await generateContributions(docRef.id, structure, result);
+  } catch (err) {
+    console.error('submitStructuredWorkout failed', err.code, err.message);
+    throw err;
+  }
 }
 
 function submitAmrapWorkout(name, structure, now) {
@@ -490,12 +495,16 @@ async function generateContributionsBase(workoutId, movements, processMovement) 
     const result = processMovement(movement, i);
     if (!result || result.totalReps <= 0) continue;
 
-    await writeStructuredLogEntry({
-      workoutId, movement,
-      sets: result.sets,
-      totalReps: result.totalReps,
-      extraFields: result.extraFields || {}
-    });
+    try {
+      await writeStructuredLogEntry({
+        workoutId, movement,
+        sets: result.sets,
+        totalReps: result.totalReps,
+        extraFields: result.extraFields || {}
+      });
+    } catch (err) {
+      console.error(`[contrib] Failed to log entry for ${movement.exerciseId}: ${err.message}`);
+    }
   }
 }
 
@@ -529,12 +538,16 @@ async function generateEmomContributions(workoutId, minutes, minutesCompleted, m
 
     const totalRepsPerMovement = movement.reps * performedTimes;
 
-    await writeStructuredLogEntry({
-      workoutId, movement,
-      sets: performedTimes,
-      totalReps: totalRepsPerMovement,
-      extraFields: { minuteIndex: i }
-    });
+    try {
+      await writeStructuredLogEntry({
+        workoutId, movement,
+        sets: performedTimes,
+        totalReps: totalRepsPerMovement,
+        extraFields: { minuteIndex: i }
+      });
+    } catch (err) {
+      console.error(`[contrib] Failed to log EMOM entry for minute ${i}, exercise ${movement.exerciseId}: ${err.message}`);
+    }
   }
 }
 

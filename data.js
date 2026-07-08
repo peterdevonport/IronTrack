@@ -39,50 +39,56 @@ function listenToDataStream(uid) {
         const processed = processWorkoutSnapshot(snapshot.docs, getEffectiveLoad, estimate1RM);
         updateCaches(processed);
         renderFromWorkouts(state.data.lastWorkouts);
+    }, (error) => {
+        console.error('Workouts stream error', error.code, error.message);
     });
 }
 
 async function processAnalytics() {
-    const bw = state.user.userBiometrics.bodyweight;
-    const gender = state.user.userBiometrics.gender;
+    try {
+        const bw = state.user.userBiometrics.bodyweight;
+        const gender = state.user.userBiometrics.gender;
 
-    const squatRec = state.cache.activeRecords['Back Squat'] || 0;
-    const benchRec = state.cache.activeRecords['Bench Press'] || 0;
-    const deadliftRec = state.cache.activeRecords['Deadlift'] || 0;
+        const squatRec = state.cache.activeRecords['Back Squat'] || 0;
+        const benchRec = state.cache.activeRecords['Bench Press'] || 0;
+        const deadliftRec = state.cache.activeRecords['Deadlift'] || 0;
 
-    const dotsSquatEl = document.getElementById('dots-breakdown-squat');
-    const dotsBenchEl = document.getElementById('dots-breakdown-bench');
-    const dotsDeadliftEl = document.getElementById('dots-breakdown-deadlift');
+        const dotsSquatEl = document.getElementById('dots-breakdown-squat');
+        const dotsBenchEl = document.getElementById('dots-breakdown-bench');
+        const dotsDeadliftEl = document.getElementById('dots-breakdown-deadlift');
 
-    if (dotsSquatEl) dotsSquatEl.innerText = `${Math.round(squatRec)} kg`;
-    if (dotsBenchEl) dotsBenchEl.innerText = `${Math.round(benchRec)} kg`;
-    if (dotsDeadliftEl) dotsDeadliftEl.innerText = `${Math.round(deadliftRec)} kg`;
+        if (dotsSquatEl) dotsSquatEl.innerText = `${Math.round(squatRec)} kg`;
+        if (dotsBenchEl) dotsBenchEl.innerText = `${Math.round(benchRec)} kg`;
+        if (dotsDeadliftEl) dotsDeadliftEl.innerText = `${Math.round(deadliftRec)} kg`;
 
-    const { dots, plTotal } = computeDotsScore(squatRec, benchRec, deadliftRec, bw, gender);
+        const { dots, plTotal } = computeDotsScore(squatRec, benchRec, deadliftRec, bw, gender);
 
-    const dotsDisplayEl = document.getElementById('dots-display');
-    const dotsTierEl = document.getElementById('dots-tier');
-    if (dotsDisplayEl) dotsDisplayEl.innerText = dots > 0 ? dots.toFixed(1) : "0.0";
-    if (dotsTierEl) dotsTierEl.innerText = getRankingTier(dots, 'dots', gender);
+        const dotsDisplayEl = document.getElementById('dots-display');
+        const dotsTierEl = document.getElementById('dots-tier');
+        if (dotsDisplayEl) dotsDisplayEl.innerText = dots > 0 ? dots.toFixed(1) : "0.0";
+        if (dotsTierEl) dotsTierEl.innerText = getRankingTier(dots, 'dots', gender);
 
-    const snatchRec = state.cache.activeRecords['Snatch'] || 0;
-    const cleanRec = state.cache.activeRecords['Clean & Jerk'] || 0;
+        const snatchRec = state.cache.activeRecords['Snatch'] || 0;
+        const cleanRec = state.cache.activeRecords['Clean & Jerk'] || 0;
 
-    const sinclairSnatchEl = document.getElementById('sinclair-breakdown-snatch');
-    const sinclairCleanEl = document.getElementById('sinclair-breakdown-clean');
+        const sinclairSnatchEl = document.getElementById('sinclair-breakdown-snatch');
+        const sinclairCleanEl = document.getElementById('sinclair-breakdown-clean');
 
-    if (sinclairSnatchEl) sinclairSnatchEl.innerText = `${Math.round(snatchRec)} kg`;
-    if (sinclairCleanEl) sinclairCleanEl.innerText = `${Math.round(cleanRec)} kg`;
+        if (sinclairSnatchEl) sinclairSnatchEl.innerText = `${Math.round(snatchRec)} kg`;
+        if (sinclairCleanEl) sinclairCleanEl.innerText = `${Math.round(cleanRec)} kg`;
 
-    const { sinclair, olyTotal } = computeSinclairScore(snatchRec, cleanRec, bw, gender);
+        const { sinclair, olyTotal } = computeSinclairScore(snatchRec, cleanRec, bw, gender);
 
-    const sinclairDisplayEl = document.getElementById('sinclair-display');
-    const sinclairTierEl = document.getElementById('sinclair-tier');
-    if (sinclairDisplayEl) sinclairDisplayEl.innerText = sinclair > 0 ? sinclair.toFixed(1) : "0.0";
-    if (sinclairTierEl) sinclairTierEl.innerText = getRankingTier(sinclair, 'sinclair', gender);
+        const sinclairDisplayEl = document.getElementById('sinclair-display');
+        const sinclairTierEl = document.getElementById('sinclair-tier');
+        if (sinclairDisplayEl) sinclairDisplayEl.innerText = sinclair > 0 ? sinclair.toFixed(1) : "0.0";
+        if (sinclairTierEl) sinclairTierEl.innerText = getRankingTier(sinclair, 'sinclair', gender);
 
-    if (auth.currentUser) {
-        debouncedUpdateLeaderboard(auth.currentUser.uid, dots, sinclair);
+        if (auth.currentUser) {
+            debouncedUpdateLeaderboard(auth.currentUser.uid, dots, sinclair);
+        }
+    } catch (err) {
+        console.error('processAnalytics failed', err);
     }
 }
 
