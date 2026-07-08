@@ -27,28 +27,26 @@ function formatDotsScore(value) {
   return Number.isFinite(number) ? number : 0;
 }
 
-function formatMovementWeight(m) {
-  const oneRM = state.cache.activeRecords[m.exerciseId || m.movement] || 0;
+function formatWeightSuffix(m, oneRM) {
   const weight = computeDisplayWeight(m, oneRM);
   if (m.weightMode === 'pct' && m.pct) {
-    return ` @ ${m.pct}% 1RM (${weight}kg)`;
+    return `${m.pct}% 1RM (${weight}kg)`;
   }
   if (m.weightMode === 'rpe' && m.rpe) {
-    return ` @ RPE ${m.rpe} (${weight}kg)`;
+    return `RPE ${m.rpe} (${weight}kg)`;
   }
-  if (m.weight) return ` @ ${m.weight}kg`;
-  return '';
+  return m.weight ? `${m.weight}kg` : '';
+}
+
+function formatMovementWeight(m) {
+  const oneRM = state.cache.activeRecords[m.exerciseId || m.movement] || 0;
+  const suffix = formatWeightSuffix(m, oneRM);
+  return suffix ? ` @ ${suffix}` : '';
 }
 
 function formatMovementDisplay(m, oneRM) {
-  const weight = computeDisplayWeight(m, oneRM);
-  if (m.weightMode === 'pct' && m.pct) {
-    return `${m.reps}x ${m.exerciseId} @ ${m.pct}% 1RM (${weight}kg)`;
-  }
-  if (m.weightMode === 'rpe' && m.rpe) {
-    return `${m.reps}x ${m.exerciseId} @ RPE ${m.rpe} (${weight}kg)`;
-  }
-  return `${m.reps}x ${m.exerciseId} @ ${m.weight}kg`;
+  const suffix = formatWeightSuffix(m, oneRM);
+  return `${m.reps}x ${m.exerciseId}${suffix ? ` @ ${suffix}` : ''}`;
 }
 
 export { formatMovementLoad, formatCardDate, formatWorkoutType, formatDotsScore, formatMovementWeight, formatMovementDisplay };
