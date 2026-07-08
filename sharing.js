@@ -3,7 +3,7 @@ import { state, HAPTIC } from './state.js';
 import { escapeHtml, haptic } from './dom.js';
 import { getDisplayName } from './exercise-data.js';
 import { renderShareFriendItem, renderPlanCard, renderSharedPlanCard, renderStructuredWorkoutCard } from './rendering.js';
-import { clearChildren, renderEmptyState, showFeedback, showToast, updatePagination, changeGenericPage, saveExpandedCardIds, restoreExpandedCardIds, updateStarIcon, setActiveTab, setInactiveTab } from './ui.js';
+import { clearChildren, renderEmptyState, showFeedback, showToast, changeGenericPage, paginateAndRender, updateStarIcon, setActiveTab, setInactiveTab } from './ui.js';
 import { getProfileDocument, getProfileDocRef } from './friends.js';
 
 let unsubscribeSharedPlans = null;
@@ -251,12 +251,6 @@ function listenToSharedPlans(uid) {
 }
 
 function renderSharedPlansUI() {
-  const container = document.getElementById('shared-plans-inline');
-  const pagination = document.getElementById('shared-plans-pagination');
-  if (!container) return;
-
-  const expandedIds = saveExpandedCardIds();
-
   let items;
   if (state.ui.plansFilter === 'favorites') {
     const favoritedOwn = state.data.lastWorkoutPlans.filter(p => p.favorite === true).map(p => ({ type: 'own', plan: p }));
@@ -272,28 +266,19 @@ function renderSharedPlansUI() {
     items = state.data.lastSharedPlans.map(s => ({ type: 'shared', share: s }));
   }
 
-  if (!items.length) {
-    const msg = state.ui.plansFilter === 'favorites'
-      ? 'No favorited plans yet. Star a plan to add it here.'
-      : 'No shared plans yet.';
-    renderEmptyState(container, msg);
-    if (pagination) pagination.classList.add('hidden');
-    return;
-  }
+  const emptyMessage = state.ui.plansFilter === 'favorites'
+    ? 'No favorited plans yet. Star a plan to add it here.'
+    : 'No shared plans yet.';
 
-  const perPage = 3;
-  const totalPages = Math.max(1, Math.ceil(items.length / perPage));
-  state.pagination.sharedPlans = Math.min(state.pagination.sharedPlans, totalPages);
-  const start = (state.pagination.sharedPlans - 1) * perPage;
-  const pageItems = items.slice(start, start + perPage);
-
-  container.innerHTML = pageItems.map(item => {
-    return item.type === 'own' ? renderPlanCard(item.plan) : item.type === 'shared' ? renderSharedPlanCard(item.share) : renderStructuredWorkoutCard(item.structured);
-  }).join('');
-  restoreExpandedCardIds(expandedIds);
-  if (typeof lucide !== 'undefined') lucide.createIcons();
-
-  updatePagination('shared-plans', state.pagination.sharedPlans, totalPages);
+  paginateAndRender({
+    stateKey: 'shared-plans',
+    list: items,
+    containerId: 'shared-plans-inline',
+    renderItems: (pageItems) => pageItems.map(item => {
+      return item.type === 'own' ? renderPlanCard(item.plan) : item.type === 'shared' ? renderSharedPlanCard(item.share) : renderStructuredWorkoutCard(item.structured);
+    }).join(''),
+    emptyMessage
+  });
 }
 
 function changeSharedPlansPage(direction) {

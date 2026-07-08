@@ -5,7 +5,7 @@ import { escapeHtml, haptic } from './dom.js';
 import { getExerciseInfo, EXERCISE_CATALOG, LOAD_FACTORS } from './exercise-data.js';
 import { formatMovementLoad, formatCardDate, formatWorkoutType } from './formatting.js';
 import { buildWorkoutDescription, formatScore_ROUNDS_AND_REPS, formatScore_COMPLETED_MINUTES, formatScore_TIME_SECONDS, getRepsPerRound } from './analytics.js';
-import { renderEmptyState, showFeedback, showToast, showPlanNameModal, updatePagination, updatePaginationControls, clearChildren, changeGenericPage, saveExpandedCardIds, restoreExpandedCardIds, buildExerciseOptionsHtml, updatePillActive, switchTab, setActiveTab, setInactiveTab } from './ui.js';
+import { renderEmptyState, showFeedback, showToast, showPlanNameModal, updatePagination, updatePaginationControls, clearChildren, changeGenericPage, paginateAndRender, buildExerciseOptionsHtml, updatePillActive, switchTab, setActiveTab, setInactiveTab } from './ui.js';
 import { renderWorkoutCard, renderPlanCard, renderSharedPlanCard, renderPlanMovements, renderMinuteSlotInner } from './rendering.js';
 import { renderFormFields } from './forms.js';
 import { renderSharedPlansUI } from './social.js';
@@ -554,29 +554,13 @@ function listenToPlans(uid) {
 }
 
 function renderPlansUI() {
-  const container = document.getElementById('saved-plans-inline');
-  const pagination = document.getElementById('plans-pagination');
-  if (!container) return;
-
-  const expandedIds = saveExpandedCardIds();
-
-  if (!state.data.lastWorkoutPlans.length) {
-    renderEmptyState(container, 'No saved plans yet.');
-    if (pagination) pagination.classList.add('hidden');
-    return;
-  }
-
-  const perPage = 3;
-  const totalPages = Math.max(1, Math.ceil(state.data.lastWorkoutPlans.length / perPage));
-  state.pagination.plans = Math.min(state.pagination.plans, totalPages);
-  const start = (state.pagination.plans - 1) * perPage;
-  const pageItems = state.data.lastWorkoutPlans.slice(start, start + perPage);
-
-  container.innerHTML = pageItems.map(plan => renderPlanCard(plan)).join('');
-  restoreExpandedCardIds(expandedIds);
-  if (typeof lucide !== 'undefined') lucide.createIcons();
-
-  updatePagination('plans', state.pagination.plans, totalPages);
+  paginateAndRender({
+    stateKey: 'plans',
+    list: state.data.lastWorkoutPlans,
+    containerId: 'saved-plans-inline',
+    renderItems: (items) => items.map(plan => renderPlanCard(plan)).join(''),
+    emptyMessage: 'No saved plans yet.'
+  });
 }
 
 function switchPlansFilter(filter) {
