@@ -250,6 +250,12 @@ function listenToSharedPlans(uid) {
   });
 }
 
+function getItemDate(item) {
+  if (item.type === 'own') return item.plan.createdAt;
+  if (item.type === 'shared') return item.share.createdAt;
+  return item.structured.timestamp;
+}
+
 function renderSharedPlansUI() {
   let items;
   if (state.ui.plansFilter === 'favorites') {
@@ -258,8 +264,8 @@ function renderSharedPlansUI() {
     const favoritedStructured = state.data.lastStructuredWorkouts.filter(w => w.favorite === true).map(w => ({ type: 'structured', structured: w }));
     items = [...favoritedOwn, ...favoritedShared, ...favoritedStructured];
     items.sort((a, b) => {
-      const aDate = a.type === 'own' ? a.plan.createdAt : a.type === 'shared' ? a.share.createdAt : a.structured.timestamp;
-      const bDate = b.type === 'own' ? b.plan.createdAt : b.type === 'shared' ? b.share.createdAt : b.structured.timestamp;
+      const aDate = getItemDate(a);
+      const bDate = getItemDate(b);
       return (bDate || 0) - (aDate || 0);
     });
   } else {
@@ -275,7 +281,9 @@ function renderSharedPlansUI() {
     list: items,
     containerId: 'shared-plans-inline',
     renderItems: (pageItems) => pageItems.map(item => {
-      return item.type === 'own' ? renderPlanCard(item.plan) : item.type === 'shared' ? renderSharedPlanCard(item.share) : renderStructuredWorkoutCard(item.structured);
+      if (item.type === 'own') return renderPlanCard(item.plan);
+      if (item.type === 'shared') return renderSharedPlanCard(item.share);
+      return renderStructuredWorkoutCard(item.structured);
     }).join(''),
     emptyMessage
   });

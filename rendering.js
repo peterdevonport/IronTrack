@@ -230,7 +230,13 @@ function workoutToLogHtml(workout, chipPBActive, chip1RMActive) {
   } else if (chip1RMActive && !chipPBActive) {
     borderClass = 'log-entry-1rm';
   } else {
-    borderClass = isPB ? 'log-entry-pb' : is1RMOnly ? 'log-entry-1rm' : 'log-entry';
+    if (isPB) {
+      borderClass = 'log-entry-pb';
+    } else if (is1RMOnly) {
+      borderClass = 'log-entry-1rm';
+    } else {
+      borderClass = 'log-entry';
+    }
   }
   const secondLine = `Est. 1RM: ${oneRM}kg  <span class="text-slate-600">|</span>  Vol: ${totalVolume.toLocaleString()}kg`;
   const repDisplay = workout.partialReps ? `${sets} × ${reps} + ${workout.partialReps} reps` : `${sets} × ${reps}`;

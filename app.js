@@ -474,13 +474,12 @@ if (cpUpdate) {
       }, 2000);
       haptic(HAPTIC.confirm);
     } catch (err) {
-      const msg = err.code === 'auth/wrong-password'
-        ? 'Current password is incorrect.'
-        : err.code === 'auth/weak-password'
-        ? 'New password is too weak.'
-        : err.code === 'auth/requires-recent-login'
-        ? 'Please sign out and sign in again, then retry.'
-        : `Failed: ${err.message}`;
+      const PASSWORD_ERROR_MAP = {
+        'auth/wrong-password': 'Current password is incorrect.',
+        'auth/weak-password': 'New password is too weak.',
+        'auth/requires-recent-login': 'Please sign out and sign in again, then retry.',
+      };
+      const msg = PASSWORD_ERROR_MAP[err.code] || `Failed: ${err.message}`;
       cpFeedback.textContent = msg;
       cpFeedback.className = 'text-xs text-rose-400 font-medium h-4 text-center';
     } finally {
@@ -511,11 +510,11 @@ if (deleteAccountBtn) {
       await deleteUser(auth.currentUser);
       haptic(HAPTIC.confirm);
     } catch (err) {
-      const msg = err.code === 'auth/wrong-password'
-        ? 'Incorrect password. Account not deleted.'
-        : err.code === 'auth/requires-recent-login'
-        ? 'Session expired. Please sign out and sign in again, then retry.'
-        : `Failed to delete account: ${err.message}`;
+      const DELETE_ERROR_MAP = {
+        'auth/wrong-password': 'Incorrect password. Account not deleted.',
+        'auth/requires-recent-login': 'Session expired. Please sign out and sign in again, then retry.',
+      };
+      const msg = DELETE_ERROR_MAP[err.code] || `Failed to delete account: ${err.message}`;
       showFeedback(msg, 'red', 'profileFeedback');
       deleteAccountBtn.disabled = false;
       deleteAccountBtn.textContent = 'Delete Account';
