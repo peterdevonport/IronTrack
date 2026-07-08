@@ -3,7 +3,7 @@ import { state } from './state.js';
 import { formatDotsScore } from './formatting.js';
 import { getDisplayName } from './exercise-data.js';
 import { buildLeaderboardRow, renderLeaderboardEmptyRow } from './rendering.js';
-import { showFeedback, clearChildren } from './ui.js';
+import { showFeedback, clearChildren, setActiveTab, setInactiveTab } from './ui.js';
 import { getProfileDocRef } from './friends.js';
 
 let leaderboardUnsubscribe = null;
@@ -34,12 +34,12 @@ function switchLeaderboardScope(scope) {
   const btnGlobal = document.getElementById('btnGlobalBoard'); //
   const btnFriends = document.getElementById('btnFriendsBoard'); //
 
-  if (scope === 'global') { //
-    btnGlobal.className = "btn-core is-primary btn-size-row";
-    btnFriends.className = "btn-core is-ghost btn-size-row";
+  if (scope === 'global') {
+    setActiveTab(btnGlobal);
+    setInactiveTab(btnFriends);
   } else {
-    btnFriends.className = "btn-core is-primary btn-size-row";
-    btnGlobal.className = "btn-core is-ghost btn-size-row";
+    setActiveTab(btnFriends);
+    setInactiveTab(btnGlobal);
   }
   renderLeaderboardView(); //
 }
@@ -132,13 +132,13 @@ function switchLeaderboardFormula(formula) {
 
   // 1. Swap visual layout pill configurations 
   if (formula === 'dots') {
-    if (btnDots) btnDots.className = "btn-core is-primary btn-size-row";
-    if (btnSinclair) btnSinclair.className = "btn-core is-ghost btn-size-row";
+    if (btnDots) setActiveTab(btnDots);
+    if (btnSinclair) setInactiveTab(btnSinclair);
     if (tableHeaderScore) tableHeaderScore.innerText = "DOTS";
     if (descEl) descEl.innerText = "Pound-for-pound DOTS standings live.";
   } else {
-    if (btnSinclair) btnSinclair.className = "btn-core is-primary btn-size-row";
-    if (btnDots) btnDots.className = "btn-core is-ghost btn-size-row";
+    if (btnSinclair) setActiveTab(btnSinclair);
+    if (btnDots) setInactiveTab(btnDots);
     if (tableHeaderScore) tableHeaderScore.innerText = "Sinclair";
     if (descEl) descEl.innerText = "Pound-for-pound Olympic Sinclair scores live.";
   }

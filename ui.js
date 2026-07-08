@@ -9,6 +9,12 @@ const NOTIFICATION_COLORS = {
   slate: 'text-slate-400'
 };
 
+const BTN_ACTIVE_CLASS = 'btn-core is-primary btn-size-row';
+const BTN_INACTIVE_CLASS = 'btn-core is-ghost btn-size-row';
+
+function setActiveTab(btn) { btn.className = BTN_ACTIVE_CLASS; }
+function setInactiveTab(btn) { btn.className = BTN_INACTIVE_CLASS; }
+
 function clearChildren(el) {
   if (el) el.textContent = '';
 }
@@ -288,4 +294,4 @@ function switchTab(tabName) {
   state.ui.currentTab = tabName;
 }
 
-export { clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, saveExpandedCardIds, restoreExpandedCardIds, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, changeGenericPage, switchTab };
+export { clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, saveExpandedCardIds, restoreExpandedCardIds, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, changeGenericPage, switchTab, BTN_ACTIVE_CLASS, BTN_INACTIVE_CLASS, setActiveTab, setInactiveTab };

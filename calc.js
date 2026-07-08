@@ -3,7 +3,7 @@ import { formatDotsScore } from './formatting.js';
 import { estimate1RM, estimateWeightForReps, getEffectiveLoad, computeEffectiveLoad, rpeToRir } from './math.js';
 import { escapeHtml, haptic } from './dom.js';
 import { getExerciseInfo, EXERCISE_CATALOG, LOAD_FACTORS } from './exercise-data.js';
-import { renderEmptyState, showFeedback, updatePagination, updatePaginationControls, changeGenericPage, buildExerciseOptionsHtml } from './ui.js';
+import { renderEmptyState, showFeedback, updatePagination, updatePaginationControls, changeGenericPage, buildExerciseOptionsHtml, setActiveTab, setInactiveTab } from './ui.js';
 import { renderFormFields } from './forms.js';
 import { getSchemaKey, computeTotalLoad } from './auth.js';
 import { getRankingTier } from './analytics.js';
@@ -84,13 +84,13 @@ function switchCalcMode(mode) {
     if (mode === 'pct') {
         pctInputs.classList.remove('hidden');
         rpeInputs.classList.add('hidden');
-        pctTab.className = 'btn-core is-primary btn-size-row';
-        rpeTab.className = 'btn-core is-ghost btn-size-row';
+        setActiveTab(pctTab);
+        setInactiveTab(rpeTab);
     } else {
         pctInputs.classList.add('hidden');
         rpeInputs.classList.remove('hidden');
-        pctTab.className = 'btn-core is-ghost btn-size-row';
-        rpeTab.className = 'btn-core is-primary btn-size-row';
+        setInactiveTab(pctTab);
+        setActiveTab(rpeTab);
     }
     updateCalcPreview();
 }
