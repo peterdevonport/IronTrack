@@ -3,7 +3,7 @@ import { state, HAPTIC } from './state.js';
 import { escapeHtml, haptic } from './dom.js';
 import { getDisplayName } from './exercise-data.js';
 import { renderShareFriendItem, renderPlanCard, renderSharedPlanCard, renderStructuredWorkoutCard } from './rendering.js';
-import { clearChildren, renderEmptyState, showFeedback, showToast, updatePagination, changeGenericPage, saveExpandedCardIds, restoreExpandedCardIds, updateStarIcon } from './ui.js';
+import { clearChildren, renderEmptyState, showFeedback, showToast, updatePagination, changeGenericPage, saveExpandedCardIds, restoreExpandedCardIds, updateStarIcon, setActiveTab, setInactiveTab } from './ui.js';
 import { getProfileDocument, getProfileDocRef } from './friends.js';
 
 let unsubscribeSharedPlans = null;
@@ -43,14 +43,14 @@ function switchShareMode(mode) {
   const qrSection = document.getElementById('share-qr-section');
 
   if (mode === 'friends') {
-    btnFriends.className = 'btn-core is-primary btn-size-row';
-    btnQR.className = 'btn-core is-ghost btn-size-row';
+    setActiveTab(btnFriends);
+    setInactiveTab(btnQR);
     friendsSection.classList.remove('hidden');
     qrSection.classList.add('hidden');
     document.getElementById('share-plan-feedback').textContent = '';
   } else {
-    btnQR.className = 'btn-core is-primary btn-size-row';
-    btnFriends.className = 'btn-core is-ghost btn-size-row';
+    setActiveTab(btnQR);
+    setInactiveTab(btnFriends);
     friendsSection.classList.add('hidden');
     qrSection.classList.remove('hidden');
     shareByQR();

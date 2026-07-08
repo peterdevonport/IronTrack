@@ -5,7 +5,7 @@ import { escapeHtml, haptic } from './dom.js';
 import { getExerciseInfo, EXERCISE_CATALOG, LOAD_FACTORS } from './exercise-data.js';
 import { formatMovementLoad, formatCardDate, formatWorkoutType } from './formatting.js';
 import { buildWorkoutDescription, formatScore_ROUNDS_AND_REPS, formatScore_COMPLETED_MINUTES, formatScore_TIME_SECONDS, getRepsPerRound } from './analytics.js';
-import { renderEmptyState, showFeedback, showToast, showPlanNameModal, updatePagination, updatePaginationControls, clearChildren, changeGenericPage, saveExpandedCardIds, restoreExpandedCardIds, buildExerciseOptionsHtml, updatePillActive, switchTab } from './ui.js';
+import { renderEmptyState, showFeedback, showToast, showPlanNameModal, updatePagination, updatePaginationControls, clearChildren, changeGenericPage, saveExpandedCardIds, restoreExpandedCardIds, buildExerciseOptionsHtml, updatePillActive, switchTab, setActiveTab, setInactiveTab } from './ui.js';
 import { renderWorkoutCard, renderPlanCard, renderSharedPlanCard, renderPlanMovements, renderMinuteSlotInner } from './rendering.js';
 import { renderFormFields } from './forms.js';
 import { renderSharedPlansUI } from './social.js';
@@ -75,11 +75,11 @@ function switchEmomMode(mode) {
   const roundsInput = document.getElementById('emom-rounds');
   if (btnSeq && btnByRound) {
     if (mode === 'sequence') {
-      btnSeq.className = 'btn-core is-primary btn-size-row';
-      btnByRound.className = 'btn-core is-ghost btn-size-row';
+      setActiveTab(btnSeq);
+      setInactiveTab(btnByRound);
     } else {
-      btnSeq.className = 'btn-core is-ghost btn-size-row';
-      btnByRound.className = 'btn-core is-primary btn-size-row';
+      setInactiveTab(btnSeq);
+      setActiveTab(btnByRound);
     }
   }
   if (heading) heading.textContent = mode === 'sequence' ? 'Sequence' : 'Round Schedule';
@@ -589,20 +589,17 @@ function switchPlansFilter(filter) {
   const sharedSection = document.getElementById('shared-plans-inline');
   const sharedPagination = document.getElementById('shared-plans-pagination');
 
-  const setActive = (btn) => { btn.className = 'btn-core is-primary btn-size-row'; };
-  const setInactive = (btn) => { btn.className = 'btn-core is-ghost btn-size-row'; };
-
   if (filter === 'mine') {
-    setActive(btnMine); setInactive(btnShared); setInactive(btnFavs);
+    setActiveTab(btnMine); setInactiveTab(btnShared); setInactiveTab(btnFavs);
     if (plansSection) plansSection.classList.remove('hidden');
     if (plansPagination) plansPagination.classList.remove('hidden');
     if (sharedSection) sharedSection.classList.add('hidden');
     if (sharedPagination) sharedPagination.classList.add('hidden');
     renderPlansUI();
   } else {
-    setInactive(btnMine);
-    if (filter === 'shared') { setActive(btnShared); setInactive(btnFavs); }
-    else { setActive(btnFavs); setInactive(btnShared); }
+    setInactiveTab(btnMine);
+    if (filter === 'shared') { setActiveTab(btnShared); setInactiveTab(btnFavs); }
+    else { setActiveTab(btnFavs); setInactiveTab(btnShared); }
     if (plansSection) plansSection.classList.add('hidden');
     if (plansPagination) plansPagination.classList.add('hidden');
     if (sharedSection) sharedSection.classList.remove('hidden');

@@ -4,7 +4,7 @@ import { escapeHtml } from './dom.js';
 import { EXERCISE_CATALOG } from './exercise-data.js';
 import { toLocalDateKey } from './date.js';
 import { workoutToLogHtml, renderVolumeBar } from './rendering.js';
-import { updatePagination, updatePaginationControls, updateTodayBtnState, showFeedback, renderMessage, renderEmptyState } from './ui.js';
+import { updatePagination, updatePaginationControls, updateTodayBtnState, showFeedback, renderMessage, renderEmptyState, setActiveTab, setInactiveTab } from './ui.js';
 
 // ==========================================
 // END WORKOUT PLAN SYSTEM
@@ -273,7 +273,7 @@ function switchVolumePeriod(period) {
   ['daily', 'weekly', 'monthly', 'yearly'].forEach(p => {
     const btn = document.getElementById(`vh-period-${p}`);
     if (btn) {
-      btn.className = p === period ? 'btn-core is-primary btn-size-row' : 'btn-core is-ghost btn-size-row';
+      if (p === period) setActiveTab(btn); else setInactiveTab(btn);
     }
   });
 
