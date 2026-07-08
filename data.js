@@ -1,5 +1,5 @@
 import { auth, db, collection, query, where, onSnapshot, doc, getDoc, orderBy, limit, Timestamp, serverTimestamp, setDoc } from './firebase.js';
-import { state } from './state.js';
+import { state, FIRESTORE_WORKOUTS_LIMIT, DEBOUNCE_DELAY_LEADERBOARD } from './state.js';
 import { estimate1RM, getEffectiveLoad } from './math.js';
 import { debounce } from './dom.js';
 import { computeDotsScore, computeSinclairScore, getRankingTier } from './analytics.js';
@@ -33,7 +33,7 @@ function listenToDataStream(uid) {
         collection(db, "workouts"),
         where("userId", "==", uid),
         orderBy("timestamp", "desc"),
-        limit(250)
+        limit(FIRESTORE_WORKOUTS_LIMIT)
     );
     onSnapshot(q, (snapshot) => {
         const processed = processWorkoutSnapshot(snapshot.docs, getEffectiveLoad, estimate1RM);
@@ -95,6 +95,6 @@ async function processAnalytics() {
 const debouncedUpdateLeaderboard = debounce(async (uid, dots, sinclair) => {
     if (!auth.currentUser || auth.currentUser.uid !== uid) return;
     await updateUserLeaderboardProfile(uid, dots, sinclair);
-}, 5000);
+}, DEBOUNCE_DELAY_LEADERBOARD);
 
 export { renderFromWorkouts, listenToDataStream, processAnalytics };

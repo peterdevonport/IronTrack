@@ -1,5 +1,5 @@
 import { auth, db, collection, query, where, onSnapshot, doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc, serverTimestamp, orderBy, limit, getDocs, arrayUnion } from './firebase.js';
-import { state, HAPTIC } from './state.js';
+import { state, HAPTIC, FAVORITE_DEBOUNCE_MS } from './state.js';
 import { escapeHtml, haptic } from './dom.js';
 import { getDisplayName } from './exercise-data.js';
 import { renderShareFriendItem, renderPlanCard, renderSharedPlanCard, renderStructuredWorkoutCard } from './rendering.js';
@@ -324,7 +324,7 @@ async function dismissSharedPlan(shareId) {
 
 async function toggleFavoriteGeneric(collection, dataArray, id) {
   if (_favDebounce[id]) return;
-  _favDebounce[id] = setTimeout(() => delete _favDebounce[id], 300);
+  _favDebounce[id] = setTimeout(() => delete _favDebounce[id], FAVORITE_DEBOUNCE_MS);
   if (!auth.currentUser) return;
   const item = dataArray.find(i => i.id === id);
   if (!item) return;

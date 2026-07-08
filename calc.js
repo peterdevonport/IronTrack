@@ -1,4 +1,4 @@
-import { state, HAPTIC, FORM_SCHEMAS, entriesPerPage, workoutFilter, pbLogExercise } from './state.js';
+import { state, HAPTIC, FORM_SCHEMAS, entriesPerPage, workoutFilter, pbLogExercise, RECORDS_PER_PAGE, PERCENT_DIVISOR } from './state.js';
 import { formatDotsScore } from './formatting.js';
 import { estimate1RM, estimateWeightForReps, getEffectiveLoad, computeEffectiveLoad, rpeToRir } from './math.js';
 import { escapeHtml, haptic } from './dom.js';
@@ -27,11 +27,10 @@ function update1RMRegistryUI() {
         return;
     }
 
-    const recordsPerPage = 10;
-    const totalPages = Math.max(1, Math.ceil(uniqueExercises.length / recordsPerPage));
+    const totalPages = Math.max(1, Math.ceil(uniqueExercises.length / RECORDS_PER_PAGE));
     state.pagination.records = Math.min(state.pagination.records, totalPages);
-    const start = (state.pagination.records - 1) * recordsPerPage;
-    const pageExercises = uniqueExercises.slice(start, start + recordsPerPage);
+    const start = (state.pagination.records - 1) * RECORDS_PER_PAGE;
+    const pageExercises = uniqueExercises.slice(start, start + RECORDS_PER_PAGE);
 
     let html = '';
     pageExercises.forEach(exercise => {
@@ -125,7 +124,7 @@ function updateCalcPreview() {
             if (addBtn) addBtn.disabled = true;
             return;
         }
-        weight = oneRM * pct / 100;
+        weight = oneRM * pct / PERCENT_DIVISOR;
         detail = `${pct}% of ${Math.round(oneRM)} kg`;
     } else {
         const repsInput = document.getElementById('calc-rpe-reps');
@@ -312,7 +311,7 @@ function changePage(direction) {
 function changeRecordsPage(direction) {
   const manualWorkouts = state.data.lastWorkouts.filter(w => w.source !== 'structured');
   const uniqueExercises = Array.from(new Set(manualWorkouts.map(w => w.exercise))).filter(Boolean).sort();
-  changeGenericPage('records', uniqueExercises, 10, update1RMRegistryUI, direction);
+  changeGenericPage('records', uniqueExercises, RECORDS_PER_PAGE, update1RMRegistryUI, direction);
 }
 
 
