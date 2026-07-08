@@ -35,37 +35,42 @@ async function getProfileDocument(uid) {
  * Initialize Social Features upon successful Auth session 
  */
 async function initSocialProfile(user, dotsScore = 0) {
-  const tagEl = document.getElementById('myCyberTag');
-  if (tagEl) {
-    tagEl.value = user.uid;
-  }
+  try {
+    const tagEl = document.getElementById('myCyberTag');
+    if (tagEl) {
+      tagEl.value = user.uid;
+    }
 
-  const profileRef = getProfileDocRef(user.uid);
+    const profileRef = getProfileDocRef(user.uid);
 
-  const existingSnap = await getDoc(profileRef);
-  if (!existingSnap.exists() || !existingSnap.data().displayName) {
-    await setDoc(profileRef, {
-      uid: user.uid,
-      displayName: user.displayName || user.email?.split('@')[0] || 'Anonymous Cyber-Lifter',
-      dotsScore: parseFloat(dotsScore) || 0,
-      lastActive: serverTimestamp()
-    }, { merge: true });
-  } else {
-    await updateDoc(profileRef, {
-      dotsScore: parseFloat(dotsScore) || 0,
-      lastActive: serverTimestamp()
+    const existingSnap = await getDoc(profileRef);
+    if (!existingSnap.exists() || !existingSnap.data().displayName) {
+      await setDoc(profileRef, {
+        uid: user.uid,
+        displayName: user.displayName || user.email?.split('@')[0] || 'Anonymous Cyber-Lifter',
+        dotsScore: parseFloat(dotsScore) || 0,
+        lastActive: serverTimestamp()
+      }, { merge: true });
+    } else {
+      await updateDoc(profileRef, {
+        dotsScore: parseFloat(dotsScore) || 0,
+        lastActive: serverTimestamp()
+      });
+    }
+
+    unsubscribeProfile = onSnapshot(profileRef, (snapshot) => {
+      const data = snapshot.data();
+      state.social.userFriendsList = Array.isArray(data?.friends) ? data.friends : [];
+      renderActiveFriendsList();
+      renderLeaderboardView();
+    }, (error) => {
+      console.error('Profile snapshot failed', error.code, error.message);
+      showFeedback('Profile access denied: check Firestore rules for profiles.', 'red');
     });
+  } catch (err) {
+    console.error('Failed to initialize social profile:', err);
+    showFeedback('Failed to load social profile. Check Firestore rules.', 'red');
   }
-
-  unsubscribeProfile = onSnapshot(profileRef, (snapshot) => {
-    const data = snapshot.data();
-    state.social.userFriendsList = Array.isArray(data?.friends) ? data.friends : [];
-    renderActiveFriendsList();
-    renderLeaderboardView();
-  }, (error) => {
-    console.error('Profile snapshot failed', error.code, error.message);
-    showFeedback('Profile access denied: check Firestore rules for profiles.', 'red');
-  });
 }
 
 async function handleAddFriend() {
