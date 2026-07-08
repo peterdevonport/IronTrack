@@ -46,6 +46,11 @@ if (typeof lucide !== 'undefined' && lucide.createIcons) {
   lucide.createIcons();
 }
 
+window.addEventListener('unhandledrejection', (e) => {
+  console.error('Unhandled promise rejection:', e.reason);
+  showFeedback('An unexpected error occurred. Please try again.', 'red');
+});
+
 navTabs.forEach(btn => {
   btn.addEventListener('click', () => switchTab(btn.dataset.tab));
 });
@@ -54,7 +59,13 @@ const pendingClaimPlanId = new URLSearchParams(window.location.search).get('clai
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
   if (user) {
-    await handleSignedIn(user);
+    try {
+      await handleSignedIn(user);
+    } catch (err) {
+      console.error('Auth state handler failed:', err);
+      showFeedback('Failed to load your profile. Please try refreshing the page.', 'red');
+      handleSignedOut();
+    }
   } else {
     handleSignedOut();
   }
@@ -150,15 +161,19 @@ function attachListeners(uid) {
 }
 
 async function processUrlParams() {
-  if (pendingFriendUid && !urlParamsProcessed) {
-    await processFriendRequest(pendingFriendUid);
-  }
-  if (pendingClaimPlanId && !urlParamsProcessed) {
-    await processClaimedPlan(pendingClaimPlanId, switchPlansFilter);
-  }
-  if (pendingFriendUid || pendingClaimPlanId) {
-    urlParamsProcessed = true;
-    window.history.replaceState({}, document.title, window.location.pathname);
+  try {
+    if (pendingFriendUid && !urlParamsProcessed) {
+      await processFriendRequest(pendingFriendUid);
+    }
+    if (pendingClaimPlanId && !urlParamsProcessed) {
+      await processClaimedPlan(pendingClaimPlanId, switchPlansFilter);
+    }
+    if (pendingFriendUid || pendingClaimPlanId) {
+      urlParamsProcessed = true;
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  } catch (err) {
+    console.error('Failed to process URL parameters:', err);
   }
 }
 loginBtn.addEventListener('click', async () => {
