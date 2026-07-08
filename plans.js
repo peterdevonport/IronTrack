@@ -1,6 +1,6 @@
 import { auth, db, collection, query, where, onSnapshot, doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc, serverTimestamp, orderBy, limit, Timestamp, getDocs } from './firebase.js';
 import { state, EPLEY_CONSTANT, entriesPerPage, HAPTIC, FORM_SCHEMAS } from './state.js';
-import { estimateWeightForReps, getEffectiveLoad, computeDisplayWeight } from './math.js';
+import { estimateWeightForReps, getEffectiveLoad, computeDisplayWeight, rpeToRir } from './math.js';
 import { escapeHtml, haptic } from './dom.js';
 import { getExerciseInfo, EXERCISE_CATALOG, LOAD_FACTORS } from './exercise-data.js';
 import { formatMovementLoad, formatCardDate, formatWorkoutType } from './formatting.js';
@@ -207,7 +207,7 @@ function previewPctMode(pct, oneRM, calcSpan, addBtn) {
 
 function previewRpeMode(rpe, reps, oneRM, calcSpan) {
   if (!isNaN(rpe) && rpe >= 1 && rpe <= 10 && reps && reps >= 1) {
-    const rir = 10 - rpe;
+    const rir = rpeToRir(rpe);
     const totalRepsPossible = reps + rir;
     const targetWeight = Math.round(estimateWeightForReps(oneRM, totalRepsPossible));
     calcSpan.textContent = '\u2192 ' + targetWeight + ' kg';
