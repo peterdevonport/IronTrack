@@ -268,6 +268,32 @@ function enableSwipe(container, { onSwipeLeft, onSwipeRight, threshold = 50 }) {
   }, { passive: true });
 }
 
+function paginateAndRender({ stateKey, list, perPage = 3, containerId, renderItems, emptyMessage }) {
+  const container = document.getElementById(containerId);
+  const pagination = document.getElementById(`${stateKey}-pagination`);
+  if (!container) return;
+
+  const expandedIds = saveExpandedCardIds();
+
+  if (!list.length) {
+    renderEmptyState(container, emptyMessage);
+    if (pagination) pagination.classList.add('hidden');
+    restoreExpandedCardIds(expandedIds);
+    return;
+  }
+
+  const totalPages = Math.max(1, Math.ceil(list.length / perPage));
+  state.pagination[stateKey] = Math.min(state.pagination[stateKey], totalPages);
+  const start = (state.pagination[stateKey] - 1) * perPage;
+  const pageItems = list.slice(start, start + perPage);
+
+  container.innerHTML = renderItems(pageItems);
+  restoreExpandedCardIds(expandedIds);
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+
+  updatePagination(stateKey, state.pagination[stateKey], totalPages);
+}
+
 function changeGenericPage(paginationKey, list, perPage, renderFn, direction) {
   const totalPages = Math.max(1, Math.ceil(list.length / perPage));
   const page = state.pagination[paginationKey];
@@ -294,4 +320,4 @@ function switchTab(tabName) {
   state.ui.currentTab = tabName;
 }
 
-export { clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, saveExpandedCardIds, restoreExpandedCardIds, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, changeGenericPage, switchTab, BTN_ACTIVE_CLASS, BTN_INACTIVE_CLASS, setActiveTab, setInactiveTab };
+export { clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, saveExpandedCardIds, restoreExpandedCardIds, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, paginateAndRender, changeGenericPage, switchTab, BTN_ACTIVE_CLASS, BTN_INACTIVE_CLASS, setActiveTab, setInactiveTab };

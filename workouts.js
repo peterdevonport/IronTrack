@@ -5,7 +5,7 @@ import { escapeHtml, haptic, debounce } from './dom.js';
 import { LOAD_FACTORS, getExerciseInfo } from './exercise-data.js';
 import { formatWorkoutType, formatMovementWeight } from './formatting.js';
 import { buildWorkoutDescription, formatScore_ROUNDS_AND_REPS, formatScore_COMPLETED_MINUTES, formatScore_TIME_SECONDS, getRepsPerRound } from './analytics.js';
-import { clearChildren, showFeedback, showToast, updatePagination, updatePaginationControls, saveExpandedCardIds, restoreExpandedCardIds, switchTab, renderEmptyState, changeGenericPage } from './ui.js';
+import { clearChildren, showFeedback, showToast, updatePagination, updatePaginationControls, paginateAndRender, switchTab, renderEmptyState, changeGenericPage } from './ui.js';
 import { renderStructuredWorkoutCard } from './rendering.js';
 import { renderSharedPlansUI } from './social.js';
 import { computeAndSyncDailyActivity } from './calendar.js';
@@ -49,31 +49,13 @@ function listenToStructuredWorkouts(uid) {
 }
 
 function renderStructuredWorkoutHistory() {
-  const container = document.getElementById('structured-workout-list');
-  const pagination = document.getElementById('structured-pagination');
-  if (!container) return;
-
-  const expandedIds = saveExpandedCardIds();
-
-  const workouts = state.data.lastStructuredWorkouts;
-
-  if (!workouts.length) {
-    renderEmptyState(container, 'No structured workouts logged yet.');
-    if (pagination) pagination.classList.add('hidden');
-    return;
-  }
-
-  const perPage = 3;
-  const totalPages = Math.max(1, Math.ceil(workouts.length / perPage));
-  state.pagination.structured = Math.min(state.pagination.structured, totalPages);
-  const start = (state.pagination.structured - 1) * perPage;
-  const pageItems = workouts.slice(start, start + perPage);
-
-  container.innerHTML = pageItems.map(renderStructuredWorkoutCard).join('');
-  restoreExpandedCardIds(expandedIds);
-  if (typeof lucide !== 'undefined') lucide.createIcons();
-
-  updatePagination('structured', state.pagination.structured, totalPages);
+  paginateAndRender({
+    stateKey: 'structured',
+    list: state.data.lastStructuredWorkouts,
+    containerId: 'structured-workout-list',
+    renderItems: (items) => items.map(renderStructuredWorkoutCard).join(''),
+    emptyMessage: 'No structured workouts logged yet.'
+  });
 }
 
 function changeStructuredPage(direction) {
