@@ -25,9 +25,26 @@ function countActiveDays(daysBack, today, activeDates) {
 }
 
 function countConsecutiveDays(today, activeDates) {
+  if (activeDates.size === 0) return 0;
+
+  const todayStr = toLocalDateKey(today);
+  let startDate;
+
+  if (activeDates.has(todayStr)) {
+    startDate = new Date(today);
+  } else {
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (activeDates.has(toLocalDateKey(yesterday))) {
+      startDate = yesterday;
+    } else {
+      return 0;
+    }
+  }
+
   let streak = 0;
   for (let i = 0; ; i++) {
-    const d = new Date(today);
+    const d = new Date(startDate);
     d.setDate(d.getDate() - i);
     if (activeDates.has(toLocalDateKey(d))) streak++;
     else break;
