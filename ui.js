@@ -14,6 +14,7 @@ const BTN_INACTIVE_CLASS = 'btn-core is-ghost btn-size-row';
 
 export const FEEDBACK_ERROR_CLASS = 'text-xs text-rose-400 font-medium h-4 text-center';
 export const FEEDBACK_SUCCESS_CLASS = 'text-xs text-emerald-400 font-medium h-4 text-center';
+export const FEEDBACK_NEUTRAL_CLASS = 'text-xs text-slate-500 font-medium h-4 text-center';
 
 function setActiveTab(btn) { btn.className = BTN_ACTIVE_CLASS; }
 function setInactiveTab(btn) { btn.className = BTN_INACTIVE_CLASS; }
