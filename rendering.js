@@ -214,6 +214,14 @@ function buildCalendarDayHtml(dateStr, day, isActive, isToday, isSelected, isThi
   return `<div class="${cls}" data-action="select-calendar-day" data-date="${dateStr}">${day}</div>`;
 }
 
+function getBorderClass({ chipPBActive, chip1RMActive, isPB, is1RMOnly }) {
+  if (chipPBActive && !chip1RMActive) return 'log-entry-pb';
+  if (chip1RMActive && !chipPBActive) return 'log-entry-1rm';
+  if (isPB) return 'log-entry-pb';
+  if (is1RMOnly) return 'log-entry-1rm';
+  return 'log-entry';
+}
+
 function workoutToLogHtml(workout, chipPBActive, chip1RMActive) {
   const load = getEffectiveLoad(workout);
   const reps = parseInt(workout.reps, 10) || 1;
@@ -224,20 +232,7 @@ function workoutToLogHtml(workout, chipPBActive, chip1RMActive) {
   const oneRM = Math.round(estimate1RM(load, reps));
   const totalWorkReps = workout.totalWorkReps || (reps * sets);
   const totalVolume = Math.round(load * totalWorkReps);
-  let borderClass;
-  if (chipPBActive && !chip1RMActive) {
-    borderClass = 'log-entry-pb';
-  } else if (chip1RMActive && !chipPBActive) {
-    borderClass = 'log-entry-1rm';
-  } else {
-    if (isPB) {
-      borderClass = 'log-entry-pb';
-    } else if (is1RMOnly) {
-      borderClass = 'log-entry-1rm';
-    } else {
-      borderClass = 'log-entry';
-    }
-  }
+  const borderClass = getBorderClass({ chipPBActive, chip1RMActive, isPB, is1RMOnly });
   const secondLine = `Est. 1RM: ${oneRM}kg  <span class="text-slate-600">|</span>  Vol: ${totalVolume.toLocaleString()}kg`;
   const repDisplay = workout.partialReps ? `${sets} × ${reps} + ${workout.partialReps} reps` : `${sets} × ${reps}`;
   return `
