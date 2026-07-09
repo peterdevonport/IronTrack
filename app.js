@@ -62,7 +62,13 @@ window.addEventListener('unhandledrejection', (e) => {
 });
 
 navTabs.forEach(btn => {
-  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  btn.addEventListener('click', () => {
+    if (btn.dataset.tab === 'profile') {
+      openProfileModal();
+    } else {
+      switchTab(btn.dataset.tab);
+    }
+  });
 });
 const pendingFriendUid = new URLSearchParams(window.location.search).get('addFriend');
 const pendingClaimPlanId = new URLSearchParams(window.location.search).get('claimPlan');
