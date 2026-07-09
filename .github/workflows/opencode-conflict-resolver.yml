@@ -1,0 +1,61 @@
+name: OpenCode Conflict Resolver
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'The PR number to resolve'
+        required: true
+      branch_name:
+        description: 'The branch name to fix'
+        required: true
+
+jobs:
+  resolve-conflict:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.AUTO_MERGE_PAT }}
+          ref: ${{ github.event.inputs.branch_name }}
+
+      - name: Prepare Git Environment & Force Conflict Markers
+        env:
+          GH_TOKEN: ${{ secrets.AUTO_MERGE_PAT }}
+        run: |
+          git config --global user.name "opencode-conflict-resolver[bot]"
+          git config --global user.email "opencode-conflict-resolver[bot]@users.noreply.github.com"
+          
+          git fetch origin master
+          git merge origin/master || true
+
+      - name: Compile Conflict Resolution Prompt
+        id: compile_prompt
+        run: |
+          echo "You are a Senior Engineer fixing a Git merge conflict." > conflict_prompt.txt
+          echo "Your branch '${{ github.event.inputs.branch_name }}' has conflicted with updates on the master branch." >> conflict_prompt.txt
+          echo -e "\n### MISSION:" >> conflict_prompt.txt
+          echo "Locate all files containing git conflict markers (<<<<<<<, =======, >>>>>>>). Evaluate both modifications, merge them cleanly so that BOTH feature behaviors are preserved, completely remove the conflict markers, and ensure syntax is perfect." >> conflict_prompt.txt
+          
+          echo "PROMPT<<EOF" >> $GITHUB_OUTPUT
+          cat conflict_prompt.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Process Conflicts with DeepSeek
+        uses: anomalyco/opencode/github@v1.17.13
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.AUTO_MERGE_PAT }}
+        with:
+          model: opencode-go/deepseek-v4-flash
+          use_github_token: true
+          prompt: ${{ steps.compile_prompt.outputs.PROMPT }}
+
+      - name: Re-Enable Auto-Merge
+        env:
+          GH_TOKEN: ${{ secrets.AUTO_MERGE_PAT }}
+        run: |
+          echo "Conflict cleared and pushed by AI. Re-enabling the auto-merge queue for PR #${{ github.event.inputs.pr_number }}..."
+          gh pr merge "${{ github.event.inputs.pr_number }}" --auto --merge
