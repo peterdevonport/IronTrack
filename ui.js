@@ -12,6 +12,9 @@ const NOTIFICATION_COLORS = {
 const BTN_ACTIVE_CLASS = 'btn-core is-primary btn-size-row';
 const BTN_INACTIVE_CLASS = 'btn-core is-ghost btn-size-row';
 
+export const FEEDBACK_ERROR_CLASS = 'text-xs text-rose-400 font-medium h-4 text-center';
+export const FEEDBACK_SUCCESS_CLASS = 'text-xs text-emerald-400 font-medium h-4 text-center';
+
 function setActiveTab(btn) { btn.className = BTN_ACTIVE_CLASS; }
 function setInactiveTab(btn) { btn.className = BTN_INACTIVE_CLASS; }
 
@@ -220,7 +223,7 @@ function showPlanNameModal(defaultName) {
       const val = input.value.trim();
       if (!val) {
         feedback.textContent = 'Enter a plan name.';
-        feedback.className = 'text-xs text-rose-400 font-medium text-center h-4';
+        feedback.className = FEEDBACK_ERROR_CLASS;
         input.focus();
         return;
       }
