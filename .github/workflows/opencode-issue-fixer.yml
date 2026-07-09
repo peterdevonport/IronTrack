@@ -94,6 +94,7 @@ jobs:
 
       - name: Process Issue with DeepSeek V4 Flash
         uses: anomalyco/opencode/github@v1.17.13
+        timeout-minutes: 15 # 👈 Safety net: Caps the AI execution time
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
