@@ -265,7 +265,7 @@ async function submitStructuredWorkout(name, structure, now, config) {
   const { type, buildResult, scoreDisplay, scoreType, scoreValue, generateContributions } = config;
   const result = buildResult();
   const workoutDoc = {
-    userId: auth.auth.currentUser.uid, name, type, structure, result,
+    userId: auth.currentUser.uid, name, type, structure, result,
     scoreDisplay: scoreDisplay(result),
     scoreType,
     scoreValue: scoreValue(result),
@@ -461,7 +461,7 @@ async function writeStructuredLogEntry({ workoutId, movement, sets, totalReps, e
   const totalVolume = estimatedLoad * totalReps;
 
   const logEntry = {
-    userId: auth.auth.currentUser.uid,
+    userId: auth.currentUser.uid,
     exercise: movement.exerciseId,
     sets,
     reps: movement.reps,
