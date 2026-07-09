@@ -149,6 +149,29 @@ async function updateChallengeStreaks(monthlyDone, yearlyDone) {
     const monthly = { completedPeriods: [...state.user.userChallengeStreaks.monthly.completedPeriods], currentStreak: 0, bestStreak: state.user.userChallengeStreaks.monthly.bestStreak || 0 };
     const yearly = { completedPeriods: [...state.user.userChallengeStreaks.yearly.completedPeriods], currentStreak: 0, bestStreak: state.user.userChallengeStreaks.yearly.bestStreak || 0 };
 
+    const cfg = CONSISTENCY_CONFIG;
+    const dates = Array.from(activeDates);
+
+    const prevMonthlyLen = monthly.completedPeriods.length;
+    monthly.completedPeriods = monthly.completedPeriods.filter(p => {
+        if (p === currentMonth) return monthlyDone;
+        const [y, m] = p.split('-').map(Number);
+        return dates.filter(d => {
+            const [dy, dm] = d.split('-').map(Number);
+            return dy === y && dm === m;
+        }).length >= cfg.monthlyUniqueDays;
+    });
+
+    const prevYearlyLen = yearly.completedPeriods.length;
+    yearly.completedPeriods = yearly.completedPeriods.filter(p => {
+        if (p === currentYear) return yearlyDone;
+        return dates.filter(d => d.startsWith(p)).length >= cfg.yearlyUniqueDays;
+    });
+
+    if (monthly.completedPeriods.length !== prevMonthlyLen || yearly.completedPeriods.length !== prevYearlyLen) {
+        updated = true;
+    }
+
     if (monthlyDone && !monthly.completedPeriods.includes(currentMonth)) {
         monthly.completedPeriods.push(currentMonth);
         updated = true;
