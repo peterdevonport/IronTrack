@@ -53,10 +53,10 @@ function calculateChallengeProgress() {
 
     const lifetimeActive = activeDates.size;
 
-    // Add day0 offsets from onboarding (visual progress only)
+    // Add lifetime day0 offset from onboarding (cumulative seeding only)
     const day0 = state.user.userBiometrics?.day0TrainingDays || { monthly: 0, yearly: 0, lifetime: 0 };
 
-    return { monthly: monthlyActive + (day0.monthly || 0), yearly: yearlyActive + (day0.yearly || 0), lifetime: lifetimeActive + (day0.lifetime || 0), monthlyRaw: monthlyActive, yearlyRaw: yearlyActive, lifetimeRaw: lifetimeActive };
+    return { monthly: monthlyActive, yearly: yearlyActive, lifetime: lifetimeActive + (day0.lifetime || 0), monthlyRaw: monthlyActive, yearlyRaw: yearlyActive, lifetimeRaw: lifetimeActive };
 }
 
 function renderChallengeCards() {
