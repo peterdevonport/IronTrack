@@ -3,16 +3,20 @@ name: OpenCode Conflict Detector
 on:
   push:
     branches:
-      - master # Runs when a PR successfully merges
+      - master
   workflow_run:
-    workflows: ["CI Test Suite"] # 👈 REPLACE with the exact name of your repo's main test/build workflow
+    workflows: ["CI Test Suite"] # 👈 Make sure this matches your actual test workflow name string
     types:
-      - completed # Runs when tests pass OR fail on any branch
+      - completed
 
 jobs:
   evaluate-queue:
     runs-on: ubuntu-latest
     steps:
+      # 🛡️ FIX: This pulls down the repository context so the 'gh' CLI knows where it is
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
       - name: Evaluate PR Pool Status
         env:
           GH_TOKEN: ${{ secrets.AUTO_MERGE_PAT }}
@@ -37,7 +41,6 @@ jobs:
             echo "Checking status of PR #$PR_NUM ($BRANCH)..."
 
             # RULE 1: If a PR is currently running tests, stop entirely. 
-            # We must wait for this PR to either cross the finish line or crash before touching anything else.
             if [ "$STATUS" = "IN_PROGRESS" ]; then
               echo "⏳ PR #$PR_NUM is currently executing CI checks. Standing down to avoid race conditions."
               exit 0
@@ -57,7 +60,6 @@ jobs:
                 -f pr_number="$PR_NUM" \
                 -f branch_name="$BRANCH"
               
-              # Exit immediately so no other workers are spawned until this one updates the board
               exit 0
             fi
           done
