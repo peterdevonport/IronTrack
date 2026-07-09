@@ -6,7 +6,7 @@ import { getExerciseInfo, getDisplayName, EXERCISE_CATALOG, LOAD_FACTORS } from 
 import { getMonday, countActiveDays, countConsecutiveDays, toLocalDateKey } from './date.js';
 import { formatMovementLoad, formatCardDate, formatWorkoutType, formatDotsScore, formatMovementWeight } from './formatting.js';
 import { computeDotsScore, computeSinclairScore, getRankingTier, formatScore_ROUNDS_AND_REPS, formatScore_COMPLETED_MINUTES, formatScore_TIME_SECONDS, describeAmrap, describeEmom, describeForTime, describeInterval, buildWorkoutDescription, buildWorkoutSummaryLine, getRepsPerRound } from './analytics.js';
-import { clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, changeGenericPage, switchTab, FEEDBACK_ERROR_CLASS, FEEDBACK_SUCCESS_CLASS } from './ui.js';
+import { clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, changeGenericPage, switchTab, FEEDBACK_ERROR_CLASS, FEEDBACK_SUCCESS_CLASS, FEEDBACK_NEUTRAL_CLASS } from './ui.js';
 import { buildWmsField, applyFieldAttributes, renderFormFields } from './forms.js';
 import { renderOnboarding1RMItem, renderOnboarding1RMList, renderCalcEntry, renderCalcEntries, renderPlanMovementItem, renderPlanMovements, renderMovementChips, renderEmomChips, renderCalendarWorkoutItem, renderVolumeBar, renderMinuteSlotInner, renderShareFriendItem, renderRegistryRow, renderLeaderboardEmptyRow, buildCalendarDayHtml, workoutToLogHtml, renderWorkoutCard, renderStructuredWorkoutCard, renderPlanCard, renderSharedPlanCard, friendToHtml, buildLeaderboardRow } from './rendering.js';
 import { getSchemaKey, computeTotalLoad, pullProfileMetrics, refreshPBForm, processWorkoutSnapshot, updateCaches, logPB } from './auth.js';
@@ -31,14 +31,15 @@ function showForgotPassword() {
   forgotPasswordEmail.value = emailInput.value || '';
   forgotPasswordEmail.focus();
   forgotPasswordFeedback.textContent = '';
-  forgotPasswordFeedback.className = 'text-xs text-slate-500 font-medium text-center h-4';
+  forgotPasswordFeedback.className = FEEDBACK_NEUTRAL_CLASS;
 }
 
 function showAuthForm() {
-  forgotPasswordSection.classList.add('hidden');
-  authFormContainer.classList.remove('hidden');
+  forgotPasswordSection.classList.remove('hidden');
+  authFormContainer.classList.add('hidden');
+  forgotPasswordEmail.value = '';
   forgotPasswordFeedback.textContent = '';
-  forgotPasswordFeedback.className = 'text-xs text-slate-500 font-medium text-center h-4';
+  forgotPasswordFeedback.className = FEEDBACK_NEUTRAL_CLASS;
 }
 
 function enableSaveOnDirty() { saveProfileBtn.disabled = false; }
@@ -414,7 +415,7 @@ if (changePasswordBtn && changePasswordForm) {
     changePasswordBtn.classList.add('hidden');
     changePasswordForm.classList.remove('hidden');
     cpFeedback.textContent = '';
-    cpFeedback.className = 'text-xs text-slate-500 font-medium h-4 text-center';
+    cpFeedback.className = FEEDBACK_NEUTRAL_CLASS;
   });
 }
 
