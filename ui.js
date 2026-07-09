@@ -310,10 +310,6 @@ function changeGenericPage(paginationKey, list, perPage, renderFn, direction) {
 }
 
 function switchTab(tabName) {
-  if (tabName === 'profile') {
-    openProfileModal();
-    return;
-  }
   tabContents.forEach(el => el.classList.remove('active'));
   const target = document.getElementById('tab-' + tabName);
   if (target) target.classList.add('active');
