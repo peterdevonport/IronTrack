@@ -251,9 +251,10 @@ function listenToSharedPlans(uid) {
 }
 
 function getItemDate(item) {
-  if (item.type === 'own') return item.plan.createdAt;
-  if (item.type === 'shared') return item.share.createdAt;
-  return item.structured.timestamp;
+  if (item.type === 'own') return item.plan?.createdAt ?? 0;
+  if (item.type === 'shared') return item.share?.createdAt ?? 0;
+  if (item.type === 'structured') return item.structured?.timestamp ?? 0;
+  return 0;
 }
 
 function renderSharedPlansUI() {
