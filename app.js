@@ -19,6 +19,15 @@ import { writeStructuredLogEntry, generateContributionsBase, generateAmrapContri
 import { update1RMRegistryUI, updateCalcCard, switchCalcMode, updateCalcPreview, handleCalcAdd, handleCalcRemove, handleCalcClear, updateLogSetButtonState, refreshLogSetForm, populateLiftSelectors, populateExerciseDropdown, populateWorkoutFilter, changePage, changeRecordsPage, currentCalcMode } from './calc.js';
 import { renderFromWorkouts, listenToDataStream, processAnalytics } from './data.js';
 
+const PASSWORD_ERROR_MAP = {
+  'auth/wrong-password': 'Current password is incorrect.',
+  'auth/weak-password': 'New password is too weak.',
+  'auth/requires-recent-login': 'Please sign out and sign in again, then retry.',
+};
+const DELETE_ERROR_MAP = {
+  'auth/wrong-password': 'Incorrect password. Account not deleted.',
+  'auth/requires-recent-login': 'Session expired. Please sign out and sign in again, then retry.',
+};
 let currentUser = null;
 let unsubscribeLogs = null;
 let pendingOnboarding1RMs = [];
@@ -475,11 +484,6 @@ if (cpUpdate) {
       }, FEEDBACK_DISMISS_DEFAULT_MS);
       haptic(HAPTIC.confirm);
     } catch (err) {
-      const PASSWORD_ERROR_MAP = {
-        'auth/wrong-password': 'Current password is incorrect.',
-        'auth/weak-password': 'New password is too weak.',
-        'auth/requires-recent-login': 'Please sign out and sign in again, then retry.',
-      };
       const msg = PASSWORD_ERROR_MAP[err.code] || `Failed: ${err.message}`;
       cpFeedback.textContent = msg;
       cpFeedback.className = FEEDBACK_ERROR_CLASS;
@@ -511,10 +515,6 @@ if (deleteAccountBtn) {
       await deleteUser(auth.currentUser);
       haptic(HAPTIC.confirm);
     } catch (err) {
-      const DELETE_ERROR_MAP = {
-        'auth/wrong-password': 'Incorrect password. Account not deleted.',
-        'auth/requires-recent-login': 'Session expired. Please sign out and sign in again, then retry.',
-      };
       const msg = DELETE_ERROR_MAP[err.code] || `Failed to delete account: ${err.message}`;
       showFeedback(msg, 'red', 'profileFeedback');
       deleteAccountBtn.disabled = false;
