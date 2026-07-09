@@ -309,6 +309,10 @@ function changeGenericPage(paginationKey, list, perPage, renderFn, direction) {
   renderFn();
 }
 
+function isPermissionDenied(err) {
+  return err?.code === 'permission-denied';
+}
+
 function switchTab(tabName) {
   tabContents.forEach(el => el.classList.remove('active'));
   const target = document.getElementById('tab-' + tabName);
@@ -320,4 +324,4 @@ function switchTab(tabName) {
   state.ui.currentTab = tabName;
 }
 
-export { clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, saveExpandedCardIds, restoreExpandedCardIds, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, paginateAndRender, changeGenericPage, switchTab, BTN_ACTIVE_CLASS, BTN_INACTIVE_CLASS, setActiveTab, setInactiveTab };
+export { clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, saveExpandedCardIds, restoreExpandedCardIds, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, paginateAndRender, changeGenericPage, switchTab, isPermissionDenied, BTN_ACTIVE_CLASS, BTN_INACTIVE_CLASS, setActiveTab, setInactiveTab };

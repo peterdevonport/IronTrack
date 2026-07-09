@@ -6,7 +6,7 @@ import { getExerciseInfo, getDisplayName, EXERCISE_CATALOG, LOAD_FACTORS } from 
 import { getMonday, countActiveDays, countConsecutiveDays, toLocalDateKey } from './date.js';
 import { formatMovementLoad, formatCardDate, formatWorkoutType, formatDotsScore, formatMovementWeight } from './formatting.js';
 import { computeDotsScore, computeSinclairScore, getRankingTier, formatScore_ROUNDS_AND_REPS, formatScore_COMPLETED_MINUTES, formatScore_TIME_SECONDS, describeAmrap, describeEmom, describeForTime, describeInterval, buildWorkoutDescription, buildWorkoutSummaryLine, getRepsPerRound } from './analytics.js';
-import { clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, changeGenericPage, switchTab, FEEDBACK_ERROR_CLASS, FEEDBACK_SUCCESS_CLASS, FEEDBACK_NEUTRAL_CLASS } from './ui.js';
+import { clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, changeGenericPage, switchTab, isPermissionDenied, FEEDBACK_ERROR_CLASS, FEEDBACK_SUCCESS_CLASS, FEEDBACK_NEUTRAL_CLASS } from './ui.js';
 import { buildWmsField, applyFieldAttributes, renderFormFields } from './forms.js';
 import { renderOnboarding1RMItem, renderOnboarding1RMList, renderCalcEntry, renderCalcEntries, renderPlanMovementItem, renderPlanMovements, renderMovementChips, renderEmomChips, renderCalendarWorkoutItem, renderVolumeBar, renderMinuteSlotInner, renderShareFriendItem, renderRegistryRow, renderLeaderboardEmptyRow, buildCalendarDayHtml, workoutToLogHtml, renderWorkoutCard, renderStructuredWorkoutCard, renderPlanCard, renderSharedPlanCard, friendToHtml, buildLeaderboardRow } from './rendering.js';
 import { getSchemaKey, computeTotalLoad, pullProfileMetrics, refreshPBForm, processWorkoutSnapshot, updateCaches, logPB } from './auth.js';
@@ -280,11 +280,11 @@ if (forgotPasswordSend) {
       forgotPasswordFeedback.className = FEEDBACK_SUCCESS_CLASS;
       setTimeout(showAuthForm, FEEDBACK_DISMISS_DEFAULT_MS);
     } catch (error) {
-      const msg = error.code === 'auth/user-not-found'
-        ? 'No account found with this email.'
-        : error.code === 'auth/invalid-email'
-        ? 'Invalid email address.'
-        : `Failed: ${error.message}`;
+      const PASSWORD_RESET_ERROR_MAP = {
+        'auth/user-not-found': 'No account found with this email.',
+        'auth/invalid-email': 'Invalid email address.',
+      };
+      const msg = PASSWORD_RESET_ERROR_MAP[error.code] || `Failed: ${error.message}`;
       forgotPasswordFeedback.textContent = msg;
       forgotPasswordFeedback.className = FEEDBACK_ERROR_CLASS;
     } finally {
@@ -689,7 +689,7 @@ workoutForm.addEventListener('submit', async (e) => {
         haptic(HAPTIC.confirm);
     } catch (err) {
         console.error('Workout submission failed', err.code, err.message);
-        if (err.code === 'permission-denied') {
+        if (isPermissionDenied(err)) {
             showFeedback('Save blocked by Firestore rules: update workouts permissions.', 'red');
         }
         alert(`Failed to save workout: ${err.message}`);

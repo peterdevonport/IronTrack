@@ -3,7 +3,7 @@ import { state, HAPTIC, FRIEND_SUCCESS_CLEAR_MS } from './state.js';
 import { escapeHtml, haptic } from './dom.js';
 import { getDisplayName } from './exercise-data.js';
 import { friendToHtml } from './rendering.js';
-import { renderEmptyState, showFeedback, updatePagination, changeGenericPage } from './ui.js';
+import { renderEmptyState, showFeedback, updatePagination, changeGenericPage, isPermissionDenied } from './ui.js';
 import { renderLeaderboardView, syncLeaderboardFeed } from './leaderboard.js';
 
 let unsubscribeProfile = null;
@@ -118,7 +118,7 @@ async function handleAddFriend() {
 
   } catch (err) {
     console.error('Friend add failed', err.code, err.message);
-    if (err.code === 'permission-denied') {
+    if (isPermissionDenied(err)) {
       showFeedback('Permission denied: check Firestore rules for profiles.', 'red', feedbackTarget);
     } else {
       showFeedback(`Error linking network node: ${err.message}`, 'red', feedbackTarget);
@@ -151,7 +151,7 @@ async function addFriendFromLeaderboard(friendUid) {
     haptic(HAPTIC.tap);
   } catch (err) {
     console.error('Leaderboard friend add failed', err.code, err.message);
-    if (err.code === 'permission-denied') {
+    if (isPermissionDenied(err)) {
       showFeedback('Permission denied: check Firestore rules for profiles.', 'red');
     } else {
       showFeedback(`Could not add friend: ${err.message}`, 'red');
