@@ -9,6 +9,21 @@ import { getProfileDocument, getProfileDocRef } from './friends.js';
 let unsubscribeSharedPlans = null;
 const _favDebounce = {};
 
+const ITEM_TYPE_STRATEGIES = {
+  own: {
+    getDate: (item) => item.plan?.createdAt ?? 0,
+    render: (item) => renderPlanCard(item.plan),
+  },
+  shared: {
+    getDate: (item) => item.share?.createdAt ?? 0,
+    render: (item) => renderSharedPlanCard(item.share),
+  },
+  structured: {
+    getDate: (item) => item.structured?.timestamp ?? 0,
+    render: (item) => renderStructuredWorkoutCard(item.structured),
+  },
+};
+
 // --- QR add friend  ---
 async function processFriendRequest(friendId) {
     if (!auth.currentUser || friendId === auth.currentUser.uid) return;
@@ -251,10 +266,7 @@ function listenToSharedPlans(uid) {
 }
 
 function getItemDate(item) {
-  if (item.type === 'own') return item.plan?.createdAt ?? 0;
-  if (item.type === 'shared') return item.share?.createdAt ?? 0;
-  if (item.type === 'structured') return item.structured?.timestamp ?? 0;
-  return 0;
+  return ITEM_TYPE_STRATEGIES[item.type]?.getDate(item) ?? 0;
 }
 
 function renderSharedPlansUI() {
@@ -282,9 +294,8 @@ function renderSharedPlansUI() {
     list: items,
     containerId: 'shared-plans-inline',
     renderItems: (pageItems) => pageItems.map(item => {
-      if (item.type === 'own') return renderPlanCard(item.plan);
-      if (item.type === 'shared') return renderSharedPlanCard(item.share);
-      return renderStructuredWorkoutCard(item.structured);
+      const strategy = ITEM_TYPE_STRATEGIES[item.type];
+      return strategy ? strategy.render(item) : '';
     }).join(''),
     emptyMessage
   });
