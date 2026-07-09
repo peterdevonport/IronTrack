@@ -5,7 +5,7 @@ on:
     branches:
       - master # Runs when a PR successfully merges
   workflow_run:
-    workflows: ["CI Tests"] # 👈 REPLACE with the exact name of your repo's main test/build workflow
+    workflows: ["CI Test Suite"] # 👈 REPLACE with the exact name of your repo's main test/build workflow
     types:
       - completed # Runs when tests pass OR fail on any branch
 
