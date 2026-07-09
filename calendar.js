@@ -53,10 +53,10 @@ function calculateChallengeProgress() {
 
     const lifetimeActive = activeDates.size;
 
-    // Add day0 offsets from onboarding
+    // Add day0 offsets from onboarding (visual progress only)
     const day0 = state.user.userBiometrics?.day0TrainingDays || { monthly: 0, yearly: 0, lifetime: 0 };
 
-    return { monthly: monthlyActive + (day0.monthly || 0), yearly: yearlyActive + (day0.yearly || 0), lifetime: lifetimeActive + (day0.lifetime || 0) };
+    return { monthly: monthlyActive + (day0.monthly || 0), yearly: yearlyActive + (day0.yearly || 0), lifetime: lifetimeActive + (day0.lifetime || 0), monthlyRaw: monthlyActive, yearlyRaw: yearlyActive, lifetimeRaw: lifetimeActive };
 }
 
 function renderChallengeCards() {
@@ -67,8 +67,8 @@ function renderChallengeCards() {
     const yearlyPct = Math.min(PERCENT_DIVISOR, (progress.yearly / cfg.yearlyUniqueDays) * PERCENT_DIVISOR);
     const lifetimePct = Math.min(PERCENT_DIVISOR, (progress.lifetime / cfg.lifetimeUniqueDays) * PERCENT_DIVISOR);
 
-    const monthlyDone = progress.monthly >= cfg.monthlyUniqueDays;
-    const yearlyDone = progress.yearly >= cfg.yearlyUniqueDays;
+    const monthlyDone = progress.monthlyRaw >= cfg.monthlyUniqueDays;
+    const yearlyDone = progress.yearlyRaw >= cfg.yearlyUniqueDays;
     const lifetimeDone = progress.lifetime >= cfg.lifetimeUniqueDays;
 
     setChallengeCard('challenge-monthly', progress.monthly, cfg.monthlyUniqueDays, monthlyPct, monthlyDone);
