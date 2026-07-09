@@ -6,7 +6,7 @@ import { getExerciseInfo, getDisplayName, EXERCISE_CATALOG, LOAD_FACTORS } from 
 import { getMonday, countActiveDays, countConsecutiveDays, toLocalDateKey } from './date.js';
 import { formatMovementLoad, formatCardDate, formatWorkoutType, formatDotsScore, formatMovementWeight } from './formatting.js';
 import { computeDotsScore, computeSinclairScore, getRankingTier, formatScore_ROUNDS_AND_REPS, formatScore_COMPLETED_MINUTES, formatScore_TIME_SECONDS, describeAmrap, describeEmom, describeForTime, describeInterval, buildWorkoutDescription, buildWorkoutSummaryLine, getRepsPerRound } from './analytics.js';
-import { clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, changeGenericPage, switchTab } from './ui.js';
+import { clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, changeGenericPage, switchTab, FEEDBACK_ERROR_CLASS, FEEDBACK_SUCCESS_CLASS } from './ui.js';
 import { buildWmsField, applyFieldAttributes, renderFormFields } from './forms.js';
 import { renderOnboarding1RMItem, renderOnboarding1RMList, renderCalcEntry, renderCalcEntries, renderPlanMovementItem, renderPlanMovements, renderMovementChips, renderEmomChips, renderCalendarWorkoutItem, renderVolumeBar, renderMinuteSlotInner, renderShareFriendItem, renderRegistryRow, renderLeaderboardEmptyRow, buildCalendarDayHtml, workoutToLogHtml, renderWorkoutCard, renderStructuredWorkoutCard, renderPlanCard, renderSharedPlanCard, friendToHtml, buildLeaderboardRow } from './rendering.js';
 import { getSchemaKey, computeTotalLoad, pullProfileMetrics, refreshPBForm, processWorkoutSnapshot, updateCaches, logPB } from './auth.js';
@@ -253,7 +253,7 @@ if (forgotPasswordSend) {
     const email = forgotPasswordEmail.value.trim();
     if (!email) {
       forgotPasswordFeedback.textContent = 'Enter your email address.';
-      forgotPasswordFeedback.className = 'text-xs text-rose-400 font-medium text-center h-4';
+      forgotPasswordFeedback.className = FEEDBACK_ERROR_CLASS;
       return;
     }
     forgotPasswordSend.disabled = true;
@@ -261,7 +261,7 @@ if (forgotPasswordSend) {
     try {
       await sendPasswordResetEmail(auth, email);
       forgotPasswordFeedback.textContent = 'Reset link sent! Check your email.';
-      forgotPasswordFeedback.className = 'text-xs text-emerald-400 font-medium text-center h-4';
+      forgotPasswordFeedback.className = FEEDBACK_SUCCESS_CLASS;
       setTimeout(showAuthForm, 2000);
     } catch (error) {
       const msg = error.code === 'auth/user-not-found'
@@ -270,7 +270,7 @@ if (forgotPasswordSend) {
         ? 'Invalid email address.'
         : `Failed: ${error.message}`;
       forgotPasswordFeedback.textContent = msg;
-      forgotPasswordFeedback.className = 'text-xs text-rose-400 font-medium text-center h-4';
+      forgotPasswordFeedback.className = FEEDBACK_ERROR_CLASS;
     } finally {
       forgotPasswordSend.disabled = false;
       forgotPasswordSend.textContent = 'Send Reset Link';
@@ -437,22 +437,22 @@ if (cpUpdate) {
 
     if (!currentPw || !newPw || !confirmPw) {
       cpFeedback.textContent = 'Fill in all password fields.';
-      cpFeedback.className = 'text-xs text-rose-400 font-medium h-4 text-center';
+      cpFeedback.className = FEEDBACK_ERROR_CLASS;
       return;
     }
     if (newPw.length < 6) {
       cpFeedback.textContent = 'New password must be at least 6 characters.';
-      cpFeedback.className = 'text-xs text-rose-400 font-medium h-4 text-center';
+      cpFeedback.className = FEEDBACK_ERROR_CLASS;
       return;
     }
     if (newPw !== confirmPw) {
       cpFeedback.textContent = 'New passwords do not match.';
-      cpFeedback.className = 'text-xs text-rose-400 font-medium h-4 text-center';
+      cpFeedback.className = FEEDBACK_ERROR_CLASS;
       return;
     }
     if (newPw === currentPw) {
       cpFeedback.textContent = 'New password must differ from current.';
-      cpFeedback.className = 'text-xs text-rose-400 font-medium h-4 text-center';
+      cpFeedback.className = FEEDBACK_ERROR_CLASS;
       return;
     }
 
@@ -463,7 +463,7 @@ if (cpUpdate) {
       await reauthenticateWithCredential(auth.currentUser, credential);
       await updatePassword(auth.currentUser, newPw);
       cpFeedback.textContent = 'Password updated successfully!';
-      cpFeedback.className = 'text-xs text-emerald-400 font-medium h-4 text-center';
+      cpFeedback.className = FEEDBACK_SUCCESS_CLASS;
       cpCurrent.value = '';
       cpNew.value = '';
       cpConfirm.value = '';
@@ -481,7 +481,7 @@ if (cpUpdate) {
       };
       const msg = PASSWORD_ERROR_MAP[err.code] || `Failed: ${err.message}`;
       cpFeedback.textContent = msg;
-      cpFeedback.className = 'text-xs text-rose-400 font-medium h-4 text-center';
+      cpFeedback.className = FEEDBACK_ERROR_CLASS;
     } finally {
       cpUpdate.disabled = false;
       cpUpdate.textContent = 'Update Password';
