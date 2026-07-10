@@ -28,6 +28,10 @@ const DELETE_ERROR_MAP = {
   'auth/wrong-password': 'Incorrect password. Account not deleted.',
   'auth/requires-recent-login': 'Session expired. Please sign out and sign in again, then retry.',
 };
+const PASSWORD_RESET_ERROR_MAP = {
+  'auth/user-not-found': 'No account found with this email.',
+  'auth/invalid-email': 'Invalid email address.',
+};
 let currentUser = null;
 let unsubscribeLogs = null;
 let pendingOnboarding1RMs = [];
@@ -280,10 +284,6 @@ if (forgotPasswordSend) {
       forgotPasswordFeedback.className = FEEDBACK_SUCCESS_CLASS;
       setTimeout(showAuthForm, FEEDBACK_DISMISS_DEFAULT_MS);
     } catch (error) {
-      const PASSWORD_RESET_ERROR_MAP = {
-        'auth/user-not-found': 'No account found with this email.',
-        'auth/invalid-email': 'Invalid email address.',
-      };
       const msg = PASSWORD_RESET_ERROR_MAP[error.code] || `Failed: ${error.message}`;
       forgotPasswordFeedback.textContent = msg;
       forgotPasswordFeedback.className = FEEDBACK_ERROR_CLASS;
