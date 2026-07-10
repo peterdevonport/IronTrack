@@ -690,7 +690,7 @@ workoutForm.addEventListener('submit', async (e) => {
     } catch (err) {
         console.error('Workout submission failed', err.code, err.message);
         if (isPermissionDenied(err)) {
-            showFeedback('Save blocked by Firestore rules: update workouts permissions.', 'red');
+            showFeedback('Save blocked by Firestore rules.', 'red', 'workoutFeedback');
         }
         alert(`Failed to save workout: ${err.message}`);
     }
