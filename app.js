@@ -523,6 +523,7 @@ if (deleteAccountBtn) {
     } catch (err) {
       const msg = DELETE_ERROR_MAP[err.code] || `Failed to delete account: ${err.message}`;
       showFeedback(msg, 'red', 'profileFeedback');
+    } finally {
       deleteAccountBtn.disabled = false;
       deleteAccountBtn.textContent = 'Delete Account';
     }
