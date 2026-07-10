@@ -6,6 +6,7 @@ import {
   submitIntervalWorkout,
   resetTrainingTab
 } from './functions.js';
+import { isPermissionDenied } from '../ui.js';
 
 // Integration test for submitPendingWorkout logic
 // Since the actual function is tightly coupled to app.js globals,
@@ -97,7 +98,7 @@ describe('submitPendingWorkout integration', () => {
       deps.showFeedback('Workout logged!', 'emerald', 'log-workout-feedback');
       deps.haptic(deps.HAPTIC.confirm);
     } catch (err) {
-      if (err.code === 'permission-denied') {
+      if (isPermissionDenied(err)) {
         deps.showFeedback('Save blocked by Firestore rules.', 'rose', 'log-workout-feedback');
       } else {
         deps.alert('Failed to log workout: ' + err.message);
