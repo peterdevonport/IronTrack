@@ -199,30 +199,30 @@ async function processUrlParams() {
 loginBtn.addEventListener('click', async () => {
     const email = emailInput.value.trim();
     const password = passwordInput.value;
-    if (!email || !password) return alert("Please fill out all credential spaces.");
+    if (!email || !password) return showFeedback('Please fill out all credential spaces.', 'red', 'auth-feedback');
 
     try {
         await signInWithEmailAndPassword(auth, email, password);
         emailInput.value = "";
         passwordInput.value = "";
     } catch (error) {
-        alert(`Authentication Rejected: ${error.message}`);
+        showFeedback(`Authentication Rejected: ${error.message}`, 'red', 'auth-feedback');
     }
 });
 
 signupBtn.addEventListener('click', async () => {
     const email = emailInput.value.trim();
     const password = passwordInput.value;
-    if (!email || !password) return alert("Please assign an email and password.");
-    if (password.length < 6) return alert("Password security requires at least 6 characters.");
+    if (!email || !password) return showFeedback('Please assign an email and password.', 'red', 'auth-feedback');
+    if (password.length < 6) return showFeedback('Password security requires at least 6 characters.', 'red', 'auth-feedback');
 
     try {
         await createUserWithEmailAndPassword(auth, email, password);
         emailInput.value = "";
         passwordInput.value = "";
-        alert("Account mapped successfully!");
+        showFeedback('Account mapped successfully!', 'emerald', 'auth-feedback');
     } catch (error) {
-        alert(`Registration Failed: ${error.message}`);
+        showFeedback(`Registration Failed: ${error.message}`, 'red', 'auth-feedback');
     }
 });
 
