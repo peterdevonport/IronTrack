@@ -99,7 +99,7 @@ describe('submitPendingWorkout integration', () => {
       deps.haptic(deps.HAPTIC.confirm);
     } catch (err) {
       if (isPermissionDenied(err)) {
-        deps.showFeedback('Save blocked by Firestore rules.', 'rose', 'log-workout-feedback');
+        deps.showFeedback('You do not have permission to save this workout.', 'rose', 'log-workout-feedback');
       } else {
         deps.alert('Failed to log workout: ' + err.message);
       }
@@ -204,7 +204,7 @@ describe('submitPendingWorkout integration', () => {
 
     await simulateSubmitPendingWorkout('AMRAP', 'Test', { movements: [] });
 
-    expect(deps.showFeedback).toHaveBeenCalledWith('Save blocked by Firestore rules.', 'rose', 'log-workout-feedback');
+    expect(deps.showFeedback).toHaveBeenCalledWith('You do not have permission to save this workout.', 'rose', 'log-workout-feedback');
   });
 
   it('should handle other Firestore errors', async () => {
