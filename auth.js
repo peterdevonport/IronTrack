@@ -4,7 +4,7 @@ import { estimate1RM, getEffectiveLoad, computeEffectiveLoad } from './math.js';
 import { haptic } from './dom.js';
 import { getExerciseInfo, LOAD_FACTORS } from './exercise-data.js';
 import { renderFormFields } from './forms.js';
-import { showFeedback } from './ui.js';
+import { PERMISSION_ERROR_MAP, showFeedback } from './ui.js';
 
 function getSchemaKey(exerciseName) {
   const info = getExerciseInfo(exerciseName);
@@ -47,7 +47,7 @@ async function pullProfileMetrics(uid) {
         if (saveBtn) saveBtn.disabled = true;
     } catch (err) {
         console.error('Failed to load profile metrics', err.code, err.message);
-        showFeedback('Unable to load profile metrics. Check Firestore rules for profiles.', 'red');
+        showFeedback(PERMISSION_ERROR_MAP.loadProfileMetrics, 'red');
     }
 }
 

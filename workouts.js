@@ -5,7 +5,7 @@ import { escapeHtml, haptic, debounce } from './dom.js';
 import { LOAD_FACTORS, getExerciseInfo } from './exercise-data.js';
 import { formatWorkoutType, formatMovementWeight } from './formatting.js';
 import { buildWorkoutDescription, formatScore_ROUNDS_AND_REPS, formatScore_COMPLETED_MINUTES, formatScore_TIME_SECONDS, getRepsPerRound } from './analytics.js';
-import { clearChildren, showFeedback, showToast, updatePagination, updatePaginationControls, paginateAndRender, switchTab, renderEmptyState, changeGenericPage, isPermissionDenied } from './ui.js';
+import { PERMISSION_ERROR_MAP, clearChildren, showFeedback, showToast, updatePagination, updatePaginationControls, paginateAndRender, switchTab, renderEmptyState, changeGenericPage, isPermissionDenied } from './ui.js';
 import { renderStructuredWorkoutCard } from './rendering.js';
 import { renderSharedPlansUI } from './social.js';
 import { computeAndSyncDailyActivity } from './calendar.js';
@@ -418,7 +418,7 @@ async function submitPendingWorkout() {
   } catch (err) {
     console.error('Log pending workout failed', err.code, err.message);
     if (isPermissionDenied(err)) {
-      showFeedback('Save blocked by Firestore rules.', 'rose', 'log-workout-feedback');
+      showFeedback(PERMISSION_ERROR_MAP.saveWorkout, 'rose', 'log-workout-feedback');
     } else {
       showFeedback('Failed to log workout: ' + err.message, 'rose', 'log-workout-feedback');
     }
