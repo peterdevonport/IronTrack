@@ -5,6 +5,7 @@ import { getDisplayName } from './exercise-data.js';
 import { buildLeaderboardRow, renderLeaderboardEmptyRow } from './rendering.js';
 import { showFeedback, clearChildren, setActiveTab, setInactiveTab } from './ui.js';
 import { getProfileDocRef } from './friends.js';
+import { MSG } from './messages.js';
 
 let leaderboardUnsubscribe = null;
 
@@ -115,7 +116,7 @@ function syncLeaderboardFeed() {
     renderLeaderboardView();
   }, (error) => {
     console.error('Leaderboard snapshot failed', error.code, error.message);
-    showFeedback('Leaderboard access denied: update Firestore rules for profiles.', 'red');
+    showFeedback(MSG.PERMISSION_LEADERBOARD, 'red');
   });
 }
 

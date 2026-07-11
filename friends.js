@@ -5,6 +5,7 @@ import { getDisplayName } from './exercise-data.js';
 import { friendToHtml } from './rendering.js';
 import { renderEmptyState, showFeedback, updatePagination, changeGenericPage, isPermissionDenied } from './ui.js';
 import { renderLeaderboardView, syncLeaderboardFeed } from './leaderboard.js';
+import { MSG } from './messages.js';
 
 let unsubscribeProfile = null;
 
@@ -65,11 +66,11 @@ async function initSocialProfile(user, dotsScore = 0) {
       renderLeaderboardView();
     }, (error) => {
       console.error('Profile snapshot failed', error.code, error.message);
-      showFeedback('Profile access denied: check Firestore rules for profiles.', 'red');
+      showFeedback(MSG.PERMISSION_FIRESTORE_RULES, 'red');
     });
   } catch (err) {
     console.error('Failed to initialize social profile:', err);
-    showFeedback('Failed to load social profile. Check Firestore rules.', 'red');
+    showFeedback(MSG.LOAD_SOCIAL_PROFILE_FAILED, 'red');
   }
 }
 
@@ -85,19 +86,19 @@ async function handleAddFriend() {
   showFeedback('Connecting to network node...', 'slate', feedbackTarget);
 
   if (!currentUser) {
-    return showFeedback('Authenticate to link friends.', 'red', feedbackTarget);
+    return showFeedback(MSG.AUTHENTICATE_TO_LINK, 'red', feedbackTarget);
   }
   if (targetUid === auth.currentUser.uid) {
-    return showFeedback("Can't link your own tag.", 'red', feedbackTarget);
+    return showFeedback(MSG.CANT_LINK_OWN_TAG, 'red', feedbackTarget);
   }
   if (state.social.userFriendsList.includes(targetUid)) {
-    return showFeedback("Friend already linked.", 'yellow', feedbackTarget);
+    return showFeedback(MSG.FRIEND_ALREADY_LINKED, 'yellow', feedbackTarget);
   }
 
   try {
     const targetDoc = await getProfileDocument(targetUid);
     if (!targetDoc.exists()) {
-      return showFeedback("Cyber-Tag not found in database.", 'red', feedbackTarget);
+      return showFeedback(MSG.CYBER_TAG_NOT_FOUND, 'red', feedbackTarget);
     }
 
     await setDoc(getProfileDocRef(auth.currentUser.uid), {
@@ -119,9 +120,9 @@ async function handleAddFriend() {
   } catch (err) {
     console.error('Friend add failed', err.code, err.message);
     if (isPermissionDenied(err)) {
-      showFeedback('Permission denied: check Firestore rules for profiles.', 'red', feedbackTarget);
+      showFeedback(MSG.PERMISSION_FIRESTORE_RULES, 'red', feedbackTarget);
     } else {
-      showFeedback(`Error linking network node: ${err.message}`, 'red', feedbackTarget);
+      showFeedback(MSG.LINK_NETWORK_NODE_FAILED + err.message, 'red', feedbackTarget);
     }
   }
 }
@@ -129,39 +130,39 @@ async function handleAddFriend() {
 async function addFriendFromLeaderboard(friendUid) {
   const currentUser = auth.currentUser;
   if (!currentUser) {
-    return showFeedback('Sign in to add friends from leaderboard.', 'red');
+    return showFeedback(MSG.SIGN_IN_TO_ADD_FRIEND, 'red');
   }
   if (!friendUid || friendUid === auth.currentUser.uid) {
     return;
   }
   if (state.social.userFriendsList.includes(friendUid)) {
-    return showFeedback('Already connected with this athlete.', 'yellow');
+    return showFeedback(MSG.ALREADY_CONNECTED, 'yellow');
   }
 
   try {
     const targetDoc = await getProfileDocument(friendUid);
     if (!targetDoc.exists()) {
-      return showFeedback('Unable to add athlete: Cyber-Tag missing.', 'red');
+      return showFeedback(MSG.ADD_ATHLETE_FAILED, 'red');
     }
 
     await setDoc(getProfileDocRef(auth.currentUser.uid), {
       friends: arrayUnion(friendUid)
     }, { merge: true });
-    showFeedback('Friend added from leaderboard!', 'emerald');
+    showFeedback(MSG.FRIEND_ADDED, 'emerald');
     haptic(HAPTIC.tap);
   } catch (err) {
     console.error('Leaderboard friend add failed', err.code, err.message);
     if (isPermissionDenied(err)) {
-      showFeedback('Permission denied: check Firestore rules for profiles.', 'red');
+      showFeedback(MSG.PERMISSION_FIRESTORE_RULES, 'red');
     } else {
-      showFeedback(`Could not add friend: ${err.message}`, 'red');
+      showFeedback(MSG.ADD_FRIEND_FAILED + err.message, 'red');
     }
   }
 }
 
 async function removeFriend(friendUid) {
   const currentUser = auth.currentUser;
-  if (!auth.currentUser) return showFeedback('Sign in to remove friends.', 'red');
+  if (!auth.currentUser) return showFeedback(MSG.SIGN_IN_TO_REMOVE_FRIEND, 'red');
   if (!friendUid) return;
   if (!state.social.userFriendsList.includes(friendUid)) return showFeedback('Athlete not in your friend list.', 'yellow');
 
@@ -175,10 +176,10 @@ async function removeFriend(friendUid) {
     state.social.userFriendsList = state.social.userFriendsList.filter(u => u !== friendUid);
     renderActiveFriendsList();
     syncLeaderboardFeed();
-    showFeedback('Friend removed.', 'slate');
+    showFeedback(MSG.FRIEND_REMOVED, 'slate');
   } catch (err) {
     console.error('Remove friend failed', err.code, err.message || err);
-    showFeedback('Unable to remove friend. Check permissions.', 'red');
+    showFeedback(MSG.REMOVE_FRIEND_FAILED, 'red');
   }
 }
 
@@ -230,7 +231,7 @@ async function renderActiveFriendsList() {
     updatePagination('friends', state.pagination.friends, totalPages);
   } catch (error) {
     console.error('Active friends render failed', error.code, error.message);
-    container.innerHTML = `<p class="text-xs text-red-400">Failed to render active grid context. Check Firestore rules for profiles.</p>`;
+    container.innerHTML = `<p class="text-xs text-red-400">${MSG.RENDER_FRIENDS_FAILED}</p>`;
   }
 }
 

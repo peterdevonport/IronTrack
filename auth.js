@@ -5,6 +5,7 @@ import { haptic } from './dom.js';
 import { getExerciseInfo, LOAD_FACTORS } from './exercise-data.js';
 import { renderFormFields } from './forms.js';
 import { showFeedback } from './ui.js';
+import { MSG } from './messages.js';
 
 function getSchemaKey(exerciseName) {
   const info = getExerciseInfo(exerciseName);
@@ -47,7 +48,7 @@ async function pullProfileMetrics(uid) {
         if (saveBtn) saveBtn.disabled = true;
     } catch (err) {
         console.error('Failed to load profile metrics', err.code, err.message);
-        showFeedback('Unable to load profile metrics. Check Firestore rules for profiles.', 'red');
+        showFeedback(MSG.PROFILE_METRICS_FAILED, 'red');
     }
 }
 
@@ -132,7 +133,7 @@ async function logPB() {
     if (!auth.currentUser) return;
     const exercise = pbLogExercise?.value;
     if (!exercise) {
-        showFeedback('Please select an exercise.', 'red', 'pb-log-feedback');
+        showFeedback(MSG.SELECT_EXERCISE, 'red', 'pb-log-feedback');
         return;
     }
     const schemaKey = getSchemaKey(exercise);
@@ -158,7 +159,7 @@ async function logPB() {
     }
 
     if (!weight || weight <= 0) {
-        showFeedback('Please enter a valid weight.', 'red', 'pb-log-feedback');
+        showFeedback(MSG.ENTER_VALID_WEIGHT, 'red', 'pb-log-feedback');
         return;
     }
 
@@ -182,11 +183,11 @@ async function logPB() {
 
         pbLogExercise.value = '';
         refreshPBForm(FORM_SCHEMAS);
-        showFeedback('Record logged! It will appear in your records.', 'emerald', 'pb-log-feedback');
+        showFeedback(MSG.RECORD_LOGGED, 'emerald', 'pb-log-feedback');
         haptic(HAPTIC.confirm);
     } catch (err) {
         console.error('Failed to log record', err.code, err.message);
-        showFeedback('Failed to log record: ' + err.message, 'red', 'pb-log-feedback');
+        showFeedback(MSG.RECORD_LOG_FAILED + err.message, 'red', 'pb-log-feedback');
     } finally {
         if (pbLogBtn) pbLogBtn.disabled = false;
     }

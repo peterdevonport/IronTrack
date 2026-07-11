@@ -11,6 +11,7 @@ import { renderFormFields } from './forms.js';
 import { renderSharedPlansUI } from './social.js';
 import { getSchemaKey, computeTotalLoad } from './auth.js';
 import { toggleForTimeDnf, cleanupStructuredSubscriptions } from './workouts.js';
+import { MSG } from './messages.js';
 
 let unsubscribePlans = null;
 
@@ -346,25 +347,25 @@ async function formatIntervalLabel(intervalMin, intervalSec) {
 }
 
 function validatePlanInputs(type) {
-  if (!auth.currentUser) { alert('Please sign in first.'); return false; }
-  if (!type) { showFeedback('Select a workout type first.', 'rose', 'planFeedback'); return false; }
+  if (!auth.currentUser) { alert(MSG.SIGN_IN_REQUIRED); return false; }
+  if (!type) { showFeedback(MSG.SELECT_WORKOUT_TYPE, 'rose', 'planFeedback'); return false; }
 
   if (type === 'AMRAP') {
     const durationMin = parseInt(document.getElementById('amrap-duration')?.value, 10);
-    if (!durationMin || durationMin < 1) { showFeedback('Enter a valid duration.', 'rose', 'planFeedback'); return false; }
+    if (!durationMin || durationMin < 1) { showFeedback(MSG.ENTER_VALID_DURATION, 'rose', 'planFeedback'); return false; }
   } else if (type === 'EMOM') {
     const intervalMin = parseInt(document.getElementById('emom-interval-min')?.value, 10) || 0;
     const intervalSec = parseInt(document.getElementById('emom-interval-sec')?.value, 10) || 0;
     const intervalSeconds = intervalMin * SECONDS_PER_MINUTE + intervalSec;
     const rounds = parseInt(document.getElementById('emom-rounds')?.value, 10) || 0;
-    if (intervalSeconds < 1) { showFeedback('Enter a valid interval.', 'rose', 'planFeedback'); return false; }
-    if (rounds < 1) { showFeedback('Enter a valid number of rounds.', 'rose', 'planFeedback'); return false; }
+    if (intervalSeconds < 1) { showFeedback(MSG.ENTER_VALID_INTERVAL, 'rose', 'planFeedback'); return false; }
+    if (rounds < 1) { showFeedback(MSG.ENTER_VALID_ROUNDS, 'rose', 'planFeedback'); return false; }
   } else if (type === 'FOR_TIME') {
     const rounds = parseInt(document.getElementById('fortime-rounds')?.value, 10);
-    if (!rounds || rounds < 1) { showFeedback('Enter a valid round count.', 'rose', 'planFeedback'); return false; }
+    if (!rounds || rounds < 1) { showFeedback(MSG.ENTER_VALID_ROUND_COUNT, 'rose', 'planFeedback'); return false; }
   } else if (type === 'INTERVAL') {
     const rounds = parseInt(document.getElementById('interval-rounds')?.value, 10);
-    if (!rounds || rounds < 1) { showFeedback('Enter a valid round count.', 'rose', 'planFeedback'); return false; }
+    if (!rounds || rounds < 1) { showFeedback(MSG.ENTER_VALID_ROUND_COUNT, 'rose', 'planFeedback'); return false; }
   }
   return true;
 }
@@ -403,9 +404,9 @@ function buildPlanDocument(userId, name, type, structure) {
 }
 
 async function savePlan() {
-  if (!auth.currentUser) return alert('Please sign in first.');
+  if (!auth.currentUser) return alert(MSG.SIGN_IN_REQUIRED);
   const type = document.getElementById('workout-type')?.value;
-  if (!type) return showFeedback('Select a workout type first.', 'rose', 'planFeedback');
+  if (!type) return showFeedback(MSG.SELECT_WORKOUT_TYPE, 'rose', 'planFeedback');
 
   let structure;
   try {
@@ -423,11 +424,11 @@ async function savePlan() {
   const planDoc = buildPlanDocument(auth.currentUser.uid, name.trim() || autoName, type, structure);
 
   addDoc(collection(db, "workout_plans"), planDoc).then(() => {
-    showFeedback('Plan saved!', 'emerald', 'planFeedback');
+    showFeedback(MSG.PLAN_SAVED, 'emerald', 'planFeedback');
     haptic(HAPTIC.confirm);
   }).catch(err => {
     console.error('Save plan failed', err.code, err.message);
-    showFeedback('Failed to save plan: ' + err.message, 'rose', 'planFeedback');
+    showFeedback(MSG.SAVE_PLAN_FAILED + err.message, 'rose', 'planFeedback');
   });
 }
 
@@ -504,8 +505,8 @@ function getEmomMovementData() {
     const pct = row.dataset.pct ? parseFloat(row.dataset.pct) : null;
     const rpe = row.dataset.rpe ? parseFloat(row.dataset.rpe) : null;
 
-    if (!exercise || exercise === 'undefined') { error = 'Select an exercise for all intervals.'; return; }
-    if (!reps || reps < 1) { error = 'Enter reps for all intervals.'; return; }
+    if (!exercise || exercise === 'undefined') { error = MSG.SELECT_EXERCISE_ALL_INTERVALS; return; }
+    if (!reps || reps < 1) { error = MSG.ENTER_REPS_ALL_INTERVALS; return; }
 
     const movement = { exerciseId: exercise, reps, weight, weightMode };
     if (pct !== null) movement.pct = pct;
@@ -604,7 +605,7 @@ async function deletePlan(planId) {
     haptic(HAPTIC.confirm);
   } catch (err) {
     console.error('Delete plan failed', err.code, err.message);
-    alert('Failed to delete plan: ' + err.message);
+    alert(MSG.DELETE_PLAN_FAILED + err.message);
   }
 }
 
@@ -616,7 +617,7 @@ async function deleteStructuredWorkout(workoutId) {
     haptic(HAPTIC.confirm);
   } catch (err) {
     console.error('Delete workout failed', err.code, err.message);
-    alert('Failed to delete workout: ' + err.message);
+    alert(MSG.DELETE_WORKOUT_FAILED + err.message);
   }
 }
 

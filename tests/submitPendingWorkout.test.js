@@ -7,6 +7,7 @@ import {
   resetTrainingTab
 } from './functions.js';
 import { isPermissionDenied } from '../ui.js';
+import { MSG } from '../messages.js';
 
 // Integration test for submitPendingWorkout logic
 // Since the actual function is tightly coupled to app.js globals,
@@ -69,11 +70,11 @@ describe('submitPendingWorkout integration', () => {
     
     if (globals.isSubmittingWorkout) return;
     if (!deps.currentUser) {
-      deps.alert('Please sign in first.');
+      deps.alert(MSG.SIGN_IN_REQUIRED);
       return;
     }
     if (!globals.pendingPlannedWorkout) {
-      deps.showFeedback('No planned workout to log.', 'rose', 'log-workout-feedback');
+      deps.showFeedback(MSG.NO_PLANNED_WORKOUT, 'rose', 'log-workout-feedback');
       return;
     }
 
@@ -89,19 +90,19 @@ describe('submitPendingWorkout integration', () => {
       };
 
       if (!handlers[type]) {
-        deps.showFeedback('Unknown workout type.', 'rose', 'log-workout-feedback');
+        deps.showFeedback(MSG.UNKNOWN_WORKOUT_TYPE, 'rose', 'log-workout-feedback');
         return;
       }
 
       await handlers[type](name, structure, now, deps);
       resetTrainingTab(deps);
-      deps.showFeedback('Workout logged!', 'emerald', 'log-workout-feedback');
+      deps.showFeedback(MSG.WORKOUT_LOGGED, 'emerald', 'log-workout-feedback');
       deps.haptic(deps.HAPTIC.confirm);
     } catch (err) {
       if (isPermissionDenied(err)) {
-        deps.showFeedback('Save blocked by Firestore rules.', 'rose', 'log-workout-feedback');
+        deps.showFeedback(MSG.SAVE_BLOCKED, 'rose', 'log-workout-feedback');
       } else {
-        deps.alert('Failed to log workout: ' + err.message);
+        deps.alert(MSG.WORKOUT_LOG_FAILED + err.message);
       }
     } finally {
       globals.isSubmittingWorkout = false;
@@ -204,7 +205,7 @@ describe('submitPendingWorkout integration', () => {
 
     await simulateSubmitPendingWorkout('AMRAP', 'Test', { movements: [] });
 
-    expect(deps.showFeedback).toHaveBeenCalledWith('Save blocked by Firestore rules.', 'rose', 'log-workout-feedback');
+    expect(deps.showFeedback).toHaveBeenCalledWith(MSG.SAVE_BLOCKED, 'rose', 'log-workout-feedback');
   });
 
   it('should handle other Firestore errors', async () => {
@@ -214,7 +215,7 @@ describe('submitPendingWorkout integration', () => {
 
     await simulateSubmitPendingWorkout('AMRAP', 'Test', { movements: [] });
 
-    expect(deps.alert).toHaveBeenCalledWith('Failed to log workout: Some error');
+    expect(deps.alert).toHaveBeenCalledWith(MSG.WORKOUT_LOG_FAILED + 'Some error');
   });
 
   it('should reset isSubmittingWorkout flag on success', async () => {

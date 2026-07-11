@@ -18,6 +18,7 @@ import { handleWorkoutTypeChange, switchEmomMode, addPlanMinuteSlot, refreshPlan
 import { writeStructuredLogEntry, generateContributionsBase, generateAmrapContributions, listenToStructuredWorkouts, renderStructuredWorkoutHistory, changeStructuredPage, setupTrainingTab, doWorkout, doStructuredWorkout, doPlanWorkout, doSharedPlan, submitStructuredWorkout, submitAmrapWorkout, submitEmomWorkout, submitForTimeWorkout, submitIntervalWorkout, resetTrainingTab, submitPendingWorkout, toggleForTimeDnf, updateForTimeScorePreview, updateIntervalScorePreview, recalcForTimeRemaining, logRound, logRep, updateLogScorePreview, updateLogWorkoutButtonState, generateEmomContributions, generateForTimeContributions, generateIntervalContributions, updateAmrapScorePreview } from './workouts.js';
 import { update1RMRegistryUI, updateCalcCard, switchCalcMode, updateCalcPreview, handleCalcAdd, handleCalcRemove, handleCalcClear, updateLogSetButtonState, refreshLogSetForm, populateLiftSelectors, populateExerciseDropdown, populateWorkoutFilter, changePage, changeRecordsPage, currentCalcMode } from './calc.js';
 import { renderFromWorkouts, listenToDataStream, processAnalytics } from './data.js';
+import { MSG } from './messages.js';
 
 const PASSWORD_ERROR_MAP = {
   'auth/wrong-password': 'Current password is incorrect.',
@@ -62,7 +63,7 @@ if (typeof lucide !== 'undefined' && lucide.createIcons) {
 
 window.addEventListener('unhandledrejection', (e) => {
   console.error('Unhandled promise rejection:', e.reason);
-  showFeedback('An unexpected error occurred. Please try again.', 'red');
+  showFeedback(MSG.UNEXPECTED_ERROR, 'red');
 });
 
 navTabs.forEach(btn => {
@@ -83,7 +84,7 @@ onAuthStateChanged(auth, async (user) => {
       await handleSignedIn(user);
     } catch (err) {
       console.error('Auth state handler failed:', err);
-      showFeedback('Failed to load your profile. Please try refreshing the page.', 'red');
+      showFeedback(MSG.PROFILE_LOAD_FAILED, 'red');
       handleSignedOut();
     }
   } else {
@@ -213,16 +214,16 @@ loginBtn.addEventListener('click', async () => {
 signupBtn.addEventListener('click', async () => {
     const email = emailInput.value.trim();
     const password = passwordInput.value;
-    if (!email || !password) return showFeedback('Please assign an email and password.', 'red', 'auth-feedback');
-    if (password.length < 6) return showFeedback('Password security requires at least 6 characters.', 'red', 'auth-feedback');
+    if (!email || !password) return showFeedback(MSG.FILL_EMAIL_PASSWORD, 'red', 'auth-feedback');
+    if (password.length < 6) return showFeedback(MSG.PASSWORD_MIN_LENGTH, 'red', 'auth-feedback');
 
     try {
         await createUserWithEmailAndPassword(auth, email, password);
         emailInput.value = "";
         passwordInput.value = "";
-        showFeedback('Account mapped successfully!', 'emerald', 'auth-feedback');
+        showFeedback(MSG.ACCOUNT_CREATED, 'emerald', 'auth-feedback');
     } catch (error) {
-        showFeedback(`Registration Failed: ${error.message}`, 'red', 'auth-feedback');
+        showFeedback(`Registration failed: ${error.message}`, 'red', 'auth-feedback');
     }
 });
 
@@ -272,7 +273,7 @@ if (forgotPasswordSend) {
   forgotPasswordSend.addEventListener('click', async () => {
     const email = forgotPasswordEmail.value.trim();
     if (!email) {
-      forgotPasswordFeedback.textContent = 'Enter your email address.';
+      forgotPasswordFeedback.textContent = MSG.ENTER_EMAIL;
       forgotPasswordFeedback.className = FEEDBACK_ERROR_CLASS;
       return;
     }
@@ -280,11 +281,11 @@ if (forgotPasswordSend) {
     forgotPasswordSend.textContent = 'Sending...';
     try {
       await sendPasswordResetEmail(auth, email);
-      forgotPasswordFeedback.textContent = 'Reset link sent! Check your email.';
+      forgotPasswordFeedback.textContent = MSG.RESET_LINK_SENT;
       forgotPasswordFeedback.className = FEEDBACK_SUCCESS_CLASS;
       setTimeout(showAuthForm, FEEDBACK_DISMISS_DEFAULT_MS);
     } catch (error) {
-      const msg = PASSWORD_RESET_ERROR_MAP[error.code] || `Failed: ${error.message}`;
+      const msg = PASSWORD_RESET_ERROR_MAP[error.code] || `Failed to reset password: ${error.message}`;
       forgotPasswordFeedback.textContent = msg;
       forgotPasswordFeedback.className = FEEDBACK_ERROR_CLASS;
     } finally {
@@ -361,7 +362,7 @@ async function saveOnboarding() {
         }
 
         hideOnboarding();
-        showFeedback('Profile initialized! Welcome to IronTrack.', 'emerald');
+        showFeedback(MSG.ONBOARDING_SUCCESS, 'emerald');
 
         syncLeaderboardFeed();
         if (listenersAttached) return;
@@ -374,7 +375,7 @@ async function saveOnboarding() {
 
     } catch (err) {
         console.error('Onboarding failed', err.code, err.message);
-        showFeedback('Failed to save profile: ' + err.message, 'red', 'onboarding-feedback');
+        showFeedback(MSG.PROFILE_SAVE_FAILED + err.message, 'red', 'onboarding-feedback');
     } finally {
         if (onboardingSaveBtn) onboardingSaveBtn.disabled = false;
     }
@@ -398,12 +399,12 @@ profileForm.addEventListener('submit', async (e) => {
     try {
         await setDoc(doc(db, "profiles", currentUser.uid), state.user.userBiometrics, { merge: true });
         processAnalytics();
-        showFeedback('Profile updated successfully!', 'emerald', 'profileFeedback');
+        showFeedback(MSG.PROFILE_UPDATED, 'emerald', 'profileFeedback');
         saveProfileBtn.disabled = true;
         haptic(HAPTIC.confirm);
     } catch (err) {
         console.error('Failed to save profile', err.code, err.message);
-        showFeedback('Unable to update profile: ' + err.message, 'red', 'profileFeedback');
+        showFeedback(MSG.PROFILE_UPDATE_FAILED + err.message, 'red', 'profileFeedback');
     }
 });
 const saveProfileBtn = document.getElementById('save-profile-btn');
@@ -452,22 +453,22 @@ if (cpUpdate) {
     const confirmPw = cpConfirm.value;
 
     if (!currentPw || !newPw || !confirmPw) {
-      cpFeedback.textContent = 'Fill in all password fields.';
+      cpFeedback.textContent = MSG.FILL_PASSWORD_FIELDS;
       cpFeedback.className = FEEDBACK_ERROR_CLASS;
       return;
     }
     if (newPw.length < 6) {
-      cpFeedback.textContent = 'New password must be at least 6 characters.';
+      cpFeedback.textContent = MSG.NEW_PASSWORD_MIN_LENGTH;
       cpFeedback.className = FEEDBACK_ERROR_CLASS;
       return;
     }
     if (newPw !== confirmPw) {
-      cpFeedback.textContent = 'New passwords do not match.';
+      cpFeedback.textContent = MSG.PASSWORDS_MISMATCH;
       cpFeedback.className = FEEDBACK_ERROR_CLASS;
       return;
     }
     if (newPw === currentPw) {
-      cpFeedback.textContent = 'New password must differ from current.';
+      cpFeedback.textContent = MSG.PASSWORD_SAME;
       cpFeedback.className = FEEDBACK_ERROR_CLASS;
       return;
     }
@@ -478,7 +479,7 @@ if (cpUpdate) {
       const credential = EmailAuthProvider.credential(auth.currentUser.email, currentPw);
       await reauthenticateWithCredential(auth.currentUser, credential);
       await updatePassword(auth.currentUser, newPw);
-      cpFeedback.textContent = 'Password updated successfully!';
+      cpFeedback.textContent = MSG.PASSWORD_UPDATED;
       cpFeedback.className = FEEDBACK_SUCCESS_CLASS;
       cpCurrent.value = '';
       cpNew.value = '';
@@ -490,7 +491,7 @@ if (cpUpdate) {
       }, FEEDBACK_DISMISS_DEFAULT_MS);
       haptic(HAPTIC.confirm);
     } catch (err) {
-      const msg = PASSWORD_ERROR_MAP[err.code] || `Failed: ${err.message}`;
+      const msg = PASSWORD_ERROR_MAP[err.code] || `Failed to update password: ${err.message}`;
       cpFeedback.textContent = msg;
       cpFeedback.className = FEEDBACK_ERROR_CLASS;
     } finally {
@@ -654,10 +655,10 @@ if (chip1RMEl) {
 }
 workoutForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (!currentUser) return alert('Please sign in before logging a workout.');
+    if (!currentUser) return alert(MSG.SIGN_IN_BEFORE_LOG);
 
     const exercise = document.getElementById('exercise')?.value;
-    if (!exercise) return showFeedback('Please select an exercise.', 'red', 'workoutFeedback');
+    if (!exercise) return showFeedback(MSG.SELECT_EXERCISE, 'red', 'workoutFeedback');
     const schemaKey = getSchemaKey(exercise);
     const sets = parseInt(document.getElementById('log-set-sets')?.value, 10);
     const reps = parseInt(document.getElementById('log-set-reps')?.value, 10);
@@ -689,14 +690,14 @@ workoutForm.addEventListener('submit', async (e) => {
     try {
         await addDoc(collection(db, "workouts"), log);
         refreshLogSetForm();
-        showFeedback('Workout saved. Keep crushing it!', 'emerald', 'workoutFeedback');
+        showFeedback(MSG.WORKOUT_SAVED, 'emerald', 'workoutFeedback');
         haptic(HAPTIC.confirm);
     } catch (err) {
         console.error('Workout submission failed', err.code, err.message);
         if (isPermissionDenied(err)) {
-            showFeedback('Save blocked by Firestore rules.', 'red', 'workoutFeedback');
+            showFeedback(MSG.SAVE_BLOCKED, 'red', 'workoutFeedback');
         } else {
-            showFeedback(`Failed to save workout: ${err.message}`, 'red', 'workoutFeedback');
+            showFeedback(MSG.WORKOUT_SAVE_FAILED + err.message, 'red', 'workoutFeedback');
         }
     }
 });
