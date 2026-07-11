@@ -10,6 +10,7 @@ import { renderStructuredWorkoutCard } from './rendering.js';
 import { renderSharedPlansUI } from './social.js';
 import { computeAndSyncDailyActivity } from './calendar.js';
 import { capturePlanStructure } from './plans.js';
+import { requireAuth } from './auth.js';
 
 let unsubscribeStructured = null;
 let isSubmittingWorkout = false;
@@ -389,7 +390,7 @@ function resetTrainingTab() {
 
 async function submitPendingWorkout() {
   if (isSubmittingWorkout) return;
-  if (!auth.currentUser) return alert('Please sign in first.');
+  if (!requireAuth('log-workout-feedback')) return;
   if (!state.builder.pendingPlannedWorkout) return showFeedback('No planned workout to log.', 'rose', 'log-workout-feedback');
 
   const btn = document.getElementById('log-workout-btn');

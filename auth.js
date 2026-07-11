@@ -192,4 +192,12 @@ async function logPB() {
     }
 }
 
-export { getSchemaKey, computeTotalLoad, pullProfileMetrics, refreshPBForm, processWorkoutSnapshot, updateCaches, logPB };
+function requireAuth(feedbackTarget = 'socialFeedback') {
+  if (!auth.currentUser) {
+    showFeedback('Please sign in to continue.', 'rose', feedbackTarget);
+    return null;
+  }
+  return auth.currentUser;
+}
+
+export { getSchemaKey, computeTotalLoad, pullProfileMetrics, refreshPBForm, processWorkoutSnapshot, updateCaches, logPB, requireAuth };
