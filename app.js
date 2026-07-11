@@ -656,11 +656,14 @@ workoutForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!currentUser) return alert('Please sign in before logging a workout.');
 
-    const exercise = document.getElementById('exercise').value;
+    const exercise = document.getElementById('exercise')?.value;
     if (!exercise) return showFeedback('Please select an exercise.', 'red', 'workoutFeedback');
     const schemaKey = getSchemaKey(exercise);
-    const sets = parseInt(document.getElementById('log-set-sets').value, 10);
-    const reps = parseInt(document.getElementById('log-set-reps').value, 10);
+    const sets = parseInt(document.getElementById('log-set-sets')?.value, 10);
+    const reps = parseInt(document.getElementById('log-set-reps')?.value, 10);
+    if (isNaN(sets) || isNaN(reps) || sets <= 0 || reps <= 0) {
+        return showFeedback('Please enter valid sets and reps.', 'red', 'workoutFeedback');
+    }
     const weight = parseFloat(document.getElementById('log-set-weight')?.value) || parseFloat(document.getElementById('log-set-bodyweight')?.value) || 0;
     const externalLoad = parseFloat(document.getElementById('log-set-ext-load')?.value) || 0;
     const estimatedLoad = computeEffectiveLoad(exercise, weight, externalLoad, state.user.userBiometrics.bodyweight);
