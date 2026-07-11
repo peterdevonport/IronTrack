@@ -166,7 +166,7 @@ function restoreExpandedCardIds(ids) {
   });
 }
 
-function showFeedback(msg, color, targetId = 'socialFeedback', delay = FEEDBACK_DISMISS_DEFAULT_MS, extraClass = '') {
+function showFeedback(msg, color, targetId, delay = FEEDBACK_DISMISS_DEFAULT_MS, extraClass = '') {
   const el = document.getElementById(targetId);
   if (!el) return;
   el.innerText = msg;

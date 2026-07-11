@@ -115,7 +115,7 @@ function syncLeaderboardFeed() {
     renderLeaderboardView();
   }, (error) => {
     console.error('Leaderboard snapshot failed', error.code, error.message);
-    showFeedback('Leaderboard access denied: update Firestore rules for profiles.', 'red');
+    showFeedback('Leaderboard access denied: update Firestore rules for profiles.', 'red', 'socialFeedback');
   });
 }
 

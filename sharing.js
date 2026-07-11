@@ -185,7 +185,7 @@ async function shareWithFriends() {
       addDoc(collection(db, "shared_plans"), buildSharedPlanDocument(fUid, content, displayName))
     ));
     modal.classList.add('hidden');
-    showFeedback(`Shared with ${selectedUids.length} friend${selectedUids.length > 1 ? 's' : ''}!`, 'emerald');
+    showFeedback(`Shared with ${selectedUids.length} friend${selectedUids.length > 1 ? 's' : ''}!`, 'emerald', 'socialFeedback');
     haptic(HAPTIC.confirm);
   } catch (err) {
     console.error('Share plan failed', err.code, err.message);
@@ -322,11 +322,11 @@ async function saveSharedPlanToMyPlans(shareId) {
   try {
     await addDoc(collection(db, "workout_plans"), planDoc);
     await updateDoc(doc(db, "shared_plans", shareId), { status: 'saved' });
-    showFeedback('Plan saved to your collection!', 'emerald');
+    showFeedback('Plan saved to your collection!', 'emerald', 'socialFeedback');
     haptic(HAPTIC.confirm);
   } catch (err) {
     console.error('Save shared plan failed', err.code, err.message);
-    showFeedback('Failed to save plan: ' + err.message, 'red');
+    showFeedback('Failed to save plan: ' + err.message, 'red', 'socialFeedback');
   }
 }
 

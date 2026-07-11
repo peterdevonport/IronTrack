@@ -47,7 +47,7 @@ async function pullProfileMetrics(uid) {
         if (saveBtn) saveBtn.disabled = true;
     } catch (err) {
         console.error('Failed to load profile metrics', err.code, err.message);
-        showFeedback('Unable to load profile metrics. Check Firestore rules for profiles.', 'red');
+        showFeedback('Unable to load profile metrics. Check Firestore rules for profiles.', 'red', 'profileFeedback');
     }
 }
 
