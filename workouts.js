@@ -64,17 +64,17 @@ function changeStructuredPage(direction) {
 
 function doWorkout() {
   const type = document.getElementById('workout-type').value;
-  if (!type) { showFeedback('Select a workout type first', 'rose', 'planFeedback'); return; }
+  if (!type) { showFeedback('Select a workout type first', 'red', 'planFeedback'); return; }
 
   const resultId = WORKOUT_TYPE_TO_RESULT_ID[type];
-  if (!resultId) { showFeedback('Unknown workout type.', 'rose', 'planFeedback'); return; }
+  if (!resultId) { showFeedback('Unknown workout type.', 'red', 'planFeedback'); return; }
 
   let structure;
   try {
     structure = capturePlanStructure(type);
   } catch (err) {
     console.error('capturePlanStructure error:', err);
-    showFeedback(err.message, 'rose', 'log-workout-feedback');
+    showFeedback(err.message, 'red', 'log-workout-feedback');
     return;
   }
 
@@ -82,7 +82,7 @@ function doWorkout() {
     ? (structure.minutes && structure.minutes.length > 0)
     : (structure.movements && structure.movements.length > 0);
   if (!hasMovements) {
-    showFeedback('Add at least one movement before starting the workout.', 'rose', 'planFeedback');
+    showFeedback('Add at least one movement before starting the workout.', 'red', 'planFeedback');
     return;
   }
 
@@ -284,7 +284,7 @@ function submitAmrapWorkout(name, structure, now) {
   const roundsCompleted = parseInt(document.getElementById('log-rounds').value, 10);
   const additionalReps = parseInt(document.getElementById('log-partial-reps').value, 10) || 0;
   if (roundsCompleted < 0) {
-    showFeedback('Enter rounds completed.', 'rose', 'log-workout-feedback');
+    showFeedback('Enter rounds completed.', 'red', 'log-workout-feedback');
     return;
   }
   return submitStructuredWorkout(name, structure, now, {
@@ -300,7 +300,7 @@ function submitAmrapWorkout(name, structure, now) {
 function submitEmomWorkout(name, structure, now) {
   const roundsCompleted = parseInt(document.getElementById('log-rounds').value, 10);
   if (roundsCompleted < 0) {
-    showFeedback('Enter rounds completed.', 'rose', 'log-workout-feedback');
+    showFeedback('Enter rounds completed.', 'red', 'log-workout-feedback');
     return;
   }
   return submitStructuredWorkout(name, structure, now, {
@@ -320,7 +320,7 @@ function submitForTimeWorkout(name, structure, now) {
   const resultSecs = dnf ? 0 : (parseInt(document.getElementById('fortime-seconds').value, 10) || 0);
   const timeSeconds = dnf ? 0 : resultMins * SECONDS_PER_MINUTE + resultSecs;
   if (resultSecs > 59) {
-    showFeedback('Seconds must be 0–59.', 'rose', 'log-workout-feedback');
+    showFeedback('Seconds must be 0–59.', 'red', 'log-workout-feedback');
     return;
   }
   return submitStructuredWorkout(name, structure, now, {
@@ -337,7 +337,7 @@ function submitIntervalWorkout(name, structure, now) {
   const roundsCompleted = parseInt(document.getElementById('log-rounds').value, 10);
   const partialReps = parseInt(document.getElementById('log-partial-reps').value, 10) || 0;
   if (roundsCompleted < 0) {
-    showFeedback('Enter rounds completed.', 'rose', 'log-workout-feedback');
+    showFeedback('Enter rounds completed.', 'red', 'log-workout-feedback');
     return;
   }
   return submitStructuredWorkout(name, structure, now, {
@@ -390,7 +390,7 @@ function resetTrainingTab() {
 async function submitPendingWorkout() {
   if (isSubmittingWorkout) return;
   if (!auth.currentUser) return alert('Please sign in first.');
-  if (!state.builder.pendingPlannedWorkout) return showFeedback('No planned workout to log.', 'rose', 'log-workout-feedback');
+  if (!state.builder.pendingPlannedWorkout) return showFeedback('No planned workout to log.', 'red', 'log-workout-feedback');
 
   const btn = document.getElementById('log-workout-btn');
   if (btn) btn.disabled = true;
@@ -408,7 +408,7 @@ async function submitPendingWorkout() {
     };
 
     if (!handlers[type]) {
-      return showFeedback('Unknown workout type.', 'rose', 'log-workout-feedback');
+      return showFeedback('Unknown workout type.', 'red', 'log-workout-feedback');
     }
 
     await handlers[type](name, structure, now);
@@ -418,9 +418,9 @@ async function submitPendingWorkout() {
   } catch (err) {
     console.error('Log pending workout failed', err.code, err.message);
     if (isPermissionDenied(err)) {
-      showFeedback('Save blocked by Firestore rules.', 'rose', 'log-workout-feedback');
+      showFeedback('Save blocked by Firestore rules.', 'red', 'log-workout-feedback');
     } else {
-      showFeedback('Failed to log workout: ' + err.message, 'rose', 'log-workout-feedback');
+      showFeedback('Failed to log workout: ' + err.message, 'red', 'log-workout-feedback');
     }
   } finally {
     if (btn) btn.disabled = false;

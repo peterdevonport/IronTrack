@@ -347,24 +347,24 @@ async function formatIntervalLabel(intervalMin, intervalSec) {
 
 function validatePlanInputs(type) {
   if (!auth.currentUser) { alert('Please sign in first.'); return false; }
-  if (!type) { showFeedback('Select a workout type first.', 'rose', 'planFeedback'); return false; }
+  if (!type) { showFeedback('Select a workout type first.', 'red', 'planFeedback'); return false; }
 
   if (type === 'AMRAP') {
     const durationMin = parseInt(document.getElementById('amrap-duration')?.value, 10);
-    if (!durationMin || durationMin < 1) { showFeedback('Enter a valid duration.', 'rose', 'planFeedback'); return false; }
+    if (!durationMin || durationMin < 1) { showFeedback('Enter a valid duration.', 'red', 'planFeedback'); return false; }
   } else if (type === 'EMOM') {
     const intervalMin = parseInt(document.getElementById('emom-interval-min')?.value, 10) || 0;
     const intervalSec = parseInt(document.getElementById('emom-interval-sec')?.value, 10) || 0;
     const intervalSeconds = intervalMin * SECONDS_PER_MINUTE + intervalSec;
     const rounds = parseInt(document.getElementById('emom-rounds')?.value, 10) || 0;
-    if (intervalSeconds < 1) { showFeedback('Enter a valid interval.', 'rose', 'planFeedback'); return false; }
-    if (rounds < 1) { showFeedback('Enter a valid number of rounds.', 'rose', 'planFeedback'); return false; }
+    if (intervalSeconds < 1) { showFeedback('Enter a valid interval.', 'red', 'planFeedback'); return false; }
+    if (rounds < 1) { showFeedback('Enter a valid number of rounds.', 'red', 'planFeedback'); return false; }
   } else if (type === 'FOR_TIME') {
     const rounds = parseInt(document.getElementById('fortime-rounds')?.value, 10);
-    if (!rounds || rounds < 1) { showFeedback('Enter a valid round count.', 'rose', 'planFeedback'); return false; }
+    if (!rounds || rounds < 1) { showFeedback('Enter a valid round count.', 'red', 'planFeedback'); return false; }
   } else if (type === 'INTERVAL') {
     const rounds = parseInt(document.getElementById('interval-rounds')?.value, 10);
-    if (!rounds || rounds < 1) { showFeedback('Enter a valid round count.', 'rose', 'planFeedback'); return false; }
+    if (!rounds || rounds < 1) { showFeedback('Enter a valid round count.', 'red', 'planFeedback'); return false; }
   }
   return true;
 }
@@ -405,13 +405,13 @@ function buildPlanDocument(userId, name, type, structure) {
 async function savePlan() {
   if (!auth.currentUser) return alert('Please sign in first.');
   const type = document.getElementById('workout-type')?.value;
-  if (!type) return showFeedback('Select a workout type first.', 'rose', 'planFeedback');
+  if (!type) return showFeedback('Select a workout type first.', 'red', 'planFeedback');
 
   let structure;
   try {
     structure = capturePlanStructure(type);
   } catch (err) {
-    return showFeedback(err.message, 'rose', 'planFeedback');
+    return showFeedback(err.message, 'red', 'planFeedback');
   }
 
   if (!validatePlanInputs(type)) return;
@@ -427,7 +427,7 @@ async function savePlan() {
     haptic(HAPTIC.confirm);
   }).catch(err => {
     console.error('Save plan failed', err.code, err.message);
-    showFeedback('Failed to save plan: ' + err.message, 'rose', 'planFeedback');
+    showFeedback('Failed to save plan: ' + err.message, 'red', 'planFeedback');
   });
 }
 

@@ -73,7 +73,7 @@ describe('submitPendingWorkout integration', () => {
       return;
     }
     if (!globals.pendingPlannedWorkout) {
-      deps.showFeedback('No planned workout to log.', 'rose', 'log-workout-feedback');
+      deps.showFeedback('No planned workout to log.', 'red', 'log-workout-feedback');
       return;
     }
 
@@ -89,7 +89,7 @@ describe('submitPendingWorkout integration', () => {
       };
 
       if (!handlers[type]) {
-        deps.showFeedback('Unknown workout type.', 'rose', 'log-workout-feedback');
+        deps.showFeedback('Unknown workout type.', 'red', 'log-workout-feedback');
         return;
       }
 
@@ -99,7 +99,7 @@ describe('submitPendingWorkout integration', () => {
       deps.haptic(deps.HAPTIC.confirm);
     } catch (err) {
       if (isPermissionDenied(err)) {
-        deps.showFeedback('Save blocked by Firestore rules.', 'rose', 'log-workout-feedback');
+        deps.showFeedback('Save blocked by Firestore rules.', 'red', 'log-workout-feedback');
       } else {
         deps.alert('Failed to log workout: ' + err.message);
       }
@@ -173,7 +173,7 @@ describe('submitPendingWorkout integration', () => {
   it('should show error for unknown workout type', async () => {
     await simulateSubmitPendingWorkout('UNKNOWN', 'Test', {});
 
-    expect(deps.showFeedback).toHaveBeenCalledWith('Unknown workout type.', 'rose', 'log-workout-feedback');
+    expect(deps.showFeedback).toHaveBeenCalledWith('Unknown workout type.', 'red', 'log-workout-feedback');
     expect(deps.addDoc).not.toHaveBeenCalled();
     expect(globals.pendingPlannedWorkout).not.toBeNull();
   });
@@ -204,7 +204,7 @@ describe('submitPendingWorkout integration', () => {
 
     await simulateSubmitPendingWorkout('AMRAP', 'Test', { movements: [] });
 
-    expect(deps.showFeedback).toHaveBeenCalledWith('Save blocked by Firestore rules.', 'rose', 'log-workout-feedback');
+    expect(deps.showFeedback).toHaveBeenCalledWith('Save blocked by Firestore rules.', 'red', 'log-workout-feedback');
   });
 
   it('should handle other Firestore errors', async () => {
