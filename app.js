@@ -9,7 +9,7 @@ import { computeDotsScore, computeSinclairScore, getRankingTier, formatScore_ROU
 import { clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, changeGenericPage, switchTab, isPermissionDenied, FEEDBACK_ERROR_CLASS, FEEDBACK_SUCCESS_CLASS, FEEDBACK_NEUTRAL_CLASS } from './ui.js';
 import { buildWmsField, applyFieldAttributes, renderFormFields } from './forms.js';
 import { renderOnboarding1RMItem, renderOnboarding1RMList, renderCalcEntry, renderCalcEntries, renderPlanMovementItem, renderPlanMovements, renderMovementChips, renderEmomChips, renderCalendarWorkoutItem, renderVolumeBar, renderMinuteSlotInner, renderShareFriendItem, renderRegistryRow, renderLeaderboardEmptyRow, buildCalendarDayHtml, workoutToLogHtml, renderWorkoutCard, renderStructuredWorkoutCard, renderPlanCard, renderSharedPlanCard, friendToHtml, buildLeaderboardRow } from './rendering.js';
-import { getSchemaKey, computeTotalLoad, pullProfileMetrics, refreshPBForm, processWorkoutSnapshot, updateCaches, logPB } from './auth.js';
+import { getSchemaKey, computeTotalLoad, pullProfileMetrics, refreshPBForm, processWorkoutSnapshot, updateCaches, logPB, requireAuth } from './auth.js';
 import { showOnboarding, hideOnboarding, addOnboarding1RM } from './onboarding.js';
 import { computeAndSyncDailyActivity, renderConsistencyUI, calculateChallengeProgress, renderChallengeCards, loadConsistencyConfig, getPreviousPeriodId, calculateStreakFromPeriods, renderStreakUI, updateChallengeStreaks, renderCalendar, updateConsistencyMetrics, getWorkoutsForDate, selectCalendarDay, changeCalendarNav, applyCalendarNav, autoSelectFirstActiveDay, goToCalendarToday, toggleCalendarView, closeCalendarDayDetail } from './calendar.js';
 import { renderLogs, getWeekStart, getWeekEnd, computeDailyBuckets, computeWeeklyBuckets, computeMonthlyBuckets, computeYearlyBuckets, computeVolumeHistory, formatRangeLabel, renderVolumeHistory, switchVolumePeriod, shiftVolumePeriod, goToCurrentPeriod, populateVolumeFilter, onVolumeFilterChange } from './volume.js';
@@ -654,7 +654,7 @@ if (chip1RMEl) {
 }
 workoutForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (!currentUser) return alert('Please sign in before logging a workout.');
+    if (!requireAuth('workoutFeedback')) return;
 
     const exercise = document.getElementById('exercise').value;
     if (!exercise) return showFeedback('Please select an exercise.', 'red', 'workoutFeedback');
