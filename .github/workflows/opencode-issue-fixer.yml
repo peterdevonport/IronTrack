@@ -118,8 +118,8 @@ jobs:
           ISSUE_NUM="${{ steps.compile_context.outputs.ISSUE_NUM }}"
 
           # Check if the opencode action created a PR for this issue
-          PR_URL=$(gh pr list --state open --json number,title,body,createdAt --jq \
-            "sort_by(.createdAt) | reverse | .[0] | select(.body // \"\" | contains(\"#$ISSUE_NUM\")) | .url" 2>/dev/null)
+          PR_URL=$(gh pr list --state open --json url,createdAt --jq \
+            "sort_by(.createdAt) | reverse | .[0].url" 2>/dev/null)
 
           # Check if the AI chose Path B (wontfix)
           LABELS=$(gh issue view "$ISSUE_NUM" --json labels -q '.labels[].name' 2>/dev/null || echo "")
