@@ -78,7 +78,7 @@ describe('submitPendingWorkout integration', () => {
     if (globals.isSubmittingWorkout) return;
     if (!deps.requireAuth('log-workout-feedback')) return;
     if (!globals.pendingPlannedWorkout) {
-      deps.showFeedback('No planned workout to log.', 'rose', 'log-workout-feedback');
+      deps.showFeedback('No planned workout to log.', 'red', 'log-workout-feedback');
       return;
     }
 
@@ -94,7 +94,7 @@ describe('submitPendingWorkout integration', () => {
       };
 
       if (!handlers[type]) {
-        deps.showFeedback('Unknown workout type.', 'rose', 'log-workout-feedback');
+        deps.showFeedback('Unknown workout type.', 'red', 'log-workout-feedback');
         return;
       }
 
@@ -178,7 +178,7 @@ describe('submitPendingWorkout integration', () => {
   it('should show error for unknown workout type', async () => {
     await simulateSubmitPendingWorkout('UNKNOWN', 'Test', {});
 
-    expect(deps.showFeedback).toHaveBeenCalledWith('Unknown workout type.', 'rose', 'log-workout-feedback');
+    expect(deps.showFeedback).toHaveBeenCalledWith('Unknown workout type.', 'red', 'log-workout-feedback');
     expect(deps.addDoc).not.toHaveBeenCalled();
     expect(globals.pendingPlannedWorkout).not.toBeNull();
   });

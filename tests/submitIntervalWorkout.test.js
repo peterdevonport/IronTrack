@@ -51,7 +51,7 @@ describe('submitIntervalWorkout', () => {
 
     await submitIntervalWorkout('Test INTERVAL', { movements: [], rounds: 5 }, 'now', deps);
 
-    expect(deps.showFeedback).toHaveBeenCalledWith('Enter rounds completed.', 'rose', 'log-workout-feedback');
+    expect(deps.showFeedback).toHaveBeenCalledWith('Enter rounds completed.', 'red', 'log-workout-feedback');
     expect(deps.addDoc).not.toHaveBeenCalled();
   });
 

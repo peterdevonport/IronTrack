@@ -9,7 +9,7 @@ import { computeDotsScore, computeSinclairScore, getRankingTier, formatScore_ROU
 import { PERMISSION_ERROR_MAP, clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, changeGenericPage, switchTab, isPermissionDenied, FEEDBACK_ERROR_CLASS, FEEDBACK_SUCCESS_CLASS, FEEDBACK_NEUTRAL_CLASS } from './ui.js';
 import { buildWmsField, applyFieldAttributes, renderFormFields } from './forms.js';
 import { renderOnboarding1RMItem, renderOnboarding1RMList, renderCalcEntry, renderCalcEntries, renderPlanMovementItem, renderPlanMovements, renderMovementChips, renderEmomChips, renderCalendarWorkoutItem, renderVolumeBar, renderMinuteSlotInner, renderShareFriendItem, renderRegistryRow, renderLeaderboardEmptyRow, buildCalendarDayHtml, workoutToLogHtml, renderWorkoutCard, renderStructuredWorkoutCard, renderPlanCard, renderSharedPlanCard, friendToHtml, buildLeaderboardRow } from './rendering.js';
-import { getSchemaKey, computeTotalLoad, pullProfileMetrics, refreshPBForm, processWorkoutSnapshot, updateCaches, logPB, requireAuth } from './auth.js';
+import { computeTotalLoad, pullProfileMetrics, refreshPBForm, processWorkoutSnapshot, updateCaches, logPB, requireAuth } from './auth.js';
 import { showOnboarding, hideOnboarding, addOnboarding1RM } from './onboarding.js';
 import { computeAndSyncDailyActivity, renderConsistencyUI, calculateChallengeProgress, renderChallengeCards, loadConsistencyConfig, getPreviousPeriodId, calculateStreakFromPeriods, renderStreakUI, updateChallengeStreaks, renderCalendar, updateConsistencyMetrics, getWorkoutsForDate, selectCalendarDay, changeCalendarNav, applyCalendarNav, autoSelectFirstActiveDay, goToCalendarToday, toggleCalendarView, closeCalendarDayDetail } from './calendar.js';
 import { renderLogs, getWeekStart, getWeekEnd, computeDailyBuckets, computeWeeklyBuckets, computeMonthlyBuckets, computeYearlyBuckets, computeVolumeHistory, formatRangeLabel, renderVolumeHistory, switchVolumePeriod, shiftVolumePeriod, goToCurrentPeriod, populateVolumeFilter, onVolumeFilterChange } from './volume.js';
@@ -31,6 +31,10 @@ const DELETE_ERROR_MAP = {
 const PASSWORD_RESET_ERROR_MAP = {
   'auth/user-not-found': 'No account found with this email.',
   'auth/invalid-email': 'Invalid email address.',
+};
+const MSG = {
+  SELECT_EXERCISE: 'Please select an exercise.',
+  INVALID_SETS_REPS: 'Please enter valid sets and reps.',
 };
 let currentUser = null;
 let unsubscribeLogs = null;
@@ -62,7 +66,7 @@ if (typeof lucide !== 'undefined' && lucide.createIcons) {
 
 window.addEventListener('unhandledrejection', (e) => {
   console.error('Unhandled promise rejection:', e.reason);
-  showFeedback('An unexpected error occurred. Please try again.', 'red');
+  showToast('An unexpected error occurred. Please try again.', 'red');
 });
 
 navTabs.forEach(btn => {
@@ -83,7 +87,7 @@ onAuthStateChanged(auth, async (user) => {
       await handleSignedIn(user);
     } catch (err) {
       console.error('Auth state handler failed:', err);
-      showFeedback('Failed to load your profile. Please try refreshing the page.', 'red');
+      showFeedback('Failed to load your profile. Please try refreshing the page.', 'red', 'profileFeedback');
       handleSignedOut();
     }
   } else {
@@ -366,7 +370,7 @@ async function saveOnboarding() {
         await batch.commit();
 
         hideOnboarding();
-        showFeedback('Profile initialized! Welcome to IronTrack.', 'emerald');
+        showFeedback('Profile initialized! Welcome to IronTrack.', 'emerald', 'profileFeedback');
 
         syncLeaderboardFeed();
         if (listenersAttached) return;
@@ -678,9 +682,7 @@ function buildWorkoutLog(values, user) {
     const { exercise, sets, reps, weight, externalLoad } = values;
     const estimatedLoad = computeEffectiveLoad(exercise, weight, externalLoad, state.user.userBiometrics.bodyweight);
     const totalVolume = estimatedLoad * reps * sets;
-
     const storedExercise = resolveExerciseVariant(exercise, externalLoad);
-
     return {
         userId: user.uid,
         exercise: storedExercise,
@@ -692,6 +694,12 @@ function buildWorkoutLog(values, user) {
         totalVolume,
         timestamp: Timestamp.now()
     };
+}
+
+function validateWorkoutValues(values) {
+    if (!values.exercise) return MSG.SELECT_EXERCISE;
+    if (isNaN(values.sets) || isNaN(values.reps) || values.sets <= 0 || values.reps <= 0) return MSG.INVALID_SETS_REPS;
+    return null;
 }
 
 async function persistWorkout(log) {
