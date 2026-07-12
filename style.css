@@ -454,7 +454,11 @@ mdui-button[full-width] { width: 100%; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
   font-size: 1.5rem;
+  line-height: 1;
 }
 .btn-fav-bookmark {
   display: inline-flex;
