@@ -78,4 +78,10 @@ function getDisplayName(profile, fallbackUid) {
   return profile?.displayName || profile?.uid || fallbackUid || 'Unknown';
 }
 
-export { EXERCISE_CATALOG, LOAD_FACTORS, getExerciseInfo, getDisplayName };
+function resolveExerciseVariant(name, externalLoad) {
+  const VARIANTS = { 'Pull Up': { condition: (ext) => ext > 0, variant: 'Pull Up (Weighted)' } };
+  const rule = VARIANTS[name];
+  return rule?.condition(externalLoad) ? rule.variant : name;
+}
+
+export { EXERCISE_CATALOG, LOAD_FACTORS, getExerciseInfo, getDisplayName, resolveExerciseVariant };

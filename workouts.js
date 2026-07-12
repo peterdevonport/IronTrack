@@ -5,12 +5,13 @@ import { escapeHtml, haptic, debounce } from './dom.js';
 import { LOAD_FACTORS, getExerciseInfo } from './exercise-data.js';
 import { formatWorkoutType, formatMovementWeight } from './formatting.js';
 import { buildWorkoutDescription, formatScore_ROUNDS_AND_REPS, formatScore_COMPLETED_MINUTES, formatScore_TIME_SECONDS, getRepsPerRound } from './analytics.js';
-import { clearChildren, showFeedback, showToast, updatePagination, updatePaginationControls, paginateAndRender, switchTab, renderEmptyState, changeGenericPage, isPermissionDenied } from './ui.js';
+import { PERMISSION_ERROR_MAP, clearChildren, showFeedback, showToast, updatePagination, updatePaginationControls, paginateAndRender, switchTab, renderEmptyState, changeGenericPage, isPermissionDenied } from './ui.js';
 import { renderStructuredWorkoutCard } from './rendering.js';
 import { renderSharedPlansUI } from './social.js';
 import { computeAndSyncDailyActivity } from './calendar.js';
 import { capturePlanStructure } from './plans.js';
 import { MSG } from './messages.js';
+import { requireAuth } from './auth.js';
 
 let unsubscribeStructured = null;
 let isSubmittingWorkout = false;
@@ -390,7 +391,7 @@ function resetTrainingTab() {
 
 async function submitPendingWorkout() {
   if (isSubmittingWorkout) return;
-  if (!auth.currentUser) return alert(MSG.SIGN_IN_REQUIRED);
+  if (!requireAuth('log-workout-feedback')) return;
   if (!state.builder.pendingPlannedWorkout) return showFeedback(MSG.NO_PLANNED_WORKOUT, 'rose', 'log-workout-feedback');
 
   const btn = document.getElementById('log-workout-btn');
@@ -419,7 +420,7 @@ async function submitPendingWorkout() {
   } catch (err) {
     console.error('Log pending workout failed', err.code, err.message);
     if (isPermissionDenied(err)) {
-      showFeedback(MSG.SAVE_BLOCKED, 'rose', 'log-workout-feedback');
+      showFeedback(PERMISSION_ERROR_MAP.saveWorkout, 'rose', 'log-workout-feedback');
     } else {
       showFeedback(MSG.WORKOUT_LOG_FAILED + err.message, 'rose', 'log-workout-feedback');
     }
