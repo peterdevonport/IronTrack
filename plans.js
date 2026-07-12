@@ -277,7 +277,7 @@ function handlePlanAdd() {
   if (!exercise || !reps || reps < 1) return;
 
   const schemaKey = getSchemaKey(exercise);
-  let weight = 0;
+  let weight;
   let weightMode = 'absolute';
   let pct = null;
   let rpe = null;
