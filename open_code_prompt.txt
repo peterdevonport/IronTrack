@@ -1,45 +1,9 @@
 You are an autonomous Senior Software Engineer evaluating an on-demand code refactor request.
-Target Issue: #166 - [OpenCode Technical Debt] Duplicated weight calculation logic between renderPlanMovements and addPlanMinuteSlot
+Target Issue: #293 - [OpenCode Technical Debt] No timeout on opencode run commands risks infinite CI hangs
 
 ### REFACTOR BLUEPRINT REPORTED:
 
-### Location
-Found in modified section of `rendering.js` lines 244-254 and `plans.js` lines 200-213.
-
-### Description
-The weight calculation logic for `pct` and `rpe` weight modes is duplicated almost identically in two separate functions:
-
-In `renderPlanMovements` (rendering.js):
-```js
-if (m.weightMode === 'pct' && m.pct) {
-  weight = oneRM > 0 ? Math.round(oneRM * m.pct / 100) : m.weight;
-  source = `${m.reps}x ${m.exerciseId} @ ${m.pct}% 1RM (${weight}kg)`;
-} else if (m.weightMode === 'rpe' && m.rpe) {
-  const rir = 10 - m.rpe;
-  weight = oneRM > 0 ? Math.round(estimateWeightForReps(oneRM, m.reps + rir)) : m.weight;
-  source = `${m.reps}x ${m.exerciseId} @ RPE ${m.rpe} (${weight}kg)`;
-}
-```
-
-In `addPlanMinuteSlot` (plans.js):
-```js
-if (data.weightMode === 'pct' && data.pct) {
-  weightDisplay = oneRM > 0 ? Math.round(oneRM * data.pct / 100) : data.weight;
-  source = `${data.exerciseId} × ${data.reps} @ ${weightDisplay} kg (${data.pct}%)`;
-} else if (data.weightMode === 'rpe' && data.rpe) {
-  const rir = 10 - data.rpe;
-  const totalRepsPossible = data.reps + rir;
-  weightDisplay = oneRM > 0 ? Math.round(estimateWeightForReps(oneRM, totalRepsPossible)) : data.weight;
-  source = `${data.exerciseId} × ${data.reps} @ ${weightDisplay} kg (RPE ${data.rpe})`;
-}
-```
-
-This is a DRY violation. If the weight calculation logic changes (e.g., rounding rules, fallback behavior), both locations must be updated in lockstep.
-
-### Suggested Refactor
-1. Extract a shared utility function like `computeDisplayWeight(movement, oneRM)` into `math.js` that handles all weight modes.
-2. Both rendering functions should call this utility instead of duplicating the logic.
-3. This also centralizes the RIR calculation (`10 - rpe`) which appears in both places.
+### Location\n`.github/workflows/opencode-conflict-resolver.yml:42` and `opencode-conflict-resolver.yml:60`\n\n### Description\nBoth `opencode run` invocations (conflict resolution and test auto-fix) have no timeout. If the AI model hangs, enters a loop, or the API becomes unresponsive, the GitHub Actions job will run until the 6-hour max job timeout, consuming runner minutes and blocking the workflow queue.\n\n### Suggested Refactor\nWrap each call with a timeout:\n```bash\ntimeout 300 opencode run --auto --model opencode-go/deepseek-v4-flash \\n  "Resolve git merge conflicts..."\nEXIT_CODE=0\nif [  -eq 124 ]; then\n  echo "❌ OpenCode timed out after 5 minutes"\n  exit 1\nfi\n```\nAlternatively, use the `timeout-minutes` key at the step level in the workflow YAML.
 
 ### YOUR MISSION:
 Analyze the corresponding source files in the current repository. Determine if this reported code smell is a genuine defect/anti-pattern that needs correcting, OR if this structure is intentional (e.g., required for performance, compliance with third-party APIs, or an explicitly guarded architectural design).
@@ -48,11 +12,11 @@ Analyze the corresponding source files in the current repository. Determine if t
 
 PATH A: [VALID CODE SMELL - FIX IT]
 If the issue is correct and should be refactored:
-1. Checkout a new branch named 'opencode/fix-issue-166'.
+1. Checkout a new branch named 'opencode/fix-issue-293'.
 2. Apply precise modifications to the master branch files to resolve the tech debt.
-3. Open a high-quality Pull Request targeting 'master' that contains 'Closes #166' in its body description.
+3. Commit and push your changes to that branch origin. Stop there! (Our automated pipeline will handle the PR and merge layers).
 
 PATH B: [INTENTIONAL DESIGN - REJECT IT]
 If you evaluate that the code is intentional, optimal, or should remain unchanged, do NOT edit any repository code or open a PR. Instead, run these terminal commands immediately:
-1. gh issue edit 166 --add-label "wontfix"
-2. gh issue comment 166 --body "### 🛑 Architectural Review: Intentional Design\nI have deeply analyzed the codebase regarding this report. I recommend **against** changing this code for the following reasons:\n\n<Provide a highly detailed, professional engineering justification explaining why this code pattern is correct, necessary, or optimal given your context.>"
+1. gh issue edit 293 --add-label "wontfix"
+2. gh issue comment 293 --body "### 🛑 Architectural Review: Intentional Design\nI have deeply analyzed the codebase regarding this report. I recommend **against** changing this code for the following reasons:\n\n<Provide a highly detailed, professional engineering justification explaining why this code pattern is correct, necessary, or optimal given your context.>"
