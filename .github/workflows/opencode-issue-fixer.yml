@@ -97,16 +97,20 @@ jobs:
           git config --global user.name "opencode-issue-fixer[bot]"
           git config --global user.email "opencode-issue-fixer[bot]@users.noreply.github.com"
 
-      - name: Process Issue with DeepSeek V4 Flash
-        uses: anomalyco/opencode/github@v1.17.13
-        timeout-minutes: 15 # 👈 Safety net: Caps the AI execution time
+      - name: Install OpenCode CLI
+        run: |
+          curl -fsSL https://opencode.ai/install | bash
+          echo "$HOME/.opencode/bin" >> $GITHUB_PATH
+
+      - name: Process Issue with OpenCode
+        timeout-minutes: 15
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.AUTO_MERGE_PAT }}
-        with:
-          model: opencode-go/deepseek-v4-flash
-          use_github_token: true
-          prompt: ${{ steps.prompt.outputs.PROMPT }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          opencode run --auto --model opencode-go/deepseek-v4-flash \
+            "$(cat open_code_prompt.txt)"
 
       # 🚀 STEP 2: PR CREATION AND NATIVE AUTO-MERGE
       - name: Handle PR Creation and Auto-Merge
