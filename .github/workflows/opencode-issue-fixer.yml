@@ -111,6 +111,8 @@ jobs:
       # 🚀 STEP 2: PR CREATION AND NATIVE AUTO-MERGE
       - name: Handle PR Creation and Auto-Merge
         if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           ISSUE_NUM="${{ steps.compile_context.outputs.ISSUE_NUM }}"
           BRANCH="opencode/fix-issue-${ISSUE_NUM}"
