@@ -104,6 +104,7 @@ jobs:
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.AUTO_MERGE_PAT }}
+          GH_TOKEN: ${{ github.token }}
         with:
           model: opencode-go/deepseek-v4-flash
           use_github_token: true
