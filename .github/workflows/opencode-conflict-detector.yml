@@ -40,10 +40,10 @@ jobs:
 
             echo "Checking status of PR #$PR_NUM ($BRANCH)..."
 
-            # RULE 1: If a PR is currently running tests, stop entirely. 
+            # RULE 1: If this PR is currently running tests, skip it and check the next one.
             if [ "$STATUS" = "IN_PROGRESS" ]; then
-              echo "⏳ PR #$PR_NUM is currently executing CI checks. Standing down to avoid race conditions."
-              exit 0
+              echo "⏳ PR #$PR_NUM is currently executing CI checks. Skipping for now..."
+              continue
             fi
 
             # RULE 2: If the AI already tried to fix this PR but it failed your test suite, skip it.
@@ -52,7 +52,7 @@ jobs:
               continue
             fi
 
-            # RULE 3: If the PR is conflicting and clean, deploy the worker to fix it, then terminate the loop.
+            # RULE 3: If the PR is conflicting and ready to merge, deploy the worker to fix it.
             if [ "$MERGEABLE" = "CONFLICTING" ]; then
               echo "🚨 PR #$PR_NUM is blocked by conflicts. Spawning dedicated Resolver..."
               
@@ -60,7 +60,7 @@ jobs:
                 -f pr_number="$PR_NUM" \
                 -f branch_name="$BRANCH"
               
-              exit 0
+              continue
             fi
           done
 
