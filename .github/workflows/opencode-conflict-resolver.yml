@@ -51,7 +51,7 @@ jobs:
         run: |
           git add -A
           git diff --cached --quiet && echo "No changes to commit" || \
-            git commit -m "fix: resolve merge conflicts with master [skip ci]"
+            git commit -m "fix: resolve merge conflicts with master"
           git push origin ${{ github.event.inputs.branch_name }}
 
       - name: Re-Enable Auto-Merge
