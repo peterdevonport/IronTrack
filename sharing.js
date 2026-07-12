@@ -43,7 +43,7 @@ async function processFriendRequest(friendId) {
             haptic(HAPTIC.tap);
         } else {
             console.error("Cyber-Tag not found.");
-            showFeedback('Cyber-Tag not found. Check the ID and try again.', 'rose', 'socialAddFriendFeedback');
+            showFeedback('Cyber-Tag not found. Check the ID and try again.', 'red', 'socialAddFriendFeedback');
         }
     } catch (err) {
         console.error("Error linking friend:", err);

@@ -81,7 +81,7 @@ export async function submitAmrapWorkout(name, structure, now, deps) {
   const roundsCompleted = parseInt(document.getElementById('log-rounds').value, 10);
   const additionalReps = parseInt(document.getElementById('log-partial-reps').value, 10) || 0;
   if (roundsCompleted < 0) {
-    showFeedback('Enter rounds completed.', 'rose', 'log-workout-feedback');
+    showFeedback('Enter rounds completed.', 'red', 'log-workout-feedback');
     return;
   }
 
@@ -105,7 +105,7 @@ export async function submitEmomWorkout(name, structure, now, deps) {
   
   const roundsCompleted = parseInt(document.getElementById('log-rounds').value, 10);
   if (roundsCompleted < 0) {
-    showFeedback('Enter rounds completed.', 'rose', 'log-workout-feedback');
+    showFeedback('Enter rounds completed.', 'red', 'log-workout-feedback');
     return;
   }
 
@@ -133,7 +133,7 @@ export async function submitForTimeWorkout(name, structure, now, deps) {
   const resultSecs = dnf ? 0 : (parseInt(document.getElementById('fortime-seconds').value, 10) || 0);
   const timeSeconds = dnf ? 0 : resultMins * 60 + resultSecs;
   if (resultSecs > 59) {
-    showFeedback('Seconds must be 0–59.', 'rose', 'log-workout-feedback');
+    showFeedback('Seconds must be 0–59.', 'red', 'log-workout-feedback');
     return;
   }
 
@@ -158,7 +158,7 @@ export async function submitIntervalWorkout(name, structure, now, deps) {
   const roundsCompleted = parseInt(document.getElementById('log-rounds').value, 10);
   const partialReps = parseInt(document.getElementById('log-partial-reps').value, 10) || 0;
   if (roundsCompleted < 0) {
-    showFeedback('Enter rounds completed.', 'rose', 'log-workout-feedback');
+    showFeedback('Enter rounds completed.', 'red', 'log-workout-feedback');
     return;
   }
 

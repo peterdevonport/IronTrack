@@ -58,7 +58,7 @@ describe('submitForTimeWorkout', () => {
 
     await submitForTimeWorkout('Test FOR_TIME', { movements: [], rounds: 3 }, 'now', deps);
 
-    expect(deps.showFeedback).toHaveBeenCalledWith('Seconds must be 0–59.', 'rose', 'log-workout-feedback');
+    expect(deps.showFeedback).toHaveBeenCalledWith('Seconds must be 0–59.', 'red', 'log-workout-feedback');
     expect(deps.addDoc).not.toHaveBeenCalled();
   });
 

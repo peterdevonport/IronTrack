@@ -38,7 +38,7 @@ describe('submitEmomWorkout', () => {
 
     await submitEmomWorkout('Test EMOM', { rounds: 10, minutes: [], mode: 'by_round' }, 'now', deps);
 
-    expect(deps.showFeedback).toHaveBeenCalledWith('Enter rounds completed.', 'rose', 'log-workout-feedback');
+    expect(deps.showFeedback).toHaveBeenCalledWith('Enter rounds completed.', 'red', 'log-workout-feedback');
     expect(deps.addDoc).not.toHaveBeenCalled();
   });
 
