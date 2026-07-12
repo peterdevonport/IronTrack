@@ -9,7 +9,7 @@ import { renderEmptyState, showFeedback, showToast, showPlanNameModal, updatePag
 import { renderWorkoutCard, renderPlanCard, renderSharedPlanCard, renderPlanMovements, renderMinuteSlotInner } from './rendering.js';
 import { renderFormFields } from './forms.js';
 import { renderSharedPlansUI } from './social.js';
-import { getSchemaKey, computeTotalLoad } from './auth.js';
+import { getSchemaKey, computeTotalLoad, requireAuth } from './auth.js';
 import { toggleForTimeDnf, cleanupStructuredSubscriptions } from './workouts.js';
 
 let unsubscribePlans = null;
@@ -346,8 +346,8 @@ async function formatIntervalLabel(intervalMin, intervalSec) {
 }
 
 function validatePlanInputs(type) {
-  if (!auth.currentUser) { alert('Please sign in first.'); return false; }
-  if (!type) { showFeedback('Select a workout type first.', 'red', 'planFeedback'); return false; }
+  if (!requireAuth('planFeedback')) return false;
+  if (!type) { showFeedback('Select a workout type first.', 'rose', 'planFeedback'); return false; }
 
   if (type === 'AMRAP') {
     const durationMin = parseInt(document.getElementById('amrap-duration')?.value, 10);
@@ -403,7 +403,7 @@ function buildPlanDocument(userId, name, type, structure) {
 }
 
 async function savePlan() {
-  if (!auth.currentUser) return alert('Please sign in first.');
+  if (!requireAuth('planFeedback')) return;
   const type = document.getElementById('workout-type')?.value;
   if (!type) return showFeedback('Select a workout type first.', 'red', 'planFeedback');
 

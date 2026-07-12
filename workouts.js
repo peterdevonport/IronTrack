@@ -5,11 +5,12 @@ import { escapeHtml, haptic, debounce } from './dom.js';
 import { LOAD_FACTORS, getExerciseInfo } from './exercise-data.js';
 import { formatWorkoutType, formatMovementWeight } from './formatting.js';
 import { buildWorkoutDescription, formatScore_ROUNDS_AND_REPS, formatScore_COMPLETED_MINUTES, formatScore_TIME_SECONDS, getRepsPerRound } from './analytics.js';
-import { clearChildren, showFeedback, showToast, updatePagination, updatePaginationControls, paginateAndRender, switchTab, renderEmptyState, changeGenericPage, isPermissionDenied } from './ui.js';
+import { PERMISSION_ERROR_MAP, clearChildren, showFeedback, showToast, updatePagination, updatePaginationControls, paginateAndRender, switchTab, renderEmptyState, changeGenericPage, isPermissionDenied } from './ui.js';
 import { renderStructuredWorkoutCard } from './rendering.js';
 import { renderSharedPlansUI } from './social.js';
 import { computeAndSyncDailyActivity } from './calendar.js';
 import { capturePlanStructure } from './plans.js';
+import { requireAuth } from './auth.js';
 
 let unsubscribeStructured = null;
 let isSubmittingWorkout = false;
@@ -389,8 +390,8 @@ function resetTrainingTab() {
 
 async function submitPendingWorkout() {
   if (isSubmittingWorkout) return;
-  if (!auth.currentUser) return alert('Please sign in first.');
-  if (!state.builder.pendingPlannedWorkout) return showFeedback('No planned workout to log.', 'red', 'log-workout-feedback');
+  if (!requireAuth('log-workout-feedback')) return;
+  if (!state.builder.pendingPlannedWorkout) return showFeedback('No planned workout to log.', 'rose', 'log-workout-feedback');
 
   const btn = document.getElementById('log-workout-btn');
   if (btn) btn.disabled = true;
@@ -418,7 +419,7 @@ async function submitPendingWorkout() {
   } catch (err) {
     console.error('Log pending workout failed', err.code, err.message);
     if (isPermissionDenied(err)) {
-      showFeedback('Save blocked by Firestore rules.', 'red', 'log-workout-feedback');
+      showFeedback(PERMISSION_ERROR_MAP.saveWorkout, 'rose', 'log-workout-feedback');
     } else {
       showFeedback('Failed to log workout: ' + err.message, 'red', 'log-workout-feedback');
     }
