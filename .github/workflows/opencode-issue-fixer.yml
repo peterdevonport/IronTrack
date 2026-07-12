@@ -106,11 +106,12 @@ jobs:
         timeout-minutes: 15
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.AUTO_MERGE_PAT }}
           GH_TOKEN: ${{ github.token }}
+          PROMPT: ${{ steps.prompt.outputs.PROMPT }}
+          USE_GITHUB_TOKEN: "true"
         run: |
-          opencode run --auto --model opencode-go/deepseek-v4-flash \
-            "$(cat open_code_prompt.txt)"
+          opencode github run --model opencode-go/deepseek-v4-flash
 
       # 🚀 STEP 2: PR CREATION AND NATIVE AUTO-MERGE
       - name: Handle PR Creation and Auto-Merge
