@@ -663,12 +663,37 @@ if (chip1RMEl) {
   });
 }
 function extractWorkoutFormValues() {
+    const exercise = document.getElementById('exercise')?.value;
+    if (!exercise) {
+        showFeedback('Please select an exercise.', 'red', 'workoutFeedback');
+        return null;
+    }
+    const sets = parseInt(document.getElementById('log-set-sets')?.value, 10);
+    const reps = parseInt(document.getElementById('log-set-reps')?.value, 10);
+    if (isNaN(sets) || isNaN(reps) || sets <= 0 || reps <= 0) {
+        showFeedback('Please enter valid sets and reps.', 'red', 'workoutFeedback');
+        return null;
+    }
+    const weight = parseFloat(document.getElementById('log-set-weight')?.value) || parseFloat(document.getElementById('log-set-bodyweight')?.value) || 0;
+    const externalLoad = parseFloat(document.getElementById('log-set-ext-load')?.value) || 0;
+    return { exercise, sets, reps, weight, externalLoad };
+}
+
+function buildWorkoutLog(values, user) {
+    const { exercise, sets, reps, weight, externalLoad } = values;
+    const estimatedLoad = computeEffectiveLoad(exercise, weight, externalLoad, state.user.userBiometrics.bodyweight);
+    const totalVolume = estimatedLoad * reps * sets;
+    const storedExercise = resolveExerciseVariant(exercise, externalLoad);
     return {
-        exercise: document.getElementById('exercise')?.value,
-        sets: parseInt(document.getElementById('log-set-sets')?.value, 10),
-        reps: parseInt(document.getElementById('log-set-reps')?.value, 10),
-        weight: parseFloat(document.getElementById('log-set-weight')?.value) || parseFloat(document.getElementById('log-set-bodyweight')?.value) || 0,
-        externalLoad: parseFloat(document.getElementById('log-set-ext-load')?.value) || 0,
+        userId: user.uid,
+        exercise: storedExercise,
+        sets,
+        reps,
+        weight,
+        externalLoad,
+        estimatedLoad,
+        totalVolume,
+        timestamp: Timestamp.now()
     };
 }
 
@@ -678,43 +703,35 @@ function validateWorkoutValues(values) {
     return null;
 }
 
+async function persistWorkout(log) {
+    await addDoc(collection(db, "workouts"), log);
+}
+
+function handleWorkoutError(err) {
+    console.error('Workout submission failed', err.code, err.message);
+    if (isPermissionDenied(err)) {
+        showFeedback(PERMISSION_ERROR_MAP.saveWorkout, 'red', 'workoutFeedback');
+    } else {
+        showFeedback(`Failed to save workout: ${err.message}`, 'red', 'workoutFeedback');
+    }
+}
+
 workoutForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!requireAuth('workoutFeedback')) return;
 
     const values = extractWorkoutFormValues();
-    const validationError = validateWorkoutValues(values);
-    if (validationError) return showFeedback(validationError, 'red', 'workoutFeedback');
+    if (!values) return;
 
-    const estimatedLoad = computeEffectiveLoad(values.exercise, values.weight, values.externalLoad, state.user.userBiometrics.bodyweight);
-    const totalVolume = estimatedLoad * values.reps * values.sets;
-
-    const storedExercise = resolveExerciseVariant(values.exercise, values.externalLoad);
-
-    const log = {
-        userId: currentUser.uid,
-        exercise: storedExercise,
-        sets: values.sets,
-        reps: values.reps,
-        weight: values.weight,
-        externalLoad: values.externalLoad,
-        estimatedLoad,
-        totalVolume,
-        timestamp: Timestamp.now()
-    };
+    const log = buildWorkoutLog(values, currentUser);
 
     try {
-        await addDoc(collection(db, "workouts"), log);
+        await persistWorkout(log);
         refreshLogSetForm();
         showFeedback(MSG.WORKOUT_SAVED, 'emerald', 'workoutFeedback');
         haptic(HAPTIC.confirm);
     } catch (err) {
-        console.error('Workout submission failed', err.code, err.message);
-        if (isPermissionDenied(err)) {
-            showFeedback(PERMISSION_ERROR_MAP.saveWorkout, 'red', 'workoutFeedback');
-        } else {
-            showFeedback(MSG.WORKOUT_SAVE_FAILED + err.message, 'red', 'workoutFeedback');
-        }
+        handleWorkoutError(err);
     }
 });
 const amrapRounds = document.getElementById('amrap-rounds');
