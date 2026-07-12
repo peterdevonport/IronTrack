@@ -37,6 +37,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.AUTO_MERGE_PAT }}
 
       # 🛡️ STEP 1: SECURITY GATE (Only blocks unauthorized human comments; safely skips for overnight automated issues)
       - name: Check User Permissions
