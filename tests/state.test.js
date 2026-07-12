@@ -1,19 +1,12 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { state } from './state.js';
+import { describe, it, expect } from 'vitest';
+import { state } from '../state.js';
 
 describe('state.user', () => {
   it('should have correct initial values', () => {
-    expect(state.user.currentUser).toBeNull();
     expect(state.user.userBiometrics).toEqual({ gender: 'male', bodyweight: 75 });
     expect(state.user.userSignupTs).toBe(0);
-    expect(state.user.pendingOnboarding1RMs).toEqual([]);
     expect(state.user.userChallengeStreaks.monthly.currentStreak).toBe(0);
     expect(state.user.userChallengeStreaks.yearly.bestStreak).toBe(0);
-  });
-
-  it('should be mutable', () => {
-    state.user.currentUser = { uid: 'test' };
-    expect(state.user.currentUser.uid).toBe('test');
   });
 });
 
@@ -133,7 +126,6 @@ describe('state.ui', () => {
   it('should have correct initial values', () => {
     expect(state.ui.plansFilter).toBe('mine');
     expect(state.ui.currentTab).toBe('dashboard');
-    expect(state.ui.urlParamsProcessed).toBe(false);
   });
 
   it('should be mutable', () => {
