@@ -1,15 +1,15 @@
-import { auth, db, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential, updatePassword, deleteUser, collection, addDoc, query, where, onSnapshot, deleteDoc, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, serverTimestamp, orderBy, limit, Timestamp, getDocs } from './firebase.js';
+import { auth, db, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential, updatePassword, deleteUser, collection, addDoc, writeBatch, query, where, onSnapshot, deleteDoc, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, serverTimestamp, orderBy, limit, Timestamp, getDocs } from './firebase.js';
 import { state, EPLEY_CONSTANT, HAPTIC, CONSISTENCY_CONFIG, entriesPerPage, INPUT_CLASS, CALC_CLASS, FORM_SCHEMAS, activeDates, loginView, appView, bottomNav, authBtn, profileBtn, profileModal, emailInput, passwordInput, loginBtn, signupBtn, greeting, profileForm, workoutForm, workoutList, paginationControls, prevPageBtn, nextPageBtn, currentPageDisplay, totalPagesDisplay, workoutFilter, exerciseSelect, onboardingView, onboardingGender, onboardingWeight, onboardingDaysMonthly, onboardingDaysYearly, onboardingDaysLifetime, onboardingExerciseSelect, onboardingWeightInput, onboardingRepsInput, onboardingAddBtn, onboardingList, onboardingEmpty, onboardingSaveBtn, onboardingFeedback, pbLogExercise, pbLogBtn, pbLogFeedback, tabContents, navTabs, FEEDBACK_DISMISS_DEFAULT_MS } from './state.js';
 import { estimate1RM, estimateWeightForReps, computeEffectiveLoad, getEffectiveLoad } from './math.js';
 import { debounce, escapeHtml, haptic } from './dom.js';
-import { getExerciseInfo, getDisplayName, EXERCISE_CATALOG, LOAD_FACTORS } from './exercise-data.js';
+import { getExerciseInfo, getDisplayName, EXERCISE_CATALOG, LOAD_FACTORS, resolveExerciseVariant } from './exercise-data.js';
 import { getMonday, countActiveDays, countConsecutiveDays, toLocalDateKey } from './date.js';
 import { formatMovementLoad, formatCardDate, formatWorkoutType, formatDotsScore, formatMovementWeight } from './formatting.js';
 import { computeDotsScore, computeSinclairScore, getRankingTier, formatScore_ROUNDS_AND_REPS, formatScore_COMPLETED_MINUTES, formatScore_TIME_SECONDS, describeAmrap, describeEmom, describeForTime, describeInterval, buildWorkoutDescription, buildWorkoutSummaryLine, getRepsPerRound } from './analytics.js';
-import { clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, changeGenericPage, switchTab, isPermissionDenied, FEEDBACK_ERROR_CLASS, FEEDBACK_SUCCESS_CLASS, FEEDBACK_NEUTRAL_CLASS } from './ui.js';
+import { PERMISSION_ERROR_MAP, clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, changeGenericPage, switchTab, isPermissionDenied, FEEDBACK_ERROR_CLASS, FEEDBACK_SUCCESS_CLASS, FEEDBACK_NEUTRAL_CLASS } from './ui.js';
 import { buildWmsField, applyFieldAttributes, renderFormFields } from './forms.js';
 import { renderOnboarding1RMItem, renderOnboarding1RMList, renderCalcEntry, renderCalcEntries, renderPlanMovementItem, renderPlanMovements, renderMovementChips, renderEmomChips, renderCalendarWorkoutItem, renderVolumeBar, renderMinuteSlotInner, renderShareFriendItem, renderRegistryRow, renderLeaderboardEmptyRow, buildCalendarDayHtml, workoutToLogHtml, renderWorkoutCard, renderStructuredWorkoutCard, renderPlanCard, renderSharedPlanCard, friendToHtml, buildLeaderboardRow } from './rendering.js';
-import { computeTotalLoad, pullProfileMetrics, refreshPBForm, processWorkoutSnapshot, updateCaches, logPB } from './auth.js';
+import { getSchemaKey, computeTotalLoad, pullProfileMetrics, refreshPBForm, processWorkoutSnapshot, updateCaches, logPB, requireAuth } from './auth.js';
 import { showOnboarding, hideOnboarding, addOnboarding1RM } from './onboarding.js';
 import { computeAndSyncDailyActivity, renderConsistencyUI, calculateChallengeProgress, renderChallengeCards, loadConsistencyConfig, getPreviousPeriodId, calculateStreakFromPeriods, renderStreakUI, updateChallengeStreaks, renderCalendar, updateConsistencyMetrics, getWorkoutsForDate, selectCalendarDay, changeCalendarNav, applyCalendarNav, autoSelectFirstActiveDay, goToCalendarToday, toggleCalendarView, closeCalendarDayDetail } from './calendar.js';
 import { renderLogs, getWeekStart, getWeekEnd, computeDailyBuckets, computeWeeklyBuckets, computeMonthlyBuckets, computeYearlyBuckets, computeVolumeHistory, formatRangeLabel, renderVolumeHistory, switchVolumePeriod, shiftVolumePeriod, goToCurrentPeriod, populateVolumeFilter, onVolumeFilterChange } from './volume.js';
@@ -344,9 +344,11 @@ async function saveOnboarding() {
     if (onboardingSaveBtn) onboardingSaveBtn.disabled = true;
 
     try {
+        const batch = writeBatch(db);
+
         const profileRef = doc(db, "profiles", currentUser.uid);
         const profileData = buildOnboardingProfileData(values, pendingOnboarding1RMs);
-        await setDoc(profileRef, profileData, { merge: true });
+        batch.set(profileRef, profileData, { merge: true });
 
         state.user.userBiometrics.gender = values.gender;
         state.user.userBiometrics.bodyweight = values.bodyweight;
@@ -357,8 +359,11 @@ async function saveOnboarding() {
         document.getElementById('profile-weight').value = values.bodyweight;
 
         for (const item of pendingOnboarding1RMs) {
-            await addDoc(collection(db, "workouts"), buildOnboardingLogEntry(item, currentUser.uid));
+            const workoutRef = doc(collection(db, "workouts"));
+            batch.set(workoutRef, buildOnboardingLogEntry(item, currentUser.uid));
         }
+
+        await batch.commit();
 
         hideOnboarding();
         showFeedback('Profile initialized! Welcome to IronTrack.', 'emerald');
@@ -674,10 +679,7 @@ function buildWorkoutLog(values, user) {
     const estimatedLoad = computeEffectiveLoad(exercise, weight, externalLoad, state.user.userBiometrics.bodyweight);
     const totalVolume = estimatedLoad * reps * sets;
 
-    let storedExercise = exercise;
-    if (exercise === 'Pull Up' && externalLoad > 0) {
-        storedExercise = 'Pull Up (Weighted)';
-    }
+    const storedExercise = resolveExerciseVariant(exercise, externalLoad);
 
     return {
         userId: user.uid,
@@ -699,7 +701,7 @@ async function persistWorkout(log) {
 function handleWorkoutError(err) {
     console.error('Workout submission failed', err.code, err.message);
     if (isPermissionDenied(err)) {
-        showFeedback('Save blocked by Firestore rules.', 'red', 'workoutFeedback');
+        showFeedback(PERMISSION_ERROR_MAP.saveWorkout, 'red', 'workoutFeedback');
     } else {
         showFeedback(`Failed to save workout: ${err.message}`, 'red', 'workoutFeedback');
     }
@@ -707,7 +709,7 @@ function handleWorkoutError(err) {
 
 workoutForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (!currentUser) return alert('Please sign in before logging a workout.');
+    if (!requireAuth('workoutFeedback')) return;
 
     const values = extractWorkoutFormValues();
     if (!values) return;
