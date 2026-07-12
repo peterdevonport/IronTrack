@@ -6,10 +6,12 @@
     "test": "vitest",
     "test:watch": "vitest watch",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@vitest/coverage-v8": "^1.6.0",
     "eslint": "^10.6.0",
     "globals": "^17.7.0",
     "jsdom": "^29.1.1",
