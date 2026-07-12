@@ -6,15 +6,17 @@ import {
   submitIntervalWorkout,
   resetTrainingTab
 } from './functions.js';
+import { isPermissionDenied } from '../ui.js';
 
 // Integration test for submitPendingWorkout logic
 // Since the actual function is tightly coupled to app.js globals,
 // we test the orchestration logic by simulating the handler pattern
 
 describe('submitPendingWorkout integration', () => {
-  let deps, mockElements, globals;
+  let deps, mockElements, globals, currentUserMock;
 
   beforeEach(() => {
+    currentUserMock = { uid: 'test-user-123' };
     mockElements = {};
     globals = {
       pendingPlannedWorkout: null,
@@ -36,13 +38,20 @@ describe('submitPendingWorkout integration', () => {
       toggleAttribute: vi.fn(),
       ...props
     });
+    const requireAuthMock = vi.fn((feedbackTarget = 'socialFeedback') => {
+      if (!currentUserMock) {
+        deps.showFeedback('Please sign in to continue.', 'rose', feedbackTarget);
+        return null;
+      }
+      return currentUserMock;
+    });
 
     deps = {
       document: {
         getElementById: vi.fn((id) => mockElements[id] || createMockElement()),
         querySelectorAll: vi.fn(() => [])
       },
-      currentUser: { uid: 'test-user-123' },
+      requireAuth: requireAuthMock,
       addDoc: vi.fn().mockResolvedValue({ id: 'test-doc-id' }),
       collection: vi.fn(),
       db: {},
@@ -54,10 +63,10 @@ describe('submitPendingWorkout integration', () => {
       generateForTimeContributions: vi.fn().mockResolvedValue(undefined),
       generateIntervalContributions: vi.fn().mockResolvedValue(undefined),
       showFeedback: vi.fn(),
-      alert: vi.fn(),
       haptic: vi.fn(),
       HAPTIC: { confirm: 'confirm' },
       Timestamp: { now: vi.fn().mockReturnValue('test-timestamp') },
+      currentUser: currentUserMock,
       globals
     };
   });
@@ -67,10 +76,7 @@ describe('submitPendingWorkout integration', () => {
     globals.pendingPlannedWorkout = { type, name, structure };
     
     if (globals.isSubmittingWorkout) return;
-    if (!deps.currentUser) {
-      deps.alert('Please sign in first.');
-      return;
-    }
+    if (!deps.requireAuth('log-workout-feedback')) return;
     if (!globals.pendingPlannedWorkout) {
       deps.showFeedback('No planned workout to log.', 'rose', 'log-workout-feedback');
       return;
@@ -97,10 +103,10 @@ describe('submitPendingWorkout integration', () => {
       deps.showFeedback('Workout logged!', 'emerald', 'log-workout-feedback');
       deps.haptic(deps.HAPTIC.confirm);
     } catch (err) {
-      if (err.code === 'permission-denied') {
-        deps.showFeedback('Save blocked by Firestore rules.', 'rose', 'log-workout-feedback');
+      if (isPermissionDenied(err)) {
+        deps.showFeedback('You do not have permission to save this workout.', 'rose', 'log-workout-feedback');
       } else {
-        deps.alert('Failed to log workout: ' + err.message);
+        deps.showFeedback('Failed to log workout: ' + err.message, 'rose', 'log-workout-feedback');
       }
     } finally {
       globals.isSubmittingWorkout = false;
@@ -188,11 +194,12 @@ describe('submitPendingWorkout integration', () => {
   });
 
   it('should show error when no user logged in', async () => {
-    deps.currentUser = null;
+    currentUserMock = null;
 
     await simulateSubmitPendingWorkout('AMRAP', 'Test', { movements: [] });
 
-    expect(deps.alert).toHaveBeenCalledWith('Please sign in first.');
+    expect(deps.requireAuth).toHaveBeenCalledWith('log-workout-feedback');
+    expect(deps.showFeedback).toHaveBeenCalledWith('Please sign in to continue.', 'rose', 'log-workout-feedback');
     expect(deps.addDoc).not.toHaveBeenCalled();
   });
 
@@ -203,7 +210,7 @@ describe('submitPendingWorkout integration', () => {
 
     await simulateSubmitPendingWorkout('AMRAP', 'Test', { movements: [] });
 
-    expect(deps.showFeedback).toHaveBeenCalledWith('Save blocked by Firestore rules.', 'rose', 'log-workout-feedback');
+    expect(deps.showFeedback).toHaveBeenCalledWith('You do not have permission to save this workout.', 'rose', 'log-workout-feedback');
   });
 
   it('should handle other Firestore errors', async () => {
@@ -213,7 +220,7 @@ describe('submitPendingWorkout integration', () => {
 
     await simulateSubmitPendingWorkout('AMRAP', 'Test', { movements: [] });
 
-    expect(deps.alert).toHaveBeenCalledWith('Failed to log workout: Some error');
+    expect(deps.showFeedback).toHaveBeenCalledWith('Failed to log workout: Some error', 'rose', 'log-workout-feedback');
   });
 
   it('should reset isSubmittingWorkout flag on success', async () => {
