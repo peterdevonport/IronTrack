@@ -2,7 +2,7 @@ import { auth, db, doc, getDoc, addDoc, collection, Timestamp } from './firebase
 import { state, HAPTIC, FORM_SCHEMAS, pbLogExercise, pbLogBtn } from './state.js';
 import { estimate1RM, getEffectiveLoad, computeEffectiveLoad } from './math.js';
 import { haptic } from './dom.js';
-import { getExerciseInfo, LOAD_FACTORS } from './exercise-data.js';
+import { getExerciseInfo, LOAD_FACTORS, resolveExerciseVariant } from './exercise-data.js';
 import { renderFormFields } from './forms.js';
 import { PERMISSION_ERROR_MAP, showFeedback } from './ui.js';
 
@@ -152,10 +152,7 @@ async function logPB() {
     }
     const reps = parseInt(document.getElementById('pb-reps')?.value, 10) || 1;
 
-    let storedExercise = exercise;
-    if (exercise === 'Pull Up' && externalLoad > 0) {
-        storedExercise = 'Pull Up (Weighted)';
-    }
+    const storedExercise = resolveExerciseVariant(exercise, externalLoad);
 
     if (!weight || weight <= 0) {
         showFeedback('Please enter a valid weight.', 'red', 'pb-log-feedback');
