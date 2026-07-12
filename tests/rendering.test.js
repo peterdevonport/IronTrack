@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('../dom.js', () => ({
   escapeHtml: vi.fn(s => String(s).replace(/[&<>"']/g, ''))
@@ -8,7 +8,8 @@ vi.mock('../formatting.js', () => ({
   formatMovementLoad: vi.fn(m => m.weight ? ` @ ${m.weight}kg` : ''),
   formatCardDate: vi.fn(ts => ts ? '15 Jan 14:30' : ''),
   formatWorkoutType: vi.fn(t => t === 'FOR_TIME' ? 'For Time' : t),
-  formatMovementDisplay: vi.fn((m, r) => `${m.reps}x ${m.exerciseId}`)
+  formatMovementDisplay: vi.fn((m, r) => `${m.reps}x ${m.exerciseId}`),
+  formatDotsScore: vi.fn(v => Number.isFinite(Number(v)) ? Number(v) : 0)
 }));
 
 vi.mock('../exercise-data.js', () => ({
@@ -57,7 +58,12 @@ import {
   renderLeaderboardEmptyRow,
   buildCalendarDayHtml,
   renderWorkoutCard,
-  friendToHtml
+  friendToHtml,
+  renderCalendarWorkoutItem,
+  renderStructuredWorkoutCard,
+  renderPlanCard,
+  buildLeaderboardRow,
+  workoutToLogHtml
 } from '../rendering.js';
 
 describe('renderOnboarding1RMItem', () => {
@@ -257,5 +263,69 @@ describe('friendToHtml', () => {
     const result = friendToHtml('uid-3', null);
     expect(result).toContain('Unknown Friend');
     expect(result).toContain('uid-3');
+  });
+});
+
+describe('renderCalendarWorkoutItem', () => {
+  it('renders structured workouts with type', () => {
+    const item = { type: 'AMRAP', structure: { durationSeconds: 300, movements: [] }, scoreDisplay: '5+10' };
+    const result = renderCalendarWorkoutItem(item);
+    expect(result).toContain('AMRAP');
+    expect(result).toContain('5+10');
+  });
+
+  it('renders regular workout items', () => {
+    const item = { exercise: 'Back Squat', reps: 5, weight: 100, sets: 2, timestamp: 1700000000000 };
+    const result = renderCalendarWorkoutItem(item);
+    expect(result).toContain('Back Squat');
+    expect(result).toContain('2');
+  });
+});
+
+describe('renderStructuredWorkoutCard', () => {
+  it('renders AMRAP card', () => {
+    const sw = { id: 's1', name: 'Test AMRAP', type: 'AMRAP', structure: {}, timestamp: 1700000000000 };
+    const result = renderStructuredWorkoutCard(sw);
+    expect(result).toContain('Test AMRAP');
+    expect(result).toContain('AMRAP');
+  });
+
+  it('renders EMOM card', () => {
+    const sw = { id: 's2', name: 'Test EMOM', type: 'EMOM', structure: { mode: 'by_round', minutes: [] } };
+    const result = renderStructuredWorkoutCard(sw);
+    expect(result).toContain('Test EMOM');
+    expect(result).toContain('EMOM');
+  });
+});
+
+describe('renderPlanCard', () => {
+  it('renders plan card', () => {
+    const plan = { id: 'p1', name: 'My Plan', type: 'AMRAP', structure: { movements: [] } };
+    const result = renderPlanCard(plan);
+    expect(result).toContain('My Plan');
+    expect(result).toContain('AMRAP');
+  });
+});
+
+describe('buildLeaderboardRow', () => {
+  it('renders my row', () => {
+    const result = buildLeaderboardRow({ uid: 'me', dotsScore: 400, sinclairScore: 350, displayName: 'Me' }, 1, true, false);
+    expect(result).toContain('Me');
+    expect(result).toContain('#1');
+  });
+});
+
+describe('workoutToLogHtml', () => {
+  it('renders PB badge for PB workout', () => {
+    const workout = { exercise: 'Back Squat', reps: 5, weight: 100, sets: 3, _isPB: true, _isMax1RM: false, timestamp: 1700000000000 };
+    const result = workoutToLogHtml(workout, false, false);
+    expect(result).toContain('PB');
+    expect(result).toContain('Back Squat');
+  });
+
+  it('renders 1RM badge for 1RM workout', () => {
+    const workout = { exercise: 'Deadlift', reps: 1, weight: 200, sets: 1, _isPB: false, _isMax1RM: true, timestamp: 1700000000000 };
+    const result = workoutToLogHtml(workout, false, false);
+    expect(result).toContain('1RM');
   });
 });
