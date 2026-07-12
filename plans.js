@@ -554,10 +554,11 @@ function listenToPlans(uid) {
   });
 }
 
-function renderPlansUI() {
+function renderPlansUI(filteredList) {
+  const list = filteredList || state.data.lastWorkoutPlans;
   paginateAndRender({
     stateKey: 'plans',
-    list: state.data.lastWorkoutPlans,
+    list: list,
     containerId: 'saved-plans-inline',
     renderItems: (items) => items.map(plan => renderPlanCard(plan)).join(''),
     emptyMessage: 'No saved plans yet.'
@@ -580,7 +581,17 @@ function switchPlansFilter(filter) {
     if (plansPagination) plansPagination.classList.remove('hidden');
     if (sharedSection) sharedSection.classList.add('hidden');
     if (sharedPagination) sharedPagination.classList.add('hidden');
+    state.pagination.plans = 1;
     renderPlansUI();
+  } else if (filter === 'favorites') {
+    setActiveTab(btnFavs); setInactiveTab(btnMine); setInactiveTab(btnShared);
+    if (plansSection) plansSection.classList.remove('hidden');
+    if (plansPagination) plansPagination.classList.remove('hidden');
+    if (sharedSection) sharedSection.classList.add('hidden');
+    if (sharedPagination) sharedPagination.classList.add('hidden');
+    state.pagination.plans = 1;
+    const favs = state.data.lastWorkoutPlans.filter(p => p.favorite);
+    renderPlansUI(favs);
   } else {
     setInactiveTab(btnMine);
     if (filter === 'shared') { setActiveTab(btnShared); setInactiveTab(btnFavs); }
