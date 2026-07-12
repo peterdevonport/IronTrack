@@ -1,4 +1,4 @@
-import { state, paginationControls, currentPageDisplay, totalPagesDisplay, prevPageBtn, nextPageBtn, profileModal, tabContents, navTabs, FEEDBACK_DISMISS_DEFAULT_MS, TOAST_DISMISS_MS } from './state.js';
+import { state, paginationControls, currentPageDisplay, totalPagesDisplay, prevPageBtn, nextPageBtn, profileModal, navBar, tabContents, FEEDBACK_DISMISS_DEFAULT_MS, TOAST_DISMISS_MS } from './state.js';
 import { escapeHtml } from './dom.js';
 import { EXERCISE_CATALOG } from './exercise-data.js';
 
@@ -26,8 +26,21 @@ export const FEEDBACK_ERROR_CLASS = 'text-xs text-rose-400 font-medium h-4 text-
 export const FEEDBACK_SUCCESS_CLASS = 'text-xs text-emerald-400 font-medium h-4 text-center';
 export const FEEDBACK_NEUTRAL_CLASS = 'text-xs text-slate-500 font-medium h-4 text-center';
 
-function setActiveTab(btn) { btn.className = BTN_ACTIVE_CLASS; }
-function setInactiveTab(btn) { btn.className = BTN_INACTIVE_CLASS; }
+function setActiveTab(btn) { 
+  if (btn.tagName === 'MDUI-BUTTON') {
+    btn.variant = 'filled';
+  } else {
+    btn.className = 'btn-core is-primary btn-size-row';
+  }
+}
+
+function setInactiveTab(btn) { 
+  if (btn.tagName === 'MDUI-BUTTON') {
+    btn.variant = 'text';
+  } else {
+    btn.className = 'btn-core is-ghost btn-size-row';
+  }
+}
 
 function clearChildren(el) {
   if (el) el.textContent = '';
@@ -94,10 +107,10 @@ function updateCalTodayBtnState() {
         isCurrent = state.calendar.month.getFullYear() === now.getFullYear() && state.calendar.month.getMonth() === now.getMonth();
     }
     if (isCurrent) {
-        btn.className = 'btn-core is-ghost btn-size-row';
+        btn.variant = 'text';
         btn.disabled = true;
     } else {
-        btn.className = 'btn-core is-primary-ghost btn-size-row';
+        btn.variant = 'tonal';
         btn.disabled = false;
     }
 }
@@ -106,10 +119,10 @@ function updateTodayBtnState() {
   const btn = document.getElementById('vh-today');
   if (!btn) return;
   if (state.volume.offset === 0) {
-    btn.className = 'btn-core is-ghost btn-size-row';
+    btn.variant = 'text';
     btn.disabled = true;
   } else {
-    btn.className = 'btn-core is-primary-ghost btn-size-row';
+    btn.variant = 'tonal';
     btn.disabled = false;
   }
 }
@@ -196,7 +209,11 @@ function showFeedback(msg, color, targetId, delay = FEEDBACK_DISMISS_DEFAULT_MS,
 }
 
 function showToast(msg, color) {
-  showFeedback(msg, color, 'toast-notification-inner', TOAST_DISMISS_MS, 'px-4 py-2 rounded-lg bg-slate-800/90 backdrop-blur-sm border border-slate-700 shadow-xl');
+  const snackbar = document.getElementById('toast-snackbar');
+  if (snackbar) {
+    snackbar.textContent = msg;
+    snackbar.setAttribute('open', '');
+  }
 }
 
 function openProfileModal() {
@@ -327,9 +344,9 @@ function switchTab(tabName) {
   tabContents.forEach(el => el.classList.remove('active'));
   const target = document.getElementById('tab-' + tabName);
   if (target) target.classList.add('active');
-  navTabs.forEach(el => el.classList.remove('active'));
-  const btn = document.querySelector('.nav-tab[data-tab="' + tabName + '"]');
-  if (btn) btn.classList.add('active');
+  if (navBar && navBar.value !== tabName) {
+    navBar.value = tabName;
+  }
   window.scrollTo({ top: 0, behavior: 'smooth' });
   state.ui.currentTab = tabName;
 }

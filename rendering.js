@@ -181,8 +181,8 @@ function renderMinuteSlotInner(label, contentHtml) {
 function renderShareFriendItem(fUid, name) {
   return `
       <label class="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-800 cursor-pointer">
-        <input type="checkbox" class="share-friend-checkbox" value="${fUid}" />
-        <span class="text-sm text-slate-200">${escapeHtml(name)}</span>
+        <mdui-checkbox class="share-friend-checkbox" value="${fUid}"></mdui-checkbox>
+        <span class="text-sm" style="color: var(--irontrack-text);">${escapeHtml(name)}</span>
       </label>`;
 }
 

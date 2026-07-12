@@ -1,11 +1,12 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="mdui-theme-auto">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>IronTrack // Analytics & Sync</title>
 
+  <link rel="stylesheet" href="https://unpkg.com/mdui@2/mdui.css" />
   <link rel="stylesheet" href="style.css" />
   <link rel="icon" href="favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="icon-32x32.png">
@@ -15,15 +16,21 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="IronTrack">
-  <meta name="theme-color" content="#27dd33" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#272a36" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#10b981" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1C1B1F" media="(prefers-color-scheme: dark)">
   <meta name="deploy-version" content="__DEPLOY_VER__">
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4" defer></script>
+  <script src="https://unpkg.com/mdui@2/mdui.global.js"></script>
+  <script>
+    // Initialize MDUI with default M3 green color scheme
+    if (window.mdui) {
+      try { window.mdui.setColorScheme('#006a6a'); } catch(e) {}
+    }
+  </script>
   <script src="https://unpkg.com/lucide@latest" defer></script>
 </head>
 
-<body class="bg-slate-800 text-slate-100 min-h-screen font-sans flex flex-col">
-  <div class="w-full lg:max-w-7xl mx-auto p-4 flex-1 flex flex-col space-y-6">
+<body class="min-h-screen flex flex-col">
+  <div class="w-full lg:max-w-7xl mx-auto p-4 flex-1 flex flex-col gap-6">
     <header class="flex justify-between items-center pt-4">
       <div id="header">
         <h1 class="text-3xl font-black tracking-tight text-emerald-400">
@@ -34,169 +41,151 @@
         </p>
       </div>
       <div class="flex items-center gap-2">
-        <button id="profile-btn" aria-label="Profile" class="btn-core is-secondary btn-size-header-util cursor-pointer hidden" title="Profile &amp; Social">
+        <mdui-button-icon id="profile-btn" class="hidden" aria-label="Profile" title="Profile &amp; Social">
           <i data-lucide="user" size="18"></i>
-        </button>
+        </mdui-button-icon>
       </div>
     </header>
 
-    <section id="login-view" class="surface-card text-center my-12 space-y-4 max-w-sm mx-auto">
+    <section id="login-view" class="text-center my-12 p-4" style="max-width: 24rem; margin-left: auto; margin-right: auto;">
        <div class="text-5xl" aria-hidden="true">⚡️</div>
       <div>
-        <h2 class="text-xl font-bold mb-1">Unlock Cloud Analytics</h2>
-        <p class="text-sm text-slate-400">
+        <h2 class="text-xl font-bold mb-1" style="color: var(--irontrack-text);">Unlock Cloud Analytics</h2>
+        <p class="text-sm" style="color: var(--irontrack-text-muted);">
           Log into your athlete profile or register a new account.
         </p>
       </div>
 
       <div id="auth-form-container">
-        <div id="auth-form" class="space-y-3 text-left">
-          <div>
-            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Email Address</label>
-            <input type="email" id="auth-email" placeholder="athlete@irontrack.com" required class="input-core" />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Password</label>
-            <div class="relative">
-              <input type="password" id="auth-password" placeholder="••••••••" required minlength="6" autocomplete="current-password" class="input-core pr-10" />
-              <button id="toggle-password-btn" type="button" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" aria-label="Toggle password visibility" aria-pressed="false">
-                <i data-lucide="eye" id="eye-icon" size="18"></i>
-                <i data-lucide="eye-off" id="eye-off-icon" size="18" class="hidden"></i>
-              </button>
-            </div>
-          </div>
+        <div id="auth-form" class="flex flex-col gap-3 text-left">
+          <mdui-text-field variant="outlined" type="email" id="auth-email" placeholder="athlete@irontrack.com" required clearable>
+            <span slot="label">Email Address</span>
+          </mdui-text-field>
+          <mdui-text-field variant="outlined" type="password" id="auth-password" placeholder="••••••••" required minlength="6" autocomplete="current-password" toggle-password>
+            <span slot="label">Password</span>
+          </mdui-text-field>
         </div>
 
         <div class="grid grid-cols-2 gap-3 pt-2">
-          <button id="email-login-btn" class="btn-core is-primary btn-size-input">
-            Sign In
-          </button>
-          <button id="email-signup-btn" class="btn-core is-secondary btn-size-input">
-            Register
-          </button>
+          <mdui-button id="email-login-btn" variant="filled" full-width>Sign In</mdui-button>
+          <mdui-button id="email-signup-btn" variant="outlined" full-width>Register</mdui-button>
         </div>
-        <p id="auth-feedback" aria-live="polite" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
+        <p id="auth-feedback" aria-live="polite" class="font-medium h-4 text-center mt-2" style="font-size: 0.75rem; color: var(--irontrack-text-muted);"></p>
       </div>
 
-      <p class="text-xs text-center mt-3">
-        <button id="forgot-password-btn" type="button" class="text-slate-400 hover:text-emerald-400 underline transition-colors cursor-pointer bg-transparent border-none text-xs">
-          Forgot Password?
-        </button>
+      <p class="text-center mt-3">
+        <mdui-button id="forgot-password-btn" variant="text">Forgot Password?</mdui-button>
       </p>
 
-      <div id="forgot-password-section" class="hidden space-y-3 pt-2 border-t border-slate-800 mt-3">
-        <p class="text-xs text-slate-400 text-center">Enter your email and we'll send a reset link.</p>
-        <input type="email" id="forgot-password-email" placeholder="athlete@irontrack.com" class="input-core" aria-label="Email for password reset" />
+      <div id="forgot-password-section" class="hidden flex flex-col gap-3 pt-2" style="border-top: 1px solid var(--irontrack-border); margin-top: 0.75rem;">
+        <p class="text-sm text-center" style="color: var(--irontrack-text-muted);">Enter your email and we'll send a reset link.</p>
+        <mdui-text-field variant="outlined" type="email" id="forgot-password-email" placeholder="athlete@irontrack.com" clearable>
+          <span slot="label">Email for password reset</span>
+        </mdui-text-field>
         <div class="grid grid-cols-2 gap-3">
-          <button id="forgot-password-cancel" type="button" class="btn-core is-ghost btn-size-input">
-            Back
-          </button>
-          <button id="forgot-password-send" type="button" class="btn-core is-primary btn-size-input">
-            Send Reset Link
-          </button>
+          <mdui-button id="forgot-password-cancel" variant="text" full-width>Back</mdui-button>
+          <mdui-button id="forgot-password-send" variant="filled" full-width>Send Reset Link</mdui-button>
         </div>
-        <p id="forgot-password-feedback" aria-live="polite" class="text-xs text-slate-500 font-medium text-center h-4"></p>
+        <p id="forgot-password-feedback" aria-live="polite" class="font-medium text-center h-4" style="font-size: 0.75rem; color: var(--irontrack-text-muted);"></p>
       </div>
     </section>
 
     <!-- ─── Onboarding Section ───────────────────────────────────────── -->
-    <section id="onboarding-view" class="hidden surface-card text-left space-y-6 max-w-lg mx-auto">
+    <section id="onboarding-view" class="hidden text-left flex flex-col gap-6 p-4" style="max-width: 32rem; margin-left: auto; margin-right: auto;">
       <div class="text-center">
-        <h2 class="text-xl font-black text-emerald-400 mb-1">Welcome to IronTrack</h2>
-        <p class="text-sm text-slate-400">Set up your profile to get the most out of your analytics.</p>
+        <h2 class="text-xl font-black" style="color: rgb(var(--mdui-color-primary));">Welcome to IronTrack</h2>
+        <p class="text-sm" style="color: var(--irontrack-text-muted);">Set up your profile to get the most out of your analytics.</p>
       </div>
 
       <!-- Step 1: Biometrics -->
       <div>
-        <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider mb-3">Your Biometrics</h3>
+        <h3 class="text-sm font-bold uppercase tracking-wider mb-3" style="color: var(--irontrack-text-secondary);">Your Biometrics</h3>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="form-label">Assigned Sex</label>
-            <select id="onboarding-gender" class="dropdown-core">
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-            </select>
+            <span class="form-label">Assigned Sex</span>
+            <mdui-select id="onboarding-gender" variant="outlined" value="male">
+              <mdui-menu-item value="male">Male</mdui-menu-item>
+              <mdui-menu-item value="female">Female</mdui-menu-item>
+            </mdui-select>
           </div>
           <div>
-            <label class="form-label">Bodyweight (kg)</label>
-            <input type="number" id="onboarding-weight" placeholder="75" min="30" step="any" required class="input-core" />
+            <span class="form-label">Bodyweight (kg)</span>
+            <mdui-text-field variant="outlined" type="number" id="onboarding-weight" placeholder="75" min="30" step="any" required></mdui-text-field>
           </div>
         </div>
       </div>
 
       <!-- Step 2: Day 0 Training Days -->
       <div>
-        <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider mb-3">Training History</h3>
+        <h3 class="text-sm font-bold uppercase tracking-wider mb-3" style="color: var(--irontrack-text-secondary);">Training History</h3>
         <p class="text-description mb-3">Estimate your training consistency so far. This seeds your challenge counters.</p>
         <div class="grid grid-cols-3 gap-3">
           <div>
-            <label class="form-label text-[10px]">This Month</label>
-            <input type="number" id="onboarding-days-monthly" placeholder="0" min="0" step="1" required class="input-core" />
+            <span class="form-label" style="font-size: 10px;">This Month</span>
+            <mdui-text-field variant="outlined" type="number" id="onboarding-days-monthly" placeholder="0" min="0" step="1" required></mdui-text-field>
           </div>
           <div>
-            <label class="form-label text-[10px]">This Year</label>
-            <input type="number" id="onboarding-days-yearly" placeholder="0" min="0" step="1" required class="input-core" />
+            <span class="form-label" style="font-size: 10px;">This Year</span>
+            <mdui-text-field variant="outlined" type="number" id="onboarding-days-yearly" placeholder="0" min="0" step="1" required></mdui-text-field>
           </div>
           <div>
-            <label class="form-label text-[10px]">Lifetime</label>
-            <input type="number" id="onboarding-days-lifetime" placeholder="0" min="0" step="1" required class="input-core" />
+            <span class="form-label" style="font-size: 10px;">Lifetime</span>
+            <mdui-text-field variant="outlined" type="number" id="onboarding-days-lifetime" placeholder="0" min="0" step="1" required></mdui-text-field>
           </div>
         </div>
       </div>
 
       <!-- Step 3: Initial 1RM/PB -->
       <div>
-        <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider mb-3">Initial 1RM / Personal Bests</h3>
+        <h3 class="text-sm font-bold uppercase tracking-wider mb-3" style="color: var(--irontrack-text-secondary);">Initial 1RM / Personal Bests</h3>
         <p class="text-description mb-3">Enter your known max lifts. These seed your records and power the %1RM and RPE calculators.</p>
 
-        <form id="onboarding-1rm-form" class="space-y-3">
+        <form id="onboarding-1rm-form" class="flex flex-col gap-3">
           <div class="flex gap-2 items-center">
             <div class="flex-1">
-              <label class="form-label">Exercise</label>
-              <select id="onboarding-1rm-exercise" class="dropdown-core">
-                <option value="" disabled selected>Select exercise...</option>
-              </select>
+              <span class="form-label">Exercise</span>
+              <mdui-select variant="outlined" id="onboarding-1rm-exercise">
+                <mdui-menu-item value="" disabled selected>Select exercise...</mdui-menu-item>
+              </mdui-select>
             </div>
-            <div class="w-20">
-              <label class="form-label">Weight</label>
-              <input type="number" id="onboarding-1rm-weight" placeholder="kg" min="0" step="any" required class="input-core" />
+            <div style="width: 5rem;">
+              <span class="form-label">Weight</span>
+              <mdui-text-field variant="outlined" type="number" id="onboarding-1rm-weight" placeholder="kg" min="0" step="any" required></mdui-text-field>
             </div>
-            <div class="w-16">
-              <label class="form-label">Reps</label>
-              <input type="number" id="onboarding-1rm-reps" value="1" min="1" step="1" required class="input-core" />
+            <div style="width: 4rem;">
+              <span class="form-label">Reps</span>
+              <mdui-text-field variant="outlined" type="number" id="onboarding-1rm-reps" value="1" min="1" step="1" required></mdui-text-field>
             </div>
-            <button type="button" id="onboarding-add-1rm" class="btn-core is-secondary btn-size-row whitespace-nowrap cursor-pointer">+ Add</button>
+            <mdui-button id="onboarding-add-1rm" variant="outlined" style="margin-top: 1.25rem;">+ Add</mdui-button>
           </div>
         </form>
 
-        <div id="onboarding-1rm-list" class="mt-3 space-y-2">
-          <p class="text-xs text-slate-500 italic py-2 text-center" id="onboarding-1rm-empty">No lifts added yet.</p>
+        <div id="onboarding-1rm-list" class="mt-3 flex flex-col gap-2">
+          <p class="text-xs italic py-2 text-center" id="onboarding-1rm-empty" style="color: var(--irontrack-text-muted);">No lifts added yet.</p>
         </div>
       </div>
 
-      <button type="button" id="onboarding-save-btn" class="btn-core is-primary btn-size-input w-full cursor-pointer">
-        Save & Start Training
-      </button>
-      <p id="onboarding-feedback" aria-live="polite" class="text-xs text-slate-500 font-medium h-4 text-center"></p>
+      <mdui-button id="onboarding-save-btn" variant="filled" full-width>Save &amp; Start Training</mdui-button>
+      <p id="onboarding-feedback" aria-live="polite" class="font-medium h-4 text-center" style="font-size: 0.75rem; color: var(--irontrack-text-muted);"></p>
     </section>
 
     <main id="app-view" class="hidden flex-1">
 
-      <div class="tab-content active bg-slate-800 w-full" id="tab-dashboard">
+      <div class="tab-content active w-full" id="tab-dashboard">
         <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6 min-w-0">
 
-          <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1 min-w-0" id="consistency-section">
+          <section class="rounded-xl p-4 lg:col-span-1 min-w-0" style="background-color: var(--irontrack-bg);" id="consistency-section">
             <h2 class="section-heading">Training Calendar</h2>
             <p class="text-description">Your training over time.</p>
 
             <div class="mt-4">
               <div class="flex items-center justify-between mb-2">
-                <button id="cal-prev-month" type="button" class="btn-core is-secondary btn-size-row" aria-label="Previous month">&lt;</button>
-                <span id="cal-month-label" class="text-sm font-bold text-slate-200"></span>
-                <button id="cal-today" type="button" class="btn-core is-ghost btn-size-row" disabled>Today</button>
-                <button id="cal-next-month" type="button" class="btn-core is-secondary btn-size-row" aria-label="Next month">&gt;</button>
+                <mdui-button id="cal-prev-month" variant="outlined" aria-label="Previous month">&lt;</mdui-button>
+                <span id="cal-month-label" class="text-sm font-bold" style="color: var(--irontrack-text);"></span>
+                <mdui-button id="cal-today" variant="text" disabled>Today</mdui-button>
+                <mdui-button id="cal-next-month" variant="outlined" aria-label="Next month">&gt;</mdui-button>
               </div>
-              <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+              <div class="grid grid-cols-7 gap-1 text-center font-bold uppercase tracking-wider mb-1" style="font-size: 10px; color: var(--irontrack-text-muted);">
                 <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
               </div>
               <div id="cal-grid-container" style="overflow: hidden;">
@@ -205,79 +194,81 @@
                 </div>
               </div>
               <div class="mt-2 text-right">
-                <button id="cal-toggle-view" type="button" class="btn-core is-ghost btn-size-row">Month View ▽</button>
+                <mdui-button id="cal-toggle-view" variant="text">Month View ▾</mdui-button>
               </div>
             </div>
 
-            <div id="cal-day-detail" class="hidden mt-3 p-3 bg-slate-950 rounded-xl space-y-2">
+            <div id="cal-day-detail" class="hidden mt-3 p-3 rounded-xl flex flex-col gap-2" style="background-color: var(--irontrack-bg);">
               <div class="flex justify-between items-center">
-                <p id="cal-day-detail-date" class="text-xs font-bold text-slate-300"></p>
-                <button id="cal-day-detail-close" aria-label="Close" type="button" class="text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none"><i data-lucide="circle-x" size="18"></i></button>
+                <p id="cal-day-detail-date" class="text-xs font-bold" style="color: var(--irontrack-text-secondary);"></p>
+                <mdui-button-icon id="cal-day-detail-close" aria-label="Close">
+                  <i data-lucide="circle-x" size="18"></i>
+                </mdui-button-icon>
               </div>
-              <div id="cal-day-workouts" class="space-y-1.5 max-h-48 overflow-y-auto pr-1.5"></div>
+              <div id="cal-day-workouts" class="flex flex-col gap-1.5 max-h-48 overflow-y-auto pr-1.5"></div>
             </div>
           </section>
 
-          <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1 min-w-0" id="challenges-section">
+          <section class="rounded-xl p-4 lg:col-span-1 min-w-0" id="challenges-section" style="background-color: var(--irontrack-bg);">
             <h2 class="section-heading">Consistency Challenges</h2>
             <p class="text-description">Training day targets.</p>
 
             <div class="grid grid-cols-2 gap-4 mt-4">
-              <div class="bg-slate-950 rounded-xl p-3" id="consistency-7day-card">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Last 7 Days</p>
-                <div class="text-xs font-black text-emerald-400 mb-0.5" id="consistency-7day">0 / 7</div>
-                <div class="mt-1.5 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                  <div id="consistency-7day-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="7-day consistency" style="width: 0%"></div>
+              <div class="rounded-xl p-3" id="consistency-7day-card" style="background-color: var(--irontrack-bg);">
+                <p class="font-bold uppercase tracking-wider mb-0.5" style="font-size: 10px; color: var(--irontrack-text-muted);">Last 7 Days</p>
+                <div class="text-xs font-black mb-0.5" id="consistency-7day" style="color: rgb(var(--mdui-color-primary));">0 / 7</div>
+                <div class="mt-1.5 h-1.5 rounded-full overflow-hidden" style="background-color: var(--irontrack-border);">
+                  <div id="consistency-7day-bar" class="h-full rounded-full challenge-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="7-day consistency" style="width: 0%; background-color: rgb(var(--mdui-color-primary));"></div>
                 </div>
-                <p class="text-[10px] text-amber-400 font-bold hidden" id="consistency-7day-streak"></p>
+                <p class="font-bold hidden" id="consistency-7day-streak" style="font-size: 10px; color: rgb(var(--mdui-color-secondary));"></p>
               </div>
-              <div class="bg-slate-950 rounded-xl p-3" id="consistency-28day-card">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Last 28 Days</p>
-                <div class="text-xs font-black text-emerald-400 mb-0.5" id="consistency-28day">0 / 30</div>
-                <div class="mt-1.5 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                  <div id="consistency-28day-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="28-day consistency" style="width: 0%"></div>
+              <div class="rounded-xl p-3" id="consistency-28day-card" style="background-color: var(--irontrack-bg);">
+                <p class="font-bold uppercase tracking-wider mb-0.5" style="font-size: 10px; color: var(--irontrack-text-muted);">Last 28 Days</p>
+                <div class="text-xs font-black mb-0.5" id="consistency-28day" style="color: rgb(var(--mdui-color-primary));">0 / 30</div>
+                <div class="mt-1.5 h-1.5 rounded-full overflow-hidden" style="background-color: var(--irontrack-border);">
+                  <div id="consistency-28day-bar" class="h-full rounded-full challenge-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="28-day consistency" style="width: 0%; background-color: rgb(var(--mdui-color-primary));"></div>
                 </div>
-                <p class="text-[10px] text-amber-400 font-bold hidden" id="consistency-28day-streak"></p>
+                <p class="font-bold hidden" id="consistency-28day-streak" style="font-size: 10px; color: rgb(var(--mdui-color-secondary));"></p>
               </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4" id="challenge-cards">
-              <div class="bg-slate-950 rounded-xl p-3" id="challenge-monthly">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">This Month</p>
-                <div class="text-xs font-black text-emerald-400 mb-0.5" id="challenge-monthly-progress">0 / 14</div>
-                <div class="mt-1.5 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                  <div id="challenge-monthly-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Monthly progress" style="width: 0%"></div>
+              <div class="rounded-xl p-3" id="challenge-monthly" style="background-color: var(--irontrack-bg);">
+                <p class="font-bold uppercase tracking-wider mb-0.5" style="font-size: 10px; color: var(--irontrack-text-muted);">This Month</p>
+                <div class="text-xs font-black mb-0.5" id="challenge-monthly-progress" style="color: rgb(var(--mdui-color-primary));">0 / 14</div>
+                <div class="mt-1.5 h-1.5 rounded-full overflow-hidden" style="background-color: var(--irontrack-border);">
+                  <div id="challenge-monthly-bar" class="h-full rounded-full challenge-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Monthly progress" style="width: 0%; background-color: rgb(var(--mdui-color-primary));"></div>
                 </div>
-                <p class="text-[10px] text-amber-400 font-bold hidden" id="challenge-monthly-streak"></p>
+                <p class="font-bold hidden" id="challenge-monthly-streak" style="font-size: 10px; color: rgb(var(--mdui-color-secondary));"></p>
               </div>
-              <div class="bg-slate-950 rounded-xl p-3" id="challenge-yearly">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">This Year</p>
-                <div class="text-xs font-black text-emerald-400 mb-0.5" id="challenge-yearly-progress">0 / 150</div>
-                <div class="mt-1.5 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                  <div id="challenge-yearly-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Yearly progress" style="width: 0%"></div>
+              <div class="rounded-xl p-3" id="challenge-yearly" style="background-color: var(--irontrack-bg);">
+                <p class="font-bold uppercase tracking-wider mb-0.5" style="font-size: 10px; color: var(--irontrack-text-muted);">This Year</p>
+                <div class="text-xs font-black mb-0.5" id="challenge-yearly-progress" style="color: rgb(var(--mdui-color-primary));">0 / 150</div>
+                <div class="mt-1.5 h-1.5 rounded-full overflow-hidden" style="background-color: var(--irontrack-border);">
+                  <div id="challenge-yearly-bar" class="h-full rounded-full challenge-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Yearly progress" style="width: 0%; background-color: rgb(var(--mdui-color-primary));"></div>
                 </div>
-                <p class="text-[10px] text-amber-400 font-bold hidden" id="challenge-yearly-streak"></p>
+                <p class="font-bold hidden" id="challenge-yearly-streak" style="font-size: 10px; color: rgb(var(--mdui-color-secondary));"></p>
               </div>
-              <div class="bg-slate-950 rounded-xl p-3 sm:col-span-2" id="challenge-lifetime">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Lifetime</p>
-                <div class="text-xs font-black text-emerald-400 mb-0.5" id="challenge-lifetime-progress">0 / 3000</div>
-                <div class="mt-1.5 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                  <div id="challenge-lifetime-bar" class="h-full bg-emerald-500 rounded-full challenge-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Lifetime progress" style="width: 0%"></div>
+              <div class="rounded-xl p-3 sm:col-span-2" id="challenge-lifetime" style="background-color: var(--irontrack-bg);">
+                <p class="font-bold uppercase tracking-wider mb-0.5" style="font-size: 10px; color: var(--irontrack-text-muted);">Lifetime</p>
+                <div class="text-xs font-black mb-0.5" id="challenge-lifetime-progress" style="color: rgb(var(--mdui-color-primary));">0 / 3000</div>
+                <div class="mt-1.5 h-1.5 rounded-full overflow-hidden" style="background-color: var(--irontrack-border);">
+                  <div id="challenge-lifetime-bar" class="h-full rounded-full challenge-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Lifetime progress" style="width: 0%; background-color: rgb(var(--mdui-color-primary));"></div>
                 </div>
               </div>
             </div>
           </section>
 
-          <section class="bg-slate-950 rounded-xl p-4 lg:col-span-1">
+          <section class="rounded-xl p-4 lg:col-span-1" style="background-color: var(--irontrack-bg);">
             <h2 class="section-heading">Saved Plans</h2>
             <p class="text-description mb-4">Your saved workout templates.</p>
             <div class="grid grid-cols-3 gap-2 mb-3">
-              <button type="button" id="plans-filter-mine" class="btn-core is-primary btn-size-row">My Plans</button>
-              <button type="button" id="plans-filter-shared" class="btn-core is-ghost btn-size-row">Shared</button>
-              <button type="button" id="plans-filter-favorites" class="btn-core is-ghost btn-size-row">Favorites</button>
+              <mdui-button id="plans-filter-mine" variant="filled" full-width>My Plans</mdui-button>
+              <mdui-button id="plans-filter-shared" variant="text" full-width>Shared</mdui-button>
+              <mdui-button id="plans-filter-favorites" variant="text" full-width>Favorites</mdui-button>
             </div>
-            <div id="saved-plans-inline" class="space-y-2">
-              <p class="text-xs text-slate-500 italic py-2 text-center">No saved plans yet.</p>
+            <div id="saved-plans-inline" class="flex flex-col gap-2">
+              <p class="text-xs italic py-2 text-center" style="color: var(--irontrack-text-muted);">No saved plans yet.</p>
             </div>
             <div id="plans-pagination" class="hidden mt-4 flex items-center justify-between gap-3">
               <button id="prev-plans-page-btn" class="btn-core is-secondary btn-size-input" type="button">
@@ -309,58 +300,56 @@
         </div>
       </div>
 
-      <div class="tab-content bg-slate-800 w-full" id="tab-performance">
+      <div class="tab-content w-full" id="tab-performance">
         <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6 min-w-0">
 
-          <div class="bg-slate-950 rounded-xl p-4 grid grid-cols-2 content-start items-start lg:col-span-1">
+          <div class="rounded-xl p-4 grid grid-cols-2 content-start items-start lg:col-span-1" style="background-color: var(--irontrack-bg);">
             <p class="section-heading">DOTS</p>
             <p class="text-description col-span-2 mb-2">Your pound-for-pound Powerlifting score.</p>
 
             <div class="flex-1 gap-2">
-              <div id="dots-display" class="text-3xl font-black text-slate-200">0.0</div>
-              <p id="dots-tier" class="text-[10px] text-emerald-400 uppercase mt-1 font-semibold">-</p>
+              <div id="dots-display" class="text-3xl font-black" style="color: var(--irontrack-text);">0.0</div>
+              <p id="dots-tier" class="font-semibold uppercase mt-1" style="font-size: 10px; color: rgb(var(--mdui-color-primary));">-</p>
             </div>
 
             <div class="w-full text-description">
               <div class="flex justify-between gap-2">
                 <span>Back Squat:</span>
-                <span id="dots-breakdown-squat" class="text-slate-200 font-bold">0 kg</span>
+                <span id="dots-breakdown-squat" class="font-bold" style="color: var(--irontrack-text);">0 kg</span>
               </div>
               <div class="flex justify-between gap-2">
                 <span>Bench Press:</span>
-                <span id="dots-breakdown-bench" class="text-slate-200 font-bold">0 kg</span>
+                <span id="dots-breakdown-bench" class="font-bold" style="color: var(--irontrack-text);">0 kg</span>
               </div>
               <div class="flex justify-between gap-2">
                 <span>Deadlift:</span>
-                <span id="dots-breakdown-deadlift" class="text-slate-200 font-bold">0 kg</span>
+                <span id="dots-breakdown-deadlift" class="font-bold" style="color: var(--irontrack-text);">0 kg</span>
               </div>
             </div>
           </div>
 
-          <div class="bg-slate-950 rounded-xl p-4 grid grid-cols-2 content-start items-start lg:col-span-1">
+          <div class="rounded-xl p-4 grid grid-cols-2 content-start items-start lg:col-span-1" style="background-color: var(--irontrack-bg);">
             <p class="section-heading">Sinclair Score</p>
             <p class="text-description col-span-2 mb-2">Your pound-for-pound Olympic weightlifting score.</p>
 
             <div class="flex-1">
-              <div id="sinclair-display" class="text-3xl font-black text-slate-200">0.0</div>
-              <p id="sinclair-tier" class="text-[10px] text-emerald-400 uppercase mt-1 font-semibold">-</p>
+              <div id="sinclair-display" class="text-3xl font-black" style="color: var(--irontrack-text);">0.0</div>
+              <p id="sinclair-tier" class="font-semibold uppercase mt-1" style="font-size: 10px; color: rgb(var(--mdui-color-primary));">-</p>
             </div>
 
             <div class="w-full text-description">
               <div class="flex justify-between gap-2">
                 <span>Snatch:</span>
-                <span id="sinclair-breakdown-snatch" class="text-slate-200 font-bold">0 kg</span>
+                <span id="sinclair-breakdown-snatch" class="font-bold" style="color: var(--irontrack-text);">0 kg</span>
               </div>
               <div class="flex justify-between gap-2">
                 <span>Clean &amp; Jerk:</span>
-                <span id="sinclair-breakdown-clean" class="text-slate-200 font-bold">0 kg</span>
+                <span id="sinclair-breakdown-clean" class="font-bold" style="color: var(--irontrack-text);">0 kg</span>
               </div>
             </div>
           </div>
 
-
-
-          <section class="bg-slate-950 rounded-xl p-4 gap-2 lg:col-span-1">
+          <section class="rounded-xl p-4 gap-2 lg:col-span-1" style="background-color: var(--irontrack-bg);">
             <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-4">
               <div>
                 <h2 class="section-heading">Leaderboard</h2>
@@ -370,27 +359,19 @@
 
             <div class="mt-4 mb-2">
               <div class="flex flex-col sm:flex-row justify-between gap-3">
-                <div class="inline-flex gap-1 p-0.5 w-fit rounded-xl bg-slate-950">
-                  <button id="btnGlobalBoard" class="btn-core is-primary btn-size-row">
-                    Global
-                  </button>
-                  <button id="btnFriendsBoard" class="btn-core is-ghost btn-size-row">
-                    Friends
-                  </button>
+                <div class="inline-flex gap-1 p-0.5 w-fit rounded-xl" style="background-color: var(--irontrack-bg);">
+                  <mdui-button id="btnGlobalBoard" variant="filled">Global</mdui-button>
+                  <mdui-button id="btnFriendsBoard" variant="text">Friends</mdui-button>
                 </div>
-                <div class="inline-flex gap-1 p-0.5 w-fit rounded-xl bg-slate-950">
-                  <button id="btnFormulaDots" class="btn-core is-primary btn-size-row">
-                    DOTS
-                  </button>
-                  <button id="btnFormulaSinclair" class="btn-core is-ghost btn-size-row">
-                    Sinclair
-                  </button>
+                <div class="inline-flex gap-1 p-0.5 w-fit rounded-xl" style="background-color: var(--irontrack-bg);">
+                  <mdui-button id="btnFormulaDots" variant="filled">DOTS</mdui-button>
+                  <mdui-button id="btnFormulaSinclair" variant="text">Sinclair</mdui-button>
                 </div>
               </div>
             </div>
 
             <div class="overflow-x-auto">
-              <table class="w-full text-left text-sm text-slate-300">
+              <table class="w-full text-left text-sm" style="color: var(--irontrack-text-secondary);">
                 <caption class="sr-only">Leaderboard</caption>
                 <thead>
                   <tr class="table-leaderboard-head">
@@ -479,13 +460,10 @@
             </div>
 
             <div id="log-result-fortime" class="hidden">
-              <div class="border-t border-slate-800 pt-4">
+              <div class="pt-4" style="border-top: 1px solid var(--irontrack-border);">
                 <h3 class="form-label mb-2">Result</h3>
                 <div class="flex items-center mb-2">
-                  <label class="flex items-center gap-2 cursor-pointer min-w-[44px] min-h-[44px] p-3">
-                    <input type="checkbox" id="fortime-dnf" class="w-4 h-4 rounded border-slate-600 bg-slate-800 accent-emerald-500" />
-                    <span class="text-xs text-slate-400">DNF</span>
-                  </label>
+                  <mdui-checkbox id="fortime-dnf">DNF</mdui-checkbox>
                 </div>
                 <div id="fortime-time-inputs" class="flex gap-3 items-end">
                   <div>
@@ -562,8 +540,8 @@
             <p class="text-xs text-slate-400">Select friends to share this plan with:</p>
             <div id="share-select-all-container" class="hidden mb-1">
               <label class="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-800 cursor-pointer">
-                <input type="checkbox" id="share-select-all" />
-                <span class="text-sm text-slate-300 font-medium">Select All</span>
+                <mdui-checkbox id="share-select-all"></mdui-checkbox>
+                <span class="text-sm" style="color: var(--irontrack-text-secondary);">Select All</span>
               </label>
             </div>
             <div id="share-friend-list" class="max-h-48 overflow-y-auto space-y-2 border border-slate-800 rounded-lg p-2 mb-3">
@@ -1037,34 +1015,34 @@
 
   </div>
 
-  <nav id="bottom-nav" class="hidden w-full" aria-label="Main navigation">
+  <nav id="bottom-nav" class="hidden" aria-label="Main navigation">
     <div class="max-w-md lg:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="bottom-nav-inner">
-        <button class="nav-tab active" data-tab="dashboard" title="Workouts">
-            <i data-lucide="layout-dashboard" size="18"></i>
-            <span>Dash</span>
-          </button>
-          <button class="nav-tab" data-tab="calculator" title="Plan">
-            <i data-lucide="clipboard-pen-line" size="18"></i>
-            <span>Plan</span>
-          </button>
-          <button class="nav-tab" data-tab="training" title="Training">
-            <i data-lucide="dumbbell" size="18"></i>
-            <span>Train</span>
-          </button>
-          <button class="nav-tab" data-tab="performance" title="Performance">
-            <i data-lucide="trending-up" size="18"></i>
-            <span>Perf.</span>
-          </button>
-          <button class="nav-tab" data-tab="history" title="History">
-            <i data-lucide="history" size="18"></i>
-            <span>History</span>
-          </button>
-          <button class="nav-tab" data-tab="profile" title="Profile">
-            <i data-lucide="user" size="18"></i>
-            <span>Profile</span>
-          </button>
-      </div>
+      <mdui-navigation-bar id="nav-bar" value="dashboard" label-visibility="labeled">
+        <mdui-navigation-bar-item value="dashboard">
+          <i slot="icon" data-lucide="layout-dashboard" size="18"></i>
+          <span>Dash</span>
+        </mdui-navigation-bar-item>
+        <mdui-navigation-bar-item value="calculator">
+          <i slot="icon" data-lucide="clipboard-pen-line" size="18"></i>
+          <span>Plan</span>
+        </mdui-navigation-bar-item>
+        <mdui-navigation-bar-item value="training">
+          <i slot="icon" data-lucide="dumbbell" size="18"></i>
+          <span>Train</span>
+        </mdui-navigation-bar-item>
+        <mdui-navigation-bar-item value="performance">
+          <i slot="icon" data-lucide="trending-up" size="18"></i>
+          <span>Perf.</span>
+        </mdui-navigation-bar-item>
+        <mdui-navigation-bar-item value="history">
+          <i slot="icon" data-lucide="history" size="18"></i>
+          <span>History</span>
+        </mdui-navigation-bar-item>
+        <mdui-navigation-bar-item value="profile">
+          <i slot="icon" data-lucide="user" size="18"></i>
+          <span>Profile</span>
+        </mdui-navigation-bar-item>
+      </mdui-navigation-bar>
     </div>
   </nav>
 
@@ -1077,7 +1055,7 @@
 </script>
 
 <div id="toast-notification" aria-live="assertive" role="alert" class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex items-center justify-center pointer-events-none">
-    <span id="toast-notification-inner" class="px-4 py-2 rounded-lg bg-slate-800/90 backdrop-blur-sm border border-slate-700 shadow-xl text-xs font-medium opacity-0 transition-all duration-500"></span>
+    <mdui-snackbar id="toast-snackbar" placement="top" auto-close-delay="3000"></mdui-snackbar>
   </div>
 </body>
 

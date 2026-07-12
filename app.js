@@ -1,5 +1,5 @@
 import { auth, db, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential, updatePassword, deleteUser, collection, addDoc, writeBatch, query, where, onSnapshot, deleteDoc, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, serverTimestamp, orderBy, limit, Timestamp, getDocs } from './firebase.js';
-import { state, EPLEY_CONSTANT, HAPTIC, CONSISTENCY_CONFIG, entriesPerPage, INPUT_CLASS, CALC_CLASS, FORM_SCHEMAS, activeDates, loginView, appView, bottomNav, authBtn, profileBtn, profileModal, emailInput, passwordInput, loginBtn, signupBtn, greeting, profileForm, workoutForm, workoutList, paginationControls, prevPageBtn, nextPageBtn, currentPageDisplay, totalPagesDisplay, workoutFilter, exerciseSelect, onboardingView, onboardingGender, onboardingWeight, onboardingDaysMonthly, onboardingDaysYearly, onboardingDaysLifetime, onboardingExerciseSelect, onboardingWeightInput, onboardingRepsInput, onboardingAddBtn, onboardingList, onboardingEmpty, onboardingSaveBtn, onboardingFeedback, pbLogExercise, pbLogBtn, pbLogFeedback, tabContents, navTabs, FEEDBACK_DISMISS_DEFAULT_MS } from './state.js';
+import { state, EPLEY_CONSTANT, HAPTIC, CONSISTENCY_CONFIG, entriesPerPage, INPUT_CLASS, CALC_CLASS, FORM_SCHEMAS, activeDates, loginView, appView, bottomNav, authBtn, profileBtn, profileModal, emailInput, passwordInput, loginBtn, signupBtn, greeting, profileForm, workoutForm, workoutList, paginationControls, prevPageBtn, nextPageBtn, currentPageDisplay, totalPagesDisplay, workoutFilter, exerciseSelect, onboardingView, onboardingGender, onboardingWeight, onboardingDaysMonthly, onboardingDaysYearly, onboardingDaysLifetime, onboardingExerciseSelect, onboardingWeightInput, onboardingRepsInput, onboardingAddBtn, onboardingList, onboardingEmpty, onboardingSaveBtn, onboardingFeedback, pbLogExercise, pbLogBtn, pbLogFeedback, tabContents, navBar, FEEDBACK_DISMISS_DEFAULT_MS } from './state.js';
 import { estimate1RM, estimateWeightForReps, computeEffectiveLoad, getEffectiveLoad } from './math.js';
 import { debounce, escapeHtml, haptic } from './dom.js';
 import { getExerciseInfo, getDisplayName, EXERCISE_CATALOG, LOAD_FACTORS, resolveExerciseVariant } from './exercise-data.js';
@@ -66,14 +66,14 @@ window.addEventListener('unhandledrejection', (e) => {
   showFeedback(MSG.UNEXPECTED_ERROR, 'red');
 });
 
-navTabs.forEach(btn => {
-  btn.addEventListener('click', () => {
-    if (btn.dataset.tab === 'profile') {
-      openProfileModal();
-    } else {
-      switchTab(btn.dataset.tab);
-    }
-  });
+navBar?.addEventListener('change', (e) => {
+  const tab = e.target.value;
+  if (tab === 'profile') {
+    openProfileModal();
+    navBar.value = state.ui.currentTab || 'dashboard';
+  } else {
+    switchTab(tab);
+  }
 });
 const pendingFriendUid = new URLSearchParams(window.location.search).get('addFriend');
 const pendingClaimPlanId = new URLSearchParams(window.location.search).get('claimPlan');
