@@ -76,6 +76,12 @@ jobs:
             npm test || { echo "❌ Tests still failing after fix. Aborting."; exit 1; }
           fi
 
+          # Verify no conflict markers remain before committing
+          if grep -rn -I -E '^(<<<<<<<|=======|>>>>>>>)' --exclude-dir=.git --exclude-dir=node_modules .; then
+            echo "❌ Conflict markers still present after AI resolution. Aborting commit."
+            exit 1
+          fi
+
           echo "✅ All checks pass. Committing and pushing..."
           git add -A
           git diff --cached --quiet && echo "No changes to commit" || \
