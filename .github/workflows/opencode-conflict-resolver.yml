@@ -47,24 +47,36 @@ jobs:
             Do NOT create branches, do NOT create PRs, do NOT use git. \
             Only edit the conflicted files in place."
 
-      - name: Test, Fix, Commit & Push
+      - name: Lint, Test, Fix & Push
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
         run: |
           set -e
           npm ci
 
-          # Run tests. If they fail, use OpenCode to fix them, then re-run.
+          # Lint first — catches duplicate declarations, unused imports, etc.
+          if ! npm run lint; then
+            echo "❌ Lint failed. Attempting auto-fix with OpenCode..."
+            opencode run --auto --model opencode-go/deepseek-v4-flash \
+              "The merge conflict resolution introduced lint errors. \
+              Fix the SOURCE CODE to resolve all ESLint errors. \
+              Do NOT modify test files or eslint config. \
+              Do NOT create branches or PRs."
+            npm run lint || { echo "❌ Lint still failing after fix. Aborting."; exit 1; }
+          fi
+
+          # Then run tests
           if ! npm test; then
             echo "❌ Tests failed. Attempting auto-fix with OpenCode..."
             opencode run --auto --model opencode-go/deepseek-v4-flash \
-              "The merge conflict resolution broke some tests. \
-              Fix the failing test assertions so they match the resolved source code. \
+              "The merge conflict resolution broke the source code causing test failures. \
+              Fix the SOURCE CODE so the existing tests pass. \
+              Do NOT modify test assertions or test files. \
               Do NOT create branches or PRs."
             npm test || { echo "❌ Tests still failing after fix. Aborting."; exit 1; }
           fi
 
-          echo "✅ All tests pass. Committing and pushing..."
+          echo "✅ All checks pass. Committing and pushing..."
           git add -A
           git diff --cached --quiet && echo "No changes to commit" || \
             git commit -m "fix: resolve merge conflicts with master"
