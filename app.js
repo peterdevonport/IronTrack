@@ -66,13 +66,25 @@ window.addEventListener('unhandledrejection', (e) => {
   showFeedback(MSG.UNEXPECTED_ERROR, 'red');
 });
 
-navBar?.addEventListener('change', (e) => {
-  const tab = e.target.value;
+function switchTabFromNav(tab) {
   if (tab === 'profile') {
     openProfileModal();
-    navBar.value = state.ui.currentTab || 'dashboard';
+    if (navBar) navBar.value = state.ui.currentTab || 'dashboard';
   } else if (tab) {
     switchTab(tab);
+  }
+}
+
+// Handle navigation via MDUI change event
+navBar?.addEventListener('change', (e) => {
+  switchTabFromNav(e.target.value);
+});
+
+// Fallback: handle clicks directly on nav items
+navBar?.addEventListener('click', (e) => {
+  const item = e.target.closest('mdui-navigation-bar-item');
+  if (item) {
+    switchTabFromNav(item.getAttribute('value'));
   }
 });
 const pendingFriendUid = new URLSearchParams(window.location.search).get('addFriend');
