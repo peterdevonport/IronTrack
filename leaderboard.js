@@ -5,6 +5,7 @@ import { getDisplayName } from './exercise-data.js';
 import { buildLeaderboardRow, renderLeaderboardEmptyRow } from './rendering.js';
 import { PERMISSION_ERROR_MAP, showFeedback, clearChildren, setActiveTab, setInactiveTab } from './ui.js';
 import { getProfileDocRef } from './friends.js';
+import { MSG } from './messages.js';
 
 let leaderboardUnsubscribe = null;
 

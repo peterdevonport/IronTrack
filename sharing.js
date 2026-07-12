@@ -5,6 +5,7 @@ import { getDisplayName } from './exercise-data.js';
 import { renderShareFriendItem, renderPlanCard, renderSharedPlanCard, renderStructuredWorkoutCard } from './rendering.js';
 import { clearChildren, renderEmptyState, showFeedback, showToast, changeGenericPage, paginateAndRender, updateStarIcon, setActiveTab, setInactiveTab } from './ui.js';
 import { getProfileDocument, getProfileDocRef } from './friends.js';
+import { MSG } from './messages.js';
 
 let unsubscribeSharedPlans = null;
 const _favDebounce = {};
@@ -43,7 +44,7 @@ async function processFriendRequest(friendId) {
             haptic(HAPTIC.tap);
         } else {
             console.error("Cyber-Tag not found.");
-            showFeedback('Cyber-Tag not found. Check the ID and try again.', 'red', 'socialAddFriendFeedback');
+            showFeedback(MSG.CYBER_TAG_NOT_FOUND_CHECK, 'rose', 'socialAddFriendFeedback');
         }
     } catch (err) {
         console.error("Error linking friend:", err);
@@ -165,13 +166,13 @@ async function shareWithFriends() {
   const feedback = document.getElementById('share-plan-feedback');
   const checked = document.querySelectorAll('.share-friend-checkbox:checked');
   if (!checked.length) {
-    feedback.textContent = 'Select at least one friend.';
+    feedback.textContent = MSG.SELECT_FRIEND;
     return;
   }
 
   const content = resolveShareContent();
   if (!content) {
-    feedback.textContent = 'Plan/workout not found.';
+    feedback.textContent = MSG.PLAN_NOT_FOUND;
     return;
   }
 
@@ -189,7 +190,7 @@ async function shareWithFriends() {
     haptic(HAPTIC.confirm);
   } catch (err) {
     console.error('Share plan failed', err.code, err.message);
-    feedback.textContent = 'Failed to share: ' + err.message;
+    feedback.textContent = MSG.SHARE_FAILED + err.message;
   }
 }
 
@@ -200,7 +201,7 @@ async function shareByQR() {
 
   const plan = resolveShareContent();
   if (!plan) {
-    feedback.textContent = 'Plan/workout not found.';
+    feedback.textContent = MSG.PLAN_NOT_FOUND;
     return;
   }
 
@@ -238,7 +239,7 @@ async function shareByQR() {
     haptic(HAPTIC.confirm);
   } catch (err) {
     console.error('QR share failed', err.code, err.message);
-    feedback.textContent = 'Failed to generate QR: ' + err.message;
+    feedback.textContent = MSG.QR_GENERATE_FAILED + err.message;
   }
 }
 
@@ -322,11 +323,11 @@ async function saveSharedPlanToMyPlans(shareId) {
   try {
     await addDoc(collection(db, "workout_plans"), planDoc);
     await updateDoc(doc(db, "shared_plans", shareId), { status: 'saved' });
-    showFeedback('Plan saved to your collection!', 'emerald', 'socialFeedback');
+    showFeedback(MSG.PLAN_SAVED_COLLECTION, 'emerald', 'socialFeedback');
     haptic(HAPTIC.confirm);
   } catch (err) {
     console.error('Save shared plan failed', err.code, err.message);
-    showFeedback('Failed to save plan: ' + err.message, 'red', 'socialFeedback');
+    showFeedback(MSG.SAVE_SHARED_PLAN_FAILED + err.message, 'red', 'socialFeedback');
   }
 }
 
@@ -338,7 +339,7 @@ async function dismissSharedPlan(shareId) {
     haptic(HAPTIC.confirm);
   } catch (err) {
     console.error('Dismiss shared plan failed', err.code, err.message);
-    alert('Failed to dismiss: ' + err.message);
+    alert(MSG.DISMISS_FAILED + err.message);
   }
 }
 
@@ -385,14 +386,14 @@ async function processClaimedPlan(claimId, switchPlansFilter) {
         if (data.shareMethod !== 'qr') { console.error("Invalid share method."); return; }
         if (data.sharedBy === auth.currentUser.uid) { return; }
         const existing = await getDocs(query(collection(db, "shared_plans"), where("sharedWith", "==", auth.currentUser.uid), where("planId", "==", data.planId), where("shareMethod", "==", "qr_claimed")));
-        if (!existing.empty) { showToast('Plan already claimed!', 'yellow'); switchPlansFilter('shared'); return; }
+        if (!existing.empty) { showToast(MSG.PLAN_ALREADY_CLAIMED, 'yellow'); switchPlansFilter('shared'); return; }
         const planSnap = await getDoc(doc(db, "workout_plans", data.planId));
         if (!planSnap.exists()) { console.error("Source plan not found."); return; }
         const plan = planSnap.data();
         await addDoc(collection(db, "shared_plans"), { sharedBy: data.sharedBy, sharedByDisplayName: data.sharedByDisplayName, sharedWith: auth.currentUser.uid, shareMethod: 'qr_claimed', planId: data.planId, contentType: 'plan', content: { name: plan.name, type: plan.type, structure: plan.structure }, status: 'active', createdAt: serverTimestamp() });
         showToast('Plan imported from QR code!', 'emerald');
         switchPlansFilter('shared');
-    } catch (err) { console.error("Claim plan failed:", err); showToast('Failed to import plan from QR.', 'red'); }
+    } catch (err) { console.error("Claim plan failed:", err); showToast(MSG.IMPORT_PLAN_FROM_QR_FAILED, 'red'); }
 }
 
 function loadSharedPlan(shareId, loadWorkoutIntoBuilder) {

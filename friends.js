@@ -5,6 +5,7 @@ import { getDisplayName } from './exercise-data.js';
 import { friendToHtml } from './rendering.js';
 import { PERMISSION_ERROR_MAP, renderEmptyState, showFeedback, updatePagination, changeGenericPage, isPermissionDenied } from './ui.js';
 import { renderLeaderboardView, syncLeaderboardFeed } from './leaderboard.js';
+import { MSG } from './messages.js';
 
 let unsubscribeProfile = null;
 
@@ -85,19 +86,19 @@ async function handleAddFriend() {
   showFeedback('Connecting to network node...', 'slate', feedbackTarget);
 
   if (!currentUser) {
-    return showFeedback('Authenticate to link friends.', 'red', feedbackTarget);
+    return showFeedback(MSG.AUTHENTICATE_TO_LINK, 'red', feedbackTarget);
   }
   if (targetUid === auth.currentUser.uid) {
-    return showFeedback("Can't link your own tag.", 'red', feedbackTarget);
+    return showFeedback(MSG.CANT_LINK_OWN_TAG, 'red', feedbackTarget);
   }
   if (state.social.userFriendsList.includes(targetUid)) {
-    return showFeedback("Friend already linked.", 'yellow', feedbackTarget);
+    return showFeedback(MSG.FRIEND_ALREADY_LINKED, 'yellow', feedbackTarget);
   }
 
   try {
     const targetDoc = await getProfileDocument(targetUid);
     if (!targetDoc.exists()) {
-      return showFeedback("Cyber-Tag not found in database.", 'red', feedbackTarget);
+      return showFeedback(MSG.CYBER_TAG_NOT_FOUND, 'red', feedbackTarget);
     }
 
     await setDoc(getProfileDocRef(auth.currentUser.uid), {
@@ -121,7 +122,7 @@ async function handleAddFriend() {
     if (isPermissionDenied(err)) {
       showFeedback(PERMISSION_ERROR_MAP.permissionDenied, 'red', feedbackTarget);
     } else {
-      showFeedback(`Error linking network node: ${err.message}`, 'red', feedbackTarget);
+      showFeedback(MSG.LINK_NETWORK_NODE_FAILED + err.message, 'red', feedbackTarget);
     }
   }
 }
@@ -129,39 +130,39 @@ async function handleAddFriend() {
 async function addFriendFromLeaderboard(friendUid) {
   const currentUser = auth.currentUser;
   if (!currentUser) {
-    return showFeedback('Sign in to add friends from leaderboard.', 'red', 'socialFeedback');
+    return showFeedback(MSG.SIGN_IN_TO_ADD_FRIEND, 'red', 'socialFeedback');
   }
   if (!friendUid || friendUid === auth.currentUser.uid) {
     return;
   }
   if (state.social.userFriendsList.includes(friendUid)) {
-    return showFeedback('Already connected with this athlete.', 'yellow', 'socialFeedback');
+    return showFeedback(MSG.ALREADY_CONNECTED, 'yellow', 'socialFeedback');
   }
 
   try {
     const targetDoc = await getProfileDocument(friendUid);
     if (!targetDoc.exists()) {
-      return showFeedback('Unable to add athlete: Cyber-Tag missing.', 'red', 'socialFeedback');
+      return showFeedback(MSG.ADD_ATHLETE_FAILED, 'red', 'socialFeedback');
     }
 
     await setDoc(getProfileDocRef(auth.currentUser.uid), {
       friends: arrayUnion(friendUid)
     }, { merge: true });
-    showFeedback('Friend added from leaderboard!', 'emerald', 'socialFeedback');
+    showFeedback(MSG.FRIEND_ADDED, 'emerald', 'socialFeedback');
     haptic(HAPTIC.tap);
   } catch (err) {
     console.error('Leaderboard friend add failed', err.code, err.message);
     if (isPermissionDenied(err)) {
       showFeedback(PERMISSION_ERROR_MAP.permissionDenied, 'red', 'socialFeedback');
     } else {
-      showFeedback(`Could not add friend: ${err.message}`, 'red', 'socialFeedback');
+      showFeedback(MSG.ADD_FRIEND_FAILED + err.message, 'red', 'socialFeedback');
     }
   }
 }
 
 async function removeFriend(friendUid) {
   const currentUser = auth.currentUser;
-  if (!auth.currentUser) return showFeedback('Sign in to remove friends.', 'red', 'socialFeedback');
+  if (!auth.currentUser) return showFeedback(MSG.SIGN_IN_TO_REMOVE_FRIEND, 'red', 'socialFeedback');
   if (!friendUid) return;
   if (!state.social.userFriendsList.includes(friendUid)) return showFeedback('Athlete not in your friend list.', 'yellow', 'socialFeedback');
 
@@ -175,10 +176,10 @@ async function removeFriend(friendUid) {
     state.social.userFriendsList = state.social.userFriendsList.filter(u => u !== friendUid);
     renderActiveFriendsList();
     syncLeaderboardFeed();
-    showFeedback('Friend removed.', 'slate', 'socialFeedback');
+    showFeedback(MSG.FRIEND_REMOVED, 'slate', 'socialFeedback');
   } catch (err) {
     console.error('Remove friend failed', err.code, err.message || err);
-    showFeedback('Unable to remove friend. Check permissions.', 'red', 'socialFeedback');
+    showFeedback(MSG.REMOVE_FRIEND_FAILED, 'red', 'socialFeedback');
   }
 }
 

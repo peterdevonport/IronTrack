@@ -7,6 +7,7 @@ import {
   resetTrainingTab
 } from './functions.js';
 import { isPermissionDenied } from '../ui.js';
+import { MSG } from '../messages.js';
 
 // Integration test for submitPendingWorkout logic
 // Since the actual function is tightly coupled to app.js globals,
@@ -78,7 +79,7 @@ describe('submitPendingWorkout integration', () => {
     if (globals.isSubmittingWorkout) return;
     if (!deps.requireAuth('log-workout-feedback')) return;
     if (!globals.pendingPlannedWorkout) {
-      deps.showFeedback('No planned workout to log.', 'red', 'log-workout-feedback');
+      deps.showFeedback(MSG.NO_PLANNED_WORKOUT, 'rose', 'log-workout-feedback');
       return;
     }
 
@@ -94,13 +95,13 @@ describe('submitPendingWorkout integration', () => {
       };
 
       if (!handlers[type]) {
-        deps.showFeedback('Unknown workout type.', 'red', 'log-workout-feedback');
+        deps.showFeedback(MSG.UNKNOWN_WORKOUT_TYPE, 'rose', 'log-workout-feedback');
         return;
       }
 
       await handlers[type](name, structure, now, deps);
       resetTrainingTab(deps);
-      deps.showFeedback('Workout logged!', 'emerald', 'log-workout-feedback');
+      deps.showFeedback(MSG.WORKOUT_LOGGED, 'emerald', 'log-workout-feedback');
       deps.haptic(deps.HAPTIC.confirm);
     } catch (err) {
       if (isPermissionDenied(err)) {
@@ -178,7 +179,7 @@ describe('submitPendingWorkout integration', () => {
   it('should show error for unknown workout type', async () => {
     await simulateSubmitPendingWorkout('UNKNOWN', 'Test', {});
 
-    expect(deps.showFeedback).toHaveBeenCalledWith('Unknown workout type.', 'red', 'log-workout-feedback');
+    expect(deps.showFeedback).toHaveBeenCalledWith('Unknown workout type.', 'rose', 'log-workout-feedback');
     expect(deps.addDoc).not.toHaveBeenCalled();
     expect(globals.pendingPlannedWorkout).not.toBeNull();
   });
