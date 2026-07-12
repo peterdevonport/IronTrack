@@ -76,7 +76,7 @@ function doWorkout() {
     structure = capturePlanStructure(type);
   } catch (err) {
     console.error('capturePlanStructure error:', err);
-    showFeedback(err.message, 'rose', 'log-workout-feedback');
+    showFeedback(err.message, 'red', 'log-workout-feedback');
     return;
   }
 

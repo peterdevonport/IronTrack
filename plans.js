@@ -412,7 +412,7 @@ async function savePlan() {
   try {
     structure = capturePlanStructure(type);
   } catch (err) {
-    return showFeedback(err.message, 'rose', 'planFeedback');
+    return showFeedback(err.message, 'red', 'planFeedback');
   }
 
   if (!validatePlanInputs(type)) return;

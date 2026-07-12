@@ -116,7 +116,7 @@ function syncLeaderboardFeed() {
     renderLeaderboardView();
   }, (error) => {
     console.error('Leaderboard snapshot failed', error.code, error.message);
-    showFeedback(PERMISSION_ERROR_MAP.loadLeaderboard, 'red');
+    showFeedback(PERMISSION_ERROR_MAP.loadLeaderboard, 'red', 'socialFeedback');
   });
 }
 

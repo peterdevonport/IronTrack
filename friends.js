@@ -21,7 +21,7 @@ function getProfileDocRef(uid) {
 function copyCyberTag() {
   const tagText = document.getElementById('myCyberTag').value;
   navigator.clipboard.writeText(tagText);
-  showFeedback('Cyber-Tag copied to clipboard!', 'emerald');
+  showFeedback('Cyber-Tag copied to clipboard!', 'emerald', 'socialFeedback');
   haptic(HAPTIC.tap);
 }
 
@@ -66,11 +66,11 @@ async function initSocialProfile(user, dotsScore = 0) {
       renderLeaderboardView();
     }, (error) => {
       console.error('Profile snapshot failed', error.code, error.message);
-      showFeedback(PERMISSION_ERROR_MAP.loadProfile, 'red');
+      showFeedback(PERMISSION_ERROR_MAP.loadProfile, 'red', 'socialFeedback');
     });
   } catch (err) {
     console.error('Failed to initialize social profile:', err);
-    showFeedback(PERMISSION_ERROR_MAP.loadSocialProfile, 'red');
+    showFeedback(PERMISSION_ERROR_MAP.loadSocialProfile, 'red', 'socialFeedback');
   }
 }
 
@@ -130,41 +130,41 @@ async function handleAddFriend() {
 async function addFriendFromLeaderboard(friendUid) {
   const currentUser = auth.currentUser;
   if (!currentUser) {
-    return showFeedback(MSG.SIGN_IN_TO_ADD_FRIEND, 'red');
+    return showFeedback(MSG.SIGN_IN_TO_ADD_FRIEND, 'red', 'socialFeedback');
   }
   if (!friendUid || friendUid === auth.currentUser.uid) {
     return;
   }
   if (state.social.userFriendsList.includes(friendUid)) {
-    return showFeedback(MSG.ALREADY_CONNECTED, 'yellow');
+    return showFeedback(MSG.ALREADY_CONNECTED, 'yellow', 'socialFeedback');
   }
 
   try {
     const targetDoc = await getProfileDocument(friendUid);
     if (!targetDoc.exists()) {
-      return showFeedback(MSG.ADD_ATHLETE_FAILED, 'red');
+      return showFeedback(MSG.ADD_ATHLETE_FAILED, 'red', 'socialFeedback');
     }
 
     await setDoc(getProfileDocRef(auth.currentUser.uid), {
       friends: arrayUnion(friendUid)
     }, { merge: true });
-    showFeedback(MSG.FRIEND_ADDED, 'emerald');
+    showFeedback(MSG.FRIEND_ADDED, 'emerald', 'socialFeedback');
     haptic(HAPTIC.tap);
   } catch (err) {
     console.error('Leaderboard friend add failed', err.code, err.message);
     if (isPermissionDenied(err)) {
-      showFeedback(PERMISSION_ERROR_MAP.permissionDenied, 'red');
+      showFeedback(PERMISSION_ERROR_MAP.permissionDenied, 'red', 'socialFeedback');
     } else {
-      showFeedback(MSG.ADD_FRIEND_FAILED + err.message, 'red');
+      showFeedback(MSG.ADD_FRIEND_FAILED + err.message, 'red', 'socialFeedback');
     }
   }
 }
 
 async function removeFriend(friendUid) {
   const currentUser = auth.currentUser;
-  if (!auth.currentUser) return showFeedback(MSG.SIGN_IN_TO_REMOVE_FRIEND, 'red');
+  if (!auth.currentUser) return showFeedback(MSG.SIGN_IN_TO_REMOVE_FRIEND, 'red', 'socialFeedback');
   if (!friendUid) return;
-  if (!state.social.userFriendsList.includes(friendUid)) return showFeedback('Athlete not in your friend list.', 'yellow');
+  if (!state.social.userFriendsList.includes(friendUid)) return showFeedback('Athlete not in your friend list.', 'yellow', 'socialFeedback');
 
   if (!confirm('Remove this friend from your list?')) return;
 
@@ -176,10 +176,10 @@ async function removeFriend(friendUid) {
     state.social.userFriendsList = state.social.userFriendsList.filter(u => u !== friendUid);
     renderActiveFriendsList();
     syncLeaderboardFeed();
-    showFeedback(MSG.FRIEND_REMOVED, 'slate');
+    showFeedback(MSG.FRIEND_REMOVED, 'slate', 'socialFeedback');
   } catch (err) {
     console.error('Remove friend failed', err.code, err.message || err);
-    showFeedback(MSG.REMOVE_FRIEND_FAILED, 'red');
+    showFeedback(MSG.REMOVE_FRIEND_FAILED, 'red', 'socialFeedback');
   }
 }
 
