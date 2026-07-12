@@ -93,9 +93,12 @@ jobs:
         run: echo "PROMPT<<EOF" >> $GITHUB_OUTPUT && cat open_code_prompt.txt >> $GITHUB_OUTPUT && echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Configure Git
+        env:
+          PAT: ${{ secrets.AUTO_MERGE_PAT }}
         run: |
           git config --global user.name "opencode-issue-fixer[bot]"
           git config --global user.email "opencode-issue-fixer[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${PAT}@github.com/${GITHUB_REPOSITORY}"
 
       - name: Process Issue with OpenCode
         uses: anomalyco/opencode/github@v1.17.13
