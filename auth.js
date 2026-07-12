@@ -47,7 +47,7 @@ async function pullProfileMetrics(uid) {
         if (saveBtn) saveBtn.disabled = true;
     } catch (err) {
         console.error('Failed to load profile metrics', err.code, err.message);
-        showFeedback(PERMISSION_ERROR_MAP.loadProfileMetrics, 'red');
+        showFeedback(PERMISSION_ERROR_MAP.loadProfileMetrics, 'red', 'profileFeedback');
     }
 }
 

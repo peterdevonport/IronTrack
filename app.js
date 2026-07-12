@@ -66,7 +66,7 @@ if (typeof lucide !== 'undefined' && lucide.createIcons) {
 
 window.addEventListener('unhandledrejection', (e) => {
   console.error('Unhandled promise rejection:', e.reason);
-  showFeedback('An unexpected error occurred. Please try again.', 'red');
+  showToast('An unexpected error occurred. Please try again.', 'red');
 });
 
 navTabs.forEach(btn => {
@@ -87,7 +87,7 @@ onAuthStateChanged(auth, async (user) => {
       await handleSignedIn(user);
     } catch (err) {
       console.error('Auth state handler failed:', err);
-      showFeedback('Failed to load your profile. Please try refreshing the page.', 'red');
+      showFeedback('Failed to load your profile. Please try refreshing the page.', 'red', 'profileFeedback');
       handleSignedOut();
     }
   } else {
@@ -370,7 +370,7 @@ async function saveOnboarding() {
         await batch.commit();
 
         hideOnboarding();
-        showFeedback('Profile initialized! Welcome to IronTrack.', 'emerald');
+        showFeedback('Profile initialized! Welcome to IronTrack.', 'emerald', 'profileFeedback');
 
         syncLeaderboardFeed();
         if (listenersAttached) return;
