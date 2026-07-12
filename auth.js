@@ -2,9 +2,9 @@ import { auth, db, doc, getDoc, addDoc, collection, Timestamp } from './firebase
 import { state, HAPTIC, FORM_SCHEMAS, pbLogExercise, pbLogBtn } from './state.js';
 import { estimate1RM, getEffectiveLoad, computeEffectiveLoad } from './math.js';
 import { haptic } from './dom.js';
-import { getExerciseInfo, LOAD_FACTORS } from './exercise-data.js';
+import { getExerciseInfo, LOAD_FACTORS, resolveExerciseVariant } from './exercise-data.js';
 import { renderFormFields } from './forms.js';
-import { showFeedback } from './ui.js';
+import { PERMISSION_ERROR_MAP, showFeedback } from './ui.js';
 
 function getSchemaKey(exerciseName) {
   const info = getExerciseInfo(exerciseName);
@@ -47,7 +47,7 @@ async function pullProfileMetrics(uid) {
         if (saveBtn) saveBtn.disabled = true;
     } catch (err) {
         console.error('Failed to load profile metrics', err.code, err.message);
-        showFeedback('Unable to load profile metrics. Check Firestore rules for profiles.', 'red');
+        showFeedback(PERMISSION_ERROR_MAP.loadProfileMetrics, 'red');
     }
 }
 
@@ -152,10 +152,7 @@ async function logPB() {
     }
     const reps = parseInt(document.getElementById('pb-reps')?.value, 10) || 1;
 
-    let storedExercise = exercise;
-    if (exercise === 'Pull Up' && externalLoad > 0) {
-        storedExercise = 'Pull Up (Weighted)';
-    }
+    const storedExercise = resolveExerciseVariant(exercise, externalLoad);
 
     if (!weight || weight <= 0) {
         showFeedback('Please enter a valid weight.', 'red', 'pb-log-feedback');
@@ -192,4 +189,12 @@ async function logPB() {
     }
 }
 
-export { getSchemaKey, computeTotalLoad, pullProfileMetrics, refreshPBForm, processWorkoutSnapshot, updateCaches, logPB };
+function requireAuth(feedbackTarget = 'socialFeedback') {
+  if (!auth.currentUser) {
+    showFeedback('Please sign in to continue.', 'rose', feedbackTarget);
+    return null;
+  }
+  return auth.currentUser;
+}
+
+export { getSchemaKey, computeTotalLoad, pullProfileMetrics, refreshPBForm, processWorkoutSnapshot, updateCaches, logPB, requireAuth };
