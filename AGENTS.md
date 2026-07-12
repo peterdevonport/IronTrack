@@ -23,7 +23,12 @@
 - **NEVER** run destructive commands (e.g., `rm -rf`, `git reset --hard`) without explicit, sequential confirmation from the user.
 - **Incremental Progress:** Break large tasks into smaller, logical steps. Verify each step before moving to the next.
 
-## 5. Verification Checklist (Definition of Done)
+## 5. Dependency Management
+- **Pin exact versions** in `package.json` (no `^` carets) for direct devDependencies to prevent lockfile drift.
+- After any `npm install <pkg>` or `npm install --save-dev <pkg>`, always run `npm ci` locally to verify the lockfile is consistent before pushing.
+- If `npm ci` fails with `Invalid: lock file's <pkg> does not satisfy <pkg>`, run `npm install` (no args) to sync the lockfile, then commit the updated `package-lock.json`.
+
+## 6. Verification Checklist (Definition of Done)
 Before declaring a task finished, you must successfully execute:
 1. Run `git status` to ensure no untracked, accidental, or sensitive files (like `.env`) are being staged.
 2. Stage and commit the changes locally using the prescribed Conventional Commit format.
