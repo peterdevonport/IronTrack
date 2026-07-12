@@ -3,7 +3,7 @@ import { state, HAPTIC, FRIEND_SUCCESS_CLEAR_MS } from './state.js';
 import { escapeHtml, haptic } from './dom.js';
 import { getDisplayName } from './exercise-data.js';
 import { friendToHtml } from './rendering.js';
-import { renderEmptyState, showFeedback, updatePagination, changeGenericPage, isPermissionDenied } from './ui.js';
+import { PERMISSION_ERROR_MAP, renderEmptyState, showFeedback, updatePagination, changeGenericPage, isPermissionDenied } from './ui.js';
 import { renderLeaderboardView, syncLeaderboardFeed } from './leaderboard.js';
 
 let unsubscribeProfile = null;
@@ -65,11 +65,11 @@ async function initSocialProfile(user, dotsScore = 0) {
       renderLeaderboardView();
     }, (error) => {
       console.error('Profile snapshot failed', error.code, error.message);
-      showFeedback('Profile access denied: check Firestore rules for profiles.', 'red', 'socialFeedback');
+      showFeedback(PERMISSION_ERROR_MAP.loadProfile, 'red', 'socialFeedback');
     });
   } catch (err) {
     console.error('Failed to initialize social profile:', err);
-    showFeedback('Failed to load social profile. Check Firestore rules.', 'red', 'socialFeedback');
+    showFeedback(PERMISSION_ERROR_MAP.loadSocialProfile, 'red', 'socialFeedback');
   }
 }
 
@@ -119,7 +119,7 @@ async function handleAddFriend() {
   } catch (err) {
     console.error('Friend add failed', err.code, err.message);
     if (isPermissionDenied(err)) {
-      showFeedback('Permission denied: check Firestore rules for profiles.', 'red', feedbackTarget);
+      showFeedback(PERMISSION_ERROR_MAP.permissionDenied, 'red', feedbackTarget);
     } else {
       showFeedback(`Error linking network node: ${err.message}`, 'red', feedbackTarget);
     }
@@ -152,7 +152,7 @@ async function addFriendFromLeaderboard(friendUid) {
   } catch (err) {
     console.error('Leaderboard friend add failed', err.code, err.message);
     if (isPermissionDenied(err)) {
-      showFeedback('Permission denied: check Firestore rules for profiles.', 'red', 'socialFeedback');
+      showFeedback(PERMISSION_ERROR_MAP.permissionDenied, 'red', 'socialFeedback');
     } else {
       showFeedback(`Could not add friend: ${err.message}`, 'red', 'socialFeedback');
     }
@@ -230,7 +230,7 @@ async function renderActiveFriendsList() {
     updatePagination('friends', state.pagination.friends, totalPages);
   } catch (error) {
     console.error('Active friends render failed', error.code, error.message);
-    container.innerHTML = `<p class="text-xs text-red-400">Failed to render active grid context. Check Firestore rules for profiles.</p>`;
+    container.innerHTML = `<p class="text-xs text-red-400">${PERMISSION_ERROR_MAP.renderFriends}</p>`;
   }
 }
 
