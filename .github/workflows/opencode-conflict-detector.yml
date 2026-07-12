@@ -22,7 +22,7 @@ jobs:
           GH_TOKEN: ${{ secrets.AUTO_MERGE_PAT }}
         run: |
           # Fetch all open OpenCode PRs with their conflict status and latest CI test conclusion
-          PR_LIST=$(gh pr list -S "head:opencode/fix-issue" state:open --json number,headRefName,mergeable,statusCheckRollup --jq '.[] | {number, branch: .headRefName, mergeable, conclusion: (.statusCheckRollup[-1].conclusion // null), status: (.statusCheckRollup[-1].status // null)} | @base64')
+          PR_LIST=$(gh pr list -S "head:opencode/fix-issue" --state open --json number,headRefName,mergeable,statusCheckRollup --jq '.[] | {number, branch: .headRefName, mergeable, conclusion: (.statusCheckRollup[-1].conclusion // null), status: (.statusCheckRollup[-1].status // null)} | @base64')
 
           if [ -z "$PR_LIST" ]; then
             echo "✅ No open OpenCode PRs found in the system."
