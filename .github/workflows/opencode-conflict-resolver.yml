@@ -21,41 +21,42 @@ jobs:
           token: ${{ secrets.AUTO_MERGE_PAT }}
           ref: ${{ github.event.inputs.branch_name }}
 
-      - name: Prepare Git Environment & Force Conflict Markers
+      - name: Prepare Git Environment & Merge Master
         env:
           GH_TOKEN: ${{ secrets.AUTO_MERGE_PAT }}
         run: |
           git config --global user.name "opencode-conflict-resolver[bot]"
           git config --global user.email "opencode-conflict-resolver[bot]@users.noreply.github.com"
-          
           git fetch origin master
           git merge origin/master || true
 
-      - name: Compile Conflict Resolution Prompt
-        id: compile_prompt
+      - name: Install OpenCode CLI
         run: |
-          echo "You are a Senior Engineer fixing a Git merge conflict." > conflict_prompt.txt
-          echo "Your branch '${{ github.event.inputs.branch_name }}' has conflicted with updates on the master branch." >> conflict_prompt.txt
-          echo -e "\n### MISSION:" >> conflict_prompt.txt
-          echo "Locate all files containing git conflict markers (<<<<<<<, =======, >>>>>>>). Evaluate both modifications, merge them cleanly so that BOTH feature behaviors are preserved, completely remove the conflict markers, and ensure syntax is perfect." >> conflict_prompt.txt
-          
-          echo "PROMPT<<EOF" >> $GITHUB_OUTPUT
-          cat conflict_prompt.txt >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          curl -fsSL https://opencode.ai/install | bash
+          echo "$HOME/.opencode/bin" >> $GITHUB_PATH
 
-      - name: Process Conflicts with DeepSeek
-        uses: anomalyco/opencode/github@v1.17.13
+      - name: Resolve Conflicts with OpenCode
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.AUTO_MERGE_PAT }}
-        with:
-          model: opencode-go/deepseek-v4-flash
-          use_github_token: true
-          prompt: ${{ steps.compile_prompt.outputs.PROMPT }}
+        run: |
+          opencode run --auto --model opencode-go/deepseek-v4-flash \
+            "Resolve git merge conflicts in this repository. \
+            Find ALL files with conflict markers (<<<<<<<, =======, >>>>>>>). \
+            For each file, merge both sides cleanly and remove all conflict markers. \
+            PRESERVE the logic from both sides. \
+            Do NOT create branches, do NOT create PRs, do NOT use git. \
+            Only edit the conflicted files in place."
+
+      - name: Commit and Push Resolved Conflicts
+        run: |
+          git add -A
+          git diff --cached --quiet && echo "No changes to commit" || \
+            git commit -m "fix: resolve merge conflicts with master [skip ci]"
+          git push origin ${{ github.event.inputs.branch_name }}
 
       - name: Re-Enable Auto-Merge
         env:
           GH_TOKEN: ${{ secrets.AUTO_MERGE_PAT }}
         run: |
-          echo "Conflict cleared and pushed by AI. Re-enabling the auto-merge queue for PR #${{ github.event.inputs.pr_number }}..."
+          echo "Re-enabling auto-merge for PR #${{ github.event.inputs.pr_number }}..."
           gh pr merge "${{ github.event.inputs.pr_number }}" --auto --merge
