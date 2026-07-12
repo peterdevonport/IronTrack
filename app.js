@@ -71,7 +71,7 @@ navBar?.addEventListener('change', (e) => {
   if (tab === 'profile') {
     openProfileModal();
     navBar.value = state.ui.currentTab || 'dashboard';
-  } else {
+  } else if (tab) {
     switchTab(tab);
   }
 });
