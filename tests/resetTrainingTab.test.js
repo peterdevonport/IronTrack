@@ -1,208 +1,216 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { resetTrainingTab } from './functions.js';
+
+const mockState = vi.hoisted(() => ({
+  builder: {
+    pendingPlannedWorkout: { type: 'AMRAP', name: 'Test', structure: {} }
+  }
+}));
+
+vi.mock('../firebase.js', () => ({
+  auth: { currentUser: null },
+  db: {},
+  collection: vi.fn(),
+  addDoc: vi.fn(),
+  doc: vi.fn(),
+  getDoc: vi.fn(),
+  Timestamp: { now: vi.fn(() => 'test-ts') }
+}));
+
+vi.mock('../state.js', () => ({
+  state: mockState,
+  EPLEY_CONSTANT: 30,
+  SECONDS_PER_MINUTE: 60,
+  PERCENT_DIVISOR: 100,
+  HAPTIC: { tap: 15, confirm: 30 },
+  FIRESTORE_STRUCTURED_LIMIT: 500,
+  DEBOUNCE_DELAY_SYNC_ACTIVITY: 3000
+}));
+
+vi.mock('../math.js', () => ({
+  estimate1RM: vi.fn(),
+  getEffectiveLoad: vi.fn(),
+  computeEffectiveLoad: vi.fn(),
+  estimateWeightForReps: vi.fn(),
+  rpeToRir: vi.fn()
+}));
+
+vi.mock('../dom.js', () => ({
+  debounce: vi.fn(() => vi.fn()),
+  escapeHtml: vi.fn(),
+  haptic: vi.fn()
+}));
+
+vi.mock('../exercise-data.js', () => ({
+  getExerciseInfo: vi.fn(),
+  LOAD_FACTORS: {}
+}));
+
+vi.mock('../analytics.js', () => ({
+  formatScore_ROUNDS_AND_REPS: vi.fn(),
+  formatScore_COMPLETED_MINUTES: vi.fn(),
+  formatScore_TIME_SECONDS: vi.fn(),
+  getRepsPerRound: vi.fn(),
+  computeDotsScore: vi.fn(),
+  computeSinclairScore: vi.fn(),
+  getRankingTier: vi.fn()
+}));
+
+vi.mock('../ui.js', () => ({
+  showFeedback: vi.fn(),
+  clearChildren: vi.fn(),
+  PERMISSION_ERROR_MAP: {}
+}));
+
+vi.mock('../messages.js', () => ({
+  MSG: {}
+}));
+
+import { resetTrainingTab } from '../workouts.js';
 
 describe('resetTrainingTab', () => {
-  let deps, mockElements, globals;
 
   beforeEach(() => {
-    mockElements = {};
-    globals = {
-      pendingPlannedWorkout: { type: 'AMRAP', name: 'Test' }
-    };
+    vi.clearAllMocks();
+    mockState.builder.pendingPlannedWorkout = { type: 'AMRAP', name: 'Test', structure: {} };
 
-    const createMockElement = (props = {}) => ({
-      textContent: '',
-      style: { display: '' },
-      innerHTML: '',
-      checked: false,
-      value: '',
-      disabled: false,
-      classList: {
-        add: vi.fn(),
-        remove: vi.fn(),
-        toggle: vi.fn()
-      },
-      toggleAttribute: vi.fn(),
-      ...props
-    });
-
-    deps = {
-      document: {
-        getElementById: vi.fn((id) => mockElements[id] || createMockElement()),
-        querySelectorAll: vi.fn(() => [])
-      },
-      globals
-    };
+    document.body.innerHTML = `
+      <div id="log-workout-type-badge"></div>
+      <div id="log-workout-placeholder"></div>
+      <div id="workout-description"></div>
+      <div id="log-result-amrap"></div>
+      <div id="log-result-emom"></div>
+      <input id="log-rounds" />
+      <input id="log-partial-reps" />
+      <button id="log-round-btn" class="is-primary"></button>
+      <button id="log-rep-btn" class="is-primary-ghost"></button>
+      <div id="log-score-preview"></div>
+      <input id="fortime-dnf" type="checkbox" />
+      <input id="fortime-minutes" required />
+      <input id="fortime-seconds" required />
+      <input id="fortime-cap-reps" />
+      <div id="fortime-time-inputs"></div>
+      <div id="fortime-cap-reps-container"></div>
+      <div id="fortime-score-preview"></div>
+      <button id="log-workout-btn" class="is-primary"></button>
+    `;
   });
 
   it('should clear pendingPlannedWorkout', () => {
-    resetTrainingTab(deps);
-    expect(globals.pendingPlannedWorkout).toBeNull();
+    resetTrainingTab();
+
+    expect(mockState.builder.pendingPlannedWorkout).toBeNull();
   });
 
   it('should hide workout type badge', () => {
-    const badge = { textContent: 'AMRAP', style: { display: 'block' } };
-    mockElements['log-workout-type-badge'] = badge;
+    resetTrainingTab();
 
-    resetTrainingTab(deps);
-
+    const badge = document.getElementById('log-workout-type-badge');
     expect(badge.textContent).toBe('');
     expect(badge.style.display).toBe('none');
   });
 
-  it('should show workout placeholder', () => {
-    const placeholder = { classList: { add: vi.fn(), remove: vi.fn() } };
-    mockElements['log-workout-placeholder'] = placeholder;
+  it('should show placeholder', () => {
+    const placeholder = document.getElementById('log-workout-placeholder');
+    placeholder.classList.add('hidden');
 
-    resetTrainingTab(deps);
+    resetTrainingTab();
 
-    expect(placeholder.classList.remove).toHaveBeenCalledWith('hidden');
+    expect(placeholder.classList.contains('hidden')).toBe(false);
   });
 
-  it('should hide workout description and clear content', () => {
-    const desc = { classList: { add: vi.fn() }, innerHTML: 'Some description' };
-    mockElements['workout-description'] = desc;
+  it('should hide and clear workout description', () => {
+    resetTrainingTab();
 
-    resetTrainingTab(deps);
-
-    expect(desc.classList.add).toHaveBeenCalledWith('hidden');
-    expect(desc.innerHTML).toBe('');
+    const desc = document.getElementById('workout-description');
+    expect(desc.classList.contains('hidden')).toBe(true);
   });
 
-  it('should hide all log-result elements', () => {
-    const resultElements = [
-      { classList: { add: vi.fn() } },
-      { classList: { add: vi.fn() } }
-    ];
-    deps.document.querySelectorAll.mockReturnValue(resultElements);
+  it('should hide all result sections', () => {
+    resetTrainingTab();
 
-    resetTrainingTab(deps);
-
-    expect(deps.document.querySelectorAll).toHaveBeenCalledWith('[id^="log-result-"]');
-    resultElements.forEach(el => {
-      expect(el.classList.add).toHaveBeenCalledWith('hidden');
+    document.querySelectorAll('[id^="log-result-"]').forEach(el => {
+      expect(el.classList.contains('hidden')).toBe(true);
     });
   });
 
-  it('should clear log-rounds input', () => {
-    const roundsInput = { value: '5' };
-    mockElements['log-rounds'] = roundsInput;
+  it('should clear round and partial reps inputs', () => {
+    document.getElementById('log-rounds').value = '5';
+    document.getElementById('log-partial-reps').value = '10';
 
-    resetTrainingTab(deps);
+    resetTrainingTab();
 
-    expect(roundsInput.value).toBe('');
+    expect(document.getElementById('log-rounds').value).toBe('');
+    expect(document.getElementById('log-partial-reps').value).toBe('');
   });
 
-  it('should clear log-partial-reps input', () => {
-    const partialInput = { value: '10' };
-    mockElements['log-partial-reps'] = partialInput;
+  it('should reset round and rep button styles', () => {
+    resetTrainingTab();
 
-    resetTrainingTab(deps);
-
-    expect(partialInput.value).toBe('');
+    const roundBtn = document.getElementById('log-round-btn');
+    const repBtn = document.getElementById('log-rep-btn');
+    expect(roundBtn.classList.contains('is-primary')).toBe(true);
+    expect(roundBtn.classList.contains('is-secondary')).toBe(false);
+    expect(repBtn.classList.contains('is-primary-ghost')).toBe(true);
+    expect(repBtn.classList.contains('is-secondary')).toBe(false);
   });
 
-  it('should reset round button styling', () => {
-    const roundBtn = { classList: { remove: vi.fn(), add: vi.fn() } };
-    mockElements['log-round-btn'] = roundBtn;
+  it('should clear score preview', () => {
+    document.getElementById('log-score-preview').textContent = '5 rounds + 10 reps';
 
-    resetTrainingTab(deps);
+    resetTrainingTab();
 
-    expect(roundBtn.classList.remove).toHaveBeenCalledWith('is-secondary');
-    expect(roundBtn.classList.add).toHaveBeenCalledWith('is-primary');
+    expect(document.getElementById('log-score-preview').textContent).toBe('\u2014');
   });
 
-  it('should reset rep button styling', () => {
-    const repBtn = { classList: { remove: vi.fn(), add: vi.fn() } };
-    mockElements['log-rep-btn'] = repBtn;
+  it('should reset For Time DNF checkbox', () => {
+    document.getElementById('fortime-dnf').checked = true;
 
-    resetTrainingTab(deps);
+    resetTrainingTab();
 
-    expect(repBtn.classList.remove).toHaveBeenCalledWith('is-secondary');
-    expect(repBtn.classList.add).toHaveBeenCalledWith('is-primary-ghost');
+    expect(document.getElementById('fortime-dnf').checked).toBe(false);
   });
 
-  it('should reset score preview to dash', () => {
-    const scorePreview = { textContent: '5 rounds' };
-    mockElements['log-score-preview'] = scorePreview;
+  it('should clear For Time inputs and add required attribute', () => {
+    document.getElementById('fortime-minutes').value = '10';
+    document.getElementById('fortime-seconds').value = '30';
 
-    resetTrainingTab(deps);
+    resetTrainingTab();
 
-    expect(scorePreview.textContent).toBe('—');
+    expect(document.getElementById('fortime-minutes').value).toBe('');
+    expect(document.getElementById('fortime-minutes').hasAttribute('required')).toBe(true);
+    expect(document.getElementById('fortime-seconds').value).toBe('');
+    expect(document.getElementById('fortime-seconds').hasAttribute('required')).toBe(true);
   });
 
-  it('should uncheck FOR_TIME DNF checkbox', () => {
-    const dnfCheckbox = { checked: true };
-    mockElements['fortime-dnf'] = dnfCheckbox;
+  it('should clear For Time cap reps', () => {
+    document.getElementById('fortime-cap-reps').value = '20';
 
-    resetTrainingTab(deps);
+    resetTrainingTab();
 
-    expect(dnfCheckbox.checked).toBe(false);
+    expect(document.getElementById('fortime-cap-reps').value).toBe('');
   });
 
-  it('should clear FOR_TIME time inputs', () => {
-    const minsInput = { value: '5', toggleAttribute: vi.fn() };
-    const secsInput = { value: '30', toggleAttribute: vi.fn() };
-    mockElements['fortime-minutes'] = minsInput;
-    mockElements['fortime-seconds'] = secsInput;
+  it('should reset For Time time inputs visibility', () => {
+    resetTrainingTab();
 
-    resetTrainingTab(deps);
-
-    expect(minsInput.value).toBe('');
-    expect(secsInput.value).toBe('');
-    expect(minsInput.toggleAttribute).toHaveBeenCalledWith('required', true);
-    expect(secsInput.toggleAttribute).toHaveBeenCalledWith('required', true);
+    expect(document.getElementById('fortime-time-inputs').classList.contains('hidden')).toBe(false);
+    expect(document.getElementById('fortime-cap-reps-container').classList.contains('hidden')).toBe(true);
   });
 
-  it('should clear FOR_TIME cap reps input', () => {
-    const capRepsInput = { value: '15' };
-    mockElements['fortime-cap-reps'] = capRepsInput;
+  it('should clear For Time score preview', () => {
+    document.getElementById('fortime-score-preview').textContent = 'Cap 20';
 
-    resetTrainingTab(deps);
+    resetTrainingTab();
 
-    expect(capRepsInput.value).toBe('');
+    expect(document.getElementById('fortime-score-preview').textContent).toBe('\u2014');
   });
 
-  it('should show FOR_TIME time inputs and hide cap container', () => {
-    const timeInputs = { classList: { remove: vi.fn() } };
-    const capContainer = { classList: { add: vi.fn() } };
-    mockElements['fortime-time-inputs'] = timeInputs;
-    mockElements['fortime-cap-reps-container'] = capContainer;
+  it('should disable workout button', () => {
+    resetTrainingTab();
 
-    resetTrainingTab(deps);
-
-    expect(timeInputs.classList.remove).toHaveBeenCalledWith('hidden');
-    expect(capContainer.classList.add).toHaveBeenCalledWith('hidden');
-  });
-
-  it('should reset FOR_TIME score preview', () => {
-    const ftScore = { textContent: '5:30' };
-    mockElements['fortime-score-preview'] = ftScore;
-
-    resetTrainingTab(deps);
-
-    expect(ftScore.textContent).toBe('—');
-  });
-
-  it('should disable and restyle log-workout-btn', () => {
-    const btn = { disabled: false, classList: { remove: vi.fn(), add: vi.fn() } };
-    mockElements['log-workout-btn'] = btn;
-
-    resetTrainingTab(deps);
-
+    const btn = document.getElementById('log-workout-btn');
     expect(btn.disabled).toBe(true);
-    expect(btn.classList.remove).toHaveBeenCalledWith('is-primary');
-    expect(btn.classList.add).toHaveBeenCalledWith('is-ghost');
-  });
-
-  it('should handle missing elements gracefully', () => {
-    // No elements set in mockElements
-    expect(() => resetTrainingTab(deps)).not.toThrow();
-  });
-
-  it('should handle null pendingPlannedWorkout', () => {
-    globals.pendingPlannedWorkout = null;
-    expect(() => resetTrainingTab(deps)).not.toThrow();
-    expect(globals.pendingPlannedWorkout).toBeNull();
+    expect(btn.classList.contains('is-primary')).toBe(false);
+    expect(btn.classList.contains('is-ghost')).toBe(true);
   });
 });

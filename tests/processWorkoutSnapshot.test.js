@@ -1,5 +1,24 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { processWorkoutSnapshot } from './functions.js';
+
+vi.mock('../firebase.js', () => ({
+  auth: { currentUser: null },
+  db: {},
+  collection: vi.fn(),
+  addDoc: vi.fn(),
+  doc: vi.fn(),
+  getDoc: vi.fn(),
+  Timestamp: { now: vi.fn(() => 'test-ts') }
+}));
+
+vi.mock('../state.js', () => ({ state: { user: { userBiometrics: {} }, cache: {} } }));
+vi.mock('../math.js', () => ({ estimate1RM: vi.fn(), getEffectiveLoad: vi.fn() }));
+vi.mock('../dom.js', () => ({ debounce: vi.fn(), escapeHtml: vi.fn(), haptic: vi.fn() }));
+vi.mock('../exercise-data.js', () => ({ getExerciseInfo: vi.fn(), LOAD_FACTORS: {} }));
+vi.mock('../forms.js', () => ({ renderFormFields: vi.fn() }));
+vi.mock('../ui.js', () => ({ showFeedback: vi.fn() }));
+vi.mock('../messages.js', () => ({ MSG: {} }));
+
+import { processWorkoutSnapshot } from '../auth.js';
 
 describe('processWorkoutSnapshot', () => {
   let getEffectiveLoad, estimate1RM;
