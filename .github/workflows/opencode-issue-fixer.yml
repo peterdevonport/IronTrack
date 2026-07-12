@@ -98,23 +98,17 @@ jobs:
           git config --global user.name "opencode-issue-fixer[bot]"
           git config --global user.email "opencode-issue-fixer[bot]@users.noreply.github.com"
 
-      - name: Install OpenCode CLI
-        run: |
-          curl -fsSL https://opencode.ai/install | bash
-          echo "$HOME/.opencode/bin" >> $GITHUB_PATH
-
       - name: Process Issue with OpenCode
+        uses: anomalyco/opencode/github@v1.17.13
         timeout-minutes: 15
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
-          PAT: ${{ secrets.AUTO_MERGE_PAT }}
           GITHUB_TOKEN: ${{ secrets.AUTO_MERGE_PAT }}
           GH_TOKEN: ${{ github.token }}
-          MODEL: opencode-go/deepseek-v4-flash
-          PROMPT: ${{ steps.prompt.outputs.PROMPT }}
-          USE_GITHUB_TOKEN: "true"
-        run: |
-          opencode github run --token "$PAT"
+        with:
+          model: opencode-go/deepseek-v4-flash
+          use_github_token: true
+          prompt: ${{ steps.prompt.outputs.PROMPT }}
 
       # 🚀 STEP 2: FIND AND FINALIZE PR OR LABEL
       - name: Finalize PR or Label
