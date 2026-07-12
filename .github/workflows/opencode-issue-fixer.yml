@@ -92,22 +92,25 @@ jobs:
         id: prompt
         run: echo "PROMPT<<EOF" >> $GITHUB_OUTPUT && cat open_code_prompt.txt >> $GITHUB_OUTPUT && echo "EOF" >> $GITHUB_OUTPUT
 
+      - name: Configure Git
+        run: |
+          git config --global user.name "opencode-issue-fixer[bot]"
+          git config --global user.email "opencode-issue-fixer[bot]@users.noreply.github.com"
+
       - name: Process Issue with DeepSeek V4 Flash
         uses: anomalyco/opencode/github@v1.17.13
         timeout-minutes: 15 # 👈 Safety net: Caps the AI execution time
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.AUTO_MERGE_PAT }}
         with:
           model: opencode-go/deepseek-v4-flash
           use_github_token: true
           prompt: ${{ steps.prompt.outputs.PROMPT }}
 
-      # 🚀 STEP 2: PR CREATION AND NATIVE AUTO-MERGE VIA REGULAR USER IDENTITY (PAT)
+      # 🚀 STEP 2: PR CREATION AND NATIVE AUTO-MERGE
       - name: Handle PR Creation and Auto-Merge
         if: success()
-        env:
-          GH_TOKEN: ${{ secrets.AUTO_MERGE_PAT }}
         run: |
           ISSUE_NUM="${{ steps.compile_context.outputs.ISSUE_NUM }}"
           BRANCH="opencode/fix-issue-${ISSUE_NUM}"
@@ -115,10 +118,19 @@ jobs:
           # Detect if the AI executed Path A (Pushed a fix branch)
           if git ls-remote --heads origin "$BRANCH" 2>/dev/null | grep -q "refs/heads/$BRANCH"; then
             echo "✅ Bot pushed branch $BRANCH — Path A completed."
-            
+
+            # Verify the branch has actual commits beyond master before creating a PR
+            git fetch origin "$BRANCH" 2>/dev/null || true
+            COMMIT_COUNT=$(git rev-list --count origin/master..origin/"$BRANCH" 2>/dev/null || echo 0)
+            if [ "$COMMIT_COUNT" -eq 0 ]; then
+              echo "⚠️ Branch $BRANCH exists but has no commits beyond master. Removing empty branch."
+              git push origin --delete "$BRANCH" 2>/dev/null || true
+              exit 1
+            fi
+
             # Check to ensure a PR isn't already active to prevent errors on workflow retries
             PR_EXISTS=$(gh pr list --head "$BRANCH" --json url --jq '.[0].url' 2>/dev/null || echo "")
-            
+
             if [ -z "$PR_EXISTS" ]; then
               echo "Opening Pull Request..."
               PR_URL=$(gh pr create \
@@ -131,7 +143,7 @@ jobs:
               PR_URL="$PR_EXISTS"
               echo "⚠️ Pull Request already exists at: $PR_URL"
             fi
-            
+
             # Instructs GitHub to merge the PR automatically the second status checks clear
             echo "Enabling Auto-Merge for $PR_URL"
             gh pr merge "$PR_URL" --auto --merge
