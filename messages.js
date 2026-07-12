@@ -28,6 +28,7 @@ MSG.WORKOUT_SAVE_FAILED = 'Failed to save workout: ';
 MSG.WORKOUT_LOG_FAILED = 'Failed to log workout: ';
 MSG.WORKOUT_LOGGED = 'Workout logged!';
 MSG.SELECT_EXERCISE = 'Please select an exercise.';
+MSG.INVALID_SETS_REPS = 'Please enter valid sets and reps.';
 MSG.SELECT_WORKOUT_TYPE = 'Select a workout type first.';
 MSG.UNKNOWN_WORKOUT_TYPE = 'Unknown workout type.';
 MSG.ADD_MOVEMENT = 'Add at least one movement before starting the workout.';

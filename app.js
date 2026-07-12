@@ -33,10 +33,6 @@ const PASSWORD_RESET_ERROR_MAP = {
   'auth/user-not-found': 'No account found with this email.',
   'auth/invalid-email': 'Invalid email address.',
 };
-const MSG = {
-  SELECT_EXERCISE: 'Please select an exercise.',
-  INVALID_SETS_REPS: 'Please enter valid sets and reps.',
-};
 let currentUser = null;
 let unsubscribeLogs = null;
 let pendingOnboarding1RMs = [];
