@@ -9,7 +9,7 @@ import { renderEmptyState, showFeedback, showToast, showPlanNameModal, updatePag
 import { renderWorkoutCard, renderPlanCard, renderSharedPlanCard, renderPlanMovements, renderMinuteSlotInner } from './rendering.js';
 import { renderFormFields } from './forms.js';
 import { renderSharedPlansUI } from './social.js';
-import { getSchemaKey, computeTotalLoad } from './auth.js';
+import { getSchemaKey, computeTotalLoad, requireAuth } from './auth.js';
 import { toggleForTimeDnf, cleanupStructuredSubscriptions } from './workouts.js';
 import { MSG } from './messages.js';
 
@@ -347,7 +347,7 @@ async function formatIntervalLabel(intervalMin, intervalSec) {
 }
 
 function validatePlanInputs(type) {
-  if (!auth.currentUser) { alert(MSG.SIGN_IN_REQUIRED); return false; }
+  if (!requireAuth('planFeedback')) return false;
   if (!type) { showFeedback(MSG.SELECT_WORKOUT_TYPE, 'rose', 'planFeedback'); return false; }
 
   if (type === 'AMRAP') {
@@ -404,7 +404,7 @@ function buildPlanDocument(userId, name, type, structure) {
 }
 
 async function savePlan() {
-  if (!auth.currentUser) return alert(MSG.SIGN_IN_REQUIRED);
+  if (!requireAuth('planFeedback')) return;
   const type = document.getElementById('workout-type')?.value;
   if (!type) return showFeedback(MSG.SELECT_WORKOUT_TYPE, 'rose', 'planFeedback');
 

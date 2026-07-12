@@ -3,7 +3,7 @@ import { state, HAPTIC, FRIEND_SUCCESS_CLEAR_MS } from './state.js';
 import { escapeHtml, haptic } from './dom.js';
 import { getDisplayName } from './exercise-data.js';
 import { friendToHtml } from './rendering.js';
-import { renderEmptyState, showFeedback, updatePagination, changeGenericPage, isPermissionDenied } from './ui.js';
+import { PERMISSION_ERROR_MAP, renderEmptyState, showFeedback, updatePagination, changeGenericPage, isPermissionDenied } from './ui.js';
 import { renderLeaderboardView, syncLeaderboardFeed } from './leaderboard.js';
 import { MSG } from './messages.js';
 
@@ -66,11 +66,11 @@ async function initSocialProfile(user, dotsScore = 0) {
       renderLeaderboardView();
     }, (error) => {
       console.error('Profile snapshot failed', error.code, error.message);
-      showFeedback(MSG.PERMISSION_FIRESTORE_RULES, 'red');
+      showFeedback(PERMISSION_ERROR_MAP.loadProfile, 'red');
     });
   } catch (err) {
     console.error('Failed to initialize social profile:', err);
-    showFeedback(MSG.LOAD_SOCIAL_PROFILE_FAILED, 'red');
+    showFeedback(PERMISSION_ERROR_MAP.loadSocialProfile, 'red');
   }
 }
 
@@ -120,7 +120,7 @@ async function handleAddFriend() {
   } catch (err) {
     console.error('Friend add failed', err.code, err.message);
     if (isPermissionDenied(err)) {
-      showFeedback(MSG.PERMISSION_FIRESTORE_RULES, 'red', feedbackTarget);
+      showFeedback(PERMISSION_ERROR_MAP.permissionDenied, 'red', feedbackTarget);
     } else {
       showFeedback(MSG.LINK_NETWORK_NODE_FAILED + err.message, 'red', feedbackTarget);
     }
@@ -153,7 +153,7 @@ async function addFriendFromLeaderboard(friendUid) {
   } catch (err) {
     console.error('Leaderboard friend add failed', err.code, err.message);
     if (isPermissionDenied(err)) {
-      showFeedback(MSG.PERMISSION_FIRESTORE_RULES, 'red');
+      showFeedback(PERMISSION_ERROR_MAP.permissionDenied, 'red');
     } else {
       showFeedback(MSG.ADD_FRIEND_FAILED + err.message, 'red');
     }
@@ -231,7 +231,7 @@ async function renderActiveFriendsList() {
     updatePagination('friends', state.pagination.friends, totalPages);
   } catch (error) {
     console.error('Active friends render failed', error.code, error.message);
-    container.innerHTML = `<p class="text-xs text-red-400">${MSG.RENDER_FRIENDS_FAILED}</p>`;
+    container.innerHTML = `<p class="text-xs text-red-400">${PERMISSION_ERROR_MAP.renderFriends}</p>`;
   }
 }
 

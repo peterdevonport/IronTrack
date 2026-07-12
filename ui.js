@@ -9,6 +9,16 @@ const NOTIFICATION_COLORS = {
   slate: 'text-slate-400'
 };
 
+const PERMISSION_ERROR_MAP = {
+  saveWorkout: 'You do not have permission to save this workout.',
+  loadLeaderboard: 'Unable to load the leaderboard. Please check your connection and try again.',
+  loadProfile: 'Unable to load profile. Please check your permissions.',
+  loadSocialProfile: 'Unable to load social profile. Please try again.',
+  permissionDenied: 'Permission denied. You may not have access to this feature.',
+  loadProfileMetrics: 'Unable to load profile metrics. Please try again.',
+  renderFriends: 'Unable to display friends list. Please try again.',
+};
+
 const BTN_ACTIVE_CLASS = 'btn-core is-primary btn-size-row';
 const BTN_INACTIVE_CLASS = 'btn-core is-ghost btn-size-row';
 
@@ -324,4 +334,4 @@ function switchTab(tabName) {
   state.ui.currentTab = tabName;
 }
 
-export { clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, saveExpandedCardIds, restoreExpandedCardIds, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, paginateAndRender, changeGenericPage, switchTab, isPermissionDenied, BTN_ACTIVE_CLASS, BTN_INACTIVE_CLASS, setActiveTab, setInactiveTab };
+export { PERMISSION_ERROR_MAP, clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, saveExpandedCardIds, restoreExpandedCardIds, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, paginateAndRender, changeGenericPage, switchTab, isPermissionDenied, BTN_ACTIVE_CLASS, BTN_INACTIVE_CLASS, setActiveTab, setInactiveTab };
