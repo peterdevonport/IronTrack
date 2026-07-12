@@ -181,8 +181,8 @@ function renderMinuteSlotInner(label, contentHtml) {
 function renderShareFriendItem(fUid, name) {
   return `
       <label class="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-800 cursor-pointer">
-        <mdui-checkbox class="share-friend-checkbox" value="${fUid}"></mdui-checkbox>
-        <span class="text-sm" style="color: rgb(var(--mdui-color-on-surface));">${escapeHtml(name)}</span>
+        <input type="checkbox" class="share-friend-checkbox" value="${fUid}" />
+        <span class="text-sm text-slate-200">${escapeHtml(name)}</span>
       </label>`;
 }
 
@@ -236,7 +236,7 @@ function workoutToLogHtml(workout, chipPBActive, chip1RMActive) {
   const secondLine = `Est. 1RM: ${oneRM}kg  <span class="text-slate-600">|</span>  Vol: ${totalVolume.toLocaleString()}kg`;
   const repDisplay = workout.partialReps ? `${sets} × ${reps} + ${workout.partialReps} reps` : `${sets} × ${reps}`;
   return `
-<div class="${borderClass} p-4 rounded-2xl mb-3 flex justify-between items-center shadow-xl transition-all duration-200" style="background-color: rgb(var(--mdui-color-surface-container));">
+<div class="${borderClass} p-4 rounded-2xl mb-3 flex justify-between items-center shadow-2xl shadow-slate-950/60 transition-all duration-200" style="background-color: var(--slate-900);">
     <div>
         <div class="flex items-center gap-2">
             <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm">${escapeHtml(workout.exercise)}</h4>
