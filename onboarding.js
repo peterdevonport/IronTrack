@@ -1,12 +1,12 @@
 import { onboardingView, appView, bottomNav, onboardingExerciseSelect, onboardingWeightInput, onboardingRepsInput } from './state.js';
-import { showFeedback, buildExerciseOptionsHtml } from './ui.js';
+import { showFeedback, buildMduiOptionsHtml } from './ui.js';
 import { renderOnboarding1RMList } from './rendering.js';
 
 function showOnboarding(pendingItems) {
     onboardingView.classList.remove('hidden');
     const groups = ['barbell', 'dumbbell', 'kettlebell', 'cardio', 'bodyweight'];
     if (onboardingExerciseSelect) {
-        onboardingExerciseSelect.innerHTML = buildExerciseOptionsHtml(groups, '<option value="" disabled selected>Select exercise...</option>');
+        onboardingExerciseSelect.innerHTML = buildMduiOptionsHtml(groups, '<mdui-menu-item value="" disabled selected>Select exercise...</mdui-menu-item>');
     }
     pendingItems.length = 0;
     renderOnboarding1RMList(pendingItems);

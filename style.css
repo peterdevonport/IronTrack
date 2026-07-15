@@ -88,12 +88,73 @@ mdui-button[full-width] { width: 100%; }
   letter-spacing: 0.05em;
 }
 
-/* ─── Surface Card ────────────────────────────── */
-.surface-card {
-  background-color: var(--color-surface-elevated), #0f172a);
-  border: 1px solid var(--color-surface-hover), #1e293b);
+/* ─── Dropdown Select ──────────────────────────── */
+.dropdown-core {
+  background-color: var(--color-surface-elevated, #0f172a);
+  color: var(--color-text, #e2e8f0);
+  border: 1px solid var(--slate-500, #64748b);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  width: 100%;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+.dropdown-core:hover {
+  border-color: var(--slate-300, #cbd5e1);
+}
+.dropdown-core:focus {
+  outline: none;
+  border-color: rgb(var(--mdui-color-primary));
+}
+.dropdown-core option,
+.dropdown-core optgroup {
+  background-color: var(--color-surface-elevated, #0f172a);
+  color: var(--color-text, #e2e8f0);
+}
+
+/* ─── Input Field ──────────────────────────────── */
+.input-core {
+  background-color: var(--color-surface-elevated, #0f172a);
+  color: var(--color-text, #e2e8f0);
+  border: 1px solid var(--slate-500, #64748b);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  width: 100%;
+  transition: border-color 0.2s ease;
+}
+.input-core::placeholder {
+  color: var(--slate-500, #64748b);
+}
+.input-core:hover {
+  border-color: var(--slate-300, #cbd5e1);
+}
+.input-core:focus {
+  outline: none;
+  border-color: rgb(var(--mdui-color-primary));
+}
+.input-core:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.input-core[type="number"] {
+  text-align: center;
+}
+
+/* ─── Card (shared semantic style) ────────────── */
+.card {
+  background-color: var(--color-surface-elevated, #0f172a);
+  border: 1px solid var(--slate-500, #64748b);
   border-radius: 1rem;
-  padding: 1.25rem;
+  padding: 1rem;
+}
+.card-interactive:hover {
+  border-color: var(--slate-300, #cbd5e1);
 }
 
 /* ─── Button Core Theme (for JS template compat) ── */
@@ -239,11 +300,7 @@ mdui-button[full-width] { width: 100%; }
 }
 
 /* ─── Structured Workout Cards ────────────────── */
-.structured-card {
-  border: 1px solid var(--color-border), #334155);
-  background-color: var(--color-surface-elevated), #0f172a);
-}
-.structured-card .score-display {
+.card .score-display {
   font-size: 1.25rem;
   font-weight: 800;
   font-family: ui-monospace, monospace;
@@ -260,13 +317,13 @@ mdui-button[full-width] { width: 100%; }
   font-size: 0.625rem;
   color: var(--slate-300, #cbd5e1);
 }
-.structured-card .structured-header-clickable { cursor: pointer; }
-.structured-card .toggle-arrow {
+.card .structured-header-clickable { cursor: pointer; }
+.card .toggle-arrow {
   font-size: 1.25rem;
   color: var(--slate-400, #94a3b8);
   user-select: none;
 }
-.structured-card .pr-badge {
+.card .pr-badge {
   background-color: rgba(168, 85, 247, 0.15);
   color: #c084fc;
   border: 1px solid rgba(168, 85, 247, 0.3);
@@ -279,9 +336,9 @@ mdui-button[full-width] { width: 100%; }
 }
 
 /* ─── Log Entry Borders ───────────────────────── */
-.log-entry { border: 1px solid var(--slate-500, #64748b) !important; }
-.log-entry-pb { border: 1px solid var(--purple-500, #a855f7) !important; }
-.log-entry-1rm { border: 1px solid rgb(var(--mdui-color-primary)) !important; }
+.log-entry { border-color: var(--slate-500, #64748b); }
+.log-entry-pb { border-color: var(--purple-500, #a855f7); }
+.log-entry-1rm { border-color: rgb(var(--mdui-color-primary)); }
 
 /* ─── Calendar ────────────────────────────────── */
 .cal-day {
@@ -511,20 +568,20 @@ mdui-button[full-width] { width: 100%; }
 }
 
 /* ─── Collapsible Section Groups ──────────────── */
-details.surface-card summary::-webkit-details-marker { display: none; }
-details.surface-card summary {
+details.card summary::-webkit-details-marker { display: none; }
+details.card summary {
   list-style: none;
   padding: 0.75rem 0;
   font-size: 1.25rem;
 }
-details.surface-card summary::after {
+details.card summary::after {
   content: "▾";
   margin-left: auto;
   transition: transform 0.2s ease;
   font-size: 1.375rem;
   color: var(--slate-300, #cbd5e1);
 }
-details.surface-card[open] summary::after {
+details.card[open] summary::after {
   transform: rotate(180deg);
 }
 
@@ -533,6 +590,7 @@ details.surface-card[open] summary::after {
 .tab-content.active {
   display: block;
   animation: tabFadeIn 0.2s ease;
+  padding-bottom: 5rem;
 }
 
 /* ─── Bottom Nav ──────────────────────────────── */

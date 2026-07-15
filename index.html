@@ -209,7 +209,7 @@
             <p class="text-description">Training day targets.</p>
 
             <div class="grid grid-cols-2 gap-4 mt-4">
-              <div class="bg-slate-950 rounded-xl p-3" id="consistency-7day-card">
+              <div class="card" id="consistency-7day-card">
                 <p class="font-bold uppercase tracking-wider mb-0.5 text-[10px] text-slate-400">Last 7 Days</p>
                 <div class="text-xs font-black mb-0.5 text-emerald-400" id="consistency-7day">0 / 7</div>
                 <div class="bg-slate-700 mt-1.5 h-1.5 rounded-full overflow-hidden">
@@ -217,7 +217,7 @@
                 </div>
                 <p class="font-bold hidden text-[10px] text-amber-400" id="consistency-7day-streak"></p>
               </div>
-              <div class="bg-slate-950 rounded-xl p-3" id="consistency-28day-card">
+              <div class="card" id="consistency-28day-card">
                 <p class="font-bold uppercase tracking-wider mb-0.5 text-[10px] text-slate-400">Last 28 Days</p>
                 <div class="text-xs font-black mb-0.5 text-emerald-400" id="consistency-28day">0 / 30</div>
                 <div class="bg-slate-700 mt-1.5 h-1.5 rounded-full overflow-hidden">
@@ -228,7 +228,7 @@
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4" id="challenge-cards">
-              <div class="bg-slate-950 rounded-xl p-3" id="challenge-monthly">
+              <div class="card" id="challenge-monthly">
                 <p class="font-bold uppercase tracking-wider mb-0.5 text-[10px] text-slate-400">This Month</p>
                 <div class="text-xs font-black mb-0.5 text-emerald-400" id="challenge-monthly-progress">0 / 14</div>
                 <div class="bg-slate-700 mt-1.5 h-1.5 rounded-full overflow-hidden">
@@ -236,7 +236,7 @@
                 </div>
                 <p class="font-bold hidden text-[10px] text-amber-400" id="challenge-monthly-streak"></p>
               </div>
-              <div class="bg-slate-950 rounded-xl p-3" id="challenge-yearly">
+              <div class="card" id="challenge-yearly">
                 <p class="font-bold uppercase tracking-wider mb-0.5 text-[10px] text-slate-400">This Year</p>
                 <div class="text-xs font-black mb-0.5 text-emerald-400" id="challenge-yearly-progress">0 / 150</div>
                 <div class="bg-slate-700 mt-1.5 h-1.5 rounded-full overflow-hidden">
@@ -244,7 +244,7 @@
                 </div>
                 <p class="font-bold hidden text-[10px] text-amber-400" id="challenge-yearly-streak"></p>
               </div>
-              <div class="bg-slate-950 rounded-xl p-3 sm:col-span-2" id="challenge-lifetime">
+              <div class="card sm:col-span-2" id="challenge-lifetime">
                 <p class="font-bold uppercase tracking-wider mb-0.5 text-[10px] text-slate-400">Lifetime</p>
                 <div class="text-xs font-black mb-0.5 text-emerald-400" id="challenge-lifetime-progress">0 / 3000</div>
                 <div class="bg-slate-700 mt-1.5 h-1.5 rounded-full overflow-hidden">
@@ -513,7 +513,7 @@
       </div>
 
       <div id="plan-name-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80" style="backdrop-filter: blur(4px);" role="dialog" aria-modal="true" aria-labelledby="plan-name-modal-title">
-        <div class="surface-card w-full max-w-sm mx-4 space-y-4">
+        <div class="card w-full max-w-sm mx-4 space-y-4">
           <p id="plan-name-modal-title" class="form-label text-base">Name Your Plan</p>
           <input type="text" id="plan-name-input" class="input-core" placeholder="e.g. Monday Push Day" aria-label="Plan name" required />
           <div class="flex gap-2">
@@ -525,7 +525,7 @@
       </div>
 
       <div id="share-plan-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80" style="backdrop-filter: blur(4px);" role="dialog" aria-modal="true" aria-labelledby="share-plan-modal-title">
-        <div class="surface-card w-full max-w-sm mx-4 space-y-4">
+        <div class="card w-full max-w-sm mx-4 space-y-4">
           <p id="share-plan-modal-title" class="form-label text-base">Share Plan</p>
           <div class="flex gap-2 mb-2">
             <button type="button" id="share-mode-friends" class="btn-core is-primary btn-size-row">Friends</button>
@@ -846,7 +846,7 @@
       <div id="profile-modal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title">
         <div id="profile-modal-backdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
         <div class="relative max-w-lg mx-auto mt-8 sm:mt-16 px-4">
-          <div class="surface-card rounded-xl overflow-hidden">
+          <div class="card rounded-xl overflow-hidden">
             <div class="flex items-center justify-between px-6 pt-6 pb-2">
               <h2 id="profile-modal-title" class="text-lg font-bold text-slate-200">Your Profile</h2>
               <button id="profile-modal-close" class="text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none p-1 leading-none" type="button" aria-label="Close profile">

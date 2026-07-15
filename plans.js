@@ -585,13 +585,12 @@ function switchPlansFilter(filter) {
     renderPlansUI();
   } else if (filter === 'favorites') {
     setActiveTab(btnFavs); setInactiveTab(btnMine); setInactiveTab(btnShared);
-    if (plansSection) plansSection.classList.remove('hidden');
-    if (plansPagination) plansPagination.classList.remove('hidden');
-    if (sharedSection) sharedSection.classList.add('hidden');
-    if (sharedPagination) sharedPagination.classList.add('hidden');
-    state.pagination.plans = 1;
-    const favs = state.data.lastWorkoutPlans.filter(p => p.favorite);
-    renderPlansUI(favs);
+    if (plansSection) plansSection.classList.add('hidden');
+    if (plansPagination) plansPagination.classList.add('hidden');
+    if (sharedSection) sharedSection.classList.remove('hidden');
+    if (sharedPagination) sharedPagination.classList.remove('hidden');
+    state.pagination['shared-plans'] = 1;
+    renderSharedPlansUI();
   } else {
     setInactiveTab(btnMine);
     if (filter === 'shared') { setActiveTab(btnShared); setInactiveTab(btnFavs); }
@@ -600,6 +599,7 @@ function switchPlansFilter(filter) {
     if (plansPagination) plansPagination.classList.add('hidden');
     if (sharedSection) sharedSection.classList.remove('hidden');
     if (sharedPagination) sharedPagination.classList.remove('hidden');
+    state.pagination['shared-plans'] = 1;
     renderSharedPlansUI();
   }
 }

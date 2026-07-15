@@ -53,7 +53,7 @@ function renderEmptyState(container, message, extraClass = '') {
 
 function renderMessage(container, message, color = 'red', size = 'xs') {
   if (!container) return;
-  container.innerHTML = `<div class="bg-slate-800 border border-slate-700 rounded-xl p-4 text-${color}-${size} text-center">${escapeHtml(message)}</div>`;
+  container.innerHTML = `<div class="card text-${color}-${size} text-center">${escapeHtml(message)}</div>`;
 }
 
 function updatePagination(name, page, totalPages) {
@@ -128,7 +128,7 @@ function updateTodayBtnState() {
 }
 
 function toggleWorkoutCard(headerEl) {
-    const card = headerEl.closest('.structured-card');
+    const card = headerEl.closest('.card');
     const movements = card.querySelector('.structured-movements');
     const showMore = card.querySelector('.show-more-text');
     if (!movements || !showMore) return;
@@ -137,7 +137,7 @@ function toggleWorkoutCard(headerEl) {
 }
 
 function updateStarIcon(id, isFav) {
-  const btn = document.querySelector(`[data-fav-id="${id}"]`);
+  const btn = document.querySelector(`[data-id="${id}"].btn-fav-star`);
   if (!btn) return;
   btn.textContent = isFav ? '\u2605' : '\u2606';
   btn.className = `${isFav ? 'text-amber-400' : 'text-slate-500'} hover:scale-110 transition-transform btn-fav-star`;
@@ -164,9 +164,23 @@ function buildExerciseOptionsHtml(categories, placeholder) {
   return html;
 }
 
+function buildMduiOptionsHtml(categories, placeholder) {
+  const labels = { barbell: 'Barbell', dumbbell: 'Dumbbell', kettlebell: 'Kettlebell', cardio: 'Cardio', bodyweight: 'Bodyweight' };
+  const sortByName = (a, b) => a.name.localeCompare(b.name);
+  let html = placeholder;
+  categories.forEach(cat => {
+    const items = EXERCISE_CATALOG.filter(ex => ex.category === cat).sort(sortByName);
+    if (items.length) {
+      html += `<mdui-menu-item value="" disabled class="text-xs opacity-50">─ ${labels[cat]} ─</mdui-menu-item>`;
+      items.forEach(ex => { if (ex.hidden) return; html += `<mdui-menu-item value="${ex.name}">${ex.name}</mdui-menu-item>`; });
+    }
+  });
+  return html;
+}
+
 function saveExpandedCardIds() {
   const ids = [];
-  document.querySelectorAll('.structured-card').forEach(card => {
+  document.querySelectorAll('.card[data-workout-id]').forEach(card => {
     const id = card.getAttribute('data-workout-id');
     if (!id) return;
     const movements = card.querySelector('.structured-movements');
@@ -354,4 +368,4 @@ function switchTab(tabName) {
   }
 }
 
-export { PERMISSION_ERROR_MAP, clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, saveExpandedCardIds, restoreExpandedCardIds, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, paginateAndRender, changeGenericPage, switchTab, isPermissionDenied, BTN_ACTIVE_CLASS, BTN_INACTIVE_CLASS, setActiveTab, setInactiveTab };
+export { PERMISSION_ERROR_MAP, clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, buildMduiOptionsHtml, saveExpandedCardIds, restoreExpandedCardIds, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, paginateAndRender, changeGenericPage, switchTab, isPermissionDenied, BTN_ACTIVE_CLASS, BTN_INACTIVE_CLASS, setActiveTab, setInactiveTab };

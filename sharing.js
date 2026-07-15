@@ -350,14 +350,11 @@ async function toggleFavoriteGeneric(collection, dataArray, id) {
   const item = dataArray.find(i => i.id === id);
   if (!item) return;
   const newVal = !(item.favorite === true);
-  item.favorite = newVal;
   updateStarIcon(id, newVal);
   try {
     await updateDoc(doc(db, collection, id), { favorite: newVal });
     haptic(HAPTIC.tap);
-    if (state.ui.plansFilter === 'favorites') renderSharedPlansUI();
   } catch (err) {
-    item.favorite = !newVal;
     updateStarIcon(id, !newVal);
     clearTimeout(_favDebounce[id]);
     delete _favDebounce[id];

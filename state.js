@@ -146,7 +146,7 @@ const pbLogFeedback = document.getElementById('pb-log-feedback');
 const tabContents = document.querySelectorAll('.tab-content');
 const navBar = document.getElementById('nav-bar');
 
-const INPUT_CLASS = '';
+const INPUT_CLASS = 'input-core';
 const CALC_CLASS = 'font-mono font-bold';
 
 const FORM_SCHEMAS = {
