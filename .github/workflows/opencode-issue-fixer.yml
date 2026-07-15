@@ -82,7 +82,7 @@ jobs:
           echo "If the issue is correct and should be refactored:" >> open_code_prompt.txt
           echo "1. Checkout a new branch named 'opencode/fix-issue-$ISSUE_NUM'." >> open_code_prompt.txt
           echo "2. Apply precise modifications to the master branch files to resolve the tech debt." >> open_code_prompt.txt
-          echo "3. Commit and push your changes to that branch origin. Stop there! (Our automated pipeline will handle the PR and merge layers)." >> open_code_prompt.txt
+          echo "3. Apply the edits to the local files only — do NOT commit or push. The workflow will handle the commit, push, and PR creation for you automatically." >> open_code_prompt.txt
 
           echo -e "\nPATH B: [INTENTIONAL DESIGN - REJECT IT]" >> open_code_prompt.txt
           echo "If you evaluate that the code is intentional, optimal, or should remain unchanged, do NOT edit any repository code or open a PR. Instead, run these terminal commands immediately:" >> open_code_prompt.txt
