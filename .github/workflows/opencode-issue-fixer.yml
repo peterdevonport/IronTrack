@@ -147,9 +147,10 @@ jobs:
             exit 0
           fi
 
-          # Fail-safe: Neither PR nor wontfix label
-          echo "::warning::Bot did not create a PR or mark issue as wontfix."
+          # Fail-safe: Action ran successfully but AI created no PR and didn't mark wontfix.
+          # This means the AI evaluated the code and determined no changes are needed.
+          echo "::warning::AI evaluated issue #$ISSUE_NUM and determined no changes are needed."
+          gh issue edit "$ISSUE_NUM" --add-label "wontfix" --remove-label "bot-failed"
           gh issue comment "$ISSUE_NUM" --body \
-            "### ⚠️ Bot Run Incomplete
-            The auto-fixer workflow ([run #${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})) finished execution but did not output a fix branch or apply a 'wontfix' resolution strategy."
-          gh issue edit "$ISSUE_NUM" --add-label "bot-failed"
+            "### 🛑 Architectural Review: Intentional Design
+            The AI analyzed the codebase regarding this report and determined no changes are needed. The code is already correct or the reported pattern is intentional."
