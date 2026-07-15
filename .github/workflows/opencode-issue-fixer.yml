@@ -85,9 +85,10 @@ jobs:
           echo "3. Apply the edits to the local files only — do NOT commit or push. The workflow will handle the commit, push, and PR creation for you automatically." >> open_code_prompt.txt
 
           echo -e "\nPATH B: [INTENTIONAL DESIGN - REJECT IT]" >> open_code_prompt.txt
-          echo "If you evaluate that the code is intentional, optimal, or should remain unchanged, do NOT edit any repository code or open a PR. Instead, run these terminal commands immediately:" >> open_code_prompt.txt
+          echo "If you evaluate that the code is intentional, optimal, or should remain unchanged, do NOT edit any repository code. Run these terminal commands immediately to mark the issue as wontfix (they work regardless of which branch is checked out):" >> open_code_prompt.txt
           echo "1. gh issue edit $ISSUE_NUM --add-label \"wontfix\"" >> open_code_prompt.txt
           echo "2. gh issue comment $ISSUE_NUM --body \"### 🛑 Architectural Review: Intentional Design\nI have deeply analyzed the codebase regarding this report. I recommend **against** changing this code for the following reasons:\n\n<Provide a highly detailed, professional engineering justification explaining why this code pattern is correct, necessary, or optimal given your context.>\"" >> open_code_prompt.txt
+          echo -e "\nIMPORTANT: You MUST run these 'gh issue' commands when choosing Path B. Do NOT just report back via chat — execute the commands so the workflow can detect the wontfix resolution." >> open_code_prompt.txt
 
       - name: Read generated prompt
         id: prompt
