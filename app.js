@@ -89,16 +89,36 @@ navBar?.addEventListener('click', (e) => {
   }
 });
 
+let _confirmingLeave = false;
+
+window.addEventListener('beforeunload', (e) => {
+  if (appView.classList.contains('hidden') || _confirmingLeave) return;
+  e.preventDefault();
+  e.returnValue = '';
+});
+
 window.addEventListener('popstate', (e) => {
   if (appView.classList.contains('hidden')) return;
 
+  if (_confirmingLeave) {
+    _confirmingLeave = false;
+    return;
+  }
+
   const s = e.state;
-  if (!s) {
-    history.pushState({ tab: state.ui.currentTab }, '', '');
-    if (!confirm('Leave IronTrack?')) return;
+
+  if (s && s._guard) {
+    history.pushState({ tab: state.ui.currentTab || 'dashboard' }, '', '');
+    _confirmingLeave = true;
+    if (!confirm('Leave IronTrack?')) {
+      _confirmingLeave = false;
+      return;
+    }
     history.back();
     return;
   }
+
+  if (!s) return;
 
   if (s.modal === 'profile' && profileModal?.classList.contains('hidden')) {
     openProfileModal();
@@ -144,6 +164,7 @@ async function handleSignedIn(user) {
   loginView.classList.add('hidden');
   appView.classList.remove('hidden');
   if (bottomNav) bottomNav.classList.remove('hidden');
+  history.pushState({ _guard: true }, '', '');
   switchTab('dashboard');
   authBtn.innerText = "Sign Out";
   if (profileBtn) profileBtn.classList.remove('hidden');
