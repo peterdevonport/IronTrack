@@ -748,10 +748,7 @@ details.card[open] summary::after {
   position: sticky;
   bottom: 0;
   flex-shrink: 0;
-  background: var(--color-surface-hover);
-  border-top: 1px solid var(--color-border);
   z-index: 40;
-  padding: 0.25rem 0;
 }
 
 /* ─── Challenge Bar ───────────────────────────── */

@@ -68,34 +68,15 @@ window.addEventListener('unhandledrejection', (e) => {
 });
 
 function switchTabFromNav(tab) {
-  if (tab === 'profile') {
-    openProfileModal();
-    if (navBar) navBar.value = state.ui.currentTab || 'dashboard';
-  } else if (tab) {
-    switchTab(tab);
-  }
+  switchTab(tab);
 }
-
-// Intercept profile clicks in capture phase before MDUI processes them
-navBar?.addEventListener('click', (e) => {
-  const item = e.target.closest('mdui-navigation-bar-item');
-  if (item?.getAttribute('value') === 'profile') {
-    e.stopImmediatePropagation();
-    openProfileModal();
-  }
-}, { capture: true });
 
 // Handle navigation via MDUI change event (includes keyboard nav)
 navBar?.addEventListener('change', (e) => {
-  if (e.target.value === 'profile') {
-    e.stopImmediatePropagation();
-    openProfileModal();
-    return;
-  }
   switchTabFromNav(e.target.value);
 });
 
-// Fallback: handle clicks directly on nav items (non-profile)
+// Fallback: handle clicks directly on nav items
 navBar?.addEventListener('click', (e) => {
   const item = e.target.closest('mdui-navigation-bar-item');
   if (item) {
