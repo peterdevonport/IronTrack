@@ -90,7 +90,10 @@ navBar?.addEventListener('click', (e) => {
 });
 
 window.addEventListener('popstate', (e) => {
-  if (appView.classList.contains('hidden')) return;
+  if (appView.classList.contains('hidden')) {
+    history.back();
+    return;
+  }
 
   const s = e.state;
 
