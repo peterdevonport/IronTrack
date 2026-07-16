@@ -16,9 +16,10 @@ jobs:
       contents: read
       issues: write
     steps:
-      - name: Checkout Code
+      - name: Checkout master
         uses: actions/checkout@v4
         with:
+          ref: master
           fetch-depth: 0
 
       - name: Read prompt
@@ -37,5 +38,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.AUTO_MERGE_PAT }}
         with:
           model: opencode-go/mimo-v2.5
-          use_github_token: true
+          use_github_token: false
           prompt: ${{ steps.prompt.outputs.PROMPT }}
