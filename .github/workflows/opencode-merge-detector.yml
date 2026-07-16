@@ -5,37 +5,24 @@ on:
     branches: [master]
 
 jobs:
-  review-merges:
+  chain-review:
     if: contains(github.event.head_commit.message, 'Merge pull request')
-    timeout-minutes: 10
-    concurrency:
-      group: merge-review-${{ github.sha }}
-      cancel-in-progress: true
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      issues: write
+      actions: write
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Read prompt
-        id: prompt
-        run: |
-          PR_NUM=$(git log -1 --format="%s" | grep -oP '#\K\d+')
-          echo "PROMPT<<EOF" >> $GITHUB_OUTPUT
-          echo "This analysis is for Pull Request #$PR_NUM which was just merged into master." >> $GITHUB_OUTPUT
-          cat .github/prompts/code-smell-review.md >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Analyze Code Smells with Mimo 2.5
-        uses: anomalyco/opencode/github@v1.17.13
+      - name: Trigger smell detector for merged PR
         env:
-          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.AUTO_MERGE_PAT }}
-        with:
-          model: opencode-go/mimo-v2.5
-          use_github_token: true
-          prompt: ${{ steps.prompt.outputs.PROMPT }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR_NUM=$(git log -1 --format="%s" | sed -n 's/.*#\([0-9]*\).*/\1/p')
+          echo "Merged PR #$PR_NUM detected. Triggering code smell analysis..."
+          gh workflow run opencode-daily-smell-detector.yml \
+            --ref master \
+            -f pr_number="$PR_NUM"
