@@ -177,6 +177,11 @@ mdui-button[full-width] { width: 100%; }
   cursor: not-allowed;
 }
 
+.btn-core:focus-visible {
+  outline: 2px solid rgb(var(--mdui-color-primary));
+  outline-offset: 2px;
+}
+
 .btn-core.is-primary {
   background-color: rgb(var(--mdui-color-primary));
   color: #000000;
@@ -198,7 +203,7 @@ mdui-button[full-width] { width: 100%; }
 .btn-core.is-ghost {
   background-color: transparent;
   color: var(--slate-400, #94a3b8);
-  border-color: transparent;
+  border-color: var(--color-border, #334155);
 }
 .btn-core.is-ghost:hover:not(:disabled) {
   color: rgb(var(--mdui-color-primary));
@@ -517,6 +522,10 @@ mdui-button[full-width] { width: 100%; }
   font-size: 1.5rem;
   line-height: 1;
 }
+.btn-fav-star:focus-visible {
+  outline: 2px solid rgb(var(--mdui-color-primary));
+  outline-offset: 2px;
+}
 .btn-fav-bookmark {
   display: inline-flex;
   align-items: center;
@@ -533,6 +542,10 @@ mdui-button[full-width] { width: 100%; }
   padding: 0.25rem;
 }
 .plan-movement-remove:hover { color: rgb(var(--mdui-color-error)); }
+.plan-movement-remove:focus-visible {
+  outline: 2px solid rgb(var(--mdui-color-primary));
+  outline-offset: 2px;
+}
 .plan-movement-remove svg { width: 18px; height: 18px; }
 
 /* ─── Leaderboard ─────────────────────────────── */
