@@ -1,0 +1,41 @@
+name: OpenCode PR Smell Detector
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  review-pr:
+    if: github.event.pull_request.merged == true
+    timeout-minutes: 10
+    concurrency:
+      group: pr-smell-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read prompt
+        id: prompt
+        run: |
+          PR_NUM="${{ github.event.pull_request.number }}"
+          echo "PROMPT<<EOF" >> $GITHUB_OUTPUT
+          echo "This analysis is for Pull Request #$PR_NUM which was just merged into master. Find the merge commit and analyze its diff." >> $GITHUB_OUTPUT
+          cat .github/prompts/code-smell-review.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Analyze Code Smells with Mimo 2.5
+        uses: anomalyco/opencode/github@v1.17.13
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.AUTO_MERGE_PAT }}
+        with:
+          model: opencode-go/mimo-v2.5
+          use_github_token: true
+          prompt: ${{ steps.prompt.outputs.PROMPT }}
