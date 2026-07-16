@@ -1,12 +1,20 @@
 /* style.css — IronTrack custom component styles */
 
 /* ─── Design Tokens ───────────────────────────── */
+/* Brand color — single source of truth */
+:root {
+  --color-brand: #27dd33;
+  --color-brand-rgb: 39, 221, 51;
+  --color-brand-light: #52e758;
+  --color-brand-dark: #14aa20;
+}
+
 .mdui-theme-dark,
 :root {
-  /* MDUI Emerald Green Theme Override */
-  --mdui-color-primary: 16, 185, 129;
-  --mdui-color-primary-light: 16, 185, 129;
-  --mdui-color-primary-dark: 52, 211, 153;
+  /* MDUI Theme Override */
+  --mdui-color-primary: var(--color-brand-rgb);
+  --mdui-color-primary-light: 82, 231, 88;
+  --mdui-color-primary-dark: 20, 170, 32;
   --mdui-color-on-primary: 0, 0, 0;
   --mdui-color-on-primary-light: 0, 0, 0;
   --mdui-color-on-primary-dark: 0, 0, 0;
@@ -38,8 +46,8 @@
   --color-text-secondary: #cbd5e1;
   --color-text-muted: #94a3b8;
   --color-border: #334155;
-  --color-primary: #10b981;
-  --color-primary-hover: #34d399;
+  --color-primary: var(--color-brand);
+  --color-primary-hover: var(--color-brand-light);
   --color-secondary: #fbbf24;
   --color-tertiary: #c084fc;
   --color-error: #fb7185;
@@ -66,8 +74,6 @@
   --color-text-secondary: #475569;
   --color-text-muted: #64748b;
   --color-border: #cbd5e1;
-  --color-primary: #10b981;
-  --color-primary-hover: #34d399;
   --color-secondary: #fbbf24;
   --color-tertiary: #c084fc;
   --color-error: #dc2626;
@@ -99,8 +105,6 @@
   --color-text-secondary: #475569;
   --color-text-muted: #64748b;
   --color-border: #cbd5e1;
-  --color-primary: #10b981;
-  --color-primary-hover: #34d399;
   --color-secondary: #fbbf24;
   --color-tertiary: #c084fc;
   --color-error: #dc2626;
@@ -132,8 +136,6 @@
     --color-text-secondary: #cbd5e1;
     --color-text-muted: #94a3b8;
     --color-border: #334155;
-    --color-primary: #10b981;
-    --color-primary-hover: #34d399;
     --color-secondary: #fbbf24;
     --color-tertiary: #c084fc;
     --color-error: #fb7185;
@@ -161,6 +163,34 @@ mdui-button[variant="text"] {
 #cal-today {
   border: none;
 }
+
+/* ─── Brand Color Utilities ─────────────────── */
+.text-emerald-300,
+.text-emerald-400 { color: var(--color-brand) !important; }
+.bg-emerald-300,
+.bg-emerald-400 { background-color: var(--color-brand) !important; }
+
+mdui-navigation-bar-item[active]::part(indicator) { background-color: var(--color-brand) !important; }
+
+/* ─── TopAppBar ──────────────────────────────── */
+#top-app-bar {
+  --z-index: 40;
+  padding-left: 1rem;
+  --mdui-color-surface: var(--color-brand-rgb);
+  --mdui-color-on-surface: 0, 0, 0;
+}
+
+mdui-top-app-bar-title::part(label) {
+  padding: 0;
+}
+
+.topbar-logo {
+  font-size: 1.875rem;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+}
+
+#profile-btn { color: #000000 !important; }
 
 /* ─── Toast Notification ──────────────────────── */
 #toast-notification {
@@ -502,7 +532,7 @@ mdui-button[variant="text"] {
   width: 100%;
   max-width: 40px;
   border-radius: 4px 4px 0 0;
-  background: linear-gradient(180deg, rgb(var(--mdui-color-primary)), #059669);
+  background: linear-gradient(180deg, rgb(var(--mdui-color-primary)), var(--color-brand-dark));
   min-height: 4px;
   transition: height 0.3s ease;
   cursor: pointer;

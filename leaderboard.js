@@ -165,8 +165,8 @@ function getThemeQrColors() {
   const isDark = html.classList.contains('mdui-theme-dark') ||
     (!html.classList.contains('mdui-theme-light') && window.matchMedia('(prefers-color-scheme: dark)').matches);
   return isDark
-    ? { dots: "#f8fafc", bg: "#0f172a", accent: "#34d399" }
-    : { dots: "#1e293b", bg: "#ffffff", accent: "#10b981" };
+    ? { dots: "#f8fafc", bg: "#0f172a", accent: "#27dd33" }
+    : { dots: "#1e293b", bg: "#ffffff", accent: "#27dd33" };
 }
 
 function showQRCode() {
