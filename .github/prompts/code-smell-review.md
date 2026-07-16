@@ -9,6 +9,9 @@ LOOK EXCLUSIVELY FOR:
 CRITICAL EXECUTION RULES:
 - Do NOT fail the GitHub Actions build.
 - Do NOT leave review comments directly on the PR.
+- Do NOT access or attempt to read files outside the project directory. Use relative paths only.
+- Do NOT use absolute paths or navigate to root directories.
+- All file analysis must use `git diff` and `git log` commands within the checked-out repository.
 - For every distinct code smell you identify, execute a native GitHub CLI command to log it as a separate background issue.
 - If `gh issue create` fails, log the error and continue with the next smell. Do not retry.
 - Maximum 10 issues per run to prevent spam.
