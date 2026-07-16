@@ -231,6 +231,7 @@ function showToast(msg, color) {
 }
 
 function openProfileModal() {
+  history.pushState({ tab: state.ui.currentTab, modal: 'profile' }, '', '');
   profileModal.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 }
@@ -238,6 +239,9 @@ function openProfileModal() {
 function closeProfileModal() {
   profileModal.classList.add('hidden');
   document.body.style.overflow = '';
+  setTimeout(() => {
+    if (navBar) navBar.value = state.ui.currentTab || 'dashboard';
+  }, 0);
 }
 
 let planNameResolve = null;
@@ -355,6 +359,7 @@ function isPermissionDenied(err) {
 }
 
 function switchTab(tabName) {
+  if (state.ui.currentTab === tabName) return;
   tabContents.forEach(el => el.classList.remove('active'));
   const target = document.getElementById('tab-' + tabName);
   if (target) target.classList.add('active');
@@ -363,6 +368,7 @@ function switchTab(tabName) {
   }
   window.scrollTo({ top: 0, behavior: 'smooth' });
   state.ui.currentTab = tabName;
+  history.pushState({ tab: tabName }, '', '');
   if (typeof lucide !== 'undefined' && lucide.createIcons) {
     lucide.createIcons();
   }

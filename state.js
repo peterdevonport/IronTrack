@@ -67,7 +67,7 @@ const state = {
   },
   ui: {
     plansFilter: 'mine',
-    currentTab: 'dashboard'
+    currentTab: null
   }
 };
 

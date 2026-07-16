@@ -76,18 +76,79 @@ function switchTabFromNav(tab) {
   }
 }
 
-// Handle navigation via MDUI change event
+// Intercept profile clicks in capture phase before MDUI processes them
+navBar?.addEventListener('click', (e) => {
+  const item = e.target.closest('mdui-navigation-bar-item');
+  if (item?.getAttribute('value') === 'profile') {
+    e.stopImmediatePropagation();
+    openProfileModal();
+  }
+}, { capture: true });
+
+// Handle navigation via MDUI change event (includes keyboard nav)
 navBar?.addEventListener('change', (e) => {
+  if (e.target.value === 'profile') {
+    e.stopImmediatePropagation();
+    openProfileModal();
+    return;
+  }
   switchTabFromNav(e.target.value);
 });
 
-// Fallback: handle clicks directly on nav items
+// Fallback: handle clicks directly on nav items (non-profile)
 navBar?.addEventListener('click', (e) => {
   const item = e.target.closest('mdui-navigation-bar-item');
   if (item) {
     switchTabFromNav(item.getAttribute('value'));
   }
 });
+
+window.addEventListener('popstate', (e) => {
+  if (appView.classList.contains('hidden')) {
+    history.back();
+    return;
+  }
+
+  const s = e.state;
+
+  // Close modal if open (it was pushed as a history entry)
+  if (profileModal && !profileModal.classList.contains('hidden')) {
+    closeProfileModal();
+    if (s?.tab) {
+      tabContents.forEach(el => el.classList.remove('active'));
+      const target = document.getElementById('tab-' + s.tab);
+      if (target) target.classList.add('active');
+      if (navBar) navBar.value = s.tab;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      state.ui.currentTab = s.tab;
+      if (typeof lucide !== 'undefined' && lucide.createIcons) {
+        lucide.createIcons();
+      }
+    }
+    return;
+  }
+
+  // Reopen modal if restoring modal state
+  if (s?.modal === 'profile' && profileModal?.classList.contains('hidden')) {
+    openProfileModal();
+    return;
+  }
+
+  if (!s) return;
+
+  if (s.tab && s.tab !== state.ui.currentTab) {
+    tabContents.forEach(el => el.classList.remove('active'));
+    const target = document.getElementById('tab-' + s.tab);
+    if (target) target.classList.add('active');
+    if (navBar) navBar.value = s.tab;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    state.ui.currentTab = s.tab;
+    if (typeof lucide !== 'undefined' && lucide.createIcons) {
+      lucide.createIcons();
+    }
+  }
+});
+
 initTheme();
 
 const pendingFriendUid = new URLSearchParams(window.location.search).get('addFriend');
