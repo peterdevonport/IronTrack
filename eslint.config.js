@@ -11,7 +11,8 @@ export default [
         ...globals.browser,
         ...globals.node,
         QRCodeStyling: "readonly",
-        lucide: "readonly"
+        lucide: "readonly",
+        mdui: "readonly"
       }
     },
     rules: {

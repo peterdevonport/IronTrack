@@ -1,6 +1,7 @@
 /* style.css — IronTrack custom component styles */
 
 /* ─── Design Tokens ───────────────────────────── */
+.mdui-theme-dark,
 :root {
   /* MDUI Emerald Green Theme Override */
   --mdui-color-primary: 16, 185, 129;
@@ -12,12 +13,21 @@
   --mdui-color-primary-container: 209, 249, 209;
   --mdui-color-primary-container-light: 209, 249, 209;
   --mdui-color-primary-container-dark: 6, 78, 59;
+  --mdui-color-on-primary-container-light: 33, 0, 94;
+  --mdui-color-on-primary-container-dark: 0, 0, 0;
   --mdui-color-on-primary-container: 0, 0, 0;
+  --mdui-color-secondary-light: 251, 191, 36;
+  --mdui-color-secondary-dark: 251, 191, 36;
   --mdui-color-secondary: 251, 191, 36;
+  --mdui-color-tertiary-light: 192, 132, 252;
+  --mdui-color-tertiary-dark: 192, 132, 252;
   --mdui-color-tertiary: 192, 132, 252;
+  --mdui-color-error-light: 179, 38, 30;
+  --mdui-color-error-dark: 251, 113, 133;
   --mdui-color-error: 251, 113, 133;
-  --mdui-color-on-surface: 241, 245, 249;
+  --mdui-color-on-surface-light: 28, 27, 31;
   --mdui-color-on-surface-dark: 241, 245, 249;
+  --mdui-color-on-surface: 241, 245, 249;
 
   /* Semantic color tokens */
   --color-bg: #1e293b;
@@ -44,6 +54,95 @@
   --slate-800: var(--color-surface-hover);
   --slate-900: var(--color-surface-elevated);
   --slate-950: var(--color-surface);
+}
+
+.mdui-theme-light {
+  /* Semantic color tokens — light mode */
+  --color-bg: #e2e8f0;
+  --color-surface: #ffffff;
+  --color-surface-elevated: #ffffff;
+  --color-surface-hover: #f1f5f9;
+  --color-text: #1e293b;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748b;
+  --color-border: #cbd5e1;
+  --color-primary: #10b981;
+  --color-primary-hover: #34d399;
+  --color-secondary: #fbbf24;
+  --color-tertiary: #c084fc;
+  --color-error: #dc2626;
+
+  /* MDUI color overrides — light mode */
+  --mdui-color-primary-container: var(--mdui-color-primary-container-light);
+  --mdui-color-on-primary-container: 33, 0, 94;
+  --mdui-color-on-surface: 28, 27, 31;
+  --mdui-color-error: 179, 38, 30;
+
+  /* Tailwind class overrides — light mode */
+  .bg-slate-950 { background-color: var(--slate-950) !important; }
+  .bg-slate-900 { background-color: var(--slate-900) !important; }
+  .bg-slate-800 { background-color: var(--slate-800) !important; }
+  .bg-slate-700 { background-color: var(--slate-700) !important; }
+  .text-slate-200 { color: var(--slate-200) !important; }
+  .text-slate-400 { color: var(--slate-400) !important; }
+  .text-slate-500 { color: var(--slate-500) !important; }
+  .border-slate-800 { border-color: var(--slate-800) !important; }
+}
+
+.mdui-theme-auto {
+  /* Light mode — default when OS is light */
+  --color-bg: #e2e8f0;
+  --color-surface: #ffffff;
+  --color-surface-elevated: #ffffff;
+  --color-surface-hover: #f1f5f9;
+  --color-text: #1e293b;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748b;
+  --color-border: #cbd5e1;
+  --color-primary: #10b981;
+  --color-primary-hover: #34d399;
+  --color-secondary: #fbbf24;
+  --color-tertiary: #c084fc;
+  --color-error: #dc2626;
+
+  --mdui-color-primary-container: var(--mdui-color-primary-container-light);
+  --mdui-color-on-primary-container: 33, 0, 94;
+  --mdui-color-on-surface: 28, 27, 31;
+  --mdui-color-error: 179, 38, 30;
+
+  /* Tailwind class overrides — light mode */
+  .bg-slate-950 { background-color: var(--slate-950) !important; }
+  .bg-slate-900 { background-color: var(--slate-900) !important; }
+  .bg-slate-800 { background-color: var(--slate-800) !important; }
+  .bg-slate-700 { background-color: var(--slate-700) !important; }
+  .text-slate-200 { color: var(--slate-200) !important; }
+  .text-slate-400 { color: var(--slate-400) !important; }
+  .text-slate-500 { color: var(--slate-500) !important; }
+  .border-slate-800 { border-color: var(--slate-800) !important; }
+}
+
+@media (prefers-color-scheme: dark) {
+  .mdui-theme-auto {
+    /* Dark mode — when OS is dark */
+    --color-bg: #1e293b;
+    --color-surface: #020617;
+    --color-surface-elevated: #0f172a;
+    --color-surface-hover: #1e293b;
+    --color-text: #e2e8f0;
+    --color-text-secondary: #cbd5e1;
+    --color-text-muted: #94a3b8;
+    --color-border: #334155;
+    --color-primary: #10b981;
+    --color-primary-hover: #34d399;
+    --color-secondary: #fbbf24;
+    --color-tertiary: #c084fc;
+    --color-error: #fb7185;
+
+    --mdui-color-primary-container: var(--mdui-color-primary-container-dark);
+    --mdui-color-on-primary-container: 0, 0, 0;
+    --mdui-color-on-surface: var(--mdui-color-on-surface-dark);
+    --mdui-color-error: 251, 113, 133;
+  }
 }
 
 body {

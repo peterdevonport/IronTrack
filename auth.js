@@ -1,5 +1,6 @@
 import { auth, db, doc, getDoc, addDoc, collection, Timestamp } from './firebase.js';
 import { state, HAPTIC, FORM_SCHEMAS, pbLogExercise, pbLogBtn } from './state.js';
+import { initTheme } from './theme.js';
 import { estimate1RM, getEffectiveLoad, computeEffectiveLoad } from './math.js';
 import { haptic } from './dom.js';
 import { getExerciseInfo, LOAD_FACTORS, resolveExerciseVariant } from './exercise-data.js';
@@ -32,6 +33,9 @@ async function pullProfileMetrics(uid) {
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
             state.user.userBiometrics = { gender: 'male', bodyweight: 75, displayName: '', ...docSnap.data() };
+            const savedTheme = docSnap.data().theme || 'auto';
+            state.user.theme = savedTheme;
+            initTheme(savedTheme);
             if (docSnap.data().challengeStreaks) {
                 state.user.userChallengeStreaks = {
                     monthly: { completedPeriods: [], currentStreak: 0, bestStreak: 0, ...docSnap.data().challengeStreaks.monthly },
