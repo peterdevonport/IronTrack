@@ -145,7 +145,6 @@ async function handleSignedIn(user) {
   appView.classList.remove('hidden');
   if (bottomNav) bottomNav.classList.remove('hidden');
   switchTab('dashboard');
-  history.replaceState({ tab: 'dashboard' }, '', '');
   authBtn.innerText = "Sign Out";
   if (profileBtn) profileBtn.classList.remove('hidden');
   window.__irontrackAuthState = 'signed-in';

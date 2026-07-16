@@ -125,7 +125,7 @@ describe('state.share', () => {
 describe('state.ui', () => {
   it('should have correct initial values', () => {
     expect(state.ui.plansFilter).toBe('mine');
-    expect(state.ui.currentTab).toBe('dashboard');
+    expect(state.ui.currentTab).toBeNull();
   });
 
   it('should be mutable', () => {
