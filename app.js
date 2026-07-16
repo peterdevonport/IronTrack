@@ -89,8 +89,16 @@ navBar?.addEventListener('click', (e) => {
   }
 });
 
+let _skipGuard = false;
+
 window.addEventListener('popstate', (e) => {
   if (appView.classList.contains('hidden')) {
+    history.back();
+    return;
+  }
+
+  if (_skipGuard) {
+    _skipGuard = false;
     history.back();
     return;
   }
@@ -102,7 +110,8 @@ window.addEventListener('popstate', (e) => {
       history.pushState({ tab: state.ui.currentTab || 'dashboard' }, '', '');
       return;
     }
-    window.location.replace('about:blank');
+    _skipGuard = true;
+    history.back();
     return;
   }
 
