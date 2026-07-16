@@ -231,7 +231,6 @@ function showToast(msg, color) {
 }
 
 function openProfileModal() {
-  history.pushState({ tab: state.ui.currentTab, modal: 'profile' }, '', '');
   profileModal.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 }
@@ -239,7 +238,9 @@ function openProfileModal() {
 function closeProfileModal() {
   profileModal.classList.add('hidden');
   document.body.style.overflow = '';
-  if (navBar) navBar.value = state.ui.currentTab || 'dashboard';
+  requestAnimationFrame(() => {
+    if (navBar) navBar.value = state.ui.currentTab || 'dashboard';
+  });
 }
 
 let planNameResolve = null;

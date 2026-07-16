@@ -99,15 +99,7 @@ window.addEventListener('popstate', (e) => {
 
   if (!s) return;
 
-  if (s.modal === 'profile') {
-    if (profileModal?.classList.contains('hidden')) {
-      openProfileModal();
-    } else {
-      closeProfileModal();
-    }
-    return;
-  }
-  if (!s.modal && profileModal && !profileModal.classList.contains('hidden')) {
+  if (profileModal && !profileModal.classList.contains('hidden')) {
     closeProfileModal();
   }
 
