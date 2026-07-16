@@ -54,6 +54,14 @@ body {
 mdui-text-field::part(input) { text-align: inherit; }
 mdui-text-field[type="number"]::part(input) { text-align: center; }
 mdui-button[full-width] { width: 100%; }
+mdui-button[variant="text"] {
+  border: 1px solid var(--color-border, #334155);
+}
+#forgot-password-btn,
+#forgot-password-cancel,
+#cal-today {
+  border: none;
+}
 
 /* ─── Toast Notification ──────────────────────── */
 #toast-notification {
