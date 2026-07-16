@@ -88,6 +88,39 @@ navBar?.addEventListener('click', (e) => {
     switchTabFromNav(item.getAttribute('value'));
   }
 });
+
+window.addEventListener('popstate', (e) => {
+  if (appView.classList.contains('hidden')) return;
+
+  const s = e.state;
+  if (!s) {
+    history.pushState({ tab: state.ui.currentTab }, '', '');
+    if (!confirm('Leave IronTrack?')) return;
+    history.back();
+    return;
+  }
+
+  if (s.modal === 'profile' && profileModal?.classList.contains('hidden')) {
+    openProfileModal();
+    return;
+  }
+  if (!s.modal && profileModal && !profileModal.classList.contains('hidden')) {
+    closeProfileModal();
+  }
+
+  if (s.tab && s.tab !== state.ui.currentTab) {
+    tabContents.forEach(el => el.classList.remove('active'));
+    const target = document.getElementById('tab-' + s.tab);
+    if (target) target.classList.add('active');
+    if (navBar) navBar.value = s.tab;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    state.ui.currentTab = s.tab;
+    if (typeof lucide !== 'undefined' && lucide.createIcons) {
+      lucide.createIcons();
+    }
+  }
+});
+
 initTheme();
 
 const pendingFriendUid = new URLSearchParams(window.location.search).get('addFriend');
@@ -112,6 +145,7 @@ async function handleSignedIn(user) {
   appView.classList.remove('hidden');
   if (bottomNav) bottomNav.classList.remove('hidden');
   switchTab('dashboard');
+  history.replaceState({ tab: 'dashboard' }, '', '');
   authBtn.innerText = "Sign Out";
   if (profileBtn) profileBtn.classList.remove('hidden');
   window.__irontrackAuthState = 'signed-in';
