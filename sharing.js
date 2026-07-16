@@ -144,7 +144,17 @@ function buildQrShareUrl(docRefId) {
   return window.location.origin + base + '?claimPlan=' + docRefId;
 }
 
+function getThemeQrColors() {
+  const html = document.documentElement;
+  const isDark = html.classList.contains('mdui-theme-dark') ||
+    (!html.classList.contains('mdui-theme-light') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  return isDark
+    ? { dots: "#f8fafc", bg: "#0f172a", accent: "#34d399" }
+    : { dots: "#1e293b", bg: "#ffffff", accent: "#10b981" };
+}
+
 function buildQrCodeConfig(url) {
+  const c = getThemeQrColors();
   return {
     type: "canvas",
     shape: "square",
@@ -154,10 +164,10 @@ function buildQrCodeConfig(url) {
     margin: 0,
     qrOptions: { typeNumber: 0, mode: "Byte", errorCorrectionLevel: "Q" },
     imageOptions: { saveAsBlob: true, hideBackgroundDots: true, imageSize: 0.4, margin: 0 },
-    dotsOptions: { type: "dots", color: "#f8fafc", roundSize: true, gradient: null },
-    backgroundOptions: { round: 0, color: "#0f172a" },
-    cornersSquareOptions: { type: "extra-rounded", color: "#34d399" },
-    cornersDotOptions: { type: "", color: "#f8fafc" }
+    dotsOptions: { type: "dots", color: c.dots, roundSize: true, gradient: null },
+    backgroundOptions: { round: 0, color: c.bg },
+    cornersSquareOptions: { type: "extra-rounded", color: c.accent },
+    cornersDotOptions: { type: "", color: c.dots }
   };
 }
 
