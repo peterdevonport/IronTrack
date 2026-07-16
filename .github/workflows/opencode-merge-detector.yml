@@ -7,6 +7,10 @@ on:
 jobs:
   chain-review:
     if: contains(github.event.head_commit.message, 'Merge pull request')
+    timeout-minutes: 5
+    concurrency:
+      group: merge-chain-${{ github.sha }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -15,13 +19,17 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
       - name: Trigger smell detector for merged PR
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           PR_NUM=$(git log -1 --format="%s" | sed -n 's/.*#\([0-9]*\).*/\1/p')
+          if [ -z "$PR_NUM" ]; then
+            echo "No PR number found in merge commit. Skipping analysis."
+            exit 0
+          fi
           echo "Merged PR #$PR_NUM detected. Triggering code smell analysis..."
           gh workflow run opencode-daily-smell-detector.yml \
             --ref master \
