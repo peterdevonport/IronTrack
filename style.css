@@ -58,10 +58,10 @@
 
 .mdui-theme-light {
   /* Semantic color tokens — light mode */
-  --color-bg: #f1f5f9;
+  --color-bg: #e2e8f0;
   --color-surface: #ffffff;
   --color-surface-elevated: #ffffff;
-  --color-surface-hover: #e2e8f0;
+  --color-surface-hover: #f1f5f9;
   --color-text: #1e293b;
   --color-text-secondary: #475569;
   --color-text-muted: #64748b;
@@ -81,10 +81,10 @@
 
 .mdui-theme-auto {
   /* Light mode — default when OS is light */
-  --color-bg: #f1f5f9;
+  --color-bg: #e2e8f0;
   --color-surface: #ffffff;
   --color-surface-elevated: #ffffff;
-  --color-surface-hover: #e2e8f0;
+  --color-surface-hover: #f1f5f9;
   --color-text: #1e293b;
   --color-text-secondary: #475569;
   --color-text-muted: #64748b;
