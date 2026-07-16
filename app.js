@@ -91,12 +91,6 @@ navBar?.addEventListener('click', (e) => {
 
 let _confirmingLeave = false;
 
-window.addEventListener('beforeunload', (e) => {
-  if (appView.classList.contains('hidden') || _confirmingLeave) return;
-  e.preventDefault();
-  e.returnValue = '';
-});
-
 window.addEventListener('popstate', (e) => {
   if (appView.classList.contains('hidden')) return;
 
