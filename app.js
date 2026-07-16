@@ -111,11 +111,30 @@ window.addEventListener('popstate', (e) => {
 
   const s = e.state;
 
-  if (!s) return;
-
+  // Close modal if open (it was pushed as a history entry)
   if (profileModal && !profileModal.classList.contains('hidden')) {
     closeProfileModal();
+    if (s?.tab) {
+      tabContents.forEach(el => el.classList.remove('active'));
+      const target = document.getElementById('tab-' + s.tab);
+      if (target) target.classList.add('active');
+      if (navBar) navBar.value = s.tab;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      state.ui.currentTab = s.tab;
+      if (typeof lucide !== 'undefined' && lucide.createIcons) {
+        lucide.createIcons();
+      }
+    }
+    return;
   }
+
+  // Reopen modal if restoring modal state
+  if (s?.modal === 'profile' && profileModal?.classList.contains('hidden')) {
+    openProfileModal();
+    return;
+  }
+
+  if (!s) return;
 
   if (s.tab && s.tab !== state.ui.currentTab) {
     tabContents.forEach(el => el.classList.remove('active'));

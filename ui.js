@@ -231,6 +231,7 @@ function showToast(msg, color) {
 }
 
 function openProfileModal() {
+  history.pushState({ tab: state.ui.currentTab, modal: 'profile' }, '', '');
   profileModal.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 }
