@@ -4,7 +4,7 @@ import { showFeedback } from './ui.js';
 
 const THEME_STORAGE_KEY = 'irontrack-theme';
 const LIGHT_META = { color: '#27dd33', scheme: 'light' };
-const DARK_META = { color: '#272a36', scheme: 'dark' };
+const DARK_META = { color: '#27dd33', scheme: 'dark' };
 
 let autoMediaQuery = null;
 let autoListenerAttached = false;

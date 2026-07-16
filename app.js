@@ -1,5 +1,5 @@
 import { auth, db, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential, updatePassword, deleteUser, collection, addDoc, writeBatch, query, where, onSnapshot, deleteDoc, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, serverTimestamp, orderBy, limit, Timestamp, getDocs } from './firebase.js';
-import { state, EPLEY_CONSTANT, HAPTIC, CONSISTENCY_CONFIG, entriesPerPage, INPUT_CLASS, CALC_CLASS, FORM_SCHEMAS, activeDates, loginView, appView, bottomNav, authBtn, profileBtn, profileModal, emailInput, passwordInput, loginBtn, signupBtn, greeting, profileForm, workoutForm, workoutList, paginationControls, prevPageBtn, nextPageBtn, currentPageDisplay, totalPagesDisplay, workoutFilter, exerciseSelect, onboardingView, onboardingGender, onboardingWeight, onboardingDaysMonthly, onboardingDaysYearly, onboardingDaysLifetime, onboardingExerciseSelect, onboardingWeightInput, onboardingRepsInput, onboardingAddBtn, onboardingList, onboardingEmpty, onboardingSaveBtn, onboardingFeedback, pbLogExercise, pbLogBtn, pbLogFeedback, tabContents, navBar, FEEDBACK_DISMISS_DEFAULT_MS } from './state.js';
+import { state, EPLEY_CONSTANT, HAPTIC, CONSISTENCY_CONFIG, entriesPerPage, INPUT_CLASS, CALC_CLASS, FORM_SCHEMAS, activeDates, loginView, appView, bottomNav, authBtn, profileBtn, profileModal, emailInput, passwordInput, loginBtn, signupBtn, profileForm, workoutForm, workoutList, paginationControls, prevPageBtn, nextPageBtn, currentPageDisplay, totalPagesDisplay, workoutFilter, exerciseSelect, onboardingView, onboardingGender, onboardingWeight, onboardingDaysMonthly, onboardingDaysYearly, onboardingDaysLifetime, onboardingExerciseSelect, onboardingWeightInput, onboardingRepsInput, onboardingAddBtn, onboardingList, onboardingEmpty, onboardingSaveBtn, onboardingFeedback, pbLogExercise, pbLogBtn, pbLogFeedback, tabContents, navBar, FEEDBACK_DISMISS_DEFAULT_MS } from './state.js';
 import { estimate1RM, estimateWeightForReps, computeEffectiveLoad, getEffectiveLoad } from './math.js';
 import { debounce, escapeHtml, haptic } from './dom.js';
 import { getExerciseInfo, getDisplayName, EXERCISE_CATALOG, LOAD_FACTORS, resolveExerciseVariant } from './exercise-data.js';
@@ -68,34 +68,15 @@ window.addEventListener('unhandledrejection', (e) => {
 });
 
 function switchTabFromNav(tab) {
-  if (tab === 'profile') {
-    openProfileModal();
-    if (navBar) navBar.value = state.ui.currentTab || 'dashboard';
-  } else if (tab) {
-    switchTab(tab);
-  }
+  switchTab(tab);
 }
-
-// Intercept profile clicks in capture phase before MDUI processes them
-navBar?.addEventListener('click', (e) => {
-  const item = e.target.closest('mdui-navigation-bar-item');
-  if (item?.getAttribute('value') === 'profile') {
-    e.stopImmediatePropagation();
-    openProfileModal();
-  }
-}, { capture: true });
 
 // Handle navigation via MDUI change event (includes keyboard nav)
 navBar?.addEventListener('change', (e) => {
-  if (e.target.value === 'profile') {
-    e.stopImmediatePropagation();
-    openProfileModal();
-    return;
-  }
   switchTabFromNav(e.target.value);
 });
 
-// Fallback: handle clicks directly on nav items (non-profile)
+// Fallback: handle clicks directly on nav items
 navBar?.addEventListener('click', (e) => {
   const item = e.target.closest('mdui-navigation-bar-item');
   if (item) {
@@ -179,7 +160,6 @@ async function handleSignedIn(user) {
   state.user.userSignupTs = new Date(user.metadata.creationTime).getTime() || 0;
 
   const handle = (user.email || user.uid).split('@')[0];
-  greeting.innerText = `Athlete: ${handle}`;
 
   await pullProfileMetrics(user.uid);
   await initSocialProfile(user);
@@ -211,7 +191,8 @@ function handleSignedOut() {
   if (profileBtn) profileBtn.classList.add('hidden');
   if (profileModal) profileModal.classList.add('hidden');
   authBtn.innerText = "Sign In";
-  greeting.innerText = "Analytics Dashboard";
+  const header = document.getElementById('header');
+  if (header) header.textContent = 'IRONTRACK';
   clearChildren(document.getElementById('workout-list'));
   renderEmptyState(document.getElementById('structured-workout-list'), 'No structured workouts logged yet.');
   clearChildren(document.getElementById('registry-table-body'));

@@ -394,7 +394,7 @@ function buildLeaderboardRow(profile, rank, isMe, isFriend) {
       <i data-lucide="user-plus" size="18"></i>
       </button>`;
   return `
-    <tr class="border-b border-slate-800/60 align-middle ${isMe ? 'bg-emerald-500/10 font-bold' : ''}">
+    <tr class="border-b border-slate-800/60 align-middle ${isMe ? 'bg-[rgba(39,221,51,0.1)] font-bold' : ''}">
       <td class="py-3 font-mono text-slate-500 align-middle">#${rank}</td>
       <td class="py-3 align-middle">
         <span class="${isMe ? 'text-emerald-400' : 'text-slate-200'}">${getDisplayName(profile, profile.uid)}</span>

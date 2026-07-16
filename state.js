@@ -116,7 +116,6 @@ const emailInput = document.getElementById('auth-email');
 const passwordInput = document.getElementById('auth-password');
 const loginBtn = document.getElementById('email-login-btn');
 const signupBtn = document.getElementById('email-signup-btn');
-const greeting = document.getElementById('user-greeting');
 const profileForm = document.getElementById('profile-form');
 const workoutForm = document.getElementById('workout-form');
 const workoutList = document.getElementById('workout-list');
@@ -206,4 +205,4 @@ const FORM_SCHEMAS = {
   },
 };
 
-export { state, EPLEY_CONSTANT, SECONDS_PER_MINUTE, PERCENT_DIVISOR, DAYS_IN_WEEK, CONSISTENCY_WINDOW_DAYS, FIRESTORE_WORKOUTS_LIMIT, FIRESTORE_STRUCTURED_LIMIT, FIRESTORE_LEADERBOARD_LIMIT, DEBOUNCE_DELAY_SYNC_ACTIVITY, DEBOUNCE_DELAY_LEADERBOARD, FEEDBACK_DISMISS_DEFAULT_MS, TOAST_DISMISS_MS, FRIEND_SUCCESS_CLEAR_MS, FAVORITE_DEBOUNCE_MS, RECORDS_PER_PAGE, HAPTIC, CONSISTENCY_CONFIG, entriesPerPage, INPUT_CLASS, CALC_CLASS, FORM_SCHEMAS, activeDates, loginView, appView, bottomNav, authBtn, profileBtn, profileModal, emailInput, passwordInput, loginBtn, signupBtn, greeting, profileForm, workoutForm, workoutList, paginationControls, prevPageBtn, nextPageBtn, currentPageDisplay, totalPagesDisplay, workoutFilter, exerciseSelect, onboardingView, onboardingGender, onboardingWeight, onboardingDaysMonthly, onboardingDaysYearly, onboardingDaysLifetime, onboardingExerciseSelect, onboardingWeightInput, onboardingRepsInput, onboardingAddBtn, onboardingList, onboardingEmpty, onboardingSaveBtn, onboardingFeedback, pbLogExercise, pbLogBtn, pbLogFeedback, tabContents, navBar };
+export { state, EPLEY_CONSTANT, SECONDS_PER_MINUTE, PERCENT_DIVISOR, DAYS_IN_WEEK, CONSISTENCY_WINDOW_DAYS, FIRESTORE_WORKOUTS_LIMIT, FIRESTORE_STRUCTURED_LIMIT, FIRESTORE_LEADERBOARD_LIMIT, DEBOUNCE_DELAY_SYNC_ACTIVITY, DEBOUNCE_DELAY_LEADERBOARD, FEEDBACK_DISMISS_DEFAULT_MS, TOAST_DISMISS_MS, FRIEND_SUCCESS_CLEAR_MS, FAVORITE_DEBOUNCE_MS, RECORDS_PER_PAGE, HAPTIC, CONSISTENCY_CONFIG, entriesPerPage, INPUT_CLASS, CALC_CLASS, FORM_SCHEMAS, activeDates, loginView, appView, bottomNav, authBtn, profileBtn, profileModal, emailInput, passwordInput, loginBtn, signupBtn, profileForm, workoutForm, workoutList, paginationControls, prevPageBtn, nextPageBtn, currentPageDisplay, totalPagesDisplay, workoutFilter, exerciseSelect, onboardingView, onboardingGender, onboardingWeight, onboardingDaysMonthly, onboardingDaysYearly, onboardingDaysLifetime, onboardingExerciseSelect, onboardingWeightInput, onboardingRepsInput, onboardingAddBtn, onboardingList, onboardingEmpty, onboardingSaveBtn, onboardingFeedback, pbLogExercise, pbLogBtn, pbLogFeedback, tabContents, navBar };

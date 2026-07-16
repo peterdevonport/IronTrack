@@ -366,6 +366,15 @@ function switchTab(tabName) {
   if (navBar && navBar.value !== tabName) {
     navBar.value = tabName;
   }
+  const titleMap = {
+    dashboard: 'Dashboard',
+    calculator: 'Plan',
+    training: 'Training',
+    performance: 'Performance',
+    history: 'History',
+  };
+  const header = document.getElementById('header');
+  if (header) header.textContent = titleMap[tabName] || 'IRONTRACK';
   window.scrollTo({ top: 0, behavior: 'smooth' });
   state.ui.currentTab = tabName;
   history.pushState({ tab: tabName }, '', '');
