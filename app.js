@@ -89,26 +89,17 @@ navBar?.addEventListener('click', (e) => {
   }
 });
 
-let _confirmingLeave = false;
-
 window.addEventListener('popstate', (e) => {
   if (appView.classList.contains('hidden')) return;
-
-  if (_confirmingLeave) {
-    _confirmingLeave = false;
-    return;
-  }
 
   const s = e.state;
 
   if (s && s._guard) {
-    history.pushState({ tab: state.ui.currentTab || 'dashboard' }, '', '');
-    _confirmingLeave = true;
     if (!confirm('Leave IronTrack?')) {
-      _confirmingLeave = false;
+      history.pushState({ tab: state.ui.currentTab || 'dashboard' }, '', '');
       return;
     }
-    history.back();
+    window.location.replace('about:blank');
     return;
   }
 
