@@ -238,9 +238,9 @@ function openProfileModal() {
 function closeProfileModal() {
   profileModal.classList.add('hidden');
   document.body.style.overflow = '';
-  requestAnimationFrame(() => {
+  setTimeout(() => {
     if (navBar) navBar.value = state.ui.currentTab || 'dashboard';
-  });
+  }, 0);
 }
 
 let planNameResolve = null;
