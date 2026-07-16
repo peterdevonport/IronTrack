@@ -239,6 +239,7 @@ function openProfileModal() {
 function closeProfileModal() {
   profileModal.classList.add('hidden');
   document.body.style.overflow = '';
+  if (navBar) navBar.value = state.ui.currentTab || 'dashboard';
 }
 
 let planNameResolve = null;
