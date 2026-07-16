@@ -19,6 +19,7 @@ import { writeStructuredLogEntry, generateContributionsBase, generateAmrapContri
 import { update1RMRegistryUI, updateCalcCard, switchCalcMode, updateCalcPreview, handleCalcAdd, handleCalcRemove, handleCalcClear, updateLogSetButtonState, refreshLogSetForm, populateLiftSelectors, populateExerciseDropdown, populateWorkoutFilter, changePage, changeRecordsPage, currentCalcMode } from './calc.js';
 import { renderFromWorkouts, listenToDataStream, processAnalytics } from './data.js';
 import { MSG } from './messages.js';
+import { initTheme, wireThemeToggle } from './theme.js';
 
 const PASSWORD_ERROR_MAP = {
   'auth/wrong-password': 'Current password is incorrect.',
@@ -87,6 +88,8 @@ navBar?.addEventListener('click', (e) => {
     switchTabFromNav(item.getAttribute('value'));
   }
 });
+initTheme();
+
 const pendingFriendUid = new URLSearchParams(window.location.search).get('addFriend');
 const pendingClaimPlanId = new URLSearchParams(window.location.search).get('claimPlan');
 onAuthStateChanged(auth, async (user) => {
@@ -922,6 +925,7 @@ function initCSPHandlers() {
   bind('vh-next', 'click', () => shiftVolumePeriod(1));
   bind('btnCopyCyberTag', 'click', copyCyberTag);
   bind('btnAddFriend', 'click', handleAddFriend);
+  wireThemeToggle();
   initActionDispatcher();
 }
 if (document.readyState === 'loading') {

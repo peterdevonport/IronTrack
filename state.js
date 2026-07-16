@@ -6,6 +6,7 @@ const activeDates = new Set();
 
 const state = {
   user: {
+    theme: 'auto',
     userBiometrics: { gender: 'male', bodyweight: 75 },
     userChallengeStreaks: {
       monthly: { completedPeriods: [], currentStreak: 0, bestStreak: 0 },
