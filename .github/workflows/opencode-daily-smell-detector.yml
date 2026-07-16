@@ -1,35 +1,26 @@
-name: OpenCode Daily Code Smell Reviewer
+name: OpenCode Daily Smell Detector
 
 on:
   schedule:
-    # Runs exactly at 04:00 UTC every single day
     - cron: '0 4 * * *'
-  workflow_dispatch: # Allows you to trigger it manually anytime via the Actions tab
+  workflow_dispatch:
 
 jobs:
-  review-smells:
-    # 🔒 CONSTRAINT 1: Ensures this automated analysis strictly targets your master branch
+  review-master:
     if: github.ref == 'refs/heads/master'
-    
     timeout-minutes: 10
-    
     concurrency:
-      group: code-smell-review-${{ github.ref_name }}
+      group: daily-smell-review
       cancel-in-progress: true
-
     runs-on: ubuntu-latest
-    
-    # 🔑 CLOUD PERMISSIONS: Only needs repository content read access,
-    # and issues write access to log findings.
     permissions:
       contents: read
       issues: write
-      
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Fetches full history so Git logs can accurately check timestamps
+          fetch-depth: 0
 
       - name: Check for Fresh Commits
         id: check_changes
@@ -38,9 +29,7 @@ jobs:
             echo "Manual trigger detected. Forcing analysis to run."
             echo "SHOULD_RUN=true" >> $GITHUB_OUTPUT
           else
-            # Checks for commits on master in the last 25 hours (provides a small latency buffer)
             RECENT_COMMITS=$(git log --since="25 hours ago" --oneline)
-            
             if [ -z "$RECENT_COMMITS" ]; then
               echo "No new commits found on master in the last 24 hours. Skipping run."
               echo "SHOULD_RUN=false" >> $GITHUB_OUTPUT
@@ -51,13 +40,11 @@ jobs:
           fi
 
       - name: Read prompt
-        # 🔒 CONSTRAINT 2: Skip reading the prompt if there are no new commits
         if: steps.check_changes.outputs.SHOULD_RUN == 'true'
         id: prompt
-        run: echo "PROMPT<<EOF" >> $GITHUB_OUTPUT && cat .github/prompts/code-smell-review.md >> $GITHUB_OUTPUT && echo "EOF" >> $GITHUB_OUTPUT
+        run: echo "PROMPT<<EOF" >> $GITHUB_OUTPUT && cat .github/prompts/code-smell-review-master.md >> $GITHUB_OUTPUT && echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Analyze Code Smells with Mimo 2.5
-        # 🔒 CONSTRAINT 2: Only spin up the OpenCode runner if fresh code exists or manually bypassed
         if: steps.check_changes.outputs.SHOULD_RUN == 'true'
         uses: anomalyco/opencode/github@v1.17.13
         env:
