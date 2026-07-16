@@ -89,31 +89,13 @@ navBar?.addEventListener('click', (e) => {
   }
 });
 
-let _skipGuard = false;
-
 window.addEventListener('popstate', (e) => {
   if (appView.classList.contains('hidden')) {
     history.back();
     return;
   }
 
-  if (_skipGuard) {
-    _skipGuard = false;
-    history.back();
-    return;
-  }
-
   const s = e.state;
-
-  if (s && s._guard) {
-    if (!confirm('Leave IronTrack?')) {
-      history.pushState({ tab: state.ui.currentTab || 'dashboard' }, '', '');
-      return;
-    }
-    _skipGuard = true;
-    history.back();
-    return;
-  }
 
   if (!s) return;
 
@@ -161,7 +143,6 @@ async function handleSignedIn(user) {
   loginView.classList.add('hidden');
   appView.classList.remove('hidden');
   if (bottomNav) bottomNav.classList.remove('hidden');
-  history.pushState({ _guard: true }, '', '');
   switchTab('dashboard');
   authBtn.innerText = "Sign Out";
   if (profileBtn) profileBtn.classList.remove('hidden');
