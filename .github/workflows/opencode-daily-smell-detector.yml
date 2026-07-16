@@ -15,7 +15,7 @@ jobs:
     if: github.ref == 'refs/heads/master' || github.event.inputs.pr_number != ''
     timeout-minutes: 10
     concurrency:
-      group: ${{ github.event.inputs.pr_number && format('pr-smell-{0}', github.event.inputs.pr_number) || 'daily-smell-review' }}
+      group: ${{ github.event.inputs.pr_number != '' && format('pr-smell-{0}', github.event.inputs.pr_number) || 'daily-smell-review' }}
       cancel-in-progress: true
     runs-on: ubuntu-latest
     permissions:
@@ -27,10 +27,18 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Sanitize PR number
+        id: sanitize
+        run: |
+          RAW="${{ github.event.inputs.pr_number }}"
+          SANITIZED=$(echo "$RAW" | tr -cd '0-9')
+          echo "PR_NUM=$SANITIZED" >> $GITHUB_OUTPUT
+
       - name: Check for Fresh Commits
         id: check_changes
         run: |
-          if [ -n "${{ github.event.inputs.pr_number }}" ]; then
+          PR_NUM="${{ steps.sanitize.outputs.PR_NUM }}"
+          if [ -n "$PR_NUM" ]; then
             echo "PR-specific analysis requested. Forcing run."
             echo "SHOULD_RUN=true" >> $GITHUB_OUTPUT
           elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
@@ -51,16 +59,18 @@ jobs:
         if: steps.check_changes.outputs.SHOULD_RUN == 'true'
         id: prompt
         run: |
-          if [ -n "${{ github.event.inputs.pr_number }}" ]; then
-            echo "PROMPT<<EOF" >> $GITHUB_OUTPUT
-            echo "This analysis is for Pull Request #${{ github.event.inputs.pr_number }} which was just merged into master." >> $GITHUB_OUTPUT
-            cat .github/prompts/code-smell-review.md >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
+          PR_NUM="${{ steps.sanitize.outputs.PR_NUM }}"
+          if [ -n "$PR_NUM" ]; then
+            HEADER="This analysis is for Pull Request #$PR_NUM which was just merged into master."
+            PROMPT_FILE=".github/prompts/code-smell-review.md"
           else
-            echo "PROMPT<<EOF" >> $GITHUB_OUTPUT
-            cat .github/prompts/code-smell-review-master.md >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
+            HEADER=""
+            PROMPT_FILE=".github/prompts/code-smell-review-master.md"
           fi
+          echo "PROMPT<<EOF" >> $GITHUB_OUTPUT
+          [ -n "$HEADER" ] && echo "$HEADER" >> $GITHUB_OUTPUT
+          cat "$PROMPT_FILE" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Analyze Code Smells with Mimo 2.5
         if: steps.check_changes.outputs.SHOULD_RUN == 'true'
