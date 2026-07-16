@@ -129,7 +129,7 @@ function renderCalendarWorkoutItem(item) {
     const badgeClass = (item.type || '').toLowerCase();
     const descLine = buildWorkoutSummaryLine(item.type, item.structure || {});
     return `
-<div class="bg-slate-900 border border-slate-700 rounded-xl p-2.5">
+<div class="card p-2.5">
     <div class="flex justify-between items-center">
         <span class="workout-type-badge ${badgeClass}">${escapeHtml(formatWorkoutType(item.type))}</span>
         <span class="text-emerald-400 font-bold font-mono text-xs">${escapeHtml(item.scoreDisplay || '—')}</span>
@@ -151,7 +151,7 @@ function renderCalendarWorkoutItem(item) {
     loadDisplay = `${Math.round(load)}kg`;
   }
   return `
-<div class="bg-slate-900 border border-slate-700 rounded-xl p-2.5">
+<div class="card p-2.5">
     <div class="flex justify-between items-center">
         <span class="text-emerald-300 font-bold text-xs uppercase tracking-wider">${escapeHtml(item.exercise)}</span>
         <span class="text-slate-200 font-mono text-xs">${repDisplay} @ ${loadDisplay}</span>
@@ -236,7 +236,7 @@ function workoutToLogHtml(workout, chipPBActive, chip1RMActive) {
   const secondLine = `Est. 1RM: ${oneRM}kg  <span class="text-slate-600">|</span>  Vol: ${totalVolume.toLocaleString()}kg`;
   const repDisplay = workout.partialReps ? `${sets} × ${reps} + ${workout.partialReps} reps` : `${sets} × ${reps}`;
   return `
-<div class="${borderClass} p-4 rounded-2xl mb-3 flex justify-between items-center shadow-2xl shadow-slate-950/60 transition-all duration-200" style="background-color: var(--slate-900);">
+<div class="card ${borderClass} p-4 rounded-2xl mb-3 flex justify-between items-center shadow-2xl shadow-slate-950/60 transition-all duration-200">
     <div>
         <div class="flex items-center gap-2">
             <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm">${escapeHtml(workout.exercise)}</h4>
@@ -265,7 +265,7 @@ function renderWorkoutCard(id, name, type, badgeClass, descLine, metadataHtml, m
   const starIcon = isFav ? '\u2605' : '\u2606';
   const favColorClass = isFav ? 'text-amber-400' : 'text-slate-500';
   const hasMovements = movementsHtml.trim().length > 0;
-  return `<div class="structured-card p-4 rounded-2xl mb-3 shadow-2xl shadow-slate-950/60 transition-all duration-200" style="background-color: var(--slate-900);" data-workout-id="${id}">
+  return `<div class="card card-interactive p-4 rounded-2xl mb-3 shadow-xl transition-all duration-200" data-workout-id="${id}">
     <div class="flex justify-between items-stretch gap-3 ${hasMovements ? 'structured-header-clickable cursor-pointer' : ''}"${hasMovements ? ` data-action="toggle-workout-card"` : ''}>
       <div class="flex flex-col justify-start gap-1.5 min-w-0 flex-1">
         <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm truncate">${escapeHtml(name)}</h4>
@@ -361,7 +361,7 @@ function renderSharedPlanCard(share) {
 function friendToHtml(fUid, data) {
   if (data) {
     return `
-      <div class="flex justify-between items-center bg-slate-900/50 p-2 border border-slate-800 rounded">
+      <div class="flex justify-between items-center card p-2 rounded">
         <span class="font-medium text-slate-300 truncate max-w-[120px]">${getDisplayName(data, fUid)}</span>
         <div class="flex items-center gap-2">
           <button type="button" data-action="remove-friend" data-uid="${fUid}" 
@@ -372,7 +372,7 @@ function friendToHtml(fUid, data) {
       </div>`;
   }
   return `
-    <div class="flex justify-between items-center bg-slate-900/50 p-2 border border-slate-800 rounded">
+    <div class="flex justify-between items-center card p-2 rounded">
       <span class="font-medium text-slate-300 truncate max-w-[120px]">Unknown Friend</span>
       <span class="text-xs font-mono text-slate-500">${fUid}</span>
     </div>`;

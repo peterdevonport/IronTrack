@@ -144,10 +144,10 @@ const pbLogExercise = document.getElementById('pb-log-exercise');
 const pbLogBtn = document.getElementById('pb-log-btn');
 const pbLogFeedback = document.getElementById('pb-log-feedback');
 const tabContents = document.querySelectorAll('.tab-content');
-const navTabs = document.querySelectorAll('.nav-tab');
+const navBar = document.getElementById('nav-bar');
 
-const INPUT_CLASS = 'w-full bg-slate-950 border border-slate-700 rounded-xl px-3 h-[39px] text-center text-slate-100 focus:outline-none focus:border-emerald-400 transition';
-const CALC_CLASS = 'w-full bg-slate-800/50 border border-slate-700 rounded-xl px-3 text-center text-emerald-400 font-bold h-[39px] flex items-center justify-center';
+const INPUT_CLASS = 'input-core';
+const CALC_CLASS = 'font-mono font-bold';
 
 const FORM_SCHEMAS = {
   logSet: {
@@ -205,4 +205,4 @@ const FORM_SCHEMAS = {
   },
 };
 
-export { state, EPLEY_CONSTANT, SECONDS_PER_MINUTE, PERCENT_DIVISOR, DAYS_IN_WEEK, CONSISTENCY_WINDOW_DAYS, FIRESTORE_WORKOUTS_LIMIT, FIRESTORE_STRUCTURED_LIMIT, FIRESTORE_LEADERBOARD_LIMIT, DEBOUNCE_DELAY_SYNC_ACTIVITY, DEBOUNCE_DELAY_LEADERBOARD, FEEDBACK_DISMISS_DEFAULT_MS, TOAST_DISMISS_MS, FRIEND_SUCCESS_CLEAR_MS, FAVORITE_DEBOUNCE_MS, RECORDS_PER_PAGE, HAPTIC, CONSISTENCY_CONFIG, entriesPerPage, INPUT_CLASS, CALC_CLASS, FORM_SCHEMAS, activeDates, loginView, appView, bottomNav, authBtn, profileBtn, profileModal, emailInput, passwordInput, loginBtn, signupBtn, greeting, profileForm, workoutForm, workoutList, paginationControls, prevPageBtn, nextPageBtn, currentPageDisplay, totalPagesDisplay, workoutFilter, exerciseSelect, onboardingView, onboardingGender, onboardingWeight, onboardingDaysMonthly, onboardingDaysYearly, onboardingDaysLifetime, onboardingExerciseSelect, onboardingWeightInput, onboardingRepsInput, onboardingAddBtn, onboardingList, onboardingEmpty, onboardingSaveBtn, onboardingFeedback, pbLogExercise, pbLogBtn, pbLogFeedback, tabContents, navTabs };
+export { state, EPLEY_CONSTANT, SECONDS_PER_MINUTE, PERCENT_DIVISOR, DAYS_IN_WEEK, CONSISTENCY_WINDOW_DAYS, FIRESTORE_WORKOUTS_LIMIT, FIRESTORE_STRUCTURED_LIMIT, FIRESTORE_LEADERBOARD_LIMIT, DEBOUNCE_DELAY_SYNC_ACTIVITY, DEBOUNCE_DELAY_LEADERBOARD, FEEDBACK_DISMISS_DEFAULT_MS, TOAST_DISMISS_MS, FRIEND_SUCCESS_CLEAR_MS, FAVORITE_DEBOUNCE_MS, RECORDS_PER_PAGE, HAPTIC, CONSISTENCY_CONFIG, entriesPerPage, INPUT_CLASS, CALC_CLASS, FORM_SCHEMAS, activeDates, loginView, appView, bottomNav, authBtn, profileBtn, profileModal, emailInput, passwordInput, loginBtn, signupBtn, greeting, profileForm, workoutForm, workoutList, paginationControls, prevPageBtn, nextPageBtn, currentPageDisplay, totalPagesDisplay, workoutFilter, exerciseSelect, onboardingView, onboardingGender, onboardingWeight, onboardingDaysMonthly, onboardingDaysYearly, onboardingDaysLifetime, onboardingExerciseSelect, onboardingWeightInput, onboardingRepsInput, onboardingAddBtn, onboardingList, onboardingEmpty, onboardingSaveBtn, onboardingFeedback, pbLogExercise, pbLogBtn, pbLogFeedback, tabContents, navBar };

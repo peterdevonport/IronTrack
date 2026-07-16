@@ -1,4 +1,4 @@
-import { state, paginationControls, currentPageDisplay, totalPagesDisplay, prevPageBtn, nextPageBtn, profileModal, tabContents, navTabs, FEEDBACK_DISMISS_DEFAULT_MS, TOAST_DISMISS_MS } from './state.js';
+import { state, paginationControls, currentPageDisplay, totalPagesDisplay, prevPageBtn, nextPageBtn, profileModal, navBar, tabContents, FEEDBACK_DISMISS_DEFAULT_MS, TOAST_DISMISS_MS } from './state.js';
 import { escapeHtml } from './dom.js';
 import { EXERCISE_CATALOG } from './exercise-data.js';
 
@@ -26,8 +26,21 @@ export const FEEDBACK_ERROR_CLASS = 'text-xs text-rose-400 font-medium h-4 text-
 export const FEEDBACK_SUCCESS_CLASS = 'text-xs text-emerald-400 font-medium h-4 text-center';
 export const FEEDBACK_NEUTRAL_CLASS = 'text-xs text-slate-500 font-medium h-4 text-center';
 
-function setActiveTab(btn) { btn.className = BTN_ACTIVE_CLASS; }
-function setInactiveTab(btn) { btn.className = BTN_INACTIVE_CLASS; }
+function setActiveTab(btn) { 
+  if (btn.tagName === 'MDUI-BUTTON') {
+    btn.variant = 'filled';
+  } else {
+    btn.className = 'btn-core is-primary btn-size-row';
+  }
+}
+
+function setInactiveTab(btn) { 
+  if (btn.tagName === 'MDUI-BUTTON') {
+    btn.variant = 'text';
+  } else {
+    btn.className = 'btn-core is-ghost btn-size-row';
+  }
+}
 
 function clearChildren(el) {
   if (el) el.textContent = '';
@@ -40,7 +53,7 @@ function renderEmptyState(container, message, extraClass = '') {
 
 function renderMessage(container, message, color = 'red', size = 'xs') {
   if (!container) return;
-  container.innerHTML = `<div class="bg-slate-800 border border-slate-700 rounded-xl p-4 text-${color}-${size} text-center">${escapeHtml(message)}</div>`;
+  container.innerHTML = `<div class="card text-${color}-${size} text-center">${escapeHtml(message)}</div>`;
 }
 
 function updatePagination(name, page, totalPages) {
@@ -94,10 +107,10 @@ function updateCalTodayBtnState() {
         isCurrent = state.calendar.month.getFullYear() === now.getFullYear() && state.calendar.month.getMonth() === now.getMonth();
     }
     if (isCurrent) {
-        btn.className = 'btn-core is-ghost btn-size-row';
+        btn.variant = 'text';
         btn.disabled = true;
     } else {
-        btn.className = 'btn-core is-primary-ghost btn-size-row';
+        btn.variant = 'tonal';
         btn.disabled = false;
     }
 }
@@ -106,16 +119,16 @@ function updateTodayBtnState() {
   const btn = document.getElementById('vh-today');
   if (!btn) return;
   if (state.volume.offset === 0) {
-    btn.className = 'btn-core is-ghost btn-size-row';
+    btn.variant = 'text';
     btn.disabled = true;
   } else {
-    btn.className = 'btn-core is-primary-ghost btn-size-row';
+    btn.variant = 'tonal';
     btn.disabled = false;
   }
 }
 
 function toggleWorkoutCard(headerEl) {
-    const card = headerEl.closest('.structured-card');
+    const card = headerEl.closest('.card');
     const movements = card.querySelector('.structured-movements');
     const showMore = card.querySelector('.show-more-text');
     if (!movements || !showMore) return;
@@ -124,7 +137,7 @@ function toggleWorkoutCard(headerEl) {
 }
 
 function updateStarIcon(id, isFav) {
-  const btn = document.querySelector(`[data-fav-id="${id}"]`);
+  const btn = document.querySelector(`[data-id="${id}"].btn-fav-star`);
   if (!btn) return;
   btn.textContent = isFav ? '\u2605' : '\u2606';
   btn.className = `${isFav ? 'text-amber-400' : 'text-slate-500'} hover:scale-110 transition-transform btn-fav-star`;
@@ -151,9 +164,23 @@ function buildExerciseOptionsHtml(categories, placeholder) {
   return html;
 }
 
+function buildMduiOptionsHtml(categories, placeholder) {
+  const labels = { barbell: 'Barbell', dumbbell: 'Dumbbell', kettlebell: 'Kettlebell', cardio: 'Cardio', bodyweight: 'Bodyweight' };
+  const sortByName = (a, b) => a.name.localeCompare(b.name);
+  let html = placeholder;
+  categories.forEach(cat => {
+    const items = EXERCISE_CATALOG.filter(ex => ex.category === cat).sort(sortByName);
+    if (items.length) {
+      html += `<mdui-menu-item value="" disabled class="text-xs opacity-50">─ ${labels[cat]} ─</mdui-menu-item>`;
+      items.forEach(ex => { if (ex.hidden) return; html += `<mdui-menu-item value="${ex.name}">${ex.name}</mdui-menu-item>`; });
+    }
+  });
+  return html;
+}
+
 function saveExpandedCardIds() {
   const ids = [];
-  document.querySelectorAll('.structured-card').forEach(card => {
+  document.querySelectorAll('.card[data-workout-id]').forEach(card => {
     const id = card.getAttribute('data-workout-id');
     if (!id) return;
     const movements = card.querySelector('.structured-movements');
@@ -196,7 +223,11 @@ function showFeedback(msg, color, targetId, delay = FEEDBACK_DISMISS_DEFAULT_MS,
 }
 
 function showToast(msg, color) {
-  showFeedback(msg, color, 'toast-notification-inner', TOAST_DISMISS_MS, 'px-4 py-2 rounded-lg bg-slate-800/90 backdrop-blur-sm border border-slate-700 shadow-xl');
+  const snackbar = document.getElementById('toast-snackbar');
+  if (snackbar) {
+    snackbar.textContent = msg;
+    snackbar.setAttribute('open', '');
+  }
 }
 
 function openProfileModal() {
@@ -327,11 +358,14 @@ function switchTab(tabName) {
   tabContents.forEach(el => el.classList.remove('active'));
   const target = document.getElementById('tab-' + tabName);
   if (target) target.classList.add('active');
-  navTabs.forEach(el => el.classList.remove('active'));
-  const btn = document.querySelector('.nav-tab[data-tab="' + tabName + '"]');
-  if (btn) btn.classList.add('active');
+  if (navBar && navBar.value !== tabName) {
+    navBar.value = tabName;
+  }
   window.scrollTo({ top: 0, behavior: 'smooth' });
   state.ui.currentTab = tabName;
+  if (typeof lucide !== 'undefined' && lucide.createIcons) {
+    lucide.createIcons();
+  }
 }
 
-export { PERMISSION_ERROR_MAP, clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, saveExpandedCardIds, restoreExpandedCardIds, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, paginateAndRender, changeGenericPage, switchTab, isPermissionDenied, BTN_ACTIVE_CLASS, BTN_INACTIVE_CLASS, setActiveTab, setInactiveTab };
+export { PERMISSION_ERROR_MAP, clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, buildMduiOptionsHtml, saveExpandedCardIds, restoreExpandedCardIds, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, paginateAndRender, changeGenericPage, switchTab, isPermissionDenied, BTN_ACTIVE_CLASS, BTN_INACTIVE_CLASS, setActiveTab, setInactiveTab };
