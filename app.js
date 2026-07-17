@@ -67,20 +67,16 @@ window.addEventListener('unhandledrejection', (e) => {
   showFeedback(MSG.UNEXPECTED_ERROR, 'red');
 });
 
-function switchTabFromNav(tab) {
-  switchTab(tab);
-}
-
 // Handle navigation via MDUI change event (includes keyboard nav)
 navBar?.addEventListener('change', (e) => {
-  switchTabFromNav(e.target.value);
+  switchTab(e.target.value);
 });
 
 // Fallback: handle clicks directly on nav items
 navBar?.addEventListener('click', (e) => {
   const item = e.target.closest('mdui-navigation-bar-item');
   if (item) {
-    switchTabFromNav(item.getAttribute('value'));
+    switchTab(item.getAttribute('value'));
   }
 });
 
