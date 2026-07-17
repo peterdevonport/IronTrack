@@ -27,4 +27,4 @@ Each issue must be clearly labeled with 'tech-debt' so the Auto-Fixer workflow c
 Include the merged PR number in the issue body for traceability.
 
 EXECUTION TEMPLATE:
-gh issue create --title "[OpenCode Technical Debt] <Short, clear summary of the smell>" --body "### Source\nThis issue was auto-detected from merged Pull Request.\n\n### Location\nFound in modified section of code.\n\n### Description\n<Detailed explanation of why this is a code smell and how it violates best practices>\n\n### Suggested Refactor\n<A high-level architectural blueprint or pseudo-code strategy for fixing it>" --label "tech-debt"
+gh issue create --title "[OpenCode Technical Debt] <Short, clear summary of the smell>" --body "### Source\nThis issue was auto-detected from merged Pull Request.\n\n### Location\nFound in modified section of code.\n\n### Description\n<Detailed explanation of why this is a code smell and how it violates best practices>\n\n### Suggested Refactor\n<A high-level architectural blueprint or pseudo-code strategy for fixing it>" --label "tech-debt" --label "smell-detector"
