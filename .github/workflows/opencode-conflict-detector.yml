@@ -23,7 +23,7 @@ jobs:
         run: |
           set -euo pipefail
           # Fetch all open PRs with their conflict status and latest CI test conclusion
-          PR_LIST=$(gh pr list --state open --json number,headRefName,mergeable,statusCheckRollup --jq '.[] | {number, branch: .headRefName, mergeable, conclusion: (.statusCheckRollup[-1].conclusion // null), status: (.statusCheckRollup[-1].status // null)} | @base64')
+          PR_LIST=$(gh pr list --limit 1000 --state open --json number,headRefName,mergeable,statusCheckRollup --jq '.[] | {number, branch: .headRefName, mergeable, conclusion: (.statusCheckRollup[-1].conclusion // null), status: (.statusCheckRollup[-1].status // null)} | @base64')
 
           if [ -z "$PR_LIST" ]; then
             echo "✅ No open PRs found in the system."
