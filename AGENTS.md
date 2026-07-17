@@ -28,7 +28,19 @@
 - After any `npm install <pkg>` or `npm install --save-dev <pkg>`, always run `npm ci` locally to verify the lockfile is consistent before pushing.
 - If `npm ci` fails with `Invalid: lock file's <pkg> does not satisfy <pkg>`, run `npm install` (no args) to sync the lockfile, then commit the updated `package-lock.json`.
 
-## 6. Verification Checklist (Definition of Done)
+## 6. Graphify Knowledge Graph
+
+This project uses Graphify (https://graphify.net/) to map the codebase as a queryable knowledge graph.
+
+- **Location:** `graphify-out/` in the project root
+- **Query first:** Before grepping or reading files for architecture questions, run `graphify query "<question>"` to get a scoped subgraph
+- **Path tracing:** Use `graphify path "<node1>" "<node2>"` to find how two things connect
+- **Explain nodes:** Use `graphify explain "<node>"` for everything Graphify knows about a symbol
+- **Refresh:** After structural changes, run `graphify . --code-only --update` (no API cost)
+- **The graph is committed:** `graphify-out/` is in git so everyone starts with a map
+- **Commit hook installed:** Auto-rebuilds on `git commit` (AST-only, no API cost)
+
+## 7. Verification Checklist (Definition of Done)
 Before declaring a task finished, you must successfully execute:
 1. Run `git status` to ensure no untracked, accidental, or sensitive files (like `.env`) are being staged.
 2. Stage and commit the changes locally using the prescribed Conventional Commit format.
