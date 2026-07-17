@@ -9,10 +9,10 @@
       "source_file": ".opencode/plugins/graphify.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 16,
-      "norm_label": "graphify.js",
       "id": "opencode_plugins_graphify",
-      "community_name": "graphify.js"
+      "community": 16,
+      "community_name": "graphify.js",
+      "norm_label": "graphify.js"
     },
     {
       "label": "GraphifyPlugin()",
@@ -20,10 +20,10 @@
       "source_file": ".opencode/plugins/graphify.js",
       "source_location": "L12",
       "_origin": "ast",
-      "community": 16,
-      "norm_label": "graphifyplugin()",
       "id": "opencode_plugins_graphify_graphifyplugin",
-      "community_name": "graphify.js"
+      "community": 16,
+      "community_name": "graphify.js",
+      "norm_label": "graphifyplugin()"
     },
     {
       "label": "IMPORTANT: keep the reminder string free of backticks and $(...) constructs.",
@@ -31,10 +31,109 @@
       "source_file": ".opencode/plugins/graphify.js",
       "source_location": "L4",
       "_origin": "ast",
-      "community": 16,
-      "norm_label": "important: keep the reminder string free of backticks and $(...) constructs.",
       "id": "opencode_plugins_graphify_rationale_4",
-      "community_name": "graphify.js"
+      "community": 16,
+      "community_name": "graphify.js",
+      "norm_label": "important: keep the reminder string free of backticks and $(...) constructs."
+    },
+    {
+      "label": "AGENTS.md",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "agents",
+      "community": 22,
+      "community_name": "OpenCode System Instructions & Guardrails",
+      "norm_label": "agents.md"
+    },
+    {
+      "label": "OpenCode System Instructions & Guardrails",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "agents_opencode_system_instructions_guardrails",
+      "community": 22,
+      "community_name": "OpenCode System Instructions & Guardrails",
+      "norm_label": "opencode system instructions & guardrails"
+    },
+    {
+      "label": "1. Critical Git Workflow",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": "L3",
+      "_origin": "ast",
+      "id": "agents_1_critical_git_workflow",
+      "community": 22,
+      "community_name": "OpenCode System Instructions & Guardrails",
+      "norm_label": "1. critical git workflow"
+    },
+    {
+      "label": "2. Development & Coding Standards",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": "L10",
+      "_origin": "ast",
+      "id": "agents_2_development_coding_standards",
+      "community": 22,
+      "community_name": "OpenCode System Instructions & Guardrails",
+      "norm_label": "2. development & coding standards"
+    },
+    {
+      "label": "3. Commit Message Guidelines",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": "L16",
+      "_origin": "ast",
+      "id": "agents_3_commit_message_guidelines",
+      "community": 22,
+      "community_name": "OpenCode System Instructions & Guardrails",
+      "norm_label": "3. commit message guidelines"
+    },
+    {
+      "label": "4. Execution & Safety Guardrails",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": "L22",
+      "_origin": "ast",
+      "id": "agents_4_execution_safety_guardrails",
+      "community": 22,
+      "community_name": "OpenCode System Instructions & Guardrails",
+      "norm_label": "4. execution & safety guardrails"
+    },
+    {
+      "label": "5. Dependency Management",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": "L26",
+      "_origin": "ast",
+      "id": "agents_5_dependency_management",
+      "community": 22,
+      "community_name": "OpenCode System Instructions & Guardrails",
+      "norm_label": "5. dependency management"
+    },
+    {
+      "label": "6. Graphify Knowledge Graph",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": "L31",
+      "_origin": "ast",
+      "id": "agents_6_graphify_knowledge_graph",
+      "community": 22,
+      "community_name": "OpenCode System Instructions & Guardrails",
+      "norm_label": "6. graphify knowledge graph"
+    },
+    {
+      "label": "7. Verification Checklist (Definition of Done)",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": "L43",
+      "_origin": "ast",
+      "id": "agents_7_verification_checklist_definition_of_done",
+      "community": 22,
+      "community_name": "OpenCode System Instructions & Guardrails",
+      "norm_label": "7. verification checklist (definition of done)"
     },
     {
       "label": "analytics.js",
@@ -44,8 +143,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "analytics.js",
-      "id": "analytics",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "analytics"
     },
     {
       "label": "DOTS_COEFF_MALE",
@@ -55,8 +154,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "dots_coeff_male",
-      "id": "analytics_dots_coeff_male",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "analytics_dots_coeff_male"
     },
     {
       "label": "DOTS_COEFF_FEMALE",
@@ -66,8 +165,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "dots_coeff_female",
-      "id": "analytics_dots_coeff_female",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "analytics_dots_coeff_female"
     },
     {
       "label": "DOTS_TIER_CUTOFFS_MALE",
@@ -77,8 +176,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "dots_tier_cutoffs_male",
-      "id": "analytics_dots_tier_cutoffs_male",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "analytics_dots_tier_cutoffs_male"
     },
     {
       "label": "DOTS_TIER_CUTOFFS_FEMALE",
@@ -88,8 +187,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "dots_tier_cutoffs_female",
-      "id": "analytics_dots_tier_cutoffs_female",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "analytics_dots_tier_cutoffs_female"
     },
     {
       "label": "computeDotsScore()",
@@ -99,8 +198,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "computedotsscore()",
-      "id": "analytics_computedotsscore",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "analytics_computedotsscore"
     },
     {
       "label": "computeSinclairScore()",
@@ -110,8 +209,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "computesinclairscore()",
-      "id": "analytics_computesinclairscore",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "analytics_computesinclairscore"
     },
     {
       "label": "getRankingTier()",
@@ -121,8 +220,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "getrankingtier()",
-      "id": "analytics_getrankingtier",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "analytics_getrankingtier"
     },
     {
       "label": "formatScore_ROUNDS_AND_REPS()",
@@ -132,8 +231,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "formatscore_rounds_and_reps()",
-      "id": "analytics_formatscore_rounds_and_reps",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "analytics_formatscore_rounds_and_reps"
     },
     {
       "label": "formatScore_COMPLETED_MINUTES()",
@@ -143,8 +242,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "formatscore_completed_minutes()",
-      "id": "analytics_formatscore_completed_minutes",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "analytics_formatscore_completed_minutes"
     },
     {
       "label": "formatScore_TIME_SECONDS()",
@@ -154,8 +253,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "formatscore_time_seconds()",
-      "id": "analytics_formatscore_time_seconds",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "analytics_formatscore_time_seconds"
     },
     {
       "label": "describeAmrap()",
@@ -165,8 +264,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "describeamrap()",
-      "id": "analytics_describeamrap",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "analytics_describeamrap"
     },
     {
       "label": "describeEmom()",
@@ -176,8 +275,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "describeemom()",
-      "id": "analytics_describeemom",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "analytics_describeemom"
     },
     {
       "label": "describeForTime()",
@@ -187,8 +286,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "describefortime()",
-      "id": "analytics_describefortime",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "analytics_describefortime"
     },
     {
       "label": "describeInterval()",
@@ -198,8 +297,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "describeinterval()",
-      "id": "analytics_describeinterval",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "analytics_describeinterval"
     },
     {
       "label": "buildWorkoutDescription()",
@@ -209,8 +308,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "buildworkoutdescription()",
-      "id": "analytics_buildworkoutdescription",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "analytics_buildworkoutdescription"
     },
     {
       "label": "buildWorkoutSummaryLine()",
@@ -220,8 +319,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "buildworkoutsummaryline()",
-      "id": "analytics_buildworkoutsummaryline",
-      "community_name": "rendering.js"
+      "community_name": "rendering.js",
+      "id": "analytics_buildworkoutsummaryline"
     },
     {
       "label": "getRepsPerRound()",
@@ -231,8 +330,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "getrepsperround()",
-      "id": "analytics_getrepsperround",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "analytics_getrepsperround"
     },
     {
       "label": "app.js",
@@ -242,8 +341,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "app.js",
-      "id": "app",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app"
     },
     {
       "label": "PASSWORD_ERROR_MAP",
@@ -253,8 +352,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "password_error_map",
-      "id": "app_password_error_map",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_password_error_map"
     },
     {
       "label": "DELETE_ERROR_MAP",
@@ -264,8 +363,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "delete_error_map",
-      "id": "app_delete_error_map",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_delete_error_map"
     },
     {
       "label": "PASSWORD_RESET_ERROR_MAP",
@@ -275,8 +374,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "password_reset_error_map",
-      "id": "app_password_reset_error_map",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_password_reset_error_map"
     },
     {
       "label": "pendingOnboarding1RMs",
@@ -286,8 +385,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "pendingonboarding1rms",
-      "id": "app_pendingonboarding1rms",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_pendingonboarding1rms"
     },
     {
       "label": "showForgotPassword()",
@@ -297,8 +396,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "showforgotpassword()",
-      "id": "app_showforgotpassword",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_showforgotpassword"
     },
     {
       "label": "showAuthForm()",
@@ -308,8 +407,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "showauthform()",
-      "id": "app_showauthform",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_showauthform"
     },
     {
       "label": "enableSaveOnDirty()",
@@ -319,8 +418,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "enablesaveondirty()",
-      "id": "app_enablesaveondirty",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_enablesaveondirty"
     },
     {
       "label": "switchTabFromNav()",
@@ -330,8 +429,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "switchtabfromnav()",
-      "id": "app_switchtabfromnav",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "app_switchtabfromnav"
     },
     {
       "label": "pendingFriendUid",
@@ -341,8 +440,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "pendingfrienduid",
-      "id": "app_pendingfrienduid",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_pendingfrienduid"
     },
     {
       "label": "pendingClaimPlanId",
@@ -352,8 +451,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "pendingclaimplanid",
-      "id": "app_pendingclaimplanid",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_pendingclaimplanid"
     },
     {
       "label": "handleSignedIn()",
@@ -363,8 +462,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "handlesignedin()",
-      "id": "app_handlesignedin",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "app_handlesignedin"
     },
     {
       "label": "handleSignedOut()",
@@ -372,10 +471,10 @@
       "source_file": "app.js",
       "source_location": "L182",
       "_origin": "ast",
-      "community": 0,
+      "community": 2,
       "norm_label": "handlesignedout()",
-      "id": "app_handlesignedout",
-      "community_name": "plans.js"
+      "community_name": "sharing.js",
+      "id": "app_handlesignedout"
     },
     {
       "label": "attachListeners()",
@@ -383,10 +482,10 @@
       "source_file": "app.js",
       "source_location": "L232",
       "_origin": "ast",
-      "community": 4,
+      "community": 2,
       "norm_label": "attachlisteners()",
-      "id": "app_attachlisteners",
-      "community_name": "calc.js"
+      "community_name": "sharing.js",
+      "id": "app_attachlisteners"
     },
     {
       "label": "processUrlParams()",
@@ -396,8 +495,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "processurlparams()",
-      "id": "app_processurlparams",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "app_processurlparams"
     },
     {
       "label": "togglePasswordBtn",
@@ -407,8 +506,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "togglepasswordbtn",
-      "id": "app_togglepasswordbtn",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_togglepasswordbtn"
     },
     {
       "label": "eyeIcon",
@@ -418,8 +517,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "eyeicon",
-      "id": "app_eyeicon",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_eyeicon"
     },
     {
       "label": "eyeOffIcon",
@@ -429,8 +528,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "eyeofficon",
-      "id": "app_eyeofficon",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_eyeofficon"
     },
     {
       "label": "forgotPasswordBtn",
@@ -440,8 +539,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "forgotpasswordbtn",
-      "id": "app_forgotpasswordbtn",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_forgotpasswordbtn"
     },
     {
       "label": "forgotPasswordSection",
@@ -451,8 +550,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "forgotpasswordsection",
-      "id": "app_forgotpasswordsection",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_forgotpasswordsection"
     },
     {
       "label": "forgotPasswordEmail",
@@ -462,8 +561,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "forgotpasswordemail",
-      "id": "app_forgotpasswordemail",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_forgotpasswordemail"
     },
     {
       "label": "forgotPasswordSend",
@@ -473,8 +572,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "forgotpasswordsend",
-      "id": "app_forgotpasswordsend",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_forgotpasswordsend"
     },
     {
       "label": "forgotPasswordCancel",
@@ -484,8 +583,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "forgotpasswordcancel",
-      "id": "app_forgotpasswordcancel",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_forgotpasswordcancel"
     },
     {
       "label": "forgotPasswordFeedback",
@@ -495,8 +594,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "forgotpasswordfeedback",
-      "id": "app_forgotpasswordfeedback",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_forgotpasswordfeedback"
     },
     {
       "label": "authFormContainer",
@@ -506,8 +605,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "authformcontainer",
-      "id": "app_authformcontainer",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_authformcontainer"
     },
     {
       "label": "collectOnboardingFormValues()",
@@ -517,8 +616,8 @@
       "_origin": "ast",
       "community": 15,
       "norm_label": "collectonboardingformvalues()",
-      "id": "app_collectonboardingformvalues",
-      "community_name": "saveOnboarding"
+      "community_name": "saveOnboarding",
+      "id": "app_collectonboardingformvalues"
     },
     {
       "label": "buildOnboardingProfileData()",
@@ -528,8 +627,8 @@
       "_origin": "ast",
       "community": 15,
       "norm_label": "buildonboardingprofiledata()",
-      "id": "app_buildonboardingprofiledata",
-      "community_name": "saveOnboarding"
+      "community_name": "saveOnboarding",
+      "id": "app_buildonboardingprofiledata"
     },
     {
       "label": "buildOnboardingLogEntry()",
@@ -539,8 +638,8 @@
       "_origin": "ast",
       "community": 15,
       "norm_label": "buildonboardinglogentry()",
-      "id": "app_buildonboardinglogentry",
-      "community_name": "saveOnboarding"
+      "community_name": "saveOnboarding",
+      "id": "app_buildonboardinglogentry"
     },
     {
       "label": "saveOnboarding()",
@@ -550,8 +649,8 @@
       "_origin": "ast",
       "community": 15,
       "norm_label": "saveonboarding()",
-      "id": "app_saveonboarding",
-      "community_name": "saveOnboarding"
+      "community_name": "saveOnboarding",
+      "id": "app_saveonboarding"
     },
     {
       "label": "saveProfileBtn",
@@ -561,8 +660,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "saveprofilebtn",
-      "id": "app_saveprofilebtn",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_saveprofilebtn"
     },
     {
       "label": "profileFields",
@@ -572,8 +671,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "profilefields",
-      "id": "app_profilefields",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_profilefields"
     },
     {
       "label": "changePasswordBtn",
@@ -583,8 +682,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "changepasswordbtn",
-      "id": "app_changepasswordbtn",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_changepasswordbtn"
     },
     {
       "label": "changePasswordForm",
@@ -594,8 +693,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "changepasswordform",
-      "id": "app_changepasswordform",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_changepasswordform"
     },
     {
       "label": "cpCurrent",
@@ -605,8 +704,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "cpcurrent",
-      "id": "app_cpcurrent",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_cpcurrent"
     },
     {
       "label": "cpNew",
@@ -616,8 +715,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "cpnew",
-      "id": "app_cpnew",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_cpnew"
     },
     {
       "label": "cpConfirm",
@@ -627,8 +726,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "cpconfirm",
-      "id": "app_cpconfirm",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_cpconfirm"
     },
     {
       "label": "cpCancel",
@@ -638,8 +737,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "cpcancel",
-      "id": "app_cpcancel",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_cpcancel"
     },
     {
       "label": "cpUpdate",
@@ -649,8 +748,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "cpupdate",
-      "id": "app_cpupdate",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_cpupdate"
     },
     {
       "label": "cpFeedback",
@@ -660,8 +759,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "cpfeedback",
-      "id": "app_cpfeedback",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_cpfeedback"
     },
     {
       "label": "deleteAccountBtn",
@@ -671,8 +770,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "deleteaccountbtn",
-      "id": "app_deleteaccountbtn",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_deleteaccountbtn"
     },
     {
       "label": "prevRecordsBtn",
@@ -682,8 +781,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "prevrecordsbtn",
-      "id": "app_prevrecordsbtn",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_prevrecordsbtn"
     },
     {
       "label": "nextRecordsBtn",
@@ -693,8 +792,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "nextrecordsbtn",
-      "id": "app_nextrecordsbtn",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_nextrecordsbtn"
     },
     {
       "label": "calcLiftSelect",
@@ -704,8 +803,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "calcliftselect",
-      "id": "app_calcliftselect",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_calcliftselect"
     },
     {
       "label": "calcPctInput",
@@ -715,8 +814,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "calcpctinput",
-      "id": "app_calcpctinput",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_calcpctinput"
     },
     {
       "label": "calcRpeReps",
@@ -726,8 +825,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "calcrpereps",
-      "id": "app_calcrpereps",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_calcrpereps"
     },
     {
       "label": "calcRpeSelect",
@@ -737,8 +836,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "calcrpeselect",
-      "id": "app_calcrpeselect",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_calcrpeselect"
     },
     {
       "label": "calcAddBtn",
@@ -748,8 +847,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "calcaddbtn",
-      "id": "app_calcaddbtn",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_calcaddbtn"
     },
     {
       "label": "calcClearBtn",
@@ -759,8 +858,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "calcclearbtn",
-      "id": "app_calcclearbtn",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_calcclearbtn"
     },
     {
       "label": "chipPBEl",
@@ -770,8 +869,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "chippbel",
-      "id": "app_chippbel",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_chippbel"
     },
     {
       "label": "chip1RMEl",
@@ -781,8 +880,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "chip1rmel",
-      "id": "app_chip1rmel",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_chip1rmel"
     },
     {
       "label": "extractWorkoutFormValues()",
@@ -790,10 +889,10 @@
       "source_file": "app.js",
       "source_location": "L718",
       "_origin": "ast",
-      "community": 2,
+      "community": 1,
       "norm_label": "extractworkoutformvalues()",
-      "id": "app_extractworkoutformvalues",
-      "community_name": "sharing.js"
+      "community_name": "app.js",
+      "id": "app_extractworkoutformvalues"
     },
     {
       "label": "buildWorkoutLog()",
@@ -801,10 +900,10 @@
       "source_file": "app.js",
       "source_location": "L735",
       "_origin": "ast",
-      "community": 0,
+      "community": 4,
       "norm_label": "buildworkoutlog()",
-      "id": "app_buildworkoutlog",
-      "community_name": "plans.js"
+      "community_name": "calc.js",
+      "id": "app_buildworkoutlog"
     },
     {
       "label": "validateWorkoutValues()",
@@ -814,8 +913,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "validateworkoutvalues()",
-      "id": "app_validateworkoutvalues",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_validateworkoutvalues"
     },
     {
       "label": "persistWorkout()",
@@ -825,8 +924,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "persistworkout()",
-      "id": "app_persistworkout",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_persistworkout"
     },
     {
       "label": "handleWorkoutError()",
@@ -836,8 +935,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "handleworkouterror()",
-      "id": "app_handleworkouterror",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "app_handleworkouterror"
     },
     {
       "label": "amrapRounds",
@@ -847,8 +946,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "amraprounds",
-      "id": "app_amraprounds",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_amraprounds"
     },
     {
       "label": "amrapAdditional",
@@ -858,8 +957,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "amrapadditional",
-      "id": "app_amrapadditional",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_amrapadditional"
     },
     {
       "label": "emomRoundsCompleted",
@@ -869,8 +968,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "emomroundscompleted",
-      "id": "app_emomroundscompleted",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_emomroundscompleted"
     },
     {
       "label": "emomRounds",
@@ -880,8 +979,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "emomrounds",
-      "id": "app_emomrounds",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_emomrounds"
     },
     {
       "label": "emomIntervalMin",
@@ -891,8 +990,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "emomintervalmin",
-      "id": "app_emomintervalmin",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_emomintervalmin"
     },
     {
       "label": "emomIntervalSec",
@@ -902,8 +1001,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "emomintervalsec",
-      "id": "app_emomintervalsec",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_emomintervalsec"
     },
     {
       "label": "fortimeMinutes",
@@ -913,8 +1012,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "fortimeminutes",
-      "id": "app_fortimeminutes",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_fortimeminutes"
     },
     {
       "label": "fortimeSeconds",
@@ -924,8 +1023,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "fortimeseconds",
-      "id": "app_fortimeseconds",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_fortimeseconds"
     },
     {
       "label": "fortimeDnf",
@@ -935,8 +1034,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "fortimednf",
-      "id": "app_fortimednf",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_fortimednf"
     },
     {
       "label": "fortimeCapReps",
@@ -946,8 +1045,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "fortimecapreps",
-      "id": "app_fortimecapreps",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_fortimecapreps"
     },
     {
       "label": "logRoundsInput",
@@ -957,8 +1056,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "logroundsinput",
-      "id": "app_logroundsinput",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_logroundsinput"
     },
     {
       "label": "logPartialInput",
@@ -968,8 +1067,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "logpartialinput",
-      "id": "app_logpartialinput",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_logpartialinput"
     },
     {
       "label": "emomModeSeq",
@@ -979,8 +1078,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "emommodeseq",
-      "id": "app_emommodeseq",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_emommodeseq"
     },
     {
       "label": "emomModeByRound",
@@ -990,8 +1089,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "emommodebyround",
-      "id": "app_emommodebyround",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_emommodebyround"
     },
     {
       "label": "emomMinuteSlots",
@@ -1001,8 +1100,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "emomminuteslots",
-      "id": "app_emomminuteslots",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_emomminuteslots"
     },
     {
       "label": "prevStructuredBtn",
@@ -1012,8 +1111,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "prevstructuredbtn",
-      "id": "app_prevstructuredbtn",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_prevstructuredbtn"
     },
     {
       "label": "nextStructuredBtn",
@@ -1023,8 +1122,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "nextstructuredbtn",
-      "id": "app_nextstructuredbtn",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_nextstructuredbtn"
     },
     {
       "label": "prevFriendsBtn",
@@ -1034,8 +1133,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "prevfriendsbtn",
-      "id": "app_prevfriendsbtn",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_prevfriendsbtn"
     },
     {
       "label": "nextFriendsBtn",
@@ -1045,8 +1144,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "nextfriendsbtn",
-      "id": "app_nextfriendsbtn",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_nextfriendsbtn"
     },
     {
       "label": "prevPlansBtn",
@@ -1056,8 +1155,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "prevplansbtn",
-      "id": "app_prevplansbtn",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_prevplansbtn"
     },
     {
       "label": "nextPlansBtn",
@@ -1067,8 +1166,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "nextplansbtn",
-      "id": "app_nextplansbtn",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_nextplansbtn"
     },
     {
       "label": "shareSendBtn",
@@ -1078,8 +1177,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "sharesendbtn",
-      "id": "app_sharesendbtn",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_sharesendbtn"
     },
     {
       "label": "shareCancelBtn",
@@ -1089,8 +1188,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "sharecancelbtn",
-      "id": "app_sharecancelbtn",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_sharecancelbtn"
     },
     {
       "label": "prevSharedPlansBtn",
@@ -1100,8 +1199,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "prevsharedplansbtn",
-      "id": "app_prevsharedplansbtn",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_prevsharedplansbtn"
     },
     {
       "label": "nextSharedPlansBtn",
@@ -1111,8 +1210,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "nextsharedplansbtn",
-      "id": "app_nextsharedplansbtn",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_nextsharedplansbtn"
     },
     {
       "label": "actionHandlers",
@@ -1122,8 +1221,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "actionhandlers",
-      "id": "app_actionhandlers",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_actionhandlers"
     },
     {
       "label": "initActionDispatcher()",
@@ -1131,10 +1230,10 @@
       "source_file": "app.js",
       "source_location": "L888",
       "_origin": "ast",
-      "community": 7,
+      "community": 2,
       "norm_label": "initactiondispatcher()",
-      "id": "app_initactiondispatcher",
-      "community_name": "volume.js"
+      "community_name": "sharing.js",
+      "id": "app_initactiondispatcher"
     },
     {
       "label": "modalClose",
@@ -1144,8 +1243,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "modalclose",
-      "id": "app_modalclose",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_modalclose"
     },
     {
       "label": "modalBackdrop",
@@ -1155,8 +1254,8 @@
       "_origin": "ast",
       "community": 1,
       "norm_label": "modalbackdrop",
-      "id": "app_modalbackdrop",
-      "community_name": "app.js"
+      "community_name": "app.js",
+      "id": "app_modalbackdrop"
     },
     {
       "label": "initCSPHandlers()",
@@ -1164,10 +1263,10 @@
       "source_file": "app.js",
       "source_location": "L926",
       "_origin": "ast",
-      "community": 7,
+      "community": 2,
       "norm_label": "initcsphandlers()",
-      "id": "app_initcsphandlers",
-      "community_name": "volume.js"
+      "community_name": "sharing.js",
+      "id": "app_initcsphandlers"
     },
     {
       "label": "auth.js",
@@ -1175,10 +1274,10 @@
       "source_file": "auth.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 0,
+      "community": 4,
       "norm_label": "auth.js",
-      "id": "auth",
-      "community_name": "plans.js"
+      "community_name": "calc.js",
+      "id": "auth"
     },
     {
       "label": "getSchemaKey()",
@@ -1188,8 +1287,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "getschemakey()",
-      "id": "auth_getschemakey",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "auth_getschemakey"
     },
     {
       "label": "computeTotalLoad()",
@@ -1199,8 +1298,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "computetotalload()",
-      "id": "auth_computetotalload",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "auth_computetotalload"
     },
     {
       "label": "pullProfileMetrics()",
@@ -1210,8 +1309,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "pullprofilemetrics()",
-      "id": "auth_pullprofilemetrics",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "auth_pullprofilemetrics"
     },
     {
       "label": "refreshPBForm()",
@@ -1221,8 +1320,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "refreshpbform()",
-      "id": "auth_refreshpbform",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "auth_refreshpbform"
     },
     {
       "label": "processWorkoutSnapshot()",
@@ -1232,8 +1331,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "processworkoutsnapshot()",
-      "id": "auth_processworkoutsnapshot",
-      "community_name": "calc.js"
+      "community_name": "calc.js",
+      "id": "auth_processworkoutsnapshot"
     },
     {
       "label": "updateCaches()",
@@ -1243,8 +1342,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "updatecaches()",
-      "id": "auth_updatecaches",
-      "community_name": "calc.js"
+      "community_name": "calc.js",
+      "id": "auth_updatecaches"
     },
     {
       "label": "logPB()",
@@ -1254,8 +1353,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "logpb()",
-      "id": "auth_logpb",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "auth_logpb"
     },
     {
       "label": "requireAuth()",
@@ -1265,8 +1364,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "requireauth()",
-      "id": "auth_requireauth",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "auth_requireauth"
     },
     {
       "label": "calc.js",
@@ -1276,8 +1375,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "calc.js",
-      "id": "calc",
-      "community_name": "calc.js"
+      "community_name": "calc.js",
+      "id": "calc"
     },
     {
       "label": "update1RMRegistryUI()",
@@ -1287,8 +1386,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "update1rmregistryui()",
-      "id": "calc_update1rmregistryui",
-      "community_name": "calc.js"
+      "community_name": "calc.js",
+      "id": "calc_update1rmregistryui"
     },
     {
       "label": "updateCalcCard()",
@@ -1298,8 +1397,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "updatecalccard()",
-      "id": "calc_updatecalccard",
-      "community_name": "calc.js"
+      "community_name": "calc.js",
+      "id": "calc_updatecalccard"
     },
     {
       "label": "switchCalcMode()",
@@ -1307,10 +1406,10 @@
       "source_file": "calc.js",
       "source_location": "L75",
       "_origin": "ast",
-      "community": 7,
+      "community": 2,
       "norm_label": "switchcalcmode()",
-      "id": "calc_switchcalcmode",
-      "community_name": "volume.js"
+      "community_name": "sharing.js",
+      "id": "calc_switchcalcmode"
     },
     {
       "label": "updateCalcPreview()",
@@ -1320,8 +1419,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "updatecalcpreview()",
-      "id": "calc_updatecalcpreview",
-      "community_name": "calc.js"
+      "community_name": "calc.js",
+      "id": "calc_updatecalcpreview"
     },
     {
       "label": "handleCalcAdd()",
@@ -1331,8 +1430,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "handlecalcadd()",
-      "id": "calc_handlecalcadd",
-      "community_name": "calc.js"
+      "community_name": "calc.js",
+      "id": "calc_handlecalcadd"
     },
     {
       "label": "handleCalcRemove()",
@@ -1342,8 +1441,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "handlecalcremove()",
-      "id": "calc_handlecalcremove",
-      "community_name": "calc.js"
+      "community_name": "calc.js",
+      "id": "calc_handlecalcremove"
     },
     {
       "label": "handleCalcClear()",
@@ -1353,8 +1452,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "handlecalcclear()",
-      "id": "calc_handlecalcclear",
-      "community_name": "calc.js"
+      "community_name": "calc.js",
+      "id": "calc_handlecalcclear"
     },
     {
       "label": "updateLogSetButtonState()",
@@ -1364,8 +1463,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "updatelogsetbuttonstate()",
-      "id": "calc_updatelogsetbuttonstate",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "calc_updatelogsetbuttonstate"
     },
     {
       "label": "refreshLogSetForm()",
@@ -1375,8 +1474,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "refreshlogsetform()",
-      "id": "calc_refreshlogsetform",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "calc_refreshlogsetform"
     },
     {
       "label": "populateLiftSelectors()",
@@ -1386,8 +1485,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "populateliftselectors()",
-      "id": "calc_populateliftselectors",
-      "community_name": "calc.js"
+      "community_name": "calc.js",
+      "id": "calc_populateliftselectors"
     },
     {
       "label": "populateExerciseDropdown()",
@@ -1397,8 +1496,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "populateexercisedropdown()",
-      "id": "calc_populateexercisedropdown",
-      "community_name": "calc.js"
+      "community_name": "calc.js",
+      "id": "calc_populateexercisedropdown"
     },
     {
       "label": "populateWorkoutFilter()",
@@ -1408,8 +1507,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "populateworkoutfilter()",
-      "id": "calc_populateworkoutfilter",
-      "community_name": "calc.js"
+      "community_name": "calc.js",
+      "id": "calc_populateworkoutfilter"
     },
     {
       "label": "changePage()",
@@ -1419,8 +1518,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "changepage()",
-      "id": "calc_changepage",
-      "community_name": "calc.js"
+      "community_name": "calc.js",
+      "id": "calc_changepage"
     },
     {
       "label": "changeRecordsPage()",
@@ -1430,8 +1529,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "changerecordspage()",
-      "id": "calc_changerecordspage",
-      "community_name": "calc.js"
+      "community_name": "calc.js",
+      "id": "calc_changerecordspage"
     },
     {
       "label": "calendar.js",
@@ -1441,8 +1540,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "calendar.js",
-      "id": "calendar",
-      "community_name": "calendar.js"
+      "community_name": "calendar.js",
+      "id": "calendar"
     },
     {
       "label": "computeAndSyncDailyActivity()",
@@ -1452,8 +1551,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "computeandsyncdailyactivity()",
-      "id": "calendar_computeandsyncdailyactivity",
-      "community_name": "calendar.js"
+      "community_name": "calendar.js",
+      "id": "calendar_computeandsyncdailyactivity"
     },
     {
       "label": "renderConsistencyUI()",
@@ -1463,8 +1562,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "renderconsistencyui()",
-      "id": "calendar_renderconsistencyui",
-      "community_name": "calendar.js"
+      "community_name": "calendar.js",
+      "id": "calendar_renderconsistencyui"
     },
     {
       "label": "calculateChallengeProgress()",
@@ -1474,8 +1573,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "calculatechallengeprogress()",
-      "id": "calendar_calculatechallengeprogress",
-      "community_name": "calendar.js"
+      "community_name": "calendar.js",
+      "id": "calendar_calculatechallengeprogress"
     },
     {
       "label": "renderChallengeCards()",
@@ -1485,8 +1584,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "renderchallengecards()",
-      "id": "calendar_renderchallengecards",
-      "community_name": "calendar.js"
+      "community_name": "calendar.js",
+      "id": "calendar_renderchallengecards"
     },
     {
       "label": "loadConsistencyConfig()",
@@ -1496,8 +1595,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "loadconsistencyconfig()",
-      "id": "calendar_loadconsistencyconfig",
-      "community_name": "calendar.js"
+      "community_name": "calendar.js",
+      "id": "calendar_loadconsistencyconfig"
     },
     {
       "label": "getPreviousPeriodId()",
@@ -1507,8 +1606,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "getpreviousperiodid()",
-      "id": "calendar_getpreviousperiodid",
-      "community_name": "calendar.js"
+      "community_name": "calendar.js",
+      "id": "calendar_getpreviousperiodid"
     },
     {
       "label": "calculateStreakFromPeriods()",
@@ -1518,8 +1617,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "calculatestreakfromperiods()",
-      "id": "calendar_calculatestreakfromperiods",
-      "community_name": "calendar.js"
+      "community_name": "calendar.js",
+      "id": "calendar_calculatestreakfromperiods"
     },
     {
       "label": "renderStreakUI()",
@@ -1529,8 +1628,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "renderstreakui()",
-      "id": "calendar_renderstreakui",
-      "community_name": "calendar.js"
+      "community_name": "calendar.js",
+      "id": "calendar_renderstreakui"
     },
     {
       "label": "updateChallengeStreaks()",
@@ -1540,8 +1639,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "updatechallengestreaks()",
-      "id": "calendar_updatechallengestreaks",
-      "community_name": "calendar.js"
+      "community_name": "calendar.js",
+      "id": "calendar_updatechallengestreaks"
     },
     {
       "label": "renderCalendar()",
@@ -1551,8 +1650,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "rendercalendar()",
-      "id": "calendar_rendercalendar",
-      "community_name": "calendar.js"
+      "community_name": "calendar.js",
+      "id": "calendar_rendercalendar"
     },
     {
       "label": "updateConsistencyMetrics()",
@@ -1562,8 +1661,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "updateconsistencymetrics()",
-      "id": "calendar_updateconsistencymetrics",
-      "community_name": "calendar.js"
+      "community_name": "calendar.js",
+      "id": "calendar_updateconsistencymetrics"
     },
     {
       "label": "getWorkoutsForDate()",
@@ -1573,8 +1672,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "getworkoutsfordate()",
-      "id": "calendar_getworkoutsfordate",
-      "community_name": "calendar.js"
+      "community_name": "calendar.js",
+      "id": "calendar_getworkoutsfordate"
     },
     {
       "label": "selectCalendarDay()",
@@ -1584,8 +1683,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "selectcalendarday()",
-      "id": "calendar_selectcalendarday",
-      "community_name": "calendar.js"
+      "community_name": "calendar.js",
+      "id": "calendar_selectcalendarday"
     },
     {
       "label": "changeCalendarNav()",
@@ -1595,8 +1694,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "changecalendarnav()",
-      "id": "calendar_changecalendarnav",
-      "community_name": "calendar.js"
+      "community_name": "calendar.js",
+      "id": "calendar_changecalendarnav"
     },
     {
       "label": "applyCalendarNav()",
@@ -1606,8 +1705,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "applycalendarnav()",
-      "id": "calendar_applycalendarnav",
-      "community_name": "calendar.js"
+      "community_name": "calendar.js",
+      "id": "calendar_applycalendarnav"
     },
     {
       "label": "autoSelectFirstActiveDay()",
@@ -1617,8 +1716,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "autoselectfirstactiveday()",
-      "id": "calendar_autoselectfirstactiveday",
-      "community_name": "calendar.js"
+      "community_name": "calendar.js",
+      "id": "calendar_autoselectfirstactiveday"
     },
     {
       "label": "goToCalendarToday()",
@@ -1628,8 +1727,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "gotocalendartoday()",
-      "id": "calendar_gotocalendartoday",
-      "community_name": "calendar.js"
+      "community_name": "calendar.js",
+      "id": "calendar_gotocalendartoday"
     },
     {
       "label": "toggleCalendarView()",
@@ -1639,8 +1738,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "togglecalendarview()",
-      "id": "calendar_togglecalendarview",
-      "community_name": "calendar.js"
+      "community_name": "calendar.js",
+      "id": "calendar_togglecalendarview"
     },
     {
       "label": "closeCalendarDayDetail()",
@@ -1650,8 +1749,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "closecalendardaydetail()",
-      "id": "calendar_closecalendardaydetail",
-      "community_name": "calendar.js"
+      "community_name": "calendar.js",
+      "id": "calendar_closecalendardaydetail"
     },
     {
       "label": "data.js",
@@ -1661,8 +1760,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "data.js",
-      "id": "data",
-      "community_name": "calc.js"
+      "community_name": "calc.js",
+      "id": "data"
     },
     {
       "label": "renderFromWorkouts()",
@@ -1672,8 +1771,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "renderfromworkouts()",
-      "id": "data_renderfromworkouts",
-      "community_name": "calc.js"
+      "community_name": "calc.js",
+      "id": "data_renderfromworkouts"
     },
     {
       "label": "listenToDataStream()",
@@ -1683,8 +1782,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "listentodatastream()",
-      "id": "data_listentodatastream",
-      "community_name": "calc.js"
+      "community_name": "calc.js",
+      "id": "data_listentodatastream"
     },
     {
       "label": "processAnalytics()",
@@ -1694,8 +1793,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "processanalytics()",
-      "id": "data_processanalytics",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "data_processanalytics"
     },
     {
       "label": "debouncedUpdateLeaderboard",
@@ -1705,8 +1804,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "debouncedupdateleaderboard",
-      "id": "data_debouncedupdateleaderboard",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "data_debouncedupdateleaderboard"
     },
     {
       "label": "date.js",
@@ -1716,8 +1815,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "date.js",
-      "id": "date",
-      "community_name": "calendar.js"
+      "community_name": "calendar.js",
+      "id": "date"
     },
     {
       "label": "toLocalDateKey()",
@@ -1727,8 +1826,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "tolocaldatekey()",
-      "id": "date_tolocaldatekey",
-      "community_name": "calendar.js"
+      "community_name": "calendar.js",
+      "id": "date_tolocaldatekey"
     },
     {
       "label": "getMonday()",
@@ -1738,8 +1837,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "getmonday()",
-      "id": "date_getmonday",
-      "community_name": "calendar.js"
+      "community_name": "calendar.js",
+      "id": "date_getmonday"
     },
     {
       "label": "countActiveDays()",
@@ -1749,8 +1848,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "countactivedays()",
-      "id": "date_countactivedays",
-      "community_name": "calendar.js"
+      "community_name": "calendar.js",
+      "id": "date_countactivedays"
     },
     {
       "label": "countConsecutiveDays()",
@@ -1760,8 +1859,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "countconsecutivedays()",
-      "id": "date_countconsecutivedays",
-      "community_name": "calendar.js"
+      "community_name": "calendar.js",
+      "id": "date_countconsecutivedays"
     },
     {
       "label": "deploy.ps1",
@@ -1771,8 +1870,8 @@
       "_origin": "ast",
       "community": 18,
       "norm_label": "deploy.ps1",
-      "id": "deploy",
-      "community_name": "deploy.ps1"
+      "community_name": "deploy.ps1",
+      "id": "deploy"
     },
     {
       "label": "dom.js",
@@ -1780,10 +1879,10 @@
       "source_file": "dom.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 2,
+      "community": 4,
       "norm_label": "dom.js",
-      "id": "dom",
-      "community_name": "sharing.js"
+      "community_name": "calc.js",
+      "id": "dom"
     },
     {
       "label": "debounce()",
@@ -1791,10 +1890,10 @@
       "source_file": "dom.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 2,
+      "community": 4,
       "norm_label": "debounce()",
-      "id": "dom_debounce",
-      "community_name": "sharing.js"
+      "community_name": "calc.js",
+      "id": "dom_debounce"
     },
     {
       "label": "escapeHtml()",
@@ -1804,8 +1903,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "escapehtml()",
-      "id": "dom_escapehtml",
-      "community_name": "rendering.js"
+      "community_name": "rendering.js",
+      "id": "dom_escapehtml"
     },
     {
       "label": "haptic()",
@@ -1815,8 +1914,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "haptic()",
-      "id": "dom_haptic",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "dom_haptic"
     },
     {
       "label": "eslint.config.js",
@@ -1826,8 +1925,8 @@
       "_origin": "ast",
       "community": 19,
       "norm_label": "eslint.config.js",
-      "id": "eslint_config",
-      "community_name": "eslint.config.js"
+      "community_name": "eslint.config.js",
+      "id": "eslint_config"
     },
     {
       "label": "exercise-data.js",
@@ -1835,10 +1934,10 @@
       "source_file": "exercise-data.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 0,
+      "community": 4,
       "norm_label": "exercise-data.js",
-      "id": "exercise_data",
-      "community_name": "plans.js"
+      "community_name": "calc.js",
+      "id": "exercise_data"
     },
     {
       "label": "EXERCISE_CATALOG",
@@ -1846,10 +1945,10 @@
       "source_file": "exercise-data.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 0,
+      "community": 4,
       "norm_label": "exercise_catalog",
-      "id": "exercise_data_exercise_catalog",
-      "community_name": "plans.js"
+      "community_name": "calc.js",
+      "id": "exercise_data_exercise_catalog"
     },
     {
       "label": "LOAD_FACTORS",
@@ -1857,10 +1956,10 @@
       "source_file": "exercise-data.js",
       "source_location": "L70",
       "_origin": "ast",
-      "community": 0,
+      "community": 4,
       "norm_label": "load_factors",
-      "id": "exercise_data_load_factors",
-      "community_name": "plans.js"
+      "community_name": "calc.js",
+      "id": "exercise_data_load_factors"
     },
     {
       "label": "getExerciseInfo()",
@@ -1868,10 +1967,10 @@
       "source_file": "exercise-data.js",
       "source_location": "L73",
       "_origin": "ast",
-      "community": 0,
+      "community": 4,
       "norm_label": "getexerciseinfo()",
-      "id": "exercise_data_getexerciseinfo",
-      "community_name": "plans.js"
+      "community_name": "calc.js",
+      "id": "exercise_data_getexerciseinfo"
     },
     {
       "label": "getDisplayName()",
@@ -1879,10 +1978,10 @@
       "source_file": "exercise-data.js",
       "source_location": "L77",
       "_origin": "ast",
-      "community": 5,
+      "community": 4,
       "norm_label": "getdisplayname()",
-      "id": "exercise_data_getdisplayname",
-      "community_name": "rendering.js"
+      "community_name": "calc.js",
+      "id": "exercise_data_getdisplayname"
     },
     {
       "label": "resolveExerciseVariant()",
@@ -1890,10 +1989,10 @@
       "source_file": "exercise-data.js",
       "source_location": "L81",
       "_origin": "ast",
-      "community": 0,
+      "community": 4,
       "norm_label": "resolveexercisevariant()",
-      "id": "exercise_data_resolveexercisevariant",
-      "community_name": "plans.js"
+      "community_name": "calc.js",
+      "id": "exercise_data_resolveexercisevariant"
     },
     {
       "label": "firebase.js",
@@ -1901,10 +2000,10 @@
       "source_file": "firebase.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 0,
+      "community": 11,
       "norm_label": "firebase.js",
-      "id": "firebase",
-      "community_name": "plans.js"
+      "community_name": "theme.js",
+      "id": "firebase"
     },
     {
       "label": "firebaseConfig",
@@ -1912,10 +2011,10 @@
       "source_file": "firebase.js",
       "source_location": "L5",
       "_origin": "ast",
-      "community": 0,
+      "community": 11,
       "norm_label": "firebaseconfig",
-      "id": "firebase_firebaseconfig",
-      "community_name": "plans.js"
+      "community_name": "theme.js",
+      "id": "firebase_firebaseconfig"
     },
     {
       "label": "app",
@@ -1923,10 +2022,10 @@
       "source_file": "firebase.js",
       "source_location": "L14",
       "_origin": "ast",
-      "community": 0,
+      "community": 11,
       "norm_label": "app",
-      "id": "firebase_app",
-      "community_name": "plans.js"
+      "community_name": "theme.js",
+      "id": "firebase_app"
     },
     {
       "label": "auth",
@@ -1934,10 +2033,10 @@
       "source_file": "firebase.js",
       "source_location": "L15",
       "_origin": "ast",
-      "community": 0,
+      "community": 11,
       "norm_label": "auth",
-      "id": "firebase_auth",
-      "community_name": "plans.js"
+      "community_name": "theme.js",
+      "id": "firebase_auth"
     },
     {
       "label": "db",
@@ -1945,10 +2044,10 @@
       "source_file": "firebase.js",
       "source_location": "L16",
       "_origin": "ast",
-      "community": 0,
+      "community": 11,
       "norm_label": "db",
-      "id": "firebase_db",
-      "community_name": "plans.js"
+      "community_name": "theme.js",
+      "id": "firebase_db"
     },
     {
       "label": "formatting.js",
@@ -1958,8 +2057,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "formatting.js",
-      "id": "formatting",
-      "community_name": "rendering.js"
+      "community_name": "rendering.js",
+      "id": "formatting"
     },
     {
       "label": "formatMovementLoad()",
@@ -1969,8 +2068,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "formatmovementload()",
-      "id": "formatting_formatmovementload",
-      "community_name": "rendering.js"
+      "community_name": "rendering.js",
+      "id": "formatting_formatmovementload"
     },
     {
       "label": "formatCardDate()",
@@ -1980,8 +2079,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "formatcarddate()",
-      "id": "formatting_formatcarddate",
-      "community_name": "rendering.js"
+      "community_name": "rendering.js",
+      "id": "formatting_formatcarddate"
     },
     {
       "label": "formatWorkoutType()",
@@ -1991,8 +2090,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "formatworkouttype()",
-      "id": "formatting_formatworkouttype",
-      "community_name": "rendering.js"
+      "community_name": "rendering.js",
+      "id": "formatting_formatworkouttype"
     },
     {
       "label": "formatDotsScore()",
@@ -2002,8 +2101,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "formatdotsscore()",
-      "id": "formatting_formatdotsscore",
-      "community_name": "rendering.js"
+      "community_name": "rendering.js",
+      "id": "formatting_formatdotsscore"
     },
     {
       "label": "formatWeightSuffix()",
@@ -2013,8 +2112,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "formatweightsuffix()",
-      "id": "formatting_formatweightsuffix",
-      "community_name": "rendering.js"
+      "community_name": "rendering.js",
+      "id": "formatting_formatweightsuffix"
     },
     {
       "label": "formatMovementWeight()",
@@ -2024,8 +2123,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "formatmovementweight()",
-      "id": "formatting_formatmovementweight",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "formatting_formatmovementweight"
     },
     {
       "label": "formatMovementDisplay()",
@@ -2035,8 +2134,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "formatmovementdisplay()",
-      "id": "formatting_formatmovementdisplay",
-      "community_name": "rendering.js"
+      "community_name": "rendering.js",
+      "id": "formatting_formatmovementdisplay"
     },
     {
       "label": "forms.js",
@@ -2046,8 +2145,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "forms.js",
-      "id": "forms",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "forms"
     },
     {
       "label": "buildWmsField()",
@@ -2057,8 +2156,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "buildwmsfield()",
-      "id": "forms_buildwmsfield",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "forms_buildwmsfield"
     },
     {
       "label": "applyFieldAttributes()",
@@ -2068,8 +2167,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "applyfieldattributes()",
-      "id": "forms_applyfieldattributes",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "forms_applyfieldattributes"
     },
     {
       "label": "renderFormFields()",
@@ -2079,8 +2178,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "renderformfields()",
-      "id": "forms_renderformfields",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "forms_renderformfields"
     },
     {
       "label": "friends.js",
@@ -2090,8 +2189,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "friends.js",
-      "id": "friends",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "friends"
     },
     {
       "label": "getProfileDocRef()",
@@ -2101,8 +2200,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "getprofiledocref()",
-      "id": "friends_getprofiledocref",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "friends_getprofiledocref"
     },
     {
       "label": "copyCyberTag()",
@@ -2112,8 +2211,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "copycybertag()",
-      "id": "friends_copycybertag",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "friends_copycybertag"
     },
     {
       "label": "getProfileDocument()",
@@ -2123,8 +2222,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "getprofiledocument()",
-      "id": "friends_getprofiledocument",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "friends_getprofiledocument"
     },
     {
       "label": "initSocialProfile()",
@@ -2134,8 +2233,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "initsocialprofile()",
-      "id": "friends_initsocialprofile",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "friends_initsocialprofile"
     },
     {
       "label": "handleAddFriend()",
@@ -2145,8 +2244,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "handleaddfriend()",
-      "id": "friends_handleaddfriend",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "friends_handleaddfriend"
     },
     {
       "label": "addFriendFromLeaderboard()",
@@ -2156,8 +2255,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "addfriendfromleaderboard()",
-      "id": "friends_addfriendfromleaderboard",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "friends_addfriendfromleaderboard"
     },
     {
       "label": "removeFriend()",
@@ -2167,8 +2266,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "removefriend()",
-      "id": "friends_removefriend",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "friends_removefriend"
     },
     {
       "label": "cacheUncachedProfiles()",
@@ -2178,8 +2277,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "cacheuncachedprofiles()",
-      "id": "friends_cacheuncachedprofiles",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "friends_cacheuncachedprofiles"
     },
     {
       "label": "renderActiveFriendsList()",
@@ -2189,8 +2288,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "renderactivefriendslist()",
-      "id": "friends_renderactivefriendslist",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "friends_renderactivefriendslist"
     },
     {
       "label": "changeFriendsPage()",
@@ -2200,8 +2299,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "changefriendspage()",
-      "id": "friends_changefriendspage",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "friends_changefriendspage"
     },
     {
       "label": "cleanupFriendsSubscriptions()",
@@ -2211,8 +2310,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "cleanupfriendssubscriptions()",
-      "id": "friends_cleanupfriendssubscriptions",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "friends_cleanupfriendssubscriptions"
     },
     {
       "label": "leaderboard.js",
@@ -2222,8 +2321,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "leaderboard.js",
-      "id": "leaderboard",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "leaderboard"
     },
     {
       "label": "filterLeaderboardProfiles()",
@@ -2233,8 +2332,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "filterleaderboardprofiles()",
-      "id": "leaderboard_filterleaderboardprofiles",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "leaderboard_filterleaderboardprofiles"
     },
     {
       "label": "computeLeaderboardSlice()",
@@ -2244,8 +2343,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "computeleaderboardslice()",
-      "id": "leaderboard_computeleaderboardslice",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "leaderboard_computeleaderboardslice"
     },
     {
       "label": "switchLeaderboardScope()",
@@ -2253,10 +2352,10 @@
       "source_file": "leaderboard.js",
       "source_location": "L33",
       "_origin": "ast",
-      "community": 7,
+      "community": 2,
       "norm_label": "switchleaderboardscope()",
-      "id": "leaderboard_switchleaderboardscope",
-      "community_name": "volume.js"
+      "community_name": "sharing.js",
+      "id": "leaderboard_switchleaderboardscope"
     },
     {
       "label": "toggleLeaderboardExpand()",
@@ -2266,8 +2365,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "toggleleaderboardexpand()",
-      "id": "leaderboard_toggleleaderboardexpand",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "leaderboard_toggleleaderboardexpand"
     },
     {
       "label": "renderLeaderboardView()",
@@ -2277,8 +2376,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "renderleaderboardview()",
-      "id": "leaderboard_renderleaderboardview",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "leaderboard_renderleaderboardview"
     },
     {
       "label": "syncLeaderboardFeed()",
@@ -2288,8 +2387,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "syncleaderboardfeed()",
-      "id": "leaderboard_syncleaderboardfeed",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "leaderboard_syncleaderboardfeed"
     },
     {
       "label": "switchLeaderboardFormula()",
@@ -2297,10 +2396,10 @@
       "source_file": "leaderboard.js",
       "source_location": "L126",
       "_origin": "ast",
-      "community": 7,
+      "community": 2,
       "norm_label": "switchleaderboardformula()",
-      "id": "leaderboard_switchleaderboardformula",
-      "community_name": "volume.js"
+      "community_name": "sharing.js",
+      "id": "leaderboard_switchleaderboardformula"
     },
     {
       "label": "updateUserLeaderboardProfile()",
@@ -2310,8 +2409,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "updateuserleaderboardprofile()",
-      "id": "leaderboard_updateuserleaderboardprofile",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "leaderboard_updateuserleaderboardprofile"
     },
     {
       "label": "getThemeQrColors()",
@@ -2321,8 +2420,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "getthemeqrcolors()",
-      "id": "leaderboard_getthemeqrcolors",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "leaderboard_getthemeqrcolors"
     },
     {
       "label": "showQRCode()",
@@ -2332,8 +2431,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "showqrcode()",
-      "id": "leaderboard_showqrcode",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "leaderboard_showqrcode"
     },
     {
       "label": "cleanupLeaderboardSubscriptions()",
@@ -2343,8 +2442,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "cleanupleaderboardsubscriptions()",
-      "id": "leaderboard_cleanupleaderboardsubscriptions",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "leaderboard_cleanupleaderboardsubscriptions"
     },
     {
       "label": "manifest.json",
@@ -2354,8 +2453,8 @@
       "_origin": "ast",
       "community": 12,
       "norm_label": "manifest.json",
-      "id": "manifest",
-      "community_name": "manifest.json"
+      "community_name": "manifest.json",
+      "id": "manifest"
     },
     {
       "label": "name",
@@ -2365,8 +2464,8 @@
       "_origin": "ast",
       "community": 12,
       "norm_label": "name",
-      "id": "manifest_name",
-      "community_name": "manifest.json"
+      "community_name": "manifest.json",
+      "id": "manifest_name"
     },
     {
       "label": "short_name",
@@ -2376,8 +2475,8 @@
       "_origin": "ast",
       "community": 12,
       "norm_label": "short_name",
-      "id": "manifest_short_name",
-      "community_name": "manifest.json"
+      "community_name": "manifest.json",
+      "id": "manifest_short_name"
     },
     {
       "label": "start_url",
@@ -2387,8 +2486,8 @@
       "_origin": "ast",
       "community": 12,
       "norm_label": "start_url",
-      "id": "manifest_start_url",
-      "community_name": "manifest.json"
+      "community_name": "manifest.json",
+      "id": "manifest_start_url"
     },
     {
       "label": "scope",
@@ -2398,8 +2497,8 @@
       "_origin": "ast",
       "community": 12,
       "norm_label": "scope",
-      "id": "manifest_scope",
-      "community_name": "manifest.json"
+      "community_name": "manifest.json",
+      "id": "manifest_scope"
     },
     {
       "label": "description",
@@ -2409,8 +2508,8 @@
       "_origin": "ast",
       "community": 12,
       "norm_label": "description",
-      "id": "manifest_description",
-      "community_name": "manifest.json"
+      "community_name": "manifest.json",
+      "id": "manifest_description"
     },
     {
       "label": "theme_color",
@@ -2420,8 +2519,8 @@
       "_origin": "ast",
       "community": 12,
       "norm_label": "theme_color",
-      "id": "manifest_theme_color",
-      "community_name": "manifest.json"
+      "community_name": "manifest.json",
+      "id": "manifest_theme_color"
     },
     {
       "label": "background_color",
@@ -2431,8 +2530,8 @@
       "_origin": "ast",
       "community": 12,
       "norm_label": "background_color",
-      "id": "manifest_background_color",
-      "community_name": "manifest.json"
+      "community_name": "manifest.json",
+      "id": "manifest_background_color"
     },
     {
       "label": "display",
@@ -2442,8 +2541,8 @@
       "_origin": "ast",
       "community": 12,
       "norm_label": "display",
-      "id": "manifest_display",
-      "community_name": "manifest.json"
+      "community_name": "manifest.json",
+      "id": "manifest_display"
     },
     {
       "label": "icons",
@@ -2453,8 +2552,8 @@
       "_origin": "ast",
       "community": 12,
       "norm_label": "icons",
-      "id": "manifest_icons",
-      "community_name": "manifest.json"
+      "community_name": "manifest.json",
+      "id": "manifest_icons"
     },
     {
       "label": "screenshots",
@@ -2464,8 +2563,8 @@
       "_origin": "ast",
       "community": 12,
       "norm_label": "screenshots",
-      "id": "manifest_screenshots",
-      "community_name": "manifest.json"
+      "community_name": "manifest.json",
+      "id": "manifest_screenshots"
     },
     {
       "label": "math.js",
@@ -2473,10 +2572,10 @@
       "source_file": "math.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 0,
+      "community": 4,
       "norm_label": "math.js",
-      "id": "math",
-      "community_name": "plans.js"
+      "community_name": "calc.js",
+      "id": "math"
     },
     {
       "label": "estimate1RM()",
@@ -2486,8 +2585,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "estimate1rm()",
-      "id": "math_estimate1rm",
-      "community_name": "calc.js"
+      "community_name": "calc.js",
+      "id": "math_estimate1rm"
     },
     {
       "label": "estimateWeightForReps()",
@@ -2495,10 +2594,10 @@
       "source_file": "math.js",
       "source_location": "L9",
       "_origin": "ast",
-      "community": 0,
+      "community": 4,
       "norm_label": "estimateweightforreps()",
-      "id": "math_estimateweightforreps",
-      "community_name": "plans.js"
+      "community_name": "calc.js",
+      "id": "math_estimateweightforreps"
     },
     {
       "label": "computeDisplayWeight()",
@@ -2506,10 +2605,10 @@
       "source_file": "math.js",
       "source_location": "L13",
       "_origin": "ast",
-      "community": 0,
+      "community": 4,
       "norm_label": "computedisplayweight()",
-      "id": "math_computedisplayweight",
-      "community_name": "plans.js"
+      "community_name": "calc.js",
+      "id": "math_computedisplayweight"
     },
     {
       "label": "rpeToRir()",
@@ -2517,10 +2616,10 @@
       "source_file": "math.js",
       "source_location": "L24",
       "_origin": "ast",
-      "community": 0,
+      "community": 4,
       "norm_label": "rpetorir()",
-      "id": "math_rpetorir",
-      "community_name": "plans.js"
+      "community_name": "calc.js",
+      "id": "math_rpetorir"
     },
     {
       "label": "computeEffectiveLoad()",
@@ -2528,10 +2627,10 @@
       "source_file": "math.js",
       "source_location": "L28",
       "_origin": "ast",
-      "community": 0,
+      "community": 4,
       "norm_label": "computeeffectiveload()",
-      "id": "math_computeeffectiveload",
-      "community_name": "plans.js"
+      "community_name": "calc.js",
+      "id": "math_computeeffectiveload"
     },
     {
       "label": "getEffectiveLoad()",
@@ -2541,8 +2640,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "geteffectiveload()",
-      "id": "math_geteffectiveload",
-      "community_name": "calc.js"
+      "community_name": "calc.js",
+      "id": "math_geteffectiveload"
     },
     {
       "label": "messages.js",
@@ -2550,10 +2649,10 @@
       "source_file": "messages.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 0,
+      "community": 2,
       "norm_label": "messages.js",
-      "id": "messages",
-      "community_name": "plans.js"
+      "community_name": "sharing.js",
+      "id": "messages"
     },
     {
       "label": "MSG",
@@ -2561,10 +2660,10 @@
       "source_file": "messages.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 0,
+      "community": 2,
       "norm_label": "msg",
-      "id": "messages_msg",
-      "community_name": "plans.js"
+      "community_name": "sharing.js",
+      "id": "messages_msg"
     },
     {
       "label": "onboarding.js",
@@ -2574,8 +2673,8 @@
       "_origin": "ast",
       "community": 14,
       "norm_label": "onboarding.js",
-      "id": "onboarding",
-      "community_name": "onboarding.js"
+      "community_name": "onboarding.js",
+      "id": "onboarding"
     },
     {
       "label": "showOnboarding()",
@@ -2585,8 +2684,8 @@
       "_origin": "ast",
       "community": 14,
       "norm_label": "showonboarding()",
-      "id": "onboarding_showonboarding",
-      "community_name": "onboarding.js"
+      "community_name": "onboarding.js",
+      "id": "onboarding_showonboarding"
     },
     {
       "label": "hideOnboarding()",
@@ -2596,8 +2695,8 @@
       "_origin": "ast",
       "community": 15,
       "norm_label": "hideonboarding()",
-      "id": "onboarding_hideonboarding",
-      "community_name": "saveOnboarding"
+      "community_name": "saveOnboarding",
+      "id": "onboarding_hideonboarding"
     },
     {
       "label": "addOnboarding1RM()",
@@ -2607,8 +2706,8 @@
       "_origin": "ast",
       "community": 14,
       "norm_label": "addonboarding1rm()",
-      "id": "onboarding_addonboarding1rm",
-      "community_name": "onboarding.js"
+      "community_name": "onboarding.js",
+      "id": "onboarding_addonboarding1rm"
     },
     {
       "label": "opencode.json",
@@ -2618,8 +2717,8 @@
       "_origin": "ast",
       "community": 13,
       "norm_label": "opencode.json",
-      "id": "opencode",
-      "community_name": "opencode.json"
+      "community_name": "opencode.json",
+      "id": "opencode"
     },
     {
       "label": "$schema",
@@ -2629,8 +2728,8 @@
       "_origin": "ast",
       "community": 13,
       "norm_label": "$schema",
-      "id": "opencode_schema",
-      "community_name": "opencode.json"
+      "community_name": "opencode.json",
+      "id": "opencode_schema"
     },
     {
       "label": "model",
@@ -2640,8 +2739,8 @@
       "_origin": "ast",
       "community": 13,
       "norm_label": "model",
-      "id": "opencode_model",
-      "community_name": "opencode.json"
+      "community_name": "opencode.json",
+      "id": "opencode_model"
     },
     {
       "label": "agent",
@@ -2651,8 +2750,8 @@
       "_origin": "ast",
       "community": 13,
       "norm_label": "agent",
-      "id": "opencode_agent",
-      "community_name": "opencode.json"
+      "community_name": "opencode.json",
+      "id": "opencode_agent"
     },
     {
       "label": "plan",
@@ -2662,8 +2761,8 @@
       "_origin": "ast",
       "community": 13,
       "norm_label": "plan",
-      "id": "opencode_agent_plan",
-      "community_name": "opencode.json"
+      "community_name": "opencode.json",
+      "id": "opencode_agent_plan"
     },
     {
       "label": "model",
@@ -2673,8 +2772,8 @@
       "_origin": "ast",
       "community": 13,
       "norm_label": "model",
-      "id": "opencode_plan_model",
-      "community_name": "opencode.json"
+      "community_name": "opencode.json",
+      "id": "opencode_plan_model"
     },
     {
       "label": "build",
@@ -2684,8 +2783,8 @@
       "_origin": "ast",
       "community": 13,
       "norm_label": "build",
-      "id": "opencode_agent_build",
-      "community_name": "opencode.json"
+      "community_name": "opencode.json",
+      "id": "opencode_agent_build"
     },
     {
       "label": "model",
@@ -2695,8 +2794,8 @@
       "_origin": "ast",
       "community": 13,
       "norm_label": "model",
-      "id": "opencode_build_model",
-      "community_name": "opencode.json"
+      "community_name": "opencode.json",
+      "id": "opencode_build_model"
     },
     {
       "label": "provider",
@@ -2706,8 +2805,8 @@
       "_origin": "ast",
       "community": 13,
       "norm_label": "provider",
-      "id": "opencode_provider",
-      "community_name": "opencode.json"
+      "community_name": "opencode.json",
+      "id": "opencode_provider"
     },
     {
       "label": "opencode",
@@ -2717,8 +2816,8 @@
       "_origin": "ast",
       "community": 13,
       "norm_label": "opencode",
-      "id": "opencode_provider_opencode",
-      "community_name": "opencode.json"
+      "community_name": "opencode.json",
+      "id": "opencode_provider_opencode"
     },
     {
       "label": "enabled",
@@ -2728,8 +2827,8 @@
       "_origin": "ast",
       "community": 13,
       "norm_label": "enabled",
-      "id": "opencode_opencode_enabled",
-      "community_name": "opencode.json"
+      "community_name": "opencode.json",
+      "id": "opencode_opencode_enabled"
     },
     {
       "label": "package.json",
@@ -2739,8 +2838,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "package.json",
-      "id": "package",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "package"
     },
     {
       "label": "name",
@@ -2750,8 +2849,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "name",
-      "id": "package_name",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "package_name"
     },
     {
       "label": "version",
@@ -2761,8 +2860,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "version",
-      "id": "package_version",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "package_version"
     },
     {
       "label": "type",
@@ -2772,8 +2871,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "type",
-      "id": "package_type",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "package_type"
     },
     {
       "label": "scripts",
@@ -2783,8 +2882,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "scripts",
-      "id": "package_scripts",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "package_scripts"
     },
     {
       "label": "test",
@@ -2794,8 +2893,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "test",
-      "id": "package_scripts_test",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "package_scripts_test"
     },
     {
       "label": "test:watch",
@@ -2805,8 +2904,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "test:watch",
-      "id": "package_scripts_test_watch",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "package_scripts_test_watch"
     },
     {
       "label": "lint",
@@ -2816,8 +2915,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "lint",
-      "id": "package_scripts_lint",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "package_scripts_lint"
     },
     {
       "label": "lint:fix",
@@ -2827,8 +2926,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "lint:fix",
-      "id": "package_scripts_lint_fix",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "package_scripts_lint_fix"
     },
     {
       "label": "test:coverage",
@@ -2838,8 +2937,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "test:coverage",
-      "id": "package_scripts_test_coverage",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "package_scripts_test_coverage"
     },
     {
       "label": "devDependencies",
@@ -2849,8 +2948,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "devdependencies",
-      "id": "package_devdependencies",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "package_devdependencies"
     },
     {
       "label": "@eslint/js",
@@ -2860,8 +2959,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "@eslint/js",
-      "id": "package_devdependencies_eslint_js",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "package_devdependencies_eslint_js"
     },
     {
       "label": "@eslint/js",
@@ -2871,8 +2970,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "@eslint/js",
-      "id": "eslint_js",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "eslint_js"
     },
     {
       "label": "@vitest/coverage-v8",
@@ -2882,8 +2981,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "@vitest/coverage-v8",
-      "id": "package_devdependencies_vitest_coverage_v8",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "package_devdependencies_vitest_coverage_v8"
     },
     {
       "label": "@vitest/coverage-v8",
@@ -2893,8 +2992,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "@vitest/coverage-v8",
-      "id": "vitest_coverage_v8",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "vitest_coverage_v8"
     },
     {
       "label": "eslint",
@@ -2904,8 +3003,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "eslint",
-      "id": "package_devdependencies_eslint",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "package_devdependencies_eslint"
     },
     {
       "label": "eslint",
@@ -2915,8 +3014,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "eslint",
-      "id": "eslint",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "eslint"
     },
     {
       "label": "globals",
@@ -2926,8 +3025,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "globals",
-      "id": "package_devdependencies_globals",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "package_devdependencies_globals"
     },
     {
       "label": "globals",
@@ -2937,8 +3036,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "globals",
-      "id": "globals",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "globals"
     },
     {
       "label": "jsdom",
@@ -2948,8 +3047,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "jsdom",
-      "id": "package_devdependencies_jsdom",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "package_devdependencies_jsdom"
     },
     {
       "label": "jsdom",
@@ -2959,8 +3058,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "jsdom",
-      "id": "jsdom",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "jsdom"
     },
     {
       "label": "vitest",
@@ -2970,8 +3069,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "vitest",
-      "id": "package_devdependencies_vitest",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "package_devdependencies_vitest"
     },
     {
       "label": "vitest",
@@ -2981,8 +3080,8 @@
       "_origin": "ast",
       "community": 9,
       "norm_label": "vitest",
-      "id": "vitest",
-      "community_name": "devDependencies"
+      "community_name": "devDependencies",
+      "id": "vitest"
     },
     {
       "label": "plans.js",
@@ -2992,8 +3091,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "plans.js",
-      "id": "plans",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "plans"
     },
     {
       "label": "handleWorkoutTypeChange()",
@@ -3001,10 +3100,10 @@
       "source_file": "plans.js",
       "source_location": "L18",
       "_origin": "ast",
-      "community": 7,
+      "community": 0,
       "norm_label": "handleworkouttypechange()",
-      "id": "plans_handleworkouttypechange",
-      "community_name": "volume.js"
+      "community_name": "plans.js",
+      "id": "plans_handleworkouttypechange"
     },
     {
       "label": "switchEmomMode()",
@@ -3012,10 +3111,10 @@
       "source_file": "plans.js",
       "source_location": "L70",
       "_origin": "ast",
-      "community": 7,
+      "community": 0,
       "norm_label": "switchemommode()",
-      "id": "plans_switchemommode",
-      "community_name": "volume.js"
+      "community_name": "plans.js",
+      "id": "plans_switchemommode"
     },
     {
       "label": "addPlanMinuteSlot()",
@@ -3025,8 +3124,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "addplanminuteslot()",
-      "id": "plans_addplanminuteslot",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "plans_addplanminuteslot"
     },
     {
       "label": "refreshPlanForm()",
@@ -3036,8 +3135,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "refreshplanform()",
-      "id": "plans_refreshplanform",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "plans_refreshplanform"
     },
     {
       "label": "handlePlanExerciseChange()",
@@ -3047,8 +3146,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "handleplanexercisechange()",
-      "id": "plans_handleplanexercisechange",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "plans_handleplanexercisechange"
     },
     {
       "label": "togglePlanWms()",
@@ -3058,8 +3157,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "toggleplanwms()",
-      "id": "plans_toggleplanwms",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "plans_toggleplanwms"
     },
     {
       "label": "previewPctMode()",
@@ -3069,8 +3168,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "previewpctmode()",
-      "id": "plans_previewpctmode",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "plans_previewpctmode"
     },
     {
       "label": "previewRpeMode()",
@@ -3078,10 +3177,10 @@
       "source_file": "plans.js",
       "source_location": "L209",
       "_origin": "ast",
-      "community": 0,
+      "community": 4,
       "norm_label": "previewrpemode()",
-      "id": "plans_previewrpemode",
-      "community_name": "plans.js"
+      "community_name": "calc.js",
+      "id": "plans_previewrpemode"
     },
     {
       "label": "previewAbsoluteMode()",
@@ -3091,8 +3190,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "previewabsolutemode()",
-      "id": "plans_previewabsolutemode",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "plans_previewabsolutemode"
     },
     {
       "label": "updatePlanCalcPreview()",
@@ -3102,8 +3201,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "updateplancalcpreview()",
-      "id": "plans_updateplancalcpreview",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "plans_updateplancalcpreview"
     },
     {
       "label": "handlePlanAdd()",
@@ -3113,8 +3212,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "handleplanadd()",
-      "id": "plans_handleplanadd",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "plans_handleplanadd"
     },
     {
       "label": "removePlanMovement()",
@@ -3124,8 +3223,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "removeplanmovement()",
-      "id": "plans_removeplanmovement",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "plans_removeplanmovement"
     },
     {
       "label": "populatePlanMovements()",
@@ -3135,8 +3234,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "populateplanmovements()",
-      "id": "plans_populateplanmovements",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "plans_populateplanmovements"
     },
     {
       "label": "formatIntervalLabel()",
@@ -3146,8 +3245,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "formatintervallabel()",
-      "id": "plans_formatintervallabel",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "plans_formatintervallabel"
     },
     {
       "label": "validatePlanInputs()",
@@ -3157,8 +3256,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "validateplaninputs()",
-      "id": "plans_validateplaninputs",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "plans_validateplaninputs"
     },
     {
       "label": "generateAutoPlanName()",
@@ -3168,8 +3267,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "generateautoplanname()",
-      "id": "plans_generateautoplanname",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "plans_generateautoplanname"
     },
     {
       "label": "buildPlanDocument()",
@@ -3179,8 +3278,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "buildplandocument()",
-      "id": "plans_buildplandocument",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "plans_buildplandocument"
     },
     {
       "label": "savePlan()",
@@ -3190,8 +3289,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "saveplan()",
-      "id": "plans_saveplan",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "plans_saveplan"
     },
     {
       "label": "removeMinuteSlot()",
@@ -3199,10 +3298,10 @@
       "source_file": "plans.js",
       "source_location": "L435",
       "_origin": "ast",
-      "community": 7,
+      "community": 0,
       "norm_label": "removeminuteslot()",
-      "id": "plans_removeminuteslot",
-      "community_name": "volume.js"
+      "community_name": "plans.js",
+      "id": "plans_removeminuteslot"
     },
     {
       "label": "updateEmomDurationDisplay()",
@@ -3210,10 +3309,10 @@
       "source_file": "plans.js",
       "source_location": "L450",
       "_origin": "ast",
-      "community": 7,
+      "community": 0,
       "norm_label": "updateemomdurationdisplay()",
-      "id": "plans_updateemomdurationdisplay",
-      "community_name": "volume.js"
+      "community_name": "plans.js",
+      "id": "plans_updateemomdurationdisplay"
     },
     {
       "label": "updateEmomSummary()",
@@ -3221,10 +3320,10 @@
       "source_file": "plans.js",
       "source_location": "L469",
       "_origin": "ast",
-      "community": 7,
+      "community": 0,
       "norm_label": "updateemomsummary()",
-      "id": "plans_updateemomsummary",
-      "community_name": "volume.js"
+      "community_name": "plans.js",
+      "id": "plans_updateemomsummary"
     },
     {
       "label": "getEmomMovementData()",
@@ -3234,8 +3333,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "getemommovementdata()",
-      "id": "plans_getemommovementdata",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "plans_getemommovementdata"
     },
     {
       "label": "updateEmomScorePreview()",
@@ -3243,10 +3342,10 @@
       "source_file": "plans.js",
       "source_location": "L520",
       "_origin": "ast",
-      "community": 7,
+      "community": 0,
       "norm_label": "updateemomscorepreview()",
-      "id": "plans_updateemomscorepreview",
-      "community_name": "volume.js"
+      "community_name": "plans.js",
+      "id": "plans_updateemomscorepreview"
     },
     {
       "label": "listenToPlans()",
@@ -3254,10 +3353,10 @@
       "source_file": "plans.js",
       "source_location": "L535",
       "_origin": "ast",
-      "community": 4,
+      "community": 2,
       "norm_label": "listentoplans()",
-      "id": "plans_listentoplans",
-      "community_name": "calc.js"
+      "community_name": "sharing.js",
+      "id": "plans_listentoplans"
     },
     {
       "label": "renderPlansUI()",
@@ -3265,10 +3364,10 @@
       "source_file": "plans.js",
       "source_location": "L557",
       "_origin": "ast",
-      "community": 4,
+      "community": 0,
       "norm_label": "renderplansui()",
-      "id": "plans_renderplansui",
-      "community_name": "calc.js"
+      "community_name": "plans.js",
+      "id": "plans_renderplansui"
     },
     {
       "label": "switchPlansFilter()",
@@ -3276,10 +3375,10 @@
       "source_file": "plans.js",
       "source_location": "L568",
       "_origin": "ast",
-      "community": 7,
+      "community": 2,
       "norm_label": "switchplansfilter()",
-      "id": "plans_switchplansfilter",
-      "community_name": "volume.js"
+      "community_name": "sharing.js",
+      "id": "plans_switchplansfilter"
     },
     {
       "label": "changePlansPage()",
@@ -3287,10 +3386,10 @@
       "source_file": "plans.js",
       "source_location": "L607",
       "_origin": "ast",
-      "community": 4,
+      "community": 0,
       "norm_label": "changeplanspage()",
-      "id": "plans_changeplanspage",
-      "community_name": "calc.js"
+      "community_name": "plans.js",
+      "id": "plans_changeplanspage"
     },
     {
       "label": "deletePlan()",
@@ -3300,8 +3399,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "deleteplan()",
-      "id": "plans_deleteplan",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "plans_deleteplan"
     },
     {
       "label": "deleteStructuredWorkout()",
@@ -3311,8 +3410,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "deletestructuredworkout()",
-      "id": "plans_deletestructuredworkout",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "plans_deletestructuredworkout"
     },
     {
       "label": "loadWorkoutIntoBuilder()",
@@ -3322,8 +3421,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "loadworkoutintobuilder()",
-      "id": "plans_loadworkoutintobuilder",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "plans_loadworkoutintobuilder"
     },
     {
       "label": "loadPlan()",
@@ -3333,8 +3432,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "loadplan()",
-      "id": "plans_loadplan",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "plans_loadplan"
     },
     {
       "label": "redoWorkout()",
@@ -3344,8 +3443,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "redoworkout()",
-      "id": "plans_redoworkout",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "plans_redoworkout"
     },
     {
       "label": "capturePlanStructure()",
@@ -3355,8 +3454,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "captureplanstructure()",
-      "id": "plans_captureplanstructure",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "plans_captureplanstructure"
     },
     {
       "label": "populateAmrapForm()",
@@ -3366,8 +3465,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "populateamrapform()",
-      "id": "plans_populateamrapform",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "plans_populateamrapform"
     },
     {
       "label": "populateEmomForm()",
@@ -3377,8 +3476,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "populateemomform()",
-      "id": "plans_populateemomform",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "plans_populateemomform"
     },
     {
       "label": "populateForTimeForm()",
@@ -3388,8 +3487,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "populatefortimeform()",
-      "id": "plans_populatefortimeform",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "plans_populatefortimeform"
     },
     {
       "label": "populateIntervalForm()",
@@ -3399,8 +3498,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "populateintervalform()",
-      "id": "plans_populateintervalform",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "plans_populateintervalform"
     },
     {
       "label": "populateMovementDropdowns()",
@@ -3408,10 +3507,10 @@
       "source_file": "plans.js",
       "source_location": "L783",
       "_origin": "ast",
-      "community": 7,
+      "community": 0,
       "norm_label": "populatemovementdropdowns()",
-      "id": "plans_populatemovementdropdowns",
-      "community_name": "volume.js"
+      "community_name": "plans.js",
+      "id": "plans_populatemovementdropdowns"
     },
     {
       "label": "cleanupWorkoutSubscriptions()",
@@ -3421,8 +3520,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "cleanupworkoutsubscriptions()",
-      "id": "plans_cleanupworkoutsubscriptions",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "plans_cleanupworkoutsubscriptions"
     },
     {
       "label": "rendering.js",
@@ -3432,8 +3531,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "rendering.js",
-      "id": "rendering",
-      "community_name": "rendering.js"
+      "community_name": "rendering.js",
+      "id": "rendering"
     },
     {
       "label": "renderOnboarding1RMItem()",
@@ -3443,8 +3542,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "renderonboarding1rmitem()",
-      "id": "rendering_renderonboarding1rmitem",
-      "community_name": "rendering.js"
+      "community_name": "rendering.js",
+      "id": "rendering_renderonboarding1rmitem"
     },
     {
       "label": "renderOnboarding1RMList()",
@@ -3452,10 +3551,10 @@
       "source_file": "rendering.js",
       "source_location": "L19",
       "_origin": "ast",
-      "community": 5,
+      "community": 14,
       "norm_label": "renderonboarding1rmlist()",
-      "id": "rendering_renderonboarding1rmlist",
-      "community_name": "rendering.js"
+      "community_name": "onboarding.js",
+      "id": "rendering_renderonboarding1rmlist"
     },
     {
       "label": "renderCalcEntry()",
@@ -3465,8 +3564,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "rendercalcentry()",
-      "id": "rendering_rendercalcentry",
-      "community_name": "rendering.js"
+      "community_name": "rendering.js",
+      "id": "rendering_rendercalcentry"
     },
     {
       "label": "renderCalcEntries()",
@@ -3476,8 +3575,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "rendercalcentries()",
-      "id": "rendering_rendercalcentries",
-      "community_name": "calc.js"
+      "community_name": "calc.js",
+      "id": "rendering_rendercalcentries"
     },
     {
       "label": "renderPlanMovementItem()",
@@ -3487,8 +3586,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "renderplanmovementitem()",
-      "id": "rendering_renderplanmovementitem",
-      "community_name": "rendering.js"
+      "community_name": "rendering.js",
+      "id": "rendering_renderplanmovementitem"
     },
     {
       "label": "renderPlanMovements()",
@@ -3498,8 +3597,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "renderplanmovements()",
-      "id": "rendering_renderplanmovements",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "rendering_renderplanmovements"
     },
     {
       "label": "renderMovementChips()",
@@ -3509,8 +3608,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "rendermovementchips()",
-      "id": "rendering_rendermovementchips",
-      "community_name": "rendering.js"
+      "community_name": "rendering.js",
+      "id": "rendering_rendermovementchips"
     },
     {
       "label": "renderEmomChips()",
@@ -3520,8 +3619,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "renderemomchips()",
-      "id": "rendering_renderemomchips",
-      "community_name": "rendering.js"
+      "community_name": "rendering.js",
+      "id": "rendering_renderemomchips"
     },
     {
       "label": "renderCalendarWorkoutItem()",
@@ -3531,8 +3630,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "rendercalendarworkoutitem()",
-      "id": "rendering_rendercalendarworkoutitem",
-      "community_name": "rendering.js"
+      "community_name": "rendering.js",
+      "id": "rendering_rendercalendarworkoutitem"
     },
     {
       "label": "renderVolumeBar()",
@@ -3542,8 +3641,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "rendervolumebar()",
-      "id": "rendering_rendervolumebar",
-      "community_name": "rendering.js"
+      "community_name": "rendering.js",
+      "id": "rendering_rendervolumebar"
     },
     {
       "label": "renderMinuteSlotInner()",
@@ -3551,10 +3650,10 @@
       "source_file": "rendering.js",
       "source_location": "L174",
       "_origin": "ast",
-      "community": 5,
+      "community": 0,
       "norm_label": "renderminuteslotinner()",
-      "id": "rendering_renderminuteslotinner",
-      "community_name": "rendering.js"
+      "community_name": "plans.js",
+      "id": "rendering_renderminuteslotinner"
     },
     {
       "label": "renderShareFriendItem()",
@@ -3564,8 +3663,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "rendersharefrienditem()",
-      "id": "rendering_rendersharefrienditem",
-      "community_name": "rendering.js"
+      "community_name": "rendering.js",
+      "id": "rendering_rendersharefrienditem"
     },
     {
       "label": "renderRegistryRow()",
@@ -3575,8 +3674,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "renderregistryrow()",
-      "id": "rendering_renderregistryrow",
-      "community_name": "rendering.js"
+      "community_name": "rendering.js",
+      "id": "rendering_renderregistryrow"
     },
     {
       "label": "renderLeaderboardEmptyRow()",
@@ -3584,10 +3683,10 @@
       "source_file": "rendering.js",
       "source_location": "L202",
       "_origin": "ast",
-      "community": 5,
+      "community": 2,
       "norm_label": "renderleaderboardemptyrow()",
-      "id": "rendering_renderleaderboardemptyrow",
-      "community_name": "rendering.js"
+      "community_name": "sharing.js",
+      "id": "rendering_renderleaderboardemptyrow"
     },
     {
       "label": "buildCalendarDayHtml()",
@@ -3597,8 +3696,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "buildcalendardayhtml()",
-      "id": "rendering_buildcalendardayhtml",
-      "community_name": "calendar.js"
+      "community_name": "calendar.js",
+      "id": "rendering_buildcalendardayhtml"
     },
     {
       "label": "getBorderClass()",
@@ -3608,8 +3707,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "getborderclass()",
-      "id": "rendering_getborderclass",
-      "community_name": "rendering.js"
+      "community_name": "rendering.js",
+      "id": "rendering_getborderclass"
     },
     {
       "label": "workoutToLogHtml()",
@@ -3619,8 +3718,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "workouttologhtml()",
-      "id": "rendering_workouttologhtml",
-      "community_name": "rendering.js"
+      "community_name": "rendering.js",
+      "id": "rendering_workouttologhtml"
     },
     {
       "label": "renderWorkoutCard()",
@@ -3630,8 +3729,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "renderworkoutcard()",
-      "id": "rendering_renderworkoutcard",
-      "community_name": "rendering.js"
+      "community_name": "rendering.js",
+      "id": "rendering_renderworkoutcard"
     },
     {
       "label": "renderStructuredWorkoutCard()",
@@ -3641,8 +3740,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "renderstructuredworkoutcard()",
-      "id": "rendering_renderstructuredworkoutcard",
-      "community_name": "rendering.js"
+      "community_name": "rendering.js",
+      "id": "rendering_renderstructuredworkoutcard"
     },
     {
       "label": "renderPlanCard()",
@@ -3652,8 +3751,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "renderplancard()",
-      "id": "rendering_renderplancard",
-      "community_name": "rendering.js"
+      "community_name": "rendering.js",
+      "id": "rendering_renderplancard"
     },
     {
       "label": "renderSharedPlanCard()",
@@ -3663,8 +3762,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "rendersharedplancard()",
-      "id": "rendering_rendersharedplancard",
-      "community_name": "rendering.js"
+      "community_name": "rendering.js",
+      "id": "rendering_rendersharedplancard"
     },
     {
       "label": "friendToHtml()",
@@ -3674,8 +3773,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "friendtohtml()",
-      "id": "rendering_friendtohtml",
-      "community_name": "rendering.js"
+      "community_name": "rendering.js",
+      "id": "rendering_friendtohtml"
     },
     {
       "label": "buildLeaderboardRow()",
@@ -3683,10 +3782,10 @@
       "source_file": "rendering.js",
       "source_location": "L381",
       "_origin": "ast",
-      "community": 5,
+      "community": 2,
       "norm_label": "buildleaderboardrow()",
-      "id": "rendering_buildleaderboardrow",
-      "community_name": "rendering.js"
+      "community_name": "sharing.js",
+      "id": "rendering_buildleaderboardrow"
     },
     {
       "label": "sharing.js",
@@ -3696,8 +3795,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "sharing.js",
-      "id": "sharing",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "sharing"
     },
     {
       "label": "_favDebounce",
@@ -3707,8 +3806,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "_favdebounce",
-      "id": "sharing_favdebounce",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "sharing_favdebounce"
     },
     {
       "label": "ITEM_TYPE_STRATEGIES",
@@ -3718,8 +3817,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "item_type_strategies",
-      "id": "sharing_item_type_strategies",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "sharing_item_type_strategies"
     },
     {
       "label": "processFriendRequest()",
@@ -3729,8 +3828,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "processfriendrequest()",
-      "id": "sharing_processfriendrequest",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "sharing_processfriendrequest"
     },
     {
       "label": "switchShareMode()",
@@ -3738,10 +3837,10 @@
       "source_file": "sharing.js",
       "source_location": "L54",
       "_origin": "ast",
-      "community": 7,
+      "community": 2,
       "norm_label": "switchsharemode()",
-      "id": "sharing_switchsharemode",
-      "community_name": "volume.js"
+      "community_name": "sharing.js",
+      "id": "sharing_switchsharemode"
     },
     {
       "label": "openShareModal()",
@@ -3749,10 +3848,10 @@
       "source_file": "sharing.js",
       "source_location": "L76",
       "_origin": "ast",
-      "community": 5,
+      "community": 2,
       "norm_label": "opensharemodal()",
-      "id": "sharing_opensharemodal",
-      "community_name": "rendering.js"
+      "community_name": "sharing.js",
+      "id": "sharing_opensharemodal"
     },
     {
       "label": "resolveShareContent()",
@@ -3762,8 +3861,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "resolvesharecontent()",
-      "id": "sharing_resolvesharecontent",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "sharing_resolvesharecontent"
     },
     {
       "label": "buildSharedPlanDocument()",
@@ -3773,8 +3872,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "buildsharedplandocument()",
-      "id": "sharing_buildsharedplandocument",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "sharing_buildsharedplandocument"
     },
     {
       "label": "buildQrShareUrl()",
@@ -3784,8 +3883,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "buildqrshareurl()",
-      "id": "sharing_buildqrshareurl",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "sharing_buildqrshareurl"
     },
     {
       "label": "getThemeQrColors()",
@@ -3795,8 +3894,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "getthemeqrcolors()",
-      "id": "sharing_getthemeqrcolors",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "sharing_getthemeqrcolors"
     },
     {
       "label": "buildQrCodeConfig()",
@@ -3806,8 +3905,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "buildqrcodeconfig()",
-      "id": "sharing_buildqrcodeconfig",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "sharing_buildqrcodeconfig"
     },
     {
       "label": "shareWithFriends()",
@@ -3817,8 +3916,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "sharewithfriends()",
-      "id": "sharing_sharewithfriends",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "sharing_sharewithfriends"
     },
     {
       "label": "shareByQR()",
@@ -3828,8 +3927,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "sharebyqr()",
-      "id": "sharing_sharebyqr",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "sharing_sharebyqr"
     },
     {
       "label": "listenToSharedPlans()",
@@ -3837,10 +3936,10 @@
       "source_file": "sharing.js",
       "source_location": "L256",
       "_origin": "ast",
-      "community": 4,
+      "community": 2,
       "norm_label": "listentosharedplans()",
-      "id": "sharing_listentosharedplans",
-      "community_name": "calc.js"
+      "community_name": "sharing.js",
+      "id": "sharing_listentosharedplans"
     },
     {
       "label": "getItemDate()",
@@ -3850,8 +3949,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "getitemdate()",
-      "id": "sharing_getitemdate",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "sharing_getitemdate"
     },
     {
       "label": "renderSharedPlansUI()",
@@ -3861,8 +3960,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "rendersharedplansui()",
-      "id": "sharing_rendersharedplansui",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "sharing_rendersharedplansui"
     },
     {
       "label": "changeSharedPlansPage()",
@@ -3872,8 +3971,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "changesharedplanspage()",
-      "id": "sharing_changesharedplanspage",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "sharing_changesharedplanspage"
     },
     {
       "label": "saveSharedPlanToMyPlans()",
@@ -3883,8 +3982,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "savesharedplantomyplans()",
-      "id": "sharing_savesharedplantomyplans",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "sharing_savesharedplantomyplans"
     },
     {
       "label": "dismissSharedPlan()",
@@ -3894,8 +3993,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "dismisssharedplan()",
-      "id": "sharing_dismisssharedplan",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "sharing_dismisssharedplan"
     },
     {
       "label": "toggleFavoriteGeneric()",
@@ -3905,8 +4004,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "togglefavoritegeneric()",
-      "id": "sharing_togglefavoritegeneric",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "sharing_togglefavoritegeneric"
     },
     {
       "label": "toggleFavorite()",
@@ -3916,8 +4015,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "togglefavorite()",
-      "id": "sharing_togglefavorite",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "sharing_togglefavorite"
     },
     {
       "label": "togglePlanFavorite()",
@@ -3927,8 +4026,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "toggleplanfavorite()",
-      "id": "sharing_toggleplanfavorite",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "sharing_toggleplanfavorite"
     },
     {
       "label": "toggleStructuredFavorite()",
@@ -3938,8 +4037,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "togglestructuredfavorite()",
-      "id": "sharing_togglestructuredfavorite",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "sharing_togglestructuredfavorite"
     },
     {
       "label": "processClaimedPlan()",
@@ -3949,8 +4048,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "processclaimedplan()",
-      "id": "sharing_processclaimedplan",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "sharing_processclaimedplan"
     },
     {
       "label": "loadSharedPlan()",
@@ -3960,8 +4059,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "loadsharedplan()",
-      "id": "sharing_loadsharedplan",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "sharing_loadsharedplan"
     },
     {
       "label": "cleanupSharedPlansSubscriptions()",
@@ -3971,8 +4070,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "cleanupsharedplanssubscriptions()",
-      "id": "sharing_cleanupsharedplanssubscriptions",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "sharing_cleanupsharedplanssubscriptions"
     },
     {
       "label": "social.js",
@@ -3982,8 +4081,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "social.js",
-      "id": "social",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "social"
     },
     {
       "label": "cleanupSocialSubscriptions()",
@@ -3993,8 +4092,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "cleanupsocialsubscriptions()",
-      "id": "social_cleanupsocialsubscriptions",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "social_cleanupsocialsubscriptions"
     },
     {
       "label": "state.js",
@@ -4004,8 +4103,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "state.js",
-      "id": "state",
-      "community_name": "state.js"
+      "community_name": "state.js",
+      "id": "state"
     },
     {
       "label": "activeDates",
@@ -4013,10 +4112,10 @@
       "source_file": "state.js",
       "source_location": "L5",
       "_origin": "ast",
-      "community": 6,
+      "community": 8,
       "norm_label": "activedates",
-      "id": "state_activedates",
-      "community_name": "calendar.js"
+      "community_name": "state.js",
+      "id": "state_activedates"
     },
     {
       "label": "state",
@@ -4024,10 +4123,10 @@
       "source_file": "state.js",
       "source_location": "L7",
       "_origin": "ast",
-      "community": 8,
+      "community": 4,
       "norm_label": "state",
-      "id": "state_state",
-      "community_name": "state.js"
+      "community_name": "calc.js",
+      "id": "state_state"
     },
     {
       "label": "HAPTIC",
@@ -4035,10 +4134,10 @@
       "source_file": "state.js",
       "source_location": "L96",
       "_origin": "ast",
-      "community": 2,
+      "community": 4,
       "norm_label": "haptic",
-      "id": "state_haptic",
-      "community_name": "sharing.js"
+      "community_name": "calc.js",
+      "id": "state_haptic"
     },
     {
       "label": "CONSISTENCY_CONFIG",
@@ -4046,10 +4145,10 @@
       "source_file": "state.js",
       "source_location": "L102",
       "_origin": "ast",
-      "community": 6,
+      "community": 8,
       "norm_label": "consistency_config",
-      "id": "state_consistency_config",
-      "community_name": "calendar.js"
+      "community_name": "state.js",
+      "id": "state_consistency_config"
     },
     {
       "label": "loginView",
@@ -4059,8 +4158,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "loginview",
-      "id": "state_loginview",
-      "community_name": "state.js"
+      "community_name": "state.js",
+      "id": "state_loginview"
     },
     {
       "label": "appView",
@@ -4070,8 +4169,8 @@
       "_origin": "ast",
       "community": 14,
       "norm_label": "appview",
-      "id": "state_appview",
-      "community_name": "onboarding.js"
+      "community_name": "onboarding.js",
+      "id": "state_appview"
     },
     {
       "label": "bottomNav",
@@ -4081,8 +4180,8 @@
       "_origin": "ast",
       "community": 14,
       "norm_label": "bottomnav",
-      "id": "state_bottomnav",
-      "community_name": "onboarding.js"
+      "community_name": "onboarding.js",
+      "id": "state_bottomnav"
     },
     {
       "label": "authBtn",
@@ -4092,8 +4191,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "authbtn",
-      "id": "state_authbtn",
-      "community_name": "state.js"
+      "community_name": "state.js",
+      "id": "state_authbtn"
     },
     {
       "label": "profileBtn",
@@ -4103,8 +4202,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "profilebtn",
-      "id": "state_profilebtn",
-      "community_name": "state.js"
+      "community_name": "state.js",
+      "id": "state_profilebtn"
     },
     {
       "label": "profileModal",
@@ -4114,8 +4213,8 @@
       "_origin": "ast",
       "community": 10,
       "norm_label": "profilemodal",
-      "id": "state_profilemodal",
-      "community_name": "ui.js"
+      "community_name": "ui.js",
+      "id": "state_profilemodal"
     },
     {
       "label": "emailInput",
@@ -4125,8 +4224,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "emailinput",
-      "id": "state_emailinput",
-      "community_name": "state.js"
+      "community_name": "state.js",
+      "id": "state_emailinput"
     },
     {
       "label": "passwordInput",
@@ -4136,8 +4235,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "passwordinput",
-      "id": "state_passwordinput",
-      "community_name": "state.js"
+      "community_name": "state.js",
+      "id": "state_passwordinput"
     },
     {
       "label": "loginBtn",
@@ -4147,8 +4246,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "loginbtn",
-      "id": "state_loginbtn",
-      "community_name": "state.js"
+      "community_name": "state.js",
+      "id": "state_loginbtn"
     },
     {
       "label": "signupBtn",
@@ -4158,8 +4257,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "signupbtn",
-      "id": "state_signupbtn",
-      "community_name": "state.js"
+      "community_name": "state.js",
+      "id": "state_signupbtn"
     },
     {
       "label": "profileForm",
@@ -4169,8 +4268,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "profileform",
-      "id": "state_profileform",
-      "community_name": "state.js"
+      "community_name": "state.js",
+      "id": "state_profileform"
     },
     {
       "label": "workoutForm",
@@ -4180,8 +4279,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "workoutform",
-      "id": "state_workoutform",
-      "community_name": "state.js"
+      "community_name": "state.js",
+      "id": "state_workoutform"
     },
     {
       "label": "workoutList",
@@ -4191,8 +4290,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "workoutlist",
-      "id": "state_workoutlist",
-      "community_name": "state.js"
+      "community_name": "state.js",
+      "id": "state_workoutlist"
     },
     {
       "label": "paginationControls",
@@ -4202,8 +4301,8 @@
       "_origin": "ast",
       "community": 10,
       "norm_label": "paginationcontrols",
-      "id": "state_paginationcontrols",
-      "community_name": "ui.js"
+      "community_name": "ui.js",
+      "id": "state_paginationcontrols"
     },
     {
       "label": "prevPageBtn",
@@ -4213,8 +4312,8 @@
       "_origin": "ast",
       "community": 10,
       "norm_label": "prevpagebtn",
-      "id": "state_prevpagebtn",
-      "community_name": "ui.js"
+      "community_name": "ui.js",
+      "id": "state_prevpagebtn"
     },
     {
       "label": "nextPageBtn",
@@ -4224,8 +4323,8 @@
       "_origin": "ast",
       "community": 10,
       "norm_label": "nextpagebtn",
-      "id": "state_nextpagebtn",
-      "community_name": "ui.js"
+      "community_name": "ui.js",
+      "id": "state_nextpagebtn"
     },
     {
       "label": "currentPageDisplay",
@@ -4235,8 +4334,8 @@
       "_origin": "ast",
       "community": 10,
       "norm_label": "currentpagedisplay",
-      "id": "state_currentpagedisplay",
-      "community_name": "ui.js"
+      "community_name": "ui.js",
+      "id": "state_currentpagedisplay"
     },
     {
       "label": "totalPagesDisplay",
@@ -4246,8 +4345,8 @@
       "_origin": "ast",
       "community": 10,
       "norm_label": "totalpagesdisplay",
-      "id": "state_totalpagesdisplay",
-      "community_name": "ui.js"
+      "community_name": "ui.js",
+      "id": "state_totalpagesdisplay"
     },
     {
       "label": "workoutFilter",
@@ -4257,8 +4356,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "workoutfilter",
-      "id": "state_workoutfilter",
-      "community_name": "volume.js"
+      "community_name": "volume.js",
+      "id": "state_workoutfilter"
     },
     {
       "label": "exerciseSelect",
@@ -4268,8 +4367,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "exerciseselect",
-      "id": "state_exerciseselect",
-      "community_name": "state.js"
+      "community_name": "state.js",
+      "id": "state_exerciseselect"
     },
     {
       "label": "onboardingView",
@@ -4279,8 +4378,8 @@
       "_origin": "ast",
       "community": 14,
       "norm_label": "onboardingview",
-      "id": "state_onboardingview",
-      "community_name": "onboarding.js"
+      "community_name": "onboarding.js",
+      "id": "state_onboardingview"
     },
     {
       "label": "onboardingGender",
@@ -4290,8 +4389,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "onboardinggender",
-      "id": "state_onboardinggender",
-      "community_name": "state.js"
+      "community_name": "state.js",
+      "id": "state_onboardinggender"
     },
     {
       "label": "onboardingWeight",
@@ -4301,8 +4400,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "onboardingweight",
-      "id": "state_onboardingweight",
-      "community_name": "state.js"
+      "community_name": "state.js",
+      "id": "state_onboardingweight"
     },
     {
       "label": "onboardingDaysMonthly",
@@ -4312,8 +4411,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "onboardingdaysmonthly",
-      "id": "state_onboardingdaysmonthly",
-      "community_name": "state.js"
+      "community_name": "state.js",
+      "id": "state_onboardingdaysmonthly"
     },
     {
       "label": "onboardingDaysYearly",
@@ -4323,8 +4422,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "onboardingdaysyearly",
-      "id": "state_onboardingdaysyearly",
-      "community_name": "state.js"
+      "community_name": "state.js",
+      "id": "state_onboardingdaysyearly"
     },
     {
       "label": "onboardingDaysLifetime",
@@ -4334,8 +4433,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "onboardingdayslifetime",
-      "id": "state_onboardingdayslifetime",
-      "community_name": "state.js"
+      "community_name": "state.js",
+      "id": "state_onboardingdayslifetime"
     },
     {
       "label": "onboardingExerciseSelect",
@@ -4345,8 +4444,8 @@
       "_origin": "ast",
       "community": 14,
       "norm_label": "onboardingexerciseselect",
-      "id": "state_onboardingexerciseselect",
-      "community_name": "onboarding.js"
+      "community_name": "onboarding.js",
+      "id": "state_onboardingexerciseselect"
     },
     {
       "label": "onboardingWeightInput",
@@ -4356,8 +4455,8 @@
       "_origin": "ast",
       "community": 14,
       "norm_label": "onboardingweightinput",
-      "id": "state_onboardingweightinput",
-      "community_name": "onboarding.js"
+      "community_name": "onboarding.js",
+      "id": "state_onboardingweightinput"
     },
     {
       "label": "onboardingRepsInput",
@@ -4367,8 +4466,8 @@
       "_origin": "ast",
       "community": 14,
       "norm_label": "onboardingrepsinput",
-      "id": "state_onboardingrepsinput",
-      "community_name": "onboarding.js"
+      "community_name": "onboarding.js",
+      "id": "state_onboardingrepsinput"
     },
     {
       "label": "onboardingAddBtn",
@@ -4378,8 +4477,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "onboardingaddbtn",
-      "id": "state_onboardingaddbtn",
-      "community_name": "state.js"
+      "community_name": "state.js",
+      "id": "state_onboardingaddbtn"
     },
     {
       "label": "onboardingList",
@@ -4389,8 +4488,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "onboardinglist",
-      "id": "state_onboardinglist",
-      "community_name": "state.js"
+      "community_name": "state.js",
+      "id": "state_onboardinglist"
     },
     {
       "label": "onboardingEmpty",
@@ -4400,8 +4499,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "onboardingempty",
-      "id": "state_onboardingempty",
-      "community_name": "state.js"
+      "community_name": "state.js",
+      "id": "state_onboardingempty"
     },
     {
       "label": "onboardingSaveBtn",
@@ -4411,8 +4510,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "onboardingsavebtn",
-      "id": "state_onboardingsavebtn",
-      "community_name": "state.js"
+      "community_name": "state.js",
+      "id": "state_onboardingsavebtn"
     },
     {
       "label": "onboardingFeedback",
@@ -4422,8 +4521,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "onboardingfeedback",
-      "id": "state_onboardingfeedback",
-      "community_name": "state.js"
+      "community_name": "state.js",
+      "id": "state_onboardingfeedback"
     },
     {
       "label": "pbLogExercise",
@@ -4431,10 +4530,10 @@
       "source_file": "state.js",
       "source_location": "L143",
       "_origin": "ast",
-      "community": 0,
+      "community": 4,
       "norm_label": "pblogexercise",
-      "id": "state_pblogexercise",
-      "community_name": "plans.js"
+      "community_name": "calc.js",
+      "id": "state_pblogexercise"
     },
     {
       "label": "pbLogBtn",
@@ -4442,10 +4541,10 @@
       "source_file": "state.js",
       "source_location": "L144",
       "_origin": "ast",
-      "community": 0,
+      "community": 4,
       "norm_label": "pblogbtn",
-      "id": "state_pblogbtn",
-      "community_name": "plans.js"
+      "community_name": "calc.js",
+      "id": "state_pblogbtn"
     },
     {
       "label": "pbLogFeedback",
@@ -4455,8 +4554,8 @@
       "_origin": "ast",
       "community": 8,
       "norm_label": "pblogfeedback",
-      "id": "state_pblogfeedback",
-      "community_name": "state.js"
+      "community_name": "state.js",
+      "id": "state_pblogfeedback"
     },
     {
       "label": "tabContents",
@@ -4466,8 +4565,8 @@
       "_origin": "ast",
       "community": 10,
       "norm_label": "tabcontents",
-      "id": "state_tabcontents",
-      "community_name": "ui.js"
+      "community_name": "ui.js",
+      "id": "state_tabcontents"
     },
     {
       "label": "navBar",
@@ -4477,8 +4576,8 @@
       "_origin": "ast",
       "community": 10,
       "norm_label": "navbar",
-      "id": "state_navbar",
-      "community_name": "ui.js"
+      "community_name": "ui.js",
+      "id": "state_navbar"
     },
     {
       "label": "FORM_SCHEMAS",
@@ -4486,10 +4585,10 @@
       "source_file": "state.js",
       "source_location": "L152",
       "_origin": "ast",
-      "community": 0,
+      "community": 4,
       "norm_label": "form_schemas",
-      "id": "state_form_schemas",
-      "community_name": "plans.js"
+      "community_name": "calc.js",
+      "id": "state_form_schemas"
     },
     {
       "label": "sw.js",
@@ -4499,8 +4598,8 @@
       "_origin": "ast",
       "community": 17,
       "norm_label": "sw.js",
-      "id": "sw",
-      "community_name": "sw.js"
+      "community_name": "sw.js",
+      "id": "sw"
     },
     {
       "label": "URLS",
@@ -4510,8 +4609,8 @@
       "_origin": "ast",
       "community": 17,
       "norm_label": "urls",
-      "id": "sw_urls",
-      "community_name": "sw.js"
+      "community_name": "sw.js",
+      "id": "sw_urls"
     },
     {
       "label": "analytics.test.js",
@@ -4521,8 +4620,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "analytics.test.js",
-      "id": "tests_analytics_test",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "tests_analytics_test"
     },
     {
       "label": "auth-functions.test.js",
@@ -4530,10 +4629,10 @@
       "source_file": "tests/auth-functions.test.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 0,
+      "community": 11,
       "norm_label": "auth-functions.test.js",
-      "id": "tests_auth_functions_test",
-      "community_name": "plans.js"
+      "community_name": "theme.js",
+      "id": "tests_auth_functions_test"
     },
     {
       "label": "calendar.test.js",
@@ -4543,8 +4642,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "calendar.test.js",
-      "id": "tests_calendar_test",
-      "community_name": "calendar.js"
+      "community_name": "calendar.js",
+      "id": "tests_calendar_test"
     },
     {
       "label": "mockActiveDates",
@@ -4554,8 +4653,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "mockactivedates",
-      "id": "tests_calendar_test_mockactivedates",
-      "community_name": "calendar.js"
+      "community_name": "calendar.js",
+      "id": "tests_calendar_test_mockactivedates"
     },
     {
       "label": "date.test.js",
@@ -4565,8 +4664,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "date.test.js",
-      "id": "tests_date_test",
-      "community_name": "calendar.js"
+      "community_name": "calendar.js",
+      "id": "tests_date_test"
     },
     {
       "label": "dom.test.js",
@@ -4574,10 +4673,10 @@
       "source_file": "tests/dom.test.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 2,
+      "community": 4,
       "norm_label": "dom.test.js",
-      "id": "tests_dom_test",
-      "community_name": "sharing.js"
+      "community_name": "calc.js",
+      "id": "tests_dom_test"
     },
     {
       "label": "exercise-data.test.js",
@@ -4585,10 +4684,10 @@
       "source_file": "tests/exercise-data.test.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 0,
+      "community": 4,
       "norm_label": "exercise-data.test.js",
-      "id": "tests_exercise_data_test",
-      "community_name": "plans.js"
+      "community_name": "calc.js",
+      "id": "tests_exercise_data_test"
     },
     {
       "label": "formatting.test.js",
@@ -4598,8 +4697,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "formatting.test.js",
-      "id": "tests_formatting_test",
-      "community_name": "rendering.js"
+      "community_name": "rendering.js",
+      "id": "tests_formatting_test"
     },
     {
       "label": "generateContributions.test.js",
@@ -4609,8 +4708,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "generatecontributions.test.js",
-      "id": "tests_generatecontributions_test",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "tests_generatecontributions_test"
     },
     {
       "label": "mockAddDoc",
@@ -4620,8 +4719,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "mockadddoc",
-      "id": "tests_generatecontributions_test_mockadddoc",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "tests_generatecontributions_test_mockadddoc"
     },
     {
       "label": "listenToDataStream.integration.test.js",
@@ -4631,8 +4730,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "listentodatastream.integration.test.js",
-      "id": "tests_listentodatastream_integration_test",
-      "community_name": "calc.js"
+      "community_name": "calc.js",
+      "id": "tests_listentodatastream_integration_test"
     },
     {
       "label": "mockState",
@@ -4642,8 +4741,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "mockstate",
-      "id": "tests_listentodatastream_integration_test_mockstate",
-      "community_name": "calc.js"
+      "community_name": "calc.js",
+      "id": "tests_listentodatastream_integration_test_mockstate"
     },
     {
       "label": "math.test.js",
@@ -4651,10 +4750,10 @@
       "source_file": "tests/math.test.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 0,
+      "community": 4,
       "norm_label": "math.test.js",
-      "id": "tests_math_test",
-      "community_name": "plans.js"
+      "community_name": "calc.js",
+      "id": "tests_math_test"
     },
     {
       "label": "processWorkoutSnapshot.test.js",
@@ -4662,10 +4761,10 @@
       "source_file": "tests/processWorkoutSnapshot.test.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 0,
+      "community": 4,
       "norm_label": "processworkoutsnapshot.test.js",
-      "id": "tests_processworkoutsnapshot_test",
-      "community_name": "plans.js"
+      "community_name": "calc.js",
+      "id": "tests_processworkoutsnapshot_test"
     },
     {
       "label": "renderFromWorkouts.test.js",
@@ -4675,8 +4774,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "renderfromworkouts.test.js",
-      "id": "tests_renderfromworkouts_test",
-      "community_name": "calc.js"
+      "community_name": "calc.js",
+      "id": "tests_renderfromworkouts_test"
     },
     {
       "label": "rendering.test.js",
@@ -4686,8 +4785,8 @@
       "_origin": "ast",
       "community": 5,
       "norm_label": "rendering.test.js",
-      "id": "tests_rendering_test",
-      "community_name": "rendering.js"
+      "community_name": "rendering.js",
+      "id": "tests_rendering_test"
     },
     {
       "label": "resetTrainingTab.test.js",
@@ -4697,8 +4796,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "resettrainingtab.test.js",
-      "id": "tests_resettrainingtab_test",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "tests_resettrainingtab_test"
     },
     {
       "label": "mockState",
@@ -4708,8 +4807,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "mockstate",
-      "id": "tests_resettrainingtab_test_mockstate",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "tests_resettrainingtab_test_mockstate"
     },
     {
       "label": "setup.js",
@@ -4719,8 +4818,8 @@
       "_origin": "ast",
       "community": 20,
       "norm_label": "setup.js",
-      "id": "tests_setup",
-      "community_name": "setup.js"
+      "community_name": "setup.js",
+      "id": "tests_setup"
     },
     {
       "label": "state.test.js",
@@ -4728,10 +4827,10 @@
       "source_file": "tests/state.test.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 8,
+      "community": 4,
       "norm_label": "state.test.js",
-      "id": "tests_state_test",
-      "community_name": "state.js"
+      "community_name": "calc.js",
+      "id": "tests_state_test"
     },
     {
       "label": "submitAmrapWorkout.test.js",
@@ -4741,8 +4840,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "submitamrapworkout.test.js",
-      "id": "tests_submitamrapworkout_test",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "tests_submitamrapworkout_test"
     },
     {
       "label": "mockAddDoc",
@@ -4752,8 +4851,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "mockadddoc",
-      "id": "tests_submitamrapworkout_test_mockadddoc",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "tests_submitamrapworkout_test_mockadddoc"
     },
     {
       "label": "submitEmomWorkout.test.js",
@@ -4763,8 +4862,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "submitemomworkout.test.js",
-      "id": "tests_submitemomworkout_test",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "tests_submitemomworkout_test"
     },
     {
       "label": "mockAddDoc",
@@ -4774,8 +4873,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "mockadddoc",
-      "id": "tests_submitemomworkout_test_mockadddoc",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "tests_submitemomworkout_test_mockadddoc"
     },
     {
       "label": "submitForTimeWorkout.test.js",
@@ -4785,8 +4884,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "submitfortimeworkout.test.js",
-      "id": "tests_submitfortimeworkout_test",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "tests_submitfortimeworkout_test"
     },
     {
       "label": "mockAddDoc",
@@ -4796,8 +4895,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "mockadddoc",
-      "id": "tests_submitfortimeworkout_test_mockadddoc",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "tests_submitfortimeworkout_test_mockadddoc"
     },
     {
       "label": "submitIntervalWorkout.test.js",
@@ -4807,8 +4906,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "submitintervalworkout.test.js",
-      "id": "tests_submitintervalworkout_test",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "tests_submitintervalworkout_test"
     },
     {
       "label": "mockAddDoc",
@@ -4818,8 +4917,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "mockadddoc",
-      "id": "tests_submitintervalworkout_test_mockadddoc",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "tests_submitintervalworkout_test_mockadddoc"
     },
     {
       "label": "submitPendingWorkout.test.js",
@@ -4829,8 +4928,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "submitpendingworkout.test.js",
-      "id": "tests_submitpendingworkout_test",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "tests_submitpendingworkout_test"
     },
     {
       "label": "mockAddDoc",
@@ -4840,8 +4939,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "mockadddoc",
-      "id": "tests_submitpendingworkout_test_mockadddoc",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "tests_submitpendingworkout_test_mockadddoc"
     },
     {
       "label": "mockState",
@@ -4851,8 +4950,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "mockstate",
-      "id": "tests_submitpendingworkout_test_mockstate",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "tests_submitpendingworkout_test_mockstate"
     },
     {
       "label": "ui.test.js",
@@ -4862,8 +4961,8 @@
       "_origin": "ast",
       "community": 10,
       "norm_label": "ui.test.js",
-      "id": "tests_ui_test",
-      "community_name": "ui.js"
+      "community_name": "ui.js",
+      "id": "tests_ui_test"
     },
     {
       "label": "updateCaches.test.js",
@@ -4873,8 +4972,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "updatecaches.test.js",
-      "id": "tests_updatecaches_test",
-      "community_name": "calc.js"
+      "community_name": "calc.js",
+      "id": "tests_updatecaches_test"
     },
     {
       "label": "mockState",
@@ -4884,8 +4983,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "mockstate",
-      "id": "tests_updatecaches_test_mockstate",
-      "community_name": "calc.js"
+      "community_name": "calc.js",
+      "id": "tests_updatecaches_test_mockstate"
     },
     {
       "label": "volume.test.js",
@@ -4895,8 +4994,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "volume.test.js",
-      "id": "tests_volume_test",
-      "community_name": "volume.js"
+      "community_name": "volume.js",
+      "id": "tests_volume_test"
     },
     {
       "label": "workouts-dom.test.js",
@@ -4906,8 +5005,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "workouts-dom.test.js",
-      "id": "tests_workouts_dom_test",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "tests_workouts_dom_test"
     },
     {
       "label": "theme.js",
@@ -4917,8 +5016,8 @@
       "_origin": "ast",
       "community": 11,
       "norm_label": "theme.js",
-      "id": "theme",
-      "community_name": "theme.js"
+      "community_name": "theme.js",
+      "id": "theme"
     },
     {
       "label": "LIGHT_META",
@@ -4928,8 +5027,8 @@
       "_origin": "ast",
       "community": 11,
       "norm_label": "light_meta",
-      "id": "theme_light_meta",
-      "community_name": "theme.js"
+      "community_name": "theme.js",
+      "id": "theme_light_meta"
     },
     {
       "label": "DARK_META",
@@ -4939,8 +5038,8 @@
       "_origin": "ast",
       "community": 11,
       "norm_label": "dark_meta",
-      "id": "theme_dark_meta",
-      "community_name": "theme.js"
+      "community_name": "theme.js",
+      "id": "theme_dark_meta"
     },
     {
       "label": "getMetaTag()",
@@ -4950,8 +5049,8 @@
       "_origin": "ast",
       "community": 11,
       "norm_label": "getmetatag()",
-      "id": "theme_getmetatag",
-      "community_name": "theme.js"
+      "community_name": "theme.js",
+      "id": "theme_getmetatag"
     },
     {
       "label": "getDefaultMeta()",
@@ -4961,8 +5060,8 @@
       "_origin": "ast",
       "community": 11,
       "norm_label": "getdefaultmeta()",
-      "id": "theme_getdefaultmeta",
-      "community_name": "theme.js"
+      "community_name": "theme.js",
+      "id": "theme_getdefaultmeta"
     },
     {
       "label": "updateMetaThemeColor()",
@@ -4972,8 +5071,8 @@
       "_origin": "ast",
       "community": 11,
       "norm_label": "updatemetathemecolor()",
-      "id": "theme_updatemetathemecolor",
-      "community_name": "theme.js"
+      "community_name": "theme.js",
+      "id": "theme_updatemetathemecolor"
     },
     {
       "label": "applyThemeClass()",
@@ -4983,8 +5082,8 @@
       "_origin": "ast",
       "community": 11,
       "norm_label": "applythemeclass()",
-      "id": "theme_applythemeclass",
-      "community_name": "theme.js"
+      "community_name": "theme.js",
+      "id": "theme_applythemeclass"
     },
     {
       "label": "updateToggleUI()",
@@ -4994,8 +5093,8 @@
       "_origin": "ast",
       "community": 11,
       "norm_label": "updatetoggleui()",
-      "id": "theme_updatetoggleui",
-      "community_name": "theme.js"
+      "community_name": "theme.js",
+      "id": "theme_updatetoggleui"
     },
     {
       "label": "initAutoListener()",
@@ -5005,8 +5104,8 @@
       "_origin": "ast",
       "community": 11,
       "norm_label": "initautolistener()",
-      "id": "theme_initautolistener",
-      "community_name": "theme.js"
+      "community_name": "theme.js",
+      "id": "theme_initautolistener"
     },
     {
       "label": "persistTheme()",
@@ -5016,8 +5115,8 @@
       "_origin": "ast",
       "community": 11,
       "norm_label": "persisttheme()",
-      "id": "theme_persisttheme",
-      "community_name": "theme.js"
+      "community_name": "theme.js",
+      "id": "theme_persisttheme"
     },
     {
       "label": "setTheme()",
@@ -5027,8 +5126,8 @@
       "_origin": "ast",
       "community": 11,
       "norm_label": "settheme()",
-      "id": "theme_settheme",
-      "community_name": "theme.js"
+      "community_name": "theme.js",
+      "id": "theme_settheme"
     },
     {
       "label": "initTheme()",
@@ -5038,8 +5137,8 @@
       "_origin": "ast",
       "community": 11,
       "norm_label": "inittheme()",
-      "id": "theme_inittheme",
-      "community_name": "theme.js"
+      "community_name": "theme.js",
+      "id": "theme_inittheme"
     },
     {
       "label": "wireThemeToggle()",
@@ -5049,8 +5148,8 @@
       "_origin": "ast",
       "community": 11,
       "norm_label": "wirethemetoggle()",
-      "id": "theme_wirethemetoggle",
-      "community_name": "theme.js"
+      "community_name": "theme.js",
+      "id": "theme_wirethemetoggle"
     },
     {
       "label": "ui.js",
@@ -5060,8 +5159,8 @@
       "_origin": "ast",
       "community": 10,
       "norm_label": "ui.js",
-      "id": "ui",
-      "community_name": "ui.js"
+      "community_name": "ui.js",
+      "id": "ui"
     },
     {
       "label": "NOTIFICATION_COLORS",
@@ -5071,8 +5170,8 @@
       "_origin": "ast",
       "community": 10,
       "norm_label": "notification_colors",
-      "id": "ui_notification_colors",
-      "community_name": "ui.js"
+      "community_name": "ui.js",
+      "id": "ui_notification_colors"
     },
     {
       "label": "PERMISSION_ERROR_MAP",
@@ -5080,10 +5179,10 @@
       "source_file": "ui.js",
       "source_location": "L12",
       "_origin": "ast",
-      "community": 2,
+      "community": 4,
       "norm_label": "permission_error_map",
-      "id": "ui_permission_error_map",
-      "community_name": "sharing.js"
+      "community_name": "calc.js",
+      "id": "ui_permission_error_map"
     },
     {
       "label": "setActiveTab()",
@@ -5091,10 +5190,10 @@
       "source_file": "ui.js",
       "source_location": "L29",
       "_origin": "ast",
-      "community": 7,
+      "community": 2,
       "norm_label": "setactivetab()",
-      "id": "ui_setactivetab",
-      "community_name": "volume.js"
+      "community_name": "sharing.js",
+      "id": "ui_setactivetab"
     },
     {
       "label": "setInactiveTab()",
@@ -5102,10 +5201,10 @@
       "source_file": "ui.js",
       "source_location": "L37",
       "_origin": "ast",
-      "community": 7,
+      "community": 2,
       "norm_label": "setinactivetab()",
-      "id": "ui_setinactivetab",
-      "community_name": "volume.js"
+      "community_name": "sharing.js",
+      "id": "ui_setinactivetab"
     },
     {
       "label": "clearChildren()",
@@ -5113,10 +5212,10 @@
       "source_file": "ui.js",
       "source_location": "L45",
       "_origin": "ast",
-      "community": 0,
+      "community": 2,
       "norm_label": "clearchildren()",
-      "id": "ui_clearchildren",
-      "community_name": "plans.js"
+      "community_name": "sharing.js",
+      "id": "ui_clearchildren"
     },
     {
       "label": "renderEmptyState()",
@@ -5124,10 +5223,10 @@
       "source_file": "ui.js",
       "source_location": "L49",
       "_origin": "ast",
-      "community": 5,
+      "community": 2,
       "norm_label": "renderemptystate()",
-      "id": "ui_renderemptystate",
-      "community_name": "rendering.js"
+      "community_name": "sharing.js",
+      "id": "ui_renderemptystate"
     },
     {
       "label": "renderMessage()",
@@ -5137,8 +5236,8 @@
       "_origin": "ast",
       "community": 10,
       "norm_label": "rendermessage()",
-      "id": "ui_rendermessage",
-      "community_name": "ui.js"
+      "community_name": "ui.js",
+      "id": "ui_rendermessage"
     },
     {
       "label": "updatePagination()",
@@ -5148,8 +5247,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "updatepagination()",
-      "id": "ui_updatepagination",
-      "community_name": "calc.js"
+      "community_name": "calc.js",
+      "id": "ui_updatepagination"
     },
     {
       "label": "updatePaginationControls()",
@@ -5159,8 +5258,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "updatepaginationcontrols()",
-      "id": "ui_updatepaginationcontrols",
-      "community_name": "calc.js"
+      "community_name": "calc.js",
+      "id": "ui_updatepaginationcontrols"
     },
     {
       "label": "updatePillActive()",
@@ -5170,8 +5269,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "updatepillactive()",
-      "id": "ui_updatepillactive",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "ui_updatepillactive"
     },
     {
       "label": "setChallengeCard()",
@@ -5181,8 +5280,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "setchallengecard()",
-      "id": "ui_setchallengecard",
-      "community_name": "calendar.js"
+      "community_name": "calendar.js",
+      "id": "ui_setchallengecard"
     },
     {
       "label": "updateCalTodayBtnState()",
@@ -5192,8 +5291,8 @@
       "_origin": "ast",
       "community": 6,
       "norm_label": "updatecaltodaybtnstate()",
-      "id": "ui_updatecaltodaybtnstate",
-      "community_name": "calendar.js"
+      "community_name": "calendar.js",
+      "id": "ui_updatecaltodaybtnstate"
     },
     {
       "label": "updateTodayBtnState()",
@@ -5203,8 +5302,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "updatetodaybtnstate()",
-      "id": "ui_updatetodaybtnstate",
-      "community_name": "volume.js"
+      "community_name": "volume.js",
+      "id": "ui_updatetodaybtnstate"
     },
     {
       "label": "toggleWorkoutCard()",
@@ -5214,8 +5313,8 @@
       "_origin": "ast",
       "community": 10,
       "norm_label": "toggleworkoutcard()",
-      "id": "ui_toggleworkoutcard",
-      "community_name": "ui.js"
+      "community_name": "ui.js",
+      "id": "ui_toggleworkoutcard"
     },
     {
       "label": "updateStarIcon()",
@@ -5225,8 +5324,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "updatestaricon()",
-      "id": "ui_updatestaricon",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "ui_updatestaricon"
     },
     {
       "label": "toggleSelectAllFriends()",
@@ -5236,8 +5335,8 @@
       "_origin": "ast",
       "community": 10,
       "norm_label": "toggleselectallfriends()",
-      "id": "ui_toggleselectallfriends",
-      "community_name": "ui.js"
+      "community_name": "ui.js",
+      "id": "ui_toggleselectallfriends"
     },
     {
       "label": "buildExerciseOptionsHtml()",
@@ -5245,10 +5344,10 @@
       "source_file": "ui.js",
       "source_location": "L152",
       "_origin": "ast",
-      "community": 4,
+      "community": 0,
       "norm_label": "buildexerciseoptionshtml()",
-      "id": "ui_buildexerciseoptionshtml",
-      "community_name": "calc.js"
+      "community_name": "plans.js",
+      "id": "ui_buildexerciseoptionshtml"
     },
     {
       "label": "buildMduiOptionsHtml()",
@@ -5258,8 +5357,8 @@
       "_origin": "ast",
       "community": 14,
       "norm_label": "buildmduioptionshtml()",
-      "id": "ui_buildmduioptionshtml",
-      "community_name": "onboarding.js"
+      "community_name": "onboarding.js",
+      "id": "ui_buildmduioptionshtml"
     },
     {
       "label": "saveExpandedCardIds()",
@@ -5267,10 +5366,10 @@
       "source_file": "ui.js",
       "source_location": "L181",
       "_origin": "ast",
-      "community": 4,
+      "community": 0,
       "norm_label": "saveexpandedcardids()",
-      "id": "ui_saveexpandedcardids",
-      "community_name": "calc.js"
+      "community_name": "plans.js",
+      "id": "ui_saveexpandedcardids"
     },
     {
       "label": "restoreExpandedCardIds()",
@@ -5278,10 +5377,10 @@
       "source_file": "ui.js",
       "source_location": "L194",
       "_origin": "ast",
-      "community": 4,
+      "community": 0,
       "norm_label": "restoreexpandedcardids()",
-      "id": "ui_restoreexpandedcardids",
-      "community_name": "calc.js"
+      "community_name": "plans.js",
+      "id": "ui_restoreexpandedcardids"
     },
     {
       "label": "showFeedback()",
@@ -5291,8 +5390,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "showfeedback()",
-      "id": "ui_showfeedback",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "ui_showfeedback"
     },
     {
       "label": "showToast()",
@@ -5302,8 +5401,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "showtoast()",
-      "id": "ui_showtoast",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "ui_showtoast"
     },
     {
       "label": "openProfileModal()",
@@ -5313,8 +5412,8 @@
       "_origin": "ast",
       "community": 10,
       "norm_label": "openprofilemodal()",
-      "id": "ui_openprofilemodal",
-      "community_name": "ui.js"
+      "community_name": "ui.js",
+      "id": "ui_openprofilemodal"
     },
     {
       "label": "closeProfileModal()",
@@ -5324,8 +5423,8 @@
       "_origin": "ast",
       "community": 10,
       "norm_label": "closeprofilemodal()",
-      "id": "ui_closeprofilemodal",
-      "community_name": "ui.js"
+      "community_name": "ui.js",
+      "id": "ui_closeprofilemodal"
     },
     {
       "label": "showPlanNameModal()",
@@ -5335,8 +5434,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "showplannamemodal()",
-      "id": "ui_showplannamemodal",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "ui_showplannamemodal"
     },
     {
       "label": "enableSwipe()",
@@ -5346,8 +5445,8 @@
       "_origin": "ast",
       "community": 10,
       "norm_label": "enableswipe()",
-      "id": "ui_enableswipe",
-      "community_name": "ui.js"
+      "community_name": "ui.js",
+      "id": "ui_enableswipe"
     },
     {
       "label": "paginateAndRender()",
@@ -5355,10 +5454,10 @@
       "source_file": "ui.js",
       "source_location": "L320",
       "_origin": "ast",
-      "community": 4,
+      "community": 0,
       "norm_label": "paginateandrender()",
-      "id": "ui_paginateandrender",
-      "community_name": "calc.js"
+      "community_name": "plans.js",
+      "id": "ui_paginateandrender"
     },
     {
       "label": "changeGenericPage()",
@@ -5366,10 +5465,10 @@
       "source_file": "ui.js",
       "source_location": "L346",
       "_origin": "ast",
-      "community": 4,
+      "community": 2,
       "norm_label": "changegenericpage()",
-      "id": "ui_changegenericpage",
-      "community_name": "calc.js"
+      "community_name": "sharing.js",
+      "id": "ui_changegenericpage"
     },
     {
       "label": "isPermissionDenied()",
@@ -5379,8 +5478,8 @@
       "_origin": "ast",
       "community": 2,
       "norm_label": "ispermissiondenied()",
-      "id": "ui_ispermissiondenied",
-      "community_name": "sharing.js"
+      "community_name": "sharing.js",
+      "id": "ui_ispermissiondenied"
     },
     {
       "label": "switchTab()",
@@ -5390,8 +5489,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "switchtab()",
-      "id": "ui_switchtab",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "ui_switchtab"
     },
     {
       "label": "utils.js",
@@ -5399,10 +5498,10 @@
       "source_file": "utils.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 6,
+      "community": 4,
       "norm_label": "utils.js",
-      "id": "utils",
-      "community_name": "calendar.js"
+      "community_name": "calc.js",
+      "id": "utils"
     },
     {
       "label": "vitest.config.js",
@@ -5412,8 +5511,8 @@
       "_origin": "ast",
       "community": 21,
       "norm_label": "vitest.config.js",
-      "id": "vitest_config",
-      "community_name": "vitest.config.js"
+      "community_name": "vitest.config.js",
+      "id": "vitest_config"
     },
     {
       "label": "volume.js",
@@ -5423,8 +5522,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "volume.js",
-      "id": "volume",
-      "community_name": "volume.js"
+      "community_name": "volume.js",
+      "id": "volume"
     },
     {
       "label": "renderLogs()",
@@ -5434,8 +5533,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "renderlogs()",
-      "id": "volume_renderlogs",
-      "community_name": "calc.js"
+      "community_name": "calc.js",
+      "id": "volume_renderlogs"
     },
     {
       "label": "getWeekStart()",
@@ -5445,8 +5544,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "getweekstart()",
-      "id": "volume_getweekstart",
-      "community_name": "volume.js"
+      "community_name": "volume.js",
+      "id": "volume_getweekstart"
     },
     {
       "label": "getWeekEnd()",
@@ -5456,8 +5555,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "getweekend()",
-      "id": "volume_getweekend",
-      "community_name": "volume.js"
+      "community_name": "volume.js",
+      "id": "volume_getweekend"
     },
     {
       "label": "computeDailyBuckets()",
@@ -5467,8 +5566,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "computedailybuckets()",
-      "id": "volume_computedailybuckets",
-      "community_name": "volume.js"
+      "community_name": "volume.js",
+      "id": "volume_computedailybuckets"
     },
     {
       "label": "computeWeeklyBuckets()",
@@ -5478,8 +5577,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "computeweeklybuckets()",
-      "id": "volume_computeweeklybuckets",
-      "community_name": "volume.js"
+      "community_name": "volume.js",
+      "id": "volume_computeweeklybuckets"
     },
     {
       "label": "computeMonthlyBuckets()",
@@ -5489,8 +5588,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "computemonthlybuckets()",
-      "id": "volume_computemonthlybuckets",
-      "community_name": "volume.js"
+      "community_name": "volume.js",
+      "id": "volume_computemonthlybuckets"
     },
     {
       "label": "computeYearlyBuckets()",
@@ -5500,8 +5599,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "computeyearlybuckets()",
-      "id": "volume_computeyearlybuckets",
-      "community_name": "volume.js"
+      "community_name": "volume.js",
+      "id": "volume_computeyearlybuckets"
     },
     {
       "label": "computeVolumeHistory()",
@@ -5511,8 +5610,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "computevolumehistory()",
-      "id": "volume_computevolumehistory",
-      "community_name": "volume.js"
+      "community_name": "volume.js",
+      "id": "volume_computevolumehistory"
     },
     {
       "label": "formatRangeLabel()",
@@ -5522,8 +5621,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "formatrangelabel()",
-      "id": "volume_formatrangelabel",
-      "community_name": "volume.js"
+      "community_name": "volume.js",
+      "id": "volume_formatrangelabel"
     },
     {
       "label": "renderVolumeHistory()",
@@ -5533,8 +5632,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "rendervolumehistory()",
-      "id": "volume_rendervolumehistory",
-      "community_name": "volume.js"
+      "community_name": "volume.js",
+      "id": "volume_rendervolumehistory"
     },
     {
       "label": "switchVolumePeriod()",
@@ -5542,10 +5641,10 @@
       "source_file": "volume.js",
       "source_location": "L269",
       "_origin": "ast",
-      "community": 7,
+      "community": 2,
       "norm_label": "switchvolumeperiod()",
-      "id": "volume_switchvolumeperiod",
-      "community_name": "volume.js"
+      "community_name": "sharing.js",
+      "id": "volume_switchvolumeperiod"
     },
     {
       "label": "shiftVolumePeriod()",
@@ -5555,8 +5654,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "shiftvolumeperiod()",
-      "id": "volume_shiftvolumeperiod",
-      "community_name": "volume.js"
+      "community_name": "volume.js",
+      "id": "volume_shiftvolumeperiod"
     },
     {
       "label": "goToCurrentPeriod()",
@@ -5566,8 +5665,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "gotocurrentperiod()",
-      "id": "volume_gotocurrentperiod",
-      "community_name": "volume.js"
+      "community_name": "volume.js",
+      "id": "volume_gotocurrentperiod"
     },
     {
       "label": "populateVolumeFilter()",
@@ -5577,8 +5676,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "populatevolumefilter()",
-      "id": "volume_populatevolumefilter",
-      "community_name": "calc.js"
+      "community_name": "calc.js",
+      "id": "volume_populatevolumefilter"
     },
     {
       "label": "onVolumeFilterChange()",
@@ -5588,8 +5687,8 @@
       "_origin": "ast",
       "community": 7,
       "norm_label": "onvolumefilterchange()",
-      "id": "volume_onvolumefilterchange",
-      "community_name": "volume.js"
+      "community_name": "volume.js",
+      "id": "volume_onvolumefilterchange"
     },
     {
       "label": "workouts.js",
@@ -5599,8 +5698,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "workouts.js",
-      "id": "workouts",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "workouts"
     },
     {
       "label": "WORKOUT_TYPE_TO_RESULT_ID",
@@ -5610,8 +5709,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "workout_type_to_result_id",
-      "id": "workouts_workout_type_to_result_id",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "workouts_workout_type_to_result_id"
     },
     {
       "label": "debouncedSyncActivity",
@@ -5621,8 +5720,8 @@
       "_origin": "ast",
       "community": 4,
       "norm_label": "debouncedsyncactivity",
-      "id": "workouts_debouncedsyncactivity",
-      "community_name": "calc.js"
+      "community_name": "calc.js",
+      "id": "workouts_debouncedsyncactivity"
     },
     {
       "label": "listenToStructuredWorkouts()",
@@ -5630,10 +5729,10 @@
       "source_file": "workouts.js",
       "source_location": "L24",
       "_origin": "ast",
-      "community": 4,
+      "community": 3,
       "norm_label": "listentostructuredworkouts()",
-      "id": "workouts_listentostructuredworkouts",
-      "community_name": "calc.js"
+      "community_name": "workouts.js",
+      "id": "workouts_listentostructuredworkouts"
     },
     {
       "label": "renderStructuredWorkoutHistory()",
@@ -5641,10 +5740,10 @@
       "source_file": "workouts.js",
       "source_location": "L53",
       "_origin": "ast",
-      "community": 4,
+      "community": 3,
       "norm_label": "renderstructuredworkouthistory()",
-      "id": "workouts_renderstructuredworkouthistory",
-      "community_name": "calc.js"
+      "community_name": "workouts.js",
+      "id": "workouts_renderstructuredworkouthistory"
     },
     {
       "label": "changeStructuredPage()",
@@ -5652,10 +5751,10 @@
       "source_file": "workouts.js",
       "source_location": "L63",
       "_origin": "ast",
-      "community": 4,
+      "community": 3,
       "norm_label": "changestructuredpage()",
-      "id": "workouts_changestructuredpage",
-      "community_name": "calc.js"
+      "community_name": "workouts.js",
+      "id": "workouts_changestructuredpage"
     },
     {
       "label": "doWorkout()",
@@ -5665,8 +5764,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "doworkout()",
-      "id": "workouts_doworkout",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "workouts_doworkout"
     },
     {
       "label": "doStructuredWorkout()",
@@ -5676,8 +5775,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "dostructuredworkout()",
-      "id": "workouts_dostructuredworkout",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "workouts_dostructuredworkout"
     },
     {
       "label": "doPlanWorkout()",
@@ -5687,8 +5786,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "doplanworkout()",
-      "id": "workouts_doplanworkout",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "workouts_doplanworkout"
     },
     {
       "label": "doSharedPlan()",
@@ -5698,8 +5797,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "dosharedplan()",
-      "id": "workouts_dosharedplan",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "workouts_dosharedplan"
     },
     {
       "label": "setupTrainingTab()",
@@ -5709,8 +5808,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "setuptrainingtab()",
-      "id": "workouts_setuptrainingtab",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "workouts_setuptrainingtab"
     },
     {
       "label": "logRound()",
@@ -5720,8 +5819,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "loground()",
-      "id": "workouts_loground",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "workouts_loground"
     },
     {
       "label": "logRep()",
@@ -5731,8 +5830,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "logrep()",
-      "id": "workouts_logrep",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "workouts_logrep"
     },
     {
       "label": "updateLogScorePreview()",
@@ -5742,8 +5841,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "updatelogscorepreview()",
-      "id": "workouts_updatelogscorepreview",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "workouts_updatelogscorepreview"
     },
     {
       "label": "updateLogWorkoutButtonState()",
@@ -5753,8 +5852,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "updatelogworkoutbuttonstate()",
-      "id": "workouts_updatelogworkoutbuttonstate",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "workouts_updatelogworkoutbuttonstate"
     },
     {
       "label": "submitStructuredWorkout()",
@@ -5764,8 +5863,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "submitstructuredworkout()",
-      "id": "workouts_submitstructuredworkout",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "workouts_submitstructuredworkout"
     },
     {
       "label": "submitAmrapWorkout()",
@@ -5775,8 +5874,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "submitamrapworkout()",
-      "id": "workouts_submitamrapworkout",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "workouts_submitamrapworkout"
     },
     {
       "label": "submitEmomWorkout()",
@@ -5786,8 +5885,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "submitemomworkout()",
-      "id": "workouts_submitemomworkout",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "workouts_submitemomworkout"
     },
     {
       "label": "submitForTimeWorkout()",
@@ -5797,8 +5896,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "submitfortimeworkout()",
-      "id": "workouts_submitfortimeworkout",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "workouts_submitfortimeworkout"
     },
     {
       "label": "submitIntervalWorkout()",
@@ -5808,8 +5907,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "submitintervalworkout()",
-      "id": "workouts_submitintervalworkout",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "workouts_submitintervalworkout"
     },
     {
       "label": "resetTrainingTab()",
@@ -5819,8 +5918,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "resettrainingtab()",
-      "id": "workouts_resettrainingtab",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "workouts_resettrainingtab"
     },
     {
       "label": "submitPendingWorkout()",
@@ -5830,8 +5929,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "submitpendingworkout()",
-      "id": "workouts_submitpendingworkout",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "workouts_submitpendingworkout"
     },
     {
       "label": "writeStructuredLogEntry()",
@@ -5839,10 +5938,10 @@
       "source_file": "workouts.js",
       "source_location": "L433",
       "_origin": "ast",
-      "community": 0,
+      "community": 4,
       "norm_label": "writestructuredlogentry()",
-      "id": "workouts_writestructuredlogentry",
-      "community_name": "plans.js"
+      "community_name": "calc.js",
+      "id": "workouts_writestructuredlogentry"
     },
     {
       "label": "generateContributionsBase()",
@@ -5852,8 +5951,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "generatecontributionsbase()",
-      "id": "workouts_generatecontributionsbase",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "workouts_generatecontributionsbase"
     },
     {
       "label": "generateAmrapContributions()",
@@ -5863,8 +5962,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "generateamrapcontributions()",
-      "id": "workouts_generateamrapcontributions",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "workouts_generateamrapcontributions"
     },
     {
       "label": "generateEmomContributions()",
@@ -5874,8 +5973,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "generateemomcontributions()",
-      "id": "workouts_generateemomcontributions",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "workouts_generateemomcontributions"
     },
     {
       "label": "toggleForTimeDnf()",
@@ -5885,8 +5984,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "togglefortimednf()",
-      "id": "workouts_togglefortimednf",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "workouts_togglefortimednf"
     },
     {
       "label": "updateForTimeScorePreview()",
@@ -5896,8 +5995,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "updatefortimescorepreview()",
-      "id": "workouts_updatefortimescorepreview",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "workouts_updatefortimescorepreview"
     },
     {
       "label": "generateForTimeContributions()",
@@ -5907,8 +6006,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "generatefortimecontributions()",
-      "id": "workouts_generatefortimecontributions",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "workouts_generatefortimecontributions"
     },
     {
       "label": "updateIntervalScorePreview()",
@@ -5918,8 +6017,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "updateintervalscorepreview()",
-      "id": "workouts_updateintervalscorepreview",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "workouts_updateintervalscorepreview"
     },
     {
       "label": "recalcForTimeRemaining()",
@@ -5929,8 +6028,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "recalcfortimeremaining()",
-      "id": "workouts_recalcfortimeremaining",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "workouts_recalcfortimeremaining"
     },
     {
       "label": "generateIntervalContributions()",
@@ -5940,8 +6039,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "generateintervalcontributions()",
-      "id": "workouts_generateintervalcontributions",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "workouts_generateintervalcontributions"
     },
     {
       "label": "updateAmrapScorePreview()",
@@ -5951,8 +6050,8 @@
       "_origin": "ast",
       "community": 3,
       "norm_label": "updateamrapscorepreview()",
-      "id": "workouts_updateamrapscorepreview",
-      "community_name": "workouts.js"
+      "community_name": "workouts.js",
+      "id": "workouts_updateamrapscorepreview"
     },
     {
       "label": "cleanupStructuredSubscriptions()",
@@ -5962,8 +6061,8 @@
       "_origin": "ast",
       "community": 0,
       "norm_label": "cleanupstructuredsubscriptions()",
-      "id": "workouts_cleanupstructuredsubscriptions",
-      "community_name": "plans.js"
+      "community_name": "plans.js",
+      "id": "workouts_cleanupstructuredsubscriptions"
     }
   ],
   "links": [
@@ -5974,9 +6073,9 @@
       "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "opencode_plugins_graphify",
-      "target": "opencode_plugins_graphify_graphifyplugin"
+      "target": "opencode_plugins_graphify_graphifyplugin",
+      "confidence_score": 1.0
     },
     {
       "relation": "rationale_for",
@@ -5985,9 +6084,97 @@
       "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast",
-      "confidence_score": 1.0,
       "source": "opencode_plugins_graphify_rationale_4",
-      "target": "opencode_plugins_graphify"
+      "target": "opencode_plugins_graphify",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "AGENTS.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "agents",
+      "target": "agents_opencode_system_instructions_guardrails",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "AGENTS.md",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "agents_opencode_system_instructions_guardrails",
+      "target": "agents_1_critical_git_workflow",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "AGENTS.md",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "agents_opencode_system_instructions_guardrails",
+      "target": "agents_2_development_coding_standards",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "AGENTS.md",
+      "source_location": "L16",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "agents_opencode_system_instructions_guardrails",
+      "target": "agents_3_commit_message_guidelines",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "AGENTS.md",
+      "source_location": "L22",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "agents_opencode_system_instructions_guardrails",
+      "target": "agents_4_execution_safety_guardrails",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "AGENTS.md",
+      "source_location": "L26",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "agents_opencode_system_instructions_guardrails",
+      "target": "agents_5_dependency_management",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "AGENTS.md",
+      "source_location": "L31",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "agents_opencode_system_instructions_guardrails",
+      "target": "agents_6_graphify_knowledge_graph",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "AGENTS.md",
+      "source_location": "L43",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "agents_opencode_system_instructions_guardrails",
+      "target": "agents_7_verification_checklist_definition_of_done",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -29017,5 +29204,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "e73d12e5fee5ae34db8f6a60e92c43913a717c55"
+  "built_at_commit": "6c7b0209b57a71e54117adb8cf9a2eedebcab244"
 }

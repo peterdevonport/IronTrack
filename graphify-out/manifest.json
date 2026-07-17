@@ -308,5 +308,145 @@
     "mtime": 1784041424.900201,
     "ast_hash": "85ef60ec8d610a0ba697838cb9e44b93",
     "semantic_hash": "85ef60ec8d610a0ba697838cb9e44b93"
+  },
+  ".github/prompts/code-smell-review-master.md": {
+    "mtime": 1784271048.5329072,
+    "ast_hash": "be2df3c30672ce3e9aa6fb1a3b61921a",
+    "semantic_hash": ""
+  },
+  ".github/prompts/code-smell-review.md": {
+    "mtime": 1784271048.5331542,
+    "ast_hash": "459239ad420a90e00e20f6304534af4e",
+    "semantic_hash": ""
+  },
+  ".github/workflows/deploy.yml": {
+    "mtime": 1784041424.8937912,
+    "ast_hash": "fc720f085aec1e505250e0c51a615b80",
+    "semantic_hash": ""
+  },
+  ".github/workflows/opencode-conflict-detector.yml": {
+    "mtime": 1784041424.8939497,
+    "ast_hash": "f0de0bdd547f119b6db93bdd381c2f7a",
+    "semantic_hash": ""
+  },
+  ".github/workflows/opencode-conflict-resolver.yml": {
+    "mtime": 1784041424.8939497,
+    "ast_hash": "a44da17d4b37343443e4a91dd2a401db",
+    "semantic_hash": ""
+  },
+  ".github/workflows/opencode-daily-smell-detector.yml": {
+    "mtime": 1784271048.5331542,
+    "ast_hash": "faf6af3d0208644df8e7b7f1ade03cbd",
+    "semantic_hash": ""
+  },
+  ".github/workflows/opencode-issue-fixer.yml": {
+    "mtime": 1784199563.6174617,
+    "ast_hash": "e8c8c629831081f3a75c1bed3e1b13c8",
+    "semantic_hash": ""
+  },
+  ".github/workflows/opencode-merge-detector.yml": {
+    "mtime": 1784271048.5331542,
+    "ast_hash": "2c8665782e4327e45fe6c380c5e1e729",
+    "semantic_hash": ""
+  },
+  ".github/workflows/test-suite.yml": {
+    "mtime": 1784041424.8939497,
+    "ast_hash": "ec692c2f264733011d6d31a229cb4e19",
+    "semantic_hash": ""
+  },
+  "404.html": {
+    "mtime": 1784041424.8939497,
+    "ast_hash": "473b7bdad894205c5c4b29007f124dd9",
+    "semantic_hash": ""
+  },
+  "AGENTS.md": {
+    "mtime": 1784280490.356868,
+    "ast_hash": "cc327ef8fd9bdaae9ba008980c7e5a50",
+    "semantic_hash": ""
+  },
+  "index.html": {
+    "mtime": 1784271048.5342085,
+    "ast_hash": "b4c3d4fcba47846210cf941cf2f0443c",
+    "semantic_hash": ""
+  },
+  "open_code_prompt.txt": {
+    "mtime": 1784041424.8962011,
+    "ast_hash": "1fd8210b14aeaefb07089884185e9907",
+    "semantic_hash": ""
+  },
+  "seed.html": {
+    "mtime": 1784271048.5346913,
+    "ast_hash": "370d61ffdf75cf8a744caa6360f6c76d",
+    "semantic_hash": ""
+  },
+  "apple-touch-icon.png": {
+    "mtime": 1784041424.8939497,
+    "ast_hash": "0c88724b8f8b775dce3bc04d08ebf30f",
+    "semantic_hash": ""
+  },
+  "icon-128x128.png": {
+    "mtime": 1784041424.895201,
+    "ast_hash": "02b288cc582ec2c718d540b770be6ad0",
+    "semantic_hash": ""
+  },
+  "icon-144x144.png": {
+    "mtime": 1784041424.895201,
+    "ast_hash": "b528df9c458d62ecb147ce36f29c61e9",
+    "semantic_hash": ""
+  },
+  "icon-152x152.png": {
+    "mtime": 1784041424.895201,
+    "ast_hash": "5e4807fab730b89b9e216b925e460f7f",
+    "semantic_hash": ""
+  },
+  "icon-16x16.png": {
+    "mtime": 1784041424.895201,
+    "ast_hash": "6234cbce91ca10390bc15d1aa1bf75ed",
+    "semantic_hash": ""
+  },
+  "icon-192x192.png": {
+    "mtime": 1784041424.895201,
+    "ast_hash": "ba9ec613c6c9925c589ceb90032fc595",
+    "semantic_hash": ""
+  },
+  "icon-256x256.png": {
+    "mtime": 1784041424.895201,
+    "ast_hash": "fc099dff1f0ee03618e38cd22bf83087",
+    "semantic_hash": ""
+  },
+  "icon-32x32.png": {
+    "mtime": 1784041424.895201,
+    "ast_hash": "f9ab0fbb4d4f4d8c0cb25ea0007e6b2b",
+    "semantic_hash": ""
+  },
+  "icon-48x48.png": {
+    "mtime": 1784041424.895201,
+    "ast_hash": "5dff7e92ca6b09baed8e9584393a5083",
+    "semantic_hash": ""
+  },
+  "icon-512x512.png": {
+    "mtime": 1784041424.8962011,
+    "ast_hash": "cdb610529097da1b68502c3f8867418a",
+    "semantic_hash": ""
+  },
+  "icon-64x64.png": {
+    "mtime": 1784041424.8962011,
+    "ast_hash": "72b555af79147e4369877436c3ac6e19",
+    "semantic_hash": ""
+  },
+  "icon-96x96.png": {
+    "mtime": 1784041424.8962011,
+    "ast_hash": "cc9d6da9caa51d777eda6dd2a5c884c6",
+    "semantic_hash": ""
+  },
+  "screenshot-mobile.png": {
+    "mtime": 1784041424.897201,
+    "ast_hash": "cad5e277242cd5ba9497c6b0df153de9",
+    "semantic_hash": ""
+  },
+  "screenshot-wide.png": {
+    "mtime": 1784041424.898201,
+    "ast_hash": "da91c2fadc40fa40b8f69c16b0eeec58",
+    "semantic_hash": ""
   }
 }
