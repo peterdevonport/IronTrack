@@ -58,9 +58,10 @@ jobs:
               
               gh workflow run opencode-conflict-resolver.yml \
                 -f pr_number="$PR_NUM" \
-                -f branch_name="$BRANCH"
-              
-              continue
+                -f branch_name="$BRANCH" || {
+                echo "❌ Failed to dispatch resolver for PR #$PR_NUM"
+                continue
+              }
             fi
           done
 
