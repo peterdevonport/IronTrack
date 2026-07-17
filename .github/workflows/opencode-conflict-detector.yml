@@ -30,13 +30,14 @@ jobs:
           fi
 
           # Evaluate the board sequentially (lowest PR number runs first)
-          __decode() { echo "$1" | base64 --decode; }
           for row in $PR_LIST; do
-            PR_NUM=$(__decode "$row" | jq -r '.number')
-            BRANCH=$(__decode "$row" | jq -r '.branch')
-            MERGEABLE=$(__decode "$row" | jq -r '.mergeable')
-            CONCLUSION=$(__decode "$row" | jq -r '.conclusion')
-            STATUS=$(__decode "$row" | jq -r '.status')
+            # 🎯 Decode the base64 row once, then extract all fields from the decoded JSON
+            decoded=$(echo "$row" | base64 --decode)
+            PR_NUM=$(echo "$decoded" | jq -r '.number')
+            BRANCH=$(echo "$decoded" | jq -r '.branch')
+            MERGEABLE=$(echo "$decoded" | jq -r '.mergeable')
+            CONCLUSION=$(echo "$decoded" | jq -r '.conclusion')
+            STATUS=$(echo "$decoded" | jq -r '.status')
 
             echo "Checking status of PR #$PR_NUM ($BRANCH)..."
 
