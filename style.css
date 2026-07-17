@@ -93,6 +93,16 @@
   .text-slate-400 { color: var(--slate-400) !important; }
   .text-slate-500 { color: var(--slate-500) !important; }
   .border-slate-800 { border-color: var(--slate-800) !important; }
+
+  /* PB badge — light mode */
+  .bg-purple-950\/50 { background-color: rgba(168, 85, 247, 0.12) !important; }
+  .text-purple-400 { color: #7c3aed !important; }
+  .border-purple-800\/60 { border-color: rgba(168, 85, 247, 0.3) !important; }
+
+  /* 1RM badge — light mode */
+  .bg-emerald-950\/50 { background-color: rgba(16, 185, 129, 0.12) !important; }
+  .text-emerald-400 { color: #059669 !important; }
+  .border-emerald-800\/60 { border-color: rgba(16, 185, 129, 0.3) !important; }
 }
 
 .mdui-theme-auto {
@@ -123,6 +133,16 @@
   .text-slate-400 { color: var(--slate-400) !important; }
   .text-slate-500 { color: var(--slate-500) !important; }
   .border-slate-800 { border-color: var(--slate-800) !important; }
+
+  /* PB badge — light mode */
+  .bg-purple-950\/50 { background-color: rgba(168, 85, 247, 0.12) !important; }
+  .text-purple-400 { color: #7c3aed !important; }
+  .border-purple-800\/60 { border-color: rgba(168, 85, 247, 0.3) !important; }
+
+  /* 1RM badge — light mode */
+  .bg-emerald-950\/50 { background-color: rgba(16, 185, 129, 0.12) !important; }
+  .text-emerald-400 { color: #059669 !important; }
+  .border-emerald-800\/60 { border-color: rgba(16, 185, 129, 0.3) !important; }
 }
 
 @media (prefers-color-scheme: dark) {
