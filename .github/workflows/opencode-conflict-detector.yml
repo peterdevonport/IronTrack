@@ -1,4 +1,4 @@
-name: OpenCode Conflict Detector
+name: PR Conflict Detector
 
 on:
   push:
