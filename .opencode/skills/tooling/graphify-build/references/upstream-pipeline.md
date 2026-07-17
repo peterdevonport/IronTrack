@@ -1,10 +1,6 @@
-# Upstream Graphify Pipeline Reference
+# Graphify Build Pipeline
 
-The full Graphify build pipeline is documented in the upstream skill at:
-
-```
-~/.config/opencode/skills/graphify/SKILL.md
-```
+This reference documents the full Graphify build pipeline used by the `graphify-build` skill.
 
 ## When to Load This Reference
 
@@ -13,7 +9,7 @@ Load this reference only when:
 - Debugging a failed build
 - Running advanced flags (--neo4j, --falkordb, --mcp)
 
-## Quick Reference
+## Pipeline Steps
 
 Core pipeline (9 steps):
 1. Ensure Python interpreter
