@@ -358,8 +358,14 @@ function isPermissionDenied(err) {
   return err?.code === 'permission-denied';
 }
 
-function switchTab(tabName) {
-  if (state.ui.currentTab === tabName) return;
+/**
+ * Low-level tab activator: performs all DOM manipulation and state updates
+ * for switching to the given tab, WITHOUT calling history.pushState.
+ * This is used by both switchTab() (user-initiated navigation) and
+ * the popstate handler (browser back/forward navigation) to avoid
+ * duplicating tab-rendering logic.
+ */
+function activateTab(tabName) {
   tabContents.forEach(el => el.classList.remove('active'));
   const target = document.getElementById('tab-' + tabName);
   if (target) target.classList.add('active');
@@ -377,10 +383,15 @@ function switchTab(tabName) {
   if (header) header.textContent = titleMap[tabName] || 'IRONTRACK';
   window.scrollTo({ top: 0, behavior: 'smooth' });
   state.ui.currentTab = tabName;
-  history.pushState({ tab: tabName }, '', '');
   if (typeof lucide !== 'undefined' && lucide.createIcons) {
     lucide.createIcons();
   }
 }
 
-export { PERMISSION_ERROR_MAP, clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, buildMduiOptionsHtml, saveExpandedCardIds, restoreExpandedCardIds, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, paginateAndRender, changeGenericPage, switchTab, isPermissionDenied, BTN_ACTIVE_CLASS, BTN_INACTIVE_CLASS, setActiveTab, setInactiveTab };
+function switchTab(tabName) {
+  if (state.ui.currentTab === tabName) return;
+  activateTab(tabName);
+  history.pushState({ tab: tabName }, '', '');
+}
+
+export { PERMISSION_ERROR_MAP, clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, buildMduiOptionsHtml, saveExpandedCardIds, restoreExpandedCardIds, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, paginateAndRender, changeGenericPage, switchTab, activateTab, isPermissionDenied, BTN_ACTIVE_CLASS, BTN_INACTIVE_CLASS, setActiveTab, setInactiveTab };
