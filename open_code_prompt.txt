@@ -1,33 +1,31 @@
 You are an autonomous Senior Software Engineer evaluating an on-demand code refactor request.
-Target Issue: #381 - [OpenCode Technical Debt] Hardcoded box-shadow in .card breaks CSS variable theming pattern in PR #379
+Target Issue: #417 - [OpenCode Technical Debt] 67-line bash script inlined in YAML — untestable and unmaintainable
 
 ### REFACTOR BLUEPRINT REPORTED:
 
 ### Source
-This issue was auto-detected from merged Pull Request #379.
+This issue was auto-detected from merged Pull Request #411.
 
 ### Location
-Found in `style.css:292` (the `.card` class).
+Found in modified section of `.github/workflows/opencode-conflict-detector.yml`, lines 24-67.
 
 ### Description
-The `.card` CSS class uses CSS custom properties for all other visual properties:
-- `background-color: var(--color-surface-elevated, #0f172a)`
-- `border: 1px solid var(--slate-500, #64748b)`
+The entire conflict detection logic — a 67-line bash script with loops, conditionals, base64 decoding, and workflow dispatch — is inlined directly in the YAML workflow file. This is a separation of concerns violation and an architectural smell. The logic is untestable (you cannot unit-test a `run:` block), hard to debug (errors appear in raw Actions logs), and difficult to maintain (any change requires editing the YAML, which mixes CI config with business logic).
 
-However, the newly added `box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.25)` uses hardcoded RGBA values. This is an inconsistency in the theming architecture — shadow intensity cannot be adjusted via CSS variables for dark mode, accessibility needs, or design-system updates without modifying the stylesheet directly.
+The resolver workflow (`opencode-conflict-resolver.yml`) has the same problem at 99 lines. Together, these files represent 166 lines of untestable bash inlined in YAML.
 
 ### Suggested Refactor
-Extract the shadow value into a CSS custom property to maintain the existing theming pattern:
-```css
-:root {
-  --shadow-card: 0 4px 12px 0 rgba(0, 0, 0, 0.25);
-}
-.card {
-  /* ... */
-  box-shadow: var(--shadow-card);
-}
+Extract the detection logic into a standalone shell script (e.g., `.github/scripts/detect-conflicts.sh`) and call it from the workflow:
+```yaml
+- name: Evaluate PR Pool Status
+  env:
+    GH_TOKEN: ${{ secrets.AUTO_MERGE_PAT }}
+  run: .github/scripts/detect-conflicts.sh
 ```
-This allows shadow intensity to be overridden per-theme (e.g., lighter shadows in high-contrast mode, or no shadows for reduced-motion preferences).
+Benefits:
+- Script can be linted with `shellcheck`
+- Script can be tested locally with `act` or `act -j evaluate-queue`
+- Separates CI orchestration from business logic
 
 ### YOUR MISSION:
 Analyze the corresponding source files in the current repository. Determine if this reported code smell is a genuine defect/anti-pattern that needs correcting, OR if this structure is intentional (e.g., required for performance, compliance with third-party APIs, or an explicitly guarded architectural design).
@@ -36,13 +34,13 @@ Analyze the corresponding source files in the current repository. Determine if t
 
 PATH A: [VALID CODE SMELL - FIX IT]
 If the issue is correct and should be refactored:
-1. Checkout a new branch named 'opencode/fix-issue-381'.
+1. Checkout a new branch named 'opencode/fix-issue-417'.
 2. Apply precise modifications to the master branch files to resolve the tech debt.
 3. Commit the changes, push the branch, and create a PR with title matching the issue title. Do NOT enable auto-merge — the workflow handles that.
 
 PATH B: [INTENTIONAL DESIGN - REJECT IT]
 If you evaluate that the code is intentional, optimal, or should remain unchanged, do NOT edit any repository code. Run ONLY these two terminal commands to mark the issue as wontfix (they work regardless of which branch is checked out):
-1. gh issue edit 381 --add-label "wontfix"
-2. gh issue comment 381 --body "### 🛑 Architectural Review: Intentional Design\nI have deeply analyzed the codebase regarding this report. I recommend **against** changing this code for the following reasons:\n\n<Provide a highly detailed, professional engineering justification explaining why this code pattern is correct, necessary, or optimal given your context.>"
+1. gh issue edit 417 --add-label "wontfix"
+2. gh issue comment 417 --body "### 🛑 Architectural Review: Intentional Design\nI have deeply analyzed the codebase regarding this report. I recommend **against** changing this code for the following reasons:\n\n<Provide a highly detailed, professional engineering justification explaining why this code pattern is correct, necessary, or optimal given your context.>"
 
 CRITICAL: Do NOT create any branch, commit, push, or pull request. Do NOT edit any files. Run ONLY the two gh issue commands above. If you create a PR, the workflow will auto-merge it because it cannot distinguish wontfix PRs from real fixes.
