@@ -1,36 +1,17 @@
-# OpenCode System Instructions & Guardrails
+# OpenCode System Instructions
 
-## 1. Critical Git Workflow
-- **ALWAYS** run `git checkout master && git pull origin master` before starting any new task.
-- **ALWAYS** create a new feature or bugfix branch from `master` for all work.
-- **NEVER** commit, modify, or push code directly to the `master` branch.
-- **Branch Naming Convention:** Use `feature/short-description` or `bugfix/short-description`.
-- **Pull Requests:** Push the completed branch to the remote repository. Do not attempt to merge into `master` via CLI.
+## Git Workflow
+- Always checkout master before starting work
+- Create feature/bugfix branches from master
+- Never commit directly to master
 
-## 2. Development & Coding Standards
-- **Write Clean Code:** Prioritize readability, modularity, and adherence to established project patterns.
-- **Do Not Guess:** If a dependency, API, or architectural pattern is ambiguous, stop and ask the user for clarification.
-- **No Ghost Code:** Delete or refactor unused variables, dead code, and temporary logging statements before finalizing a task.
-- **Comments & Docs:** Add meaningful inline comments for complex logic, and update relevant documentation (`README.md`, etc.) if system behavior changes.
+## Commits
+- Use Conventional Commits
+- Allowed types: feat, fix, docs, style, refactor, test, chore
 
-## 3. Commit Message Guidelines
-- **ALWAYS** use Conventional Commits formatting for all commit messages. 
-- **Format:** `<type>(<scope>): <short description in imperative mood>`
-  - *Examples:* `feat(auth): add JWT validation middleware`, `fix(api): resolve null pointer in user payload`
-- **Allowed Types:** `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`.
+## Safety
+- No destructive commands without confirmation
+- Break large tasks into small verifiable steps
 
-## 4. Execution & Safety Guardrails
-- **NEVER** run destructive commands (e.g., `rm -rf`, `git reset --hard`) without explicit, sequential confirmation from the user.
-- **Incremental Progress:** Break large tasks into smaller, logical steps. Verify each step before moving to the next.
-
-## 5. Dependency Management
-- **Pin exact versions** in `package.json` (no `^` carets) for direct devDependencies to prevent lockfile drift.
-- After any `npm install <pkg>` or `npm install --save-dev <pkg>`, always run `npm ci` locally to verify the lockfile is consistent before pushing.
-- If `npm ci` fails with `Invalid: lock file's <pkg> does not satisfy <pkg>`, run `npm install` (no args) to sync the lockfile, then commit the updated `package-lock.json`.
-
-## 6. Verification Checklist (Definition of Done)
-Before declaring a task finished, you must successfully execute:
-1. Run `git status` to ensure no untracked, accidental, or sensitive files (like `.env`) are being staged.
-2. Stage and commit the changes locally using the prescribed Conventional Commit format.
-3. Push the feature/bugfix branch to the GitHub remote repository to trigger the GitHub workflows.
-4. Output a summary of the changes made and provide the exact branch name so the user can open a Pull Request.
+## Codebase Intelligence
+- Use Graphify before exploring existing architecture or relationships when available

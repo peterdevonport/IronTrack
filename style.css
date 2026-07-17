@@ -64,7 +64,8 @@
   --slate-950: var(--color-surface);
 }
 
-.mdui-theme-light {
+.mdui-theme-light,
+.mdui-theme-auto {
   /* Semantic color tokens — light mode */
   --color-bg: #e2e8f0;
   --color-surface: #ffffff;
@@ -79,46 +80,6 @@
   --color-error: #dc2626;
 
   /* MDUI color overrides — light mode */
-  --mdui-color-primary-container: var(--mdui-color-primary-container-light);
-  --mdui-color-on-primary-container: 33, 0, 94;
-  --mdui-color-on-surface: 28, 27, 31;
-  --mdui-color-error: 179, 38, 30;
-
-  /* Tailwind class overrides — light mode */
-  .bg-slate-950 { background-color: var(--slate-950) !important; }
-  .bg-slate-900 { background-color: var(--slate-900) !important; }
-  .bg-slate-800 { background-color: var(--slate-800) !important; }
-  .bg-slate-700 { background-color: var(--slate-700) !important; }
-  .text-slate-200 { color: var(--slate-200) !important; }
-  .text-slate-400 { color: var(--slate-400) !important; }
-  .text-slate-500 { color: var(--slate-500) !important; }
-  .border-slate-800 { border-color: var(--slate-800) !important; }
-
-  /* PB badge — light mode */
-  .bg-purple-950\/50 { background-color: rgba(168, 85, 247, 0.12) !important; }
-  .text-purple-400 { color: #7c3aed !important; }
-  .border-purple-800\/60 { border-color: rgba(168, 85, 247, 0.3) !important; }
-
-  /* 1RM badge — light mode */
-  .bg-emerald-950\/50 { background-color: rgba(16, 185, 129, 0.12) !important; }
-  .text-emerald-400 { color: #059669 !important; }
-  .border-emerald-800\/60 { border-color: rgba(16, 185, 129, 0.3) !important; }
-}
-
-.mdui-theme-auto {
-  /* Light mode — default when OS is light */
-  --color-bg: #e2e8f0;
-  --color-surface: #ffffff;
-  --color-surface-elevated: #ffffff;
-  --color-surface-hover: #f1f5f9;
-  --color-text: #1e293b;
-  --color-text-secondary: #475569;
-  --color-text-muted: #64748b;
-  --color-border: #cbd5e1;
-  --color-secondary: #fbbf24;
-  --color-tertiary: #c084fc;
-  --color-error: #dc2626;
-
   --mdui-color-primary-container: var(--mdui-color-primary-container-light);
   --mdui-color-on-primary-container: 33, 0, 94;
   --mdui-color-on-surface: 28, 27, 31;

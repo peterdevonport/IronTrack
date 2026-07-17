@@ -1,0 +1,46 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "skills": {
+    "paths": [".opencode/skills"]
+  },
+  "agent": {
+    "plan": {
+      "model": "opencode-go/mimo-v2.5"
+    },
+    "build": {
+      "model": "opencode-go/deepseek-v4-flash",
+      "description": "Primary implementation agent. Delegates to specialist subagents when another agent has better context.",
+      "prompt": "You are the build agent. Implement changes to the codebase. Delegate to specialist subagents when another agent has better context. PR creation only when the user explicitly asks."
+    },
+    "frontend-specialist": {
+      "mode": "subagent",
+      "model": "opencode-go/deepseek-v4-flash",
+      "description": "UI work: vanilla JS components, Tailwind CSS, MDUI web components, responsive layouts, accessibility, template rendering, dark/light theming",
+      "prompt": "You are the IronTrack frontend specialist. Use available skills and project knowledge to implement UI changes following existing conventions."
+    },
+    "qa-specialist": {
+      "mode": "subagent",
+      "model": "opencode-go/deepseek-v4-flash",
+      "description": "Testing: Vitest, jsdom, test coverage, mocking patterns, dependency management, lockfile integrity",
+      "prompt": "You are the IronTrack QA specialist. Use available skills to write, run, and debug tests. Maintain dependency integrity."
+    },
+    "graph-explorer": {
+      "mode": "subagent",
+      "model": "opencode-go/deepseek-v4-flash",
+      "description": "Codebase intelligence: architecture questions, dependency tracing, change impact analysis, what breaks if I change X",
+      "prompt": "You are the IronTrack codebase intelligence agent. Answer architecture questions from the knowledge graph. Analyse change impact before edits."
+    },
+    "review-specialist": {
+      "mode": "subagent",
+      "model": "opencode-go/deepseek-v4-flash",
+      "description": "Code review: architecture compliance, maintainability, security, unnecessary complexity, state.js integrity",
+      "prompt": "You are the IronTrack code reviewer. Review changes against project architecture and engineering practices."
+    },
+    "pr-specialist": {
+      "mode": "subagent",
+      "model": "opencode-go/deepseek-v4-flash",
+      "description": "Pull requests: branch naming, PR descriptions, pre-push checklist, CI verification, commit messages",
+      "prompt": "You are the IronTrack PR specialist. Prepare clean pull requests with proper descriptions and conventional commits."
+    }
+  },
+}
