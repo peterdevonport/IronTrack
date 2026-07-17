@@ -1,29 +1,28 @@
 You are an autonomous Senior Software Engineer evaluating an on-demand code refactor request.
-Target Issue: #476 - [OpenCode Technical Debt] Inconsistent cross-workflow naming — resolver still uses 'opencode' prefix
+Target Issue: #406 - [OpenCode Technical Debt] AGENTS.md information loss — verification checklist and dependency steps removed
 
 ### REFACTOR BLUEPRINT REPORTED:
 
 ### Source
-This issue was auto-detected from merged Pull Request #456.
+This issue was auto-detected from merged Pull Request #399 (refactor/opencode-architecture).
 
 ### Location
-`.github/workflows/opencode-conflict-detector.yml` line 62 references `.github/workflows/opencode-conflict-resolver.yml`.
+Found in modified section of code: `AGENTS.md` (reduced from 74 to 17 lines).
 
 ### Description
-PR #456 renamed the conflict detector workflow from "OpenCode Conflict Detector" to "PR Conflict Detector" because it now scans all open PRs. However, the workflow dispatches a companion resolver workflow that is still named `opencode-conflict-resolver.yml` with the old "opencode" prefix.
+The original `AGENTS.md` contained a numbered verification checklist ("Definition of Done") that agents followed before declaring a task complete:
 
-This creates an inconsistent naming scheme within the conflict-detection workflow family:
-- Detector: `opencode-conflict-detector.yml` → display name "PR Conflict Detector" (partially renamed)
-- Resolver: `opencode-conflict-resolver.yml` → display name not updated
+1. `git status` — check for untracked secrets
+2. Stage and commit with Conventional Commit format
+3. Push to remote to trigger workflows
+4. Output summary + branch name for the user
 
-Anyone working on the CI/CD pipeline must mentally reconcile that "opencode" in the filename no longer means "only for OpenCode PRs". This erodes naming conventions and adds cognitive overhead.
+This checklist has been removed from `AGENTS.md` and is partially captured in `pr-workflow/SKILL.md`, but the skill is only invoked "when the user explicitly requests PR creation." This means the verification steps are not automatically surfaced during normal task execution — agents may finish work without running `git status` or staging properly.
+
+Similarly, the detailed dependency management steps ("run `npm ci` locally to verify lockfile consistency before pushing" and the specific failure-recovery procedure) were removed from the top-level instructions and buried inside the `dependency-management` skill.
 
 ### Suggested Refactor
-Rename both workflows consistently:
-- `opencode-conflict-detector.yml` → `pr-conflict-detector.yml`
-- `opencode-conflict-resolver.yml` → `pr-conflict-resolver.yml`
-
-Update the dispatch reference on line 62 accordingly. This creates a cohesive, self-describing naming convention for the conflict-detection family of workflows.
+Restore the verification checklist as a permanent section in `AGENTS.md` (it applies to every task, not just PR creation). Keep detailed recovery procedures in the dependency skill, but add a pointer in `AGENTS.md` like: "See dependency-management skill for lockfile recovery steps."
 
 ### YOUR MISSION:
 Analyze the corresponding source files in the current repository. Determine if this reported code smell is a genuine defect/anti-pattern that needs correcting, OR if this structure is intentional (e.g., required for performance, compliance with third-party APIs, or an explicitly guarded architectural design).
@@ -32,13 +31,13 @@ Analyze the corresponding source files in the current repository. Determine if t
 
 PATH A: [VALID CODE SMELL - FIX IT]
 If the issue is correct and should be refactored:
-1. Checkout a new branch named 'opencode/fix-issue-476'.
+1. Checkout a new branch named 'opencode/fix-issue-406'.
 2. Apply precise modifications to the master branch files to resolve the tech debt.
 3. Commit the changes, push the branch, and create a PR with title matching the issue title. Do NOT enable auto-merge — the workflow handles that.
 
 PATH B: [INTENTIONAL DESIGN - REJECT IT]
 If you evaluate that the code is intentional, optimal, or should remain unchanged, do NOT edit any repository code. Run these terminal commands immediately to mark the issue as wontfix (they work regardless of which branch is checked out):
-1. gh issue edit 476 --add-label "wontfix"
-2. gh issue comment 476 --body "### 🛑 Architectural Review: Intentional Design\nI have deeply analyzed the codebase regarding this report. I recommend **against** changing this code for the following reasons:\n\n<Provide a highly detailed, professional engineering justification explaining why this code pattern is correct, necessary, or optimal given your context.>"
+1. gh issue edit 406 --add-label "wontfix"
+2. gh issue comment 406 --body "### 🛑 Architectural Review: Intentional Design\nI have deeply analyzed the codebase regarding this report. I recommend **against** changing this code for the following reasons:\n\n<Provide a highly detailed, professional engineering justification explaining why this code pattern is correct, necessary, or optimal given your context.>"
 
 IMPORTANT: You MUST run these 'gh issue' commands when choosing Path B. Do NOT just report back via chat — execute the commands so the workflow can detect the wontfix resolution.
