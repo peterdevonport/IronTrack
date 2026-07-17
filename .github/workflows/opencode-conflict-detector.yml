@@ -34,6 +34,9 @@ jobs:
             exit 0
           fi
 
+          # Track dispatch failures across all PRs for accurate exit code propagation
+          DISPATCH_FAILURES=0
+
           # Evaluate the board sequentially (lowest PR number runs first)
           for row in $PR_LIST; do
             # 🎯 Decode the base64 row once, then extract all fields from the decoded JSON
@@ -78,10 +81,16 @@ jobs:
               
               if [ "$__dispatch_ok" = false ]; then
                 echo "❌ Failed to dispatch resolver for PR #$PR_NUM after 3 attempts"
+                DISPATCH_FAILURES=$((DISPATCH_FAILURES + 1))
               fi
               
               continue
             fi
           done
+
+          if [ "$DISPATCH_FAILURES" -gt 0 ]; then
+            echo "❌ $DISPATCH_FAILURES dispatch(es) failed — check logs for details"
+            exit 1
+          fi
 
           echo "✅ All open PRs are either perfectly healthy or already merged."
