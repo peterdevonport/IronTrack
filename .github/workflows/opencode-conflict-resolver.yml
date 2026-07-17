@@ -21,79 +21,13 @@ jobs:
           token: ${{ secrets.AUTO_MERGE_PAT }}
           ref: ${{ github.event.inputs.branch_name }}
 
-      - name: Prepare Git Environment & Merge Master
-        env:
-          GH_TOKEN: ${{ secrets.AUTO_MERGE_PAT }}
-        run: |
-          git config --global user.name "opencode-conflict-resolver[bot]"
-          git config --global user.email "opencode-conflict-resolver[bot]@users.noreply.github.com"
-          git fetch origin master
-          git merge origin/master || true
-
       - name: Install OpenCode CLI
         run: |
           curl -fsSL https://opencode.ai/install | bash
           echo "$HOME/.opencode/bin" >> $GITHUB_PATH
 
-      - name: Resolve Conflicts with OpenCode
-        env:
-          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
-        run: |
-          timeout 300 opencode run --auto --model opencode-go/deepseek-v4-flash \
-            "Resolve git merge conflicts in this repository. \
-            Find ALL files with conflict markers (<<<<<<<, =======, >>>>>>>). \
-            For each file, merge both sides cleanly and remove all conflict markers. \
-            PRESERVE the logic from both sides. \
-            Do NOT create branches, do NOT create PRs, do NOT use git. \
-            Only edit the conflicted files in place." || \
-            { echo "❌ OpenCode timed out after 5 minutes"; exit 1; }
-
-      - name: Lint, Test, Fix & Push
-        env:
-          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
-        run: |
-          set -e
-          npm ci
-
-          # Lint first — catches duplicate declarations, unused imports, etc.
-          if ! npm run lint; then
-            echo "❌ Lint failed. Attempting auto-fix with OpenCode..."
-            timeout 300 opencode run --auto --model opencode-go/deepseek-v4-flash \
-              "The merge conflict resolution introduced lint errors. \
-              Fix the SOURCE CODE to resolve all ESLint errors. \
-              Do NOT modify test files or eslint config. \
-              Do NOT create branches or PRs." || \
-              { echo "❌ OpenCode timed out after 5 minutes"; exit 1; }
-            npm run lint || { echo "❌ Lint still failing after fix. Aborting."; exit 1; }
-          fi
-
-          # Then run tests
-          if ! npm test; then
-            echo "❌ Tests failed. Attempting auto-fix with OpenCode..."
-            timeout 300 opencode run --auto --model opencode-go/deepseek-v4-flash \
-              "The merge conflict resolution broke the source code causing test failures. \
-              Fix the SOURCE CODE so the existing tests pass. \
-              Do NOT modify test assertions or test files. \
-              Do NOT create branches or PRs." || \
-              { echo "❌ OpenCode timed out after 5 minutes"; exit 1; }
-            npm test || { echo "❌ Tests still failing after fix. Aborting."; exit 1; }
-          fi
-
-          # Verify no conflict markers remain before committing
-          if grep -rn -I -E '^(<<<<<<<|=======|>>>>>>>)' --exclude-dir=.git --exclude-dir=node_modules .; then
-            echo "❌ Conflict markers still present after AI resolution. Aborting commit."
-            exit 1
-          fi
-
-          echo "✅ All checks pass. Committing and pushing..."
-          git add -A
-          git diff --cached --quiet && echo "No changes to commit" || \
-            git commit -m "fix: resolve merge conflicts with master"
-          git push origin ${{ github.event.inputs.branch_name }}
-
-      - name: Re-Enable Auto-Merge
+      - name: Resolve Conflicts & Push
         env:
           GH_TOKEN: ${{ secrets.AUTO_MERGE_PAT }}
-        run: |
-          echo "Re-enabling auto-merge for PR #${{ github.event.inputs.pr_number }}..."
-          gh pr merge "${{ github.event.inputs.pr_number }}" --auto --merge
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+        run: .github/scripts/resolve-conflicts.sh "${{ github.event.inputs.pr_number }}" "${{ github.event.inputs.branch_name }}"
