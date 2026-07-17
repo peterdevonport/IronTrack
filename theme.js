@@ -3,35 +3,13 @@ import { state } from './state.js';
 import { showFeedback } from './ui.js';
 
 const THEME_STORAGE_KEY = 'irontrack-theme';
-const LIGHT_META = { color: '#27dd33', scheme: 'light' };
-const DARK_META = { color: '#27dd33', scheme: 'dark' };
 
 let autoMediaQuery = null;
 let autoListenerAttached = false;
 
-function getMetaTag(scheme) {
-  return document.querySelector(`meta[name="theme-color"][media="(prefers-color-scheme: ${scheme})"]`);
-}
-
-function getDefaultMeta() {
-  return document.querySelector('meta[name="theme-color"]:not([media])');
-}
-
-function updateMetaThemeColor(mode, isDarkOs) {
-  if (mode === 'light') {
-    const el = getMetaTag('light') || getDefaultMeta();
-    if (el) el.setAttribute('content', LIGHT_META.color);
-  } else if (mode === 'dark') {
-    const el = getMetaTag('dark') || getDefaultMeta();
-    if (el) el.setAttribute('content', DARK_META.color);
-  } else {
-    const isDark = isDarkOs !== undefined ? isDarkOs : window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const scheme = isDark ? 'dark' : 'light';
-    const el = getMetaTag(scheme);
-    if (el) {
-      el.setAttribute('content', isDark ? DARK_META.color : LIGHT_META.color);
-    }
-  }
+function updateMetaThemeColor() {
+  const el = document.querySelector('meta[name="theme-color"]');
+  if (el) el.setAttribute('content', '#27dd33');
 }
 
 function applyThemeClass(mode) {
@@ -41,15 +19,12 @@ function applyThemeClass(mode) {
 
   if (mode === 'auto') {
     html.classList.add('mdui-theme-auto');
-    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    updateMetaThemeColor('auto', isDark);
   } else if (mode === 'light') {
     html.classList.add('mdui-theme-light');
-    updateMetaThemeColor('light');
   } else {
     html.classList.add('mdui-theme-dark');
-    updateMetaThemeColor('dark');
   }
+  updateMetaThemeColor();
 }
 
 function updateToggleUI(mode) {
@@ -72,7 +47,7 @@ function initAutoListener() {
       if (saved === 'auto') {
         applyThemeClass('auto');
       }
-      updateMetaThemeColor('auto', e.matches);
+      updateMetaThemeColor();
     };
     if (autoMediaQuery.addEventListener) {
       autoMediaQuery.addEventListener('change', handler);
