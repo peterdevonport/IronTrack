@@ -66,7 +66,14 @@ main() {
   for row in $pr_list; do
     # Decode the base64 row once, then extract all fields from the decoded JSON
     local decoded pr_num branch mergeable conclusion status
-    decoded=$(echo "$row" | base64 --decode)
+    if ! decoded=$(echo "$row" | base64 --decode 2>/dev/null); then
+      echo "⚠️ Failed to decode base64 row (first 80 chars: ${row:0:80}...), skipping..."
+      continue
+    fi
+    if ! echo "$decoded" | jq empty 2>/dev/null; then
+      echo "⚠️ Decoded row is not valid JSON, skipping..."
+      continue
+    fi
     pr_num=$(echo "$decoded" | jq -r '.number')
     branch=$(echo "$decoded" | jq -r '.branch')
     mergeable=$(echo "$decoded" | jq -r '.mergeable')
