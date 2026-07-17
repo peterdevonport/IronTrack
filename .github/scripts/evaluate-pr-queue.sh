@@ -1,26 +1,23 @@
 #!/usr/bin/env bash
 #
-# detect-conflicts.sh — Evaluates all open PRs and dispatches the
-#                       conflict resolver for PRs blocked by conflicts.
+# evaluate-pr-queue.sh — Evaluates all open PRs and dispatches conflict resolvers.
 #
-# Environment variables:
-#   GH_TOKEN            — GitHub PAT with repo scope (required)
-#   GITHUB_REPOSITORY   — Set automatically by GitHub Actions (owner/repo)
+# This script is called by the "PR Conflict Detector" GitHub Actions workflow.
+# It fetches all open PRs, evaluates their merge/CI status, and dispatches
+# the opencode-conflict-resolver workflow for any PR blocked by conflicts.
 #
-# Usage (from GitHub Actions workflow):
-#   - name: Evaluate PR Pool Status
-#     env:
-#       GH_TOKEN: ${{ secrets.AUTO_MERGE_PAT }}
-#     run: .github/scripts/detect-conflicts.sh
+# Environment variables (set by the workflow or GitHub Actions):
+#   GH_TOKEN           — GitHub token with repo + workflow scopes
+#   GITHUB_REPOSITORY  — <owner>/<repo> of the current repository
 #
 # shellcheck disable=SC2086  # Intentionally unquoted $PR_LIST for word-splitting
 #                             # The values are base64-encoded (no spaces) so it's safe.
 
 set -euo pipefail
 
-# ---------------------------------------------------------------------------
+# ──────────────────────────────────────────────
 # Configuration
-# ---------------------------------------------------------------------------
+# ──────────────────────────────────────────────
 
 # GitHub CLI hard limit for --limit — values above 1000 are silently capped.
 # If the repo ever exceeds this many open PRs, the remainder are not fetched
@@ -34,18 +31,9 @@ BACKOFF_BASE_SECONDS=5
 # Rate-limit guard: cap dispatch to avoid exhausting GitHub Action runner quota
 MAX_DISPATCH=3
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-log()   { printf "%s\n" "$*"; }
-ok()    { log "✅ $*"; }
-warn()  { log "⚠️  $*"; }
-fail()  { log "❌ $*"; }
-
-# ---------------------------------------------------------------------------
+# ──────────────────────────────────────────────
 # Main
-# ---------------------------------------------------------------------------
+# ──────────────────────────────────────────────
 
 main() {
   # Fetch total open PR count to detect silent truncation
@@ -54,18 +42,16 @@ main() {
 
   # Fetch all open PRs with their conflict status and latest CI test conclusion
   local pr_list
-  pr_list=$(gh pr list \
-    --limit "$PR_FETCH_LIMIT" \
-    --state open \
+  pr_list=$(gh pr list --limit "$PR_FETCH_LIMIT" --state open \
     --json number,headRefName,mergeable,statusCheckRollup \
     --jq '.[] | {number, branch: .headRefName, mergeable, conclusion: (.statusCheckRollup[-1].conclusion // null), status: (.statusCheckRollup[-1].status // null)} | @base64')
 
   if [ -z "$pr_list" ]; then
-    ok "No open PRs found in the system."
-    return 0
+    echo "✅ No open PRs found in the system."
+    exit 0
   fi
 
-  # Track dispatch failures and count across all PRs
+  # Track dispatch failures across all PRs for accurate exit code propagation
   local dispatch_failures=0
   local dispatch_count=0
 
@@ -73,7 +59,7 @@ main() {
   local pr_count
   pr_count=$(echo "$pr_list" | wc -l)
   if [ -n "$total_open" ] && [ "$total_open" -ne 0 ] && [ "$pr_count" -lt "$total_open" ] 2>/dev/null; then
-    warn "Fetched $pr_count of $total_open open PRs. Results may be truncated."
+    echo "⚠️ Warning: Fetched $pr_count of $total_open open PRs. Results may be truncated."
   fi
 
   # Evaluate the board sequentially (lowest PR number runs first)
@@ -81,11 +67,11 @@ main() {
     # Decode the base64 row once, then extract all fields from the decoded JSON
     local decoded pr_num branch mergeable conclusion status
     if ! decoded=$(echo "$row" | base64 --decode 2>/dev/null); then
-      warn "Failed to decode base64 row (first 80 chars: ${row:0:80}...), skipping..."
+      echo "⚠️ Failed to decode base64 row (first 80 chars: ${row:0:80}...), skipping..."
       continue
     fi
     if ! echo "$decoded" | jq empty 2>/dev/null; then
-      warn "Decoded row is not valid JSON, skipping..."
+      echo "⚠️ Decoded row is not valid JSON, skipping..."
       continue
     fi
     pr_num=$(echo "$decoded" | jq -r '.number')
@@ -94,17 +80,17 @@ main() {
     conclusion=$(echo "$decoded" | jq -r '.conclusion')
     status=$(echo "$decoded" | jq -r '.status')
 
-    log "Checking status of PR #${pr_num} (${branch})..."
+    echo "Checking status of PR #$pr_num ($branch)..."
 
     # RULE 1: If this PR is currently running tests, skip it and check the next one.
     if [ "$status" = "IN_PROGRESS" ]; then
-      log "⏳ PR #${pr_num} is currently executing CI checks. Skipping for now..."
+      echo "⏳ PR #$pr_num is currently executing CI checks. Skipping for now..."
       continue
     fi
 
     # RULE 2: If the AI already tried to fix this PR but it failed your test suite, skip it.
     if [ "$conclusion" = "FAILURE" ]; then
-      fail "PR #${pr_num} has failed CI checks. Skipping to avoid stalling the queue."
+      echo "❌ PR #$pr_num has failed CI checks. Skipping to avoid stalling the queue."
       continue
     fi
 
@@ -112,15 +98,15 @@ main() {
     if [ "$mergeable" = "CONFLICTING" ]; then
       # Rate-limit: stop dispatching after MAX_DISPATCH to avoid flooding the runner pool
       if [ "$dispatch_count" -ge "$MAX_DISPATCH" ]; then
-        log "⏳ Dispatch limit ($MAX_DISPATCH) reached. Remaining conflicting PRs will be resolved on the next cycle."
+        echo "⏳ Dispatch limit ($MAX_DISPATCH) reached. Remaining conflicting PRs will be resolved on the next cycle."
         break
       fi
 
-      log "🚨 PR #${pr_num} is blocked by conflicts. Spawning dedicated Resolver (dispatch $((dispatch_count + 1)) of $MAX_DISPATCH)..."
+      echo "🚨 PR #$pr_num is blocked by conflicts. Spawning dedicated Resolver (dispatch $((dispatch_count + 1)) of $MAX_DISPATCH)..."
 
       # Dispatch the resolver with retry logic for transient API errors
       local dispatch_ok=false
-      for attempt in $(seq 1 "$RETRY_MAX"); do
+      for attempt in $(seq 1 $RETRY_MAX); do
         if gh workflow run opencode-conflict-resolver.yml \
           -f pr_number="$pr_num" \
           -f branch_name="$branch"; then
@@ -128,13 +114,13 @@ main() {
           dispatch_count=$((dispatch_count + 1))
           break
         fi
-        if [ "$attempt" -lt "$RETRY_MAX" ]; then
-          sleep "$(( attempt * BACKOFF_BASE_SECONDS ))"
+        if [ "$attempt" -lt $RETRY_MAX ]; then
+          sleep $(( attempt * BACKOFF_BASE_SECONDS ))
         fi
       done
 
       if [ "$dispatch_ok" = false ]; then
-        fail "Failed to dispatch resolver for PR #${pr_num} after ${RETRY_MAX} attempts"
+        echo "❌ Failed to dispatch resolver for PR #$pr_num after $RETRY_MAX attempts"
         dispatch_failures=$((dispatch_failures + 1))
       fi
 
@@ -143,11 +129,11 @@ main() {
   done
 
   if [ "$dispatch_failures" -gt 0 ]; then
-    fail "${dispatch_failures} dispatch(es) failed — check logs for details"
-    return 1
+    echo "❌ $dispatch_failures dispatch(es) failed — check logs for details"
+    exit 1
   fi
 
-  ok "All open PRs are either perfectly healthy or already merged."
+  echo "✅ All open PRs are either perfectly healthy or already merged."
 }
 
 main "$@"
