@@ -1,3 +1,8 @@
 ﻿
 pat.txt
 node_modules/
+
+# Graphify
+graphify-out/cost.json
+graphify-out/cache/
+graphify-out/20*/
