@@ -128,6 +128,7 @@ jobs:
 
           if [ -n "$PR_URL" ]; then
             echo "✅ OpenCode created a PR: $PR_URL"
+            gh pr edit "$PR_URL" --add-label "auto-fix" 2>/dev/null || true
 
             if [ "$IS_WONTFIX" -gt 0 ]; then
               echo "Issue is marked wontfix — closing the PR and issue."

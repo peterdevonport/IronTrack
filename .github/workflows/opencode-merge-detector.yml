@@ -30,6 +30,14 @@ jobs:
             echo "No PR number found in merge commit. Skipping analysis."
             exit 0
           fi
+
+          # Skip smell detection for fixer PRs (labeled auto-fix)
+          LABELS=$(gh pr view "$PR_NUM" --json labels -q '.labels[].name' 2>/dev/null || echo "")
+          if echo "$LABELS" | grep -q "auto-fix"; then
+            echo "Fixer PR #$PR_NUM — skipping smell detection."
+            exit 0
+          fi
+
           echo "Merged PR #$PR_NUM detected. Triggering code smell analysis..."
           gh workflow run opencode-daily-smell-detector.yml \
             --ref master \
