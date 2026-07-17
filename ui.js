@@ -236,12 +236,18 @@ function openProfileModal() {
   document.body.style.overflow = 'hidden';
 }
 
-function closeProfileModal() {
+function closeProfileModal(skipHistoryBack = false) {
   profileModal.classList.add('hidden');
   document.body.style.overflow = '';
   setTimeout(() => {
     if (navBar) navBar.value = state.ui.currentTab || 'dashboard';
   }, 0);
+  // Pop the history entry that openProfileModal() pushed, unless we are
+  // already reacting to a popstate event (where the browser already
+  // consumed the entry).
+  if (!skipHistoryBack) {
+    history.back();
+  }
 }
 
 let planNameResolve = null;
