@@ -26,6 +26,9 @@ jobs:
           GH_TOKEN: ${{ secrets.AUTO_MERGE_PAT }}
         run: |
           set -euo pipefail
+          # Retry configuration for dispatching the conflict resolver
+          RETRY_MAX=3
+          BACKOFF_BASE_SECONDS=5
           # Fetch all open PRs with their conflict status and latest CI test conclusion
           PR_LIST=$(gh pr list --limit 1000 --state open --json number,headRefName,mergeable,statusCheckRollup --jq '.[] | {number, branch: .headRefName, mergeable, conclusion: (.statusCheckRollup[-1].conclusion // null), status: (.statusCheckRollup[-1].status // null)} | @base64')
 
@@ -67,20 +70,20 @@ jobs:
               
               # Dispatch the resolver with retry logic for transient API errors
               __dispatch_ok=false
-              for attempt in 1 2 3; do
+              for attempt in $(seq 1 $RETRY_MAX); do
                 if gh workflow run opencode-conflict-resolver.yml \
                   -f pr_number="$PR_NUM" \
                   -f branch_name="$BRANCH"; then
                   __dispatch_ok=true
                   break
                 fi
-                if [ "$attempt" -lt 3 ]; then
-                  sleep $(( attempt * 5 ))
+                if [ "$attempt" -lt $RETRY_MAX ]; then
+                  sleep $(( attempt * $BACKOFF_BASE_SECONDS ))
                 fi
               done
               
               if [ "$__dispatch_ok" = false ]; then
-                echo "❌ Failed to dispatch resolver for PR #$PR_NUM after 3 attempts"
+                echo "❌ Failed to dispatch resolver for PR #$PR_NUM after $RETRY_MAX attempts"
                 DISPATCH_FAILURES=$((DISPATCH_FAILURES + 1))
               fi
               
