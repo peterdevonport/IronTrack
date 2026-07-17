@@ -1,29 +1,21 @@
 You are an autonomous Senior Software Engineer evaluating an on-demand code refactor request.
-Target Issue: #476 - [OpenCode Technical Debt] Inconsistent cross-workflow naming — resolver still uses 'opencode' prefix
+Target Issue: #395 - [OpenCode Technical Debt] Missing trailing newline in opencode.json and generated files
 
 ### REFACTOR BLUEPRINT REPORTED:
 
 ### Source
-This issue was auto-detected from merged Pull Request #456.
+This issue was auto-detected from merged Pull Request #388.
 
 ### Location
-`.github/workflows/opencode-conflict-detector.yml` line 62 references `.github/workflows/opencode-conflict-resolver.yml`.
+Found in modified section of code: `.opencode/opencode.json` (line 6, end of file).
 
 ### Description
-PR #456 renamed the conflict detector workflow from "OpenCode Conflict Detector" to "PR Conflict Detector" because it now scans all open PRs. However, the workflow dispatches a companion resolver workflow that is still named `opencode-conflict-resolver.yml` with the old "opencode" prefix.
-
-This creates an inconsistent naming scheme within the conflict-detection workflow family:
-- Detector: `opencode-conflict-detector.yml` → display name "PR Conflict Detector" (partially renamed)
-- Resolver: `opencode-conflict-resolver.yml` → display name not updated
-
-Anyone working on the CI/CD pipeline must mentally reconcile that "opencode" in the filename no longer means "only for OpenCode PRs". This erodes naming conventions and adds cognitive overhead.
+The `.opencode/opencode.json` configuration file is missing a trailing newline at the end of file. This violates the POSIX text file standard and can cause issues with some tools that expect a newline-terminated file. Additionally, the generated `graphify-out/manifest.json` and `graphify-out/graph.html` files also lack trailing newlines, suggesting a systematic issue with the graphify tool's output generation.
 
 ### Suggested Refactor
-Rename both workflows consistently:
-- `opencode-conflict-detector.yml` → `pr-conflict-detector.yml`
-- `opencode-conflict-resolver.yml` → `pr-conflict-resolver.yml`
-
-Update the dispatch reference on line 62 accordingly. This creates a cohesive, self-describing naming convention for the conflict-detection family of workflows.
+1. Add a trailing newline to `.opencode/opencode.json`.
+2. Report or fix the graphify tool to always emit a trailing newline in generated files.
+3. Consider adding a linting rule (e.g., `eslint --rule "eol-last": ["error", "always"]` or an `.editorconfig` with `insert_final_newline = true`) to prevent this class of issue going forward.
 
 ### YOUR MISSION:
 Analyze the corresponding source files in the current repository. Determine if this reported code smell is a genuine defect/anti-pattern that needs correcting, OR if this structure is intentional (e.g., required for performance, compliance with third-party APIs, or an explicitly guarded architectural design).
@@ -32,13 +24,13 @@ Analyze the corresponding source files in the current repository. Determine if t
 
 PATH A: [VALID CODE SMELL - FIX IT]
 If the issue is correct and should be refactored:
-1. Checkout a new branch named 'opencode/fix-issue-476'.
+1. Checkout a new branch named 'opencode/fix-issue-395'.
 2. Apply precise modifications to the master branch files to resolve the tech debt.
 3. Commit the changes, push the branch, and create a PR with title matching the issue title. Do NOT enable auto-merge — the workflow handles that.
 
 PATH B: [INTENTIONAL DESIGN - REJECT IT]
 If you evaluate that the code is intentional, optimal, or should remain unchanged, do NOT edit any repository code. Run these terminal commands immediately to mark the issue as wontfix (they work regardless of which branch is checked out):
-1. gh issue edit 476 --add-label "wontfix"
-2. gh issue comment 476 --body "### 🛑 Architectural Review: Intentional Design\nI have deeply analyzed the codebase regarding this report. I recommend **against** changing this code for the following reasons:\n\n<Provide a highly detailed, professional engineering justification explaining why this code pattern is correct, necessary, or optimal given your context.>"
+1. gh issue edit 395 --add-label "wontfix"
+2. gh issue comment 395 --body "### 🛑 Architectural Review: Intentional Design\nI have deeply analyzed the codebase regarding this report. I recommend **against** changing this code for the following reasons:\n\n<Provide a highly detailed, professional engineering justification explaining why this code pattern is correct, necessary, or optimal given your context.>"
 
 IMPORTANT: You MUST run these 'gh issue' commands when choosing Path B. Do NOT just report back via chat — execute the commands so the workflow can detect the wontfix resolution.
