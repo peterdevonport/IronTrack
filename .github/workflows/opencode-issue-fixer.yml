@@ -126,26 +126,25 @@ jobs:
           LABELS=$(gh issue view "$ISSUE_NUM" --json labels -q '.labels[].name' 2>/dev/null || echo "")
           IS_WONTFIX=$(echo "$LABELS" | grep -c "wontfix" || true)
 
-          if [ -n "$PR_URL" ]; then
-            echo "✅ OpenCode created a PR: $PR_URL"
+          # Handle wontfix uniformly: close issue (and PR if one exists), then exit
+          if [ "$IS_WONTFIX" -gt 0 ]; then
+            echo "✅ Issue #$ISSUE_NUM marked wontfix — closing."
 
-            if [ "$IS_WONTFIX" -gt 0 ]; then
-              echo "Issue is marked wontfix — closing the PR and issue."
+            if [ -n "$PR_URL" ]; then
               PR_NUM=$(echo "$PR_URL" | grep -oP '/pull/\K\d+')
+              echo "Closing associated PR #$PR_NUM."
               gh pr close "$PR_NUM" --comment "Closing — the AI determined this is an intentional design (wontfix)."
-              gh issue close "$ISSUE_NUM" --comment "Closed — AI determined this is an intentional design (wontfix)."
-            else
-              echo "Enabling auto-merge for the PR."
-              gh pr merge "$PR_URL" --auto --merge
             fi
 
+            gh issue close "$ISSUE_NUM" --comment "Closed — AI determined this is an intentional design (wontfix)."
             exit 0
           fi
 
-          # No PR found — maybe it's a wontfix issue, or the push failed
-          if [ "$IS_WONTFIX" -gt 0 ]; then
-            echo "✅ Issue #$ISSUE_NUM marked wontfix — Path B completed. Closing issue."
-            gh issue close "$ISSUE_NUM" --comment "Closed — AI determined this is an intentional design (wontfix)."
+          # PR exists but not wontfix — enable auto-merge
+          if [ -n "$PR_URL" ]; then
+            echo "✅ OpenCode created a PR: $PR_URL"
+            echo "Enabling auto-merge for the PR."
+            gh pr merge "$PR_URL" --auto --merge
             exit 0
           fi
 
