@@ -6,7 +6,7 @@ import { getExerciseInfo, getDisplayName, EXERCISE_CATALOG, LOAD_FACTORS, resolv
 import { getMonday, countActiveDays, countConsecutiveDays, toLocalDateKey } from './date.js';
 import { formatMovementLoad, formatCardDate, formatWorkoutType, formatDotsScore, formatMovementWeight } from './formatting.js';
 import { computeDotsScore, computeSinclairScore, getRankingTier, formatScore_ROUNDS_AND_REPS, formatScore_COMPLETED_MINUTES, formatScore_TIME_SECONDS, describeAmrap, describeEmom, describeForTime, describeInterval, buildWorkoutDescription, buildWorkoutSummaryLine, getRepsPerRound } from './analytics.js';
-import { PERMISSION_ERROR_MAP, clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, changeGenericPage, switchTab, isPermissionDenied, FEEDBACK_ERROR_CLASS, FEEDBACK_SUCCESS_CLASS, FEEDBACK_NEUTRAL_CLASS } from './ui.js';
+import { PERMISSION_ERROR_MAP, clearChildren, renderEmptyState, renderMessage, updatePagination, updatePaginationControls, updatePillActive, setChallengeCard, updateCalTodayBtnState, updateTodayBtnState, toggleWorkoutCard, updateStarIcon, toggleSelectAllFriends, buildExerciseOptionsHtml, showFeedback, showToast, openProfileModal, closeProfileModal, showPlanNameModal, enableSwipe, changeGenericPage, activateTab, switchTab, isPermissionDenied, FEEDBACK_ERROR_CLASS, FEEDBACK_SUCCESS_CLASS, FEEDBACK_NEUTRAL_CLASS } from './ui.js';
 import { buildWmsField, applyFieldAttributes, renderFormFields } from './forms.js';
 import { renderOnboarding1RMItem, renderOnboarding1RMList, renderCalcEntry, renderCalcEntries, renderPlanMovementItem, renderPlanMovements, renderMovementChips, renderEmomChips, renderCalendarWorkoutItem, renderVolumeBar, renderMinuteSlotInner, renderShareFriendItem, renderRegistryRow, renderLeaderboardEmptyRow, buildCalendarDayHtml, workoutToLogHtml, renderWorkoutCard, renderStructuredWorkoutCard, renderPlanCard, renderSharedPlanCard, friendToHtml, buildLeaderboardRow } from './rendering.js';
 import { computeTotalLoad, pullProfileMetrics, refreshPBForm, processWorkoutSnapshot, updateCaches, logPB, requireAuth } from './auth.js';
@@ -93,15 +93,7 @@ window.addEventListener('popstate', (e) => {
   if (profileModal && !profileModal.classList.contains('hidden')) {
     closeProfileModal(true);
     if (s?.tab) {
-      tabContents.forEach(el => el.classList.remove('active'));
-      const target = document.getElementById('tab-' + s.tab);
-      if (target) target.classList.add('active');
-      if (navBar) navBar.value = s.tab;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      state.ui.currentTab = s.tab;
-      if (typeof lucide !== 'undefined' && lucide.createIcons) {
-        lucide.createIcons();
-      }
+      activateTab(s.tab);
     }
     return;
   }
@@ -115,15 +107,7 @@ window.addEventListener('popstate', (e) => {
   if (!s) return;
 
   if (s.tab && s.tab !== state.ui.currentTab) {
-    tabContents.forEach(el => el.classList.remove('active'));
-    const target = document.getElementById('tab-' + s.tab);
-    if (target) target.classList.add('active');
-    if (navBar) navBar.value = s.tab;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    state.ui.currentTab = s.tab;
-    if (typeof lucide !== 'undefined' && lucide.createIcons) {
-      lucide.createIcons();
-    }
+    activateTab(s.tab);
   }
 });
 
