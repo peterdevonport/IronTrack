@@ -40,3 +40,8 @@ Anything reviewers should know.
 - Push branch to remote
 - Provide branch name so the user can open the PR on GitHub
 - Do not attempt to merge via CLI
+
+## Do Not
+- Write PR descriptions to temp files — compose in memory and pass via `gh pr create --body`
+- Create any files outside the project without explicit user permission
+- Push without running the pre-push checklist first
