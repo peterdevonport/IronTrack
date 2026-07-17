@@ -7,9 +7,18 @@ const THEME_STORAGE_KEY = 'irontrack-theme';
 let autoMediaQuery = null;
 let autoListenerAttached = false;
 
+/**
+ * Read the canonical brand colour from the --color-brand CSS custom property.
+ * Falls back to the hardcoded hex only if the property is unavailable (edge case).
+ */
+function getBrandColor() {
+  const value = getComputedStyle(document.documentElement).getPropertyValue('--color-brand').trim();
+  return value || '#27dd33';
+}
+
 function updateMetaThemeColor() {
   const el = document.querySelector('meta[name="theme-color"]');
-  if (el) el.setAttribute('content', '#27dd33');
+  if (el) el.setAttribute('content', getBrandColor());
 }
 
 function applyThemeClass(mode) {
@@ -117,9 +126,10 @@ export function getThemeQrColors() {
   const html = document.documentElement;
   const isDark = html.classList.contains('mdui-theme-dark') ||
     (!html.classList.contains('mdui-theme-light') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const brand = getBrandColor();
   return isDark
-    ? { dots: "#f8fafc", bg: "#0f172a", accent: "#27dd33" }
-    : { dots: "#1e293b", bg: "#ffffff", accent: "#27dd33" };
+    ? { dots: "#f8fafc", bg: "#0f172a", accent: brand }
+    : { dots: "#1e293b", bg: "#ffffff", accent: brand };
 }
 
 export function wireThemeToggle() {
