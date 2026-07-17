@@ -82,7 +82,7 @@ jobs:
           echo "If the issue is correct and should be refactored:" >> open_code_prompt.txt
           echo "1. Checkout a new branch named 'opencode/fix-issue-$ISSUE_NUM'." >> open_code_prompt.txt
           echo "2. Apply precise modifications to the master branch files to resolve the tech debt." >> open_code_prompt.txt
-          echo "3. Apply the edits to the local files only — do NOT commit or push. The workflow will handle the commit, push, and PR creation for you automatically." >> open_code_prompt.txt
+          echo "3. Commit the changes, push the branch, and create a PR with title matching the issue title. Do NOT enable auto-merge — the workflow handles that." >> open_code_prompt.txt
 
           echo -e "\nPATH B: [INTENTIONAL DESIGN - REJECT IT]" >> open_code_prompt.txt
           echo "If you evaluate that the code is intentional, optimal, or should remain unchanged, do NOT edit any repository code. Run these terminal commands immediately to mark the issue as wontfix (they work regardless of which branch is checked out):" >> open_code_prompt.txt
@@ -120,8 +120,7 @@ jobs:
           ISSUE_NUM="${{ steps.compile_context.outputs.ISSUE_NUM }}"
 
           # Check if the opencode action created a PR for this issue
-          PR_URL=$(gh pr list --state open --json url,createdAt --jq \
-            "sort_by(.createdAt) | reverse | .[0].url" 2>/dev/null)
+          PR_URL=$(gh pr list --head "opencode/fix-issue-$ISSUE_NUM" --state open --json url --jq '.[0].url' 2>/dev/null)
 
           # Check if the AI chose Path B (wontfix)
           LABELS=$(gh issue view "$ISSUE_NUM" --json labels -q '.labels[].name' 2>/dev/null || echo "")
@@ -131,9 +130,10 @@ jobs:
             echo "✅ OpenCode created a PR: $PR_URL"
 
             if [ "$IS_WONTFIX" -gt 0 ]; then
-              echo "Issue is marked wontfix — closing the PR."
+              echo "Issue is marked wontfix — closing the PR and issue."
               PR_NUM=$(echo "$PR_URL" | grep -oP '/pull/\K\d+')
               gh pr close "$PR_NUM" --comment "Closing — the AI determined this is an intentional design (wontfix)."
+              gh issue close "$ISSUE_NUM" --comment "Closed — AI determined this is an intentional design (wontfix)."
             else
               echo "Enabling auto-merge for the PR."
               gh pr merge "$PR_URL" --auto --merge
@@ -144,7 +144,8 @@ jobs:
 
           # No PR found — maybe it's a wontfix issue, or the push failed
           if [ "$IS_WONTFIX" -gt 0 ]; then
-            echo "✅ Issue #$ISSUE_NUM marked wontfix — Path B completed."
+            echo "✅ Issue #$ISSUE_NUM marked wontfix — Path B completed. Closing issue."
+            gh issue close "$ISSUE_NUM" --comment "Closed — AI determined this is an intentional design (wontfix)."
             exit 0
           fi
 
