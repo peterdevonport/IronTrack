@@ -1,6 +1,6 @@
 ---
 name: irontrack-testing
-description: "Use when writing tests for IronTrack, debugging test failures, or understanding what to mock and how to structure tests for this project's architecture."
+description: "Use for IronTrack-specific test knowledge: what to mock (state.js, Firebase), common regression areas, and project mocking conventions."
 ---
 
 # IronTrack Testing
