@@ -26,14 +26,20 @@ jobs:
           GH_TOKEN: ${{ secrets.AUTO_MERGE_PAT }}
         run: |
           set -euo pipefail
+
           # Fetch total open PR count to detect silent truncation
           TOTAL_OPEN=$(gh api "search/issues?q=is:pr+is:open+repo:${GITHUB_REPOSITORY}&per_page=1" --jq '.total_count' 2>/dev/null || echo "0")
+
+          # GitHub CLI hard limit for --limit — values above 1000 are silently capped.
+          # If the repo ever exceeds this many open PRs, the remainder are not fetched
+          # and will be skipped during conflict evaluation.
+          PR_FETCH_LIMIT=1000
 
           # Retry configuration for dispatching the conflict resolver
           RETRY_MAX=3
           BACKOFF_BASE_SECONDS=5
           # Fetch all open PRs with their conflict status and latest CI test conclusion
-          PR_LIST=$(gh pr list --limit 1000 --state open --json number,headRefName,mergeable,statusCheckRollup --jq '.[] | {number, branch: .headRefName, mergeable, conclusion: (.statusCheckRollup[-1].conclusion // null), status: (.statusCheckRollup[-1].status // null)} | @base64')
+          PR_LIST=$(gh pr list --limit "$PR_FETCH_LIMIT" --state open --json number,headRefName,mergeable,statusCheckRollup --jq '.[] | {number, branch: .headRefName, mergeable, conclusion: (.statusCheckRollup[-1].conclusion // null), status: (.statusCheckRollup[-1].status // null)} | @base64')
 
           if [ -z "$PR_LIST" ]; then
             echo "✅ No open PRs found in the system."
