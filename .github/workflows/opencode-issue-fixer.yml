@@ -104,11 +104,11 @@ jobs:
         timeout-minutes: 15
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
-          GITHUB_TOKEN: ${{ github.token }}
-          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.AUTO_MERGE_PAT }}
+          GH_TOKEN: ${{ secrets.AUTO_MERGE_PAT }}
         with:
           model: opencode-go/deepseek-v4-flash
-          use_github_token: true
+          use_github_token: false
           prompt: ${{ steps.prompt.outputs.PROMPT }}
 
       # 🚀 STEP 2: FIND AND FINALIZE PR OR LABEL
