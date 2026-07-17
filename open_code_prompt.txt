@@ -1,67 +1,17 @@
 You are an autonomous Senior Software Engineer evaluating an on-demand code refactor request.
-Target Issues: #384 - [OpenCode Technical Debt] Magic number colors: hardcoded hex/RGBA badge values bypass design token system AND #383 - [OpenCode Technical Debt] DRY violation: badge light-mode overrides duplicated across .mdui-theme-light and .mdui-theme-auto
+Target Issue: #373 - [OpenCode Technical Debt] Async persistTheme() fire-and-forget in initTheme() silently drops Firestore errors
 
 ### REFACTOR BLUEPRINT REPORTED:
 
-### Source
-This issue was auto-detected from merged Pull Request #382.
-
 ### Location
-Found in `style.css`, lines 98–100 and 103–105 (and duplicated at lines 138–140, 143–145) — corresponding to the `.mdui-theme-light` block (lines 97–105) and `.mdui-theme-auto` block (lines 137–145).
+Found in recent master commits.
+- `theme.js:118-119`
 
 ### Description
-PR #382 introduces six hardcoded color values that bypass the project's CSS custom property design token system:
-
-- `rgba(168, 85, 247, 0.12)` — purple background
-- `#7c3aed` — purple text
-- `rgba(168, 85, 247, 0.3)` — purple border
-- `rgba(16, 185, 129, 0.12)` — emerald background
-- `#059669` — emerald text
-- `rgba(16, 185, 129, 0.3)` — emerald border
-
-The rest of the stylesheet follows a pattern of defining colors as CSS custom properties in `:root` and referencing them via `var()` (e.g., `var(--purple-400, #c084fc)` at line 415, `var(--color-brand)` at line 189). These new values are raw literals with no central definition, making them inconsistent with the established design system.
-
-Furthermore, these badge light-mode CSS overrides are copy-pasted verbatim into two separate theme blocks:
-
-- `.mdui-theme-light` (lines 97–105)
-- `.mdui-theme-auto` (lines 137–145)
-
-This violates the DRY (Don't Repeat Yourself) principle: any future change to badge colors, opacity, or border values must be updated in both places. If a developer updates one block but misses the other, the two themes will silently diverge. This is an extension of a pre-existing duplication problem — the slate Tailwind class overrides (lines 88–95 and 128–135) were already duplicated before this PR.
+In `initTheme()`, when the locally stored theme differs from the Firestore-saved theme, `persistTheme(mode)` is called without `await`. The `persistTheme` function is `async` and performs both a `localStorage.setItem` and a `setDoc` to Firestore. Without `await`, the Firestore write is fire-and-forget — any network failure or permission error is logged to console but the user gets no indication that their theme preference failed to sync to the server. On next page load, the stale Firestore value could overwrite the local choice.
 
 ### Suggested Refactor
-Two complementary refactors are recommended:
-
-**1. Centralize badge color tokens:**
-Define new CSS custom properties in the `:root` block for badge colors:
-
-```css
-:root {
-  /* Badge tokens */
-  --badge-purple-bg: rgba(168, 85, 247, 0.12);
-  --badge-purple-text: #7c3aed;
-  --badge-purple-border: rgba(168, 85, 247, 0.3);
-  --badge-emerald-bg: rgba(16, 185, 129, 0.12);
-  --badge-emerald-text: #059669;
-  --badge-emerald-border: rgba(16, 185, 129, 0.3);
-}
-```
-
-Then reference `var(--badge-purple-bg)` etc. in the light-mode overrides. This centralizes the values and aligns with the existing design token architecture.
-
-**2. Eliminate duplicated theme blocks:**
-Extract the shared light-mode Tailwind class overrides (both slate and badge) into a single reusable block using a combined selector:
-
-```css
-.mdui-theme-light,
-.mdui-theme-auto {
-  /* All shared light-mode Tailwind overrides here, once */
-  .bg-purple-950\/50 { ... }
-  .text-purple-400 { ... }
-  /* etc. */
-}
-```
-
-This eliminates the duplication while preserving the same cascade specificity.
+Add error recovery: either `await` the `persistTheme()` call and handle the error in `initTheme`, or (better for UI responsiveness) make `persistTheme` return a Promise that is captured and handled with `.catch()`. Show a non-intrusive toast notification if the Firestore sync fails, and fall back to localStorage as the source of truth.
 
 ### YOUR MISSION:
 Analyze the corresponding source files in the current repository. Determine if this reported code smell is a genuine defect/anti-pattern that needs correcting, OR if this structure is intentional (e.g., required for performance, compliance with third-party APIs, or an explicitly guarded architectural design).
@@ -70,14 +20,13 @@ Analyze the corresponding source files in the current repository. Determine if t
 
 PATH A: [VALID CODE SMELL - FIX IT]
 If the issue is correct and should be refactored:
-1. Checkout a new branch named 'opencode/fix-issue-384-and-383'.
+1. Checkout a new branch named 'opencode/fix-issue-373'.
 2. Apply precise modifications to the master branch files to resolve the tech debt.
-3. Apply the edits to the local files only — do NOT commit or push. The workflow will handle the commit, push, and PR creation for you automatically.
+3. Commit the changes, push the branch, and create a PR with title matching the issue title. Do NOT enable auto-merge — the workflow handles that.
 
 PATH B: [INTENTIONAL DESIGN - REJECT IT]
 If you evaluate that the code is intentional, optimal, or should remain unchanged, do NOT edit any repository code. Run these terminal commands immediately to mark the issue as wontfix (they work regardless of which branch is checked out):
-1. gh issue edit 384 --add-label "wontfix" && gh issue edit 383 --add-label "wontfix"
-2. gh issue comment 384 --body "### 🛑 Architectural Review: Intentional Design\nI have deeply analyzed the codebase regarding this report. I recommend **against** changing this code for the following reasons:\n\n<Provide a highly detailed, professional engineering justification explaining why this code pattern is correct, necessary, or optimal given your context.>"
-3. gh issue comment 383 --body "### 🛑 Architectural Review: Intentional Design\nI have deeply analyzed the codebase regarding this report. I recommend **against** changing this code for the following reasons:\n\n<Provide a highly detailed, professional engineering justification explaining why this code pattern is correct, necessary, or optimal given your context.>"
+1. gh issue edit 373 --add-label "wontfix"
+2. gh issue comment 373 --body "### 🛑 Architectural Review: Intentional Design\nI have deeply analyzed the codebase regarding this report. I recommend **against** changing this code for the following reasons:\n\n<Provide a highly detailed, professional engineering justification explaining why this code pattern is correct, necessary, or optimal given your context.>"
 
 IMPORTANT: You MUST run these 'gh issue' commands when choosing Path B. Do NOT just report back via chat — execute the commands so the workflow can detect the wontfix resolution.
