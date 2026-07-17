@@ -1,29 +1,27 @@
 You are an autonomous Senior Software Engineer evaluating an on-demand code refactor request.
-Target Issue: #476 - [OpenCode Technical Debt] Inconsistent cross-workflow naming — resolver still uses 'opencode' prefix
+Target Issue: #463 - [OpenCode Technical Debt] Magic number in retry backoff 'sleep $(( attempt * 5 ))'
 
 ### REFACTOR BLUEPRINT REPORTED:
 
 ### Source
-This issue was auto-detected from merged Pull Request #456.
+This issue was auto-detected from merged Pull Request #451.
 
 ### Location
-`.github/workflows/opencode-conflict-detector.yml` line 62 references `.github/workflows/opencode-conflict-resolver.yml`.
+Found in modified section of `.github/workflows/opencode-conflict-detector.yml`, line 75.
 
 ### Description
-PR #456 renamed the conflict detector workflow from "OpenCode Conflict Detector" to "PR Conflict Detector" because it now scans all open PRs. However, the workflow dispatches a companion resolver workflow that is still named `opencode-conflict-resolver.yml` with the old "opencode" prefix.
+The retry backoff uses `sleep $(( attempt * 5 ))` where the multiplier `5` is an unexplained magic number. The retry strategy (linear backoff with 5s, 10s, 15s intervals) has no documented rationale. The retry count of 3 (line 67: `for attempt in 1 2 3`) is also a magic number without explanation.
 
-This creates an inconsistent naming scheme within the conflict-detection workflow family:
-- Detector: `opencode-conflict-detector.yml` → display name "PR Conflict Detector" (partially renamed)
-- Resolver: `opencode-conflict-resolver.yml` → display name not updated
-
-Anyone working on the CI/CD pipeline must mentally reconcile that "opencode" in the filename no longer means "only for OpenCode PRs". This erodes naming conventions and adds cognitive overhead.
+This makes the retry behavior non-obvious to maintainers and prevents easy tuning if the API behavior changes.
 
 ### Suggested Refactor
-Rename both workflows consistently:
-- `opencode-conflict-detector.yml` → `pr-conflict-detector.yml`
-- `opencode-conflict-resolver.yml` → `pr-conflict-resolver.yml`
-
-Update the dispatch reference on line 62 accordingly. This creates a cohesive, self-describing naming convention for the conflict-detection family of workflows.
+1. Extract the backoff multiplier and max retries into named variables at the top of the script:
+   ```bash
+   MAX_RETRIES=3
+   BACKOFF_BASE_SECONDS=5
+   ```
+2. Add a comment explaining the chosen strategy (e.g., "Linear backoff to avoid rate-limiting on gh API").
+3. Consider exponential backoff (`2 ** attempt`) for better resilience against transient failures.
 
 ### YOUR MISSION:
 Analyze the corresponding source files in the current repository. Determine if this reported code smell is a genuine defect/anti-pattern that needs correcting, OR if this structure is intentional (e.g., required for performance, compliance with third-party APIs, or an explicitly guarded architectural design).
@@ -32,13 +30,13 @@ Analyze the corresponding source files in the current repository. Determine if t
 
 PATH A: [VALID CODE SMELL - FIX IT]
 If the issue is correct and should be refactored:
-1. Checkout a new branch named 'opencode/fix-issue-476'.
+1. Checkout a new branch named 'opencode/fix-issue-463'.
 2. Apply precise modifications to the master branch files to resolve the tech debt.
 3. Commit the changes, push the branch, and create a PR with title matching the issue title. Do NOT enable auto-merge — the workflow handles that.
 
 PATH B: [INTENTIONAL DESIGN - REJECT IT]
 If you evaluate that the code is intentional, optimal, or should remain unchanged, do NOT edit any repository code. Run these terminal commands immediately to mark the issue as wontfix (they work regardless of which branch is checked out):
-1. gh issue edit 476 --add-label "wontfix"
-2. gh issue comment 476 --body "### 🛑 Architectural Review: Intentional Design\nI have deeply analyzed the codebase regarding this report. I recommend **against** changing this code for the following reasons:\n\n<Provide a highly detailed, professional engineering justification explaining why this code pattern is correct, necessary, or optimal given your context.>"
+1. gh issue edit 463 --add-label "wontfix"
+2. gh issue comment 463 --body "### 🛑 Architectural Review: Intentional Design\nI have deeply analyzed the codebase regarding this report. I recommend **against** changing this code for the following reasons:\n\n<Provide a highly detailed, professional engineering justification explaining why this code pattern is correct, necessary, or optimal given your context.>"
 
 IMPORTANT: You MUST run these 'gh issue' commands when choosing Path B. Do NOT just report back via chat — execute the commands so the workflow can detect the wontfix resolution.
