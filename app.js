@@ -93,8 +93,9 @@ window.addEventListener('popstate', (e) => {
   const s = e.state;
 
   // Close modal if open (it was pushed as a history entry)
+  // Pass true to skip history.back() — the browser already popped the entry.
   if (profileModal && !profileModal.classList.contains('hidden')) {
-    closeProfileModal();
+    closeProfileModal(true);
     if (s?.tab) {
       tabContents.forEach(el => el.classList.remove('active'));
       const target = document.getElementById('tab-' + s.tab);
