@@ -9,6 +9,10 @@ on:
     types:
       - completed
 
+concurrency:
+  group: conflict-detector
+  cancel-in-progress: true
+
 jobs:
   evaluate-queue:
     runs-on: ubuntu-latest
