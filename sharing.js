@@ -5,6 +5,7 @@ import { getDisplayName } from './exercise-data.js';
 import { renderShareFriendItem, renderPlanCard, renderSharedPlanCard, renderStructuredWorkoutCard } from './rendering.js';
 import { clearChildren, renderEmptyState, showFeedback, showToast, changeGenericPage, paginateAndRender, updateStarIcon, setActiveTab, setInactiveTab } from './ui.js';
 import { getProfileDocument, getProfileDocRef } from './friends.js';
+import { getThemeQrColors } from './theme.js';
 import { MSG } from './messages.js';
 
 let unsubscribeSharedPlans = null;
@@ -142,15 +143,6 @@ function buildSharedPlanDocument(fUid, content, displayName) {
 function buildQrShareUrl(docRefId) {
   const base = window.location.pathname.replace(/\/?[^/]*$/, '/');
   return window.location.origin + base + '?claimPlan=' + docRefId;
-}
-
-function getThemeQrColors() {
-  const html = document.documentElement;
-  const isDark = html.classList.contains('mdui-theme-dark') ||
-    (!html.classList.contains('mdui-theme-light') && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  return isDark
-    ? { dots: "#f8fafc", bg: "#0f172a", accent: "#27dd33" }
-    : { dots: "#1e293b", bg: "#ffffff", accent: "#27dd33" };
 }
 
 function buildQrCodeConfig(url) {

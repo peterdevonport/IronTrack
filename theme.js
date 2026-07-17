@@ -106,6 +106,22 @@ export function initTheme(savedTheme) {
   updateToggleUI(mode);
 }
 
+/**
+ * Returns QR code dot/background/accent colours derived from the current theme.
+ * Checks for explicit mdui theme classes first, then falls back to the user's
+ * `prefers-color-scheme` media query.
+ *
+ * @returns {{ dots: string, bg: string, accent: string }}
+ */
+export function getThemeQrColors() {
+  const html = document.documentElement;
+  const isDark = html.classList.contains('mdui-theme-dark') ||
+    (!html.classList.contains('mdui-theme-light') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  return isDark
+    ? { dots: "#f8fafc", bg: "#0f172a", accent: "#27dd33" }
+    : { dots: "#1e293b", bg: "#ffffff", accent: "#27dd33" };
+}
+
 export function wireThemeToggle() {
   document.querySelectorAll('.theme-btn').forEach(btn => {
     btn.addEventListener('click', () => {
