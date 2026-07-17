@@ -1,29 +1,27 @@
 You are an autonomous Senior Software Engineer evaluating an on-demand code refactor request.
-Target Issue: #476 - [OpenCode Technical Debt] Inconsistent cross-workflow naming — resolver still uses 'opencode' prefix
+Target Issue: #380 - [OpenCode Technical Debt] CSS shadow value behavioral change masked as refactor in PR #379
 
 ### REFACTOR BLUEPRINT REPORTED:
 
 ### Source
-This issue was auto-detected from merged Pull Request #456.
+This issue was auto-detected from merged Pull Request #379.
 
 ### Location
-`.github/workflows/opencode-conflict-detector.yml` line 62 references `.github/workflows/opencode-conflict-resolver.yml`.
+Found in `style.css:292` and `rendering.js:239,268`.
 
 ### Description
-PR #456 renamed the conflict detector workflow from "OpenCode Conflict Detector" to "PR Conflict Detector" because it now scans all open PRs. However, the workflow dispatches a companion resolver workflow that is still named `opencode-conflict-resolver.yml` with the old "opencode" prefix.
+The PR claims to "move shadow styling" from inline Tailwind classes to the shared `.card` CSS class, but the new shadow value is materially different from both originals:
 
-This creates an inconsistent naming scheme within the conflict-detection workflow family:
-- Detector: `opencode-conflict-detector.yml` → display name "PR Conflict Detector" (partially renamed)
-- Resolver: `opencode-conflict-resolver.yml` → display name not updated
+- **Workout log card (before):** `shadow-2xl shadow-slate-950/60` → Tailwind resolves to `0 25px 50px -12px rgb(0 0 0 / 0.25)` with a slate color tint
+- **Workout card (before):** `shadow-xl` → Tailwind resolves to `0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)`
+- **Unified (after):** `0 4px 12px 0 rgba(0, 0, 0, 0.25)` — significantly lighter and smaller than both originals
 
-Anyone working on the CI/CD pipeline must mentally reconcile that "opencode" in the filename no longer means "only for OpenCode PRs". This erodes naming conventions and adds cognitive overhead.
+This is a behavioral change disguised as a refactor. If the lighter shadow is intentional, it should be documented; if not, this is a visual regression.
 
 ### Suggested Refactor
-Rename both workflows consistently:
-- `opencode-conflict-detector.yml` → `pr-conflict-detector.yml`
-- `opencode-conflict-resolver.yml` → `pr-conflict-resolver.yml`
-
-Update the dispatch reference on line 62 accordingly. This creates a cohesive, self-describing naming convention for the conflict-detection family of workflows.
+Either:
+1. **If intentional:** Update the PR description and commit message to reflect this is a deliberate shadow redesign, not just a refactor.
+2. **If unintentional:** Restore the original shadow intensity by using a heavier `box-shadow` value that matches the original Tailwind utilities, e.g., `box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25), 0 20px 25px -5px rgb(0 0 0 / 0.1);` or use CSS custom properties for the shadow tokens.
 
 ### YOUR MISSION:
 Analyze the corresponding source files in the current repository. Determine if this reported code smell is a genuine defect/anti-pattern that needs correcting, OR if this structure is intentional (e.g., required for performance, compliance with third-party APIs, or an explicitly guarded architectural design).
@@ -32,13 +30,13 @@ Analyze the corresponding source files in the current repository. Determine if t
 
 PATH A: [VALID CODE SMELL - FIX IT]
 If the issue is correct and should be refactored:
-1. Checkout a new branch named 'opencode/fix-issue-476'.
+1. Checkout a new branch named 'opencode/fix-issue-380'.
 2. Apply precise modifications to the master branch files to resolve the tech debt.
 3. Commit the changes, push the branch, and create a PR with title matching the issue title. Do NOT enable auto-merge — the workflow handles that.
 
 PATH B: [INTENTIONAL DESIGN - REJECT IT]
-If you evaluate that the code is intentional, optimal, or should remain unchanged, do NOT edit any repository code. Run these terminal commands immediately to mark the issue as wontfix (they work regardless of which branch is checked out):
-1. gh issue edit 476 --add-label "wontfix"
-2. gh issue comment 476 --body "### 🛑 Architectural Review: Intentional Design\nI have deeply analyzed the codebase regarding this report. I recommend **against** changing this code for the following reasons:\n\n<Provide a highly detailed, professional engineering justification explaining why this code pattern is correct, necessary, or optimal given your context.>"
+If you evaluate that the code is intentional, optimal, or should remain unchanged, do NOT edit any repository code. Run ONLY these two terminal commands to mark the issue as wontfix (they work regardless of which branch is checked out):
+1. gh issue edit 380 --add-label "wontfix"
+2. gh issue comment 380 --body "### 🛑 Architectural Review: Intentional Design\nI have deeply analyzed the codebase regarding this report. I recommend **against** changing this code for the following reasons:\n\n<Provide a highly detailed, professional engineering justification explaining why this code pattern is correct, necessary, or optimal given your context.>"
 
-IMPORTANT: You MUST run these 'gh issue' commands when choosing Path B. Do NOT just report back via chat — execute the commands so the workflow can detect the wontfix resolution.
+CRITICAL: Do NOT create any branch, commit, push, or pull request. Do NOT edit any files. Run ONLY the two gh issue commands above. If you create a PR, the workflow will auto-merge it because it cannot distinguish wontfix PRs from real fixes.
