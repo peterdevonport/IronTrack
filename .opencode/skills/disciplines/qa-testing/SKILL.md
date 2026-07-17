@@ -1,6 +1,6 @@
 ---
 name: qa-testing
-description: "Use when writing, running, or debugging tests, or when checking test coverage and test structure."
+description: "Use for generic testing patterns: test structure, coverage strategy, mocking principles, and vitest commands. Not project-specific."
 ---
 
 # QA Testing

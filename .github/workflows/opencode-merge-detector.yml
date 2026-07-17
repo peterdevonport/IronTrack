@@ -14,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      issues: write
+      pull-requests: read
       actions: write
     steps:
       - name: Checkout Code
@@ -21,7 +23,7 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Trigger smell detector for merged PR
+      - name: Trigger smell detector or close issue for merged PR
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -31,10 +33,19 @@ jobs:
             exit 0
           fi
 
-          # Skip smell detection for fixer PRs (labeled auto-fix)
+          # Check if this is a fixer PR (labeled auto-fix)
           LABELS=$(gh pr view "$PR_NUM" --json labels -q '.labels[].name' 2>/dev/null || echo "")
+          BRANCH=$(gh pr view "$PR_NUM" --json headRefName -q '.headRefName' 2>/dev/null || echo "")
+
           if echo "$LABELS" | grep -q "auto-fix"; then
-            echo "Fixer PR #$PR_NUM — skipping smell detection."
+            # Close the associated issue instead of triggering smell detection
+            ISSUE_NUM=$(echo "$BRANCH" | sed -n 's/opencode\/fix-issue-\([0-9]*\).*/\1/p')
+            if [ -n "$ISSUE_NUM" ]; then
+              echo "Fixer PR #$PR_NUM merged — closing issue #$ISSUE_NUM."
+              gh issue close "$ISSUE_NUM" --comment "Fixed — PR #$PR_NUM was merged."
+            else
+              echo "Fixer PR #$PR_NUM merged — could not extract issue number from branch $BRANCH."
+            fi
             exit 0
           fi
 

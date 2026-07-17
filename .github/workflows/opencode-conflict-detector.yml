@@ -27,6 +27,13 @@ jobs:
         run: |
           set -euo pipefail
 
+          # Prefer the external script (origin/master's extraction); fall back to inline implementation
+          if [ -f .github/scripts/evaluate-pr-queue.sh ]; then
+            exec bash .github/scripts/evaluate-pr-queue.sh
+          fi
+
+          # --- Inline fallback (HEAD) ---
+
           # Fetch total open PR count to detect silent truncation
           TOTAL_OPEN=$(gh api "search/issues?q=is:pr+is:open+repo:${GITHUB_REPOSITORY}&per_page=1" --jq '.total_count' 2>/dev/null || echo "0")
 
