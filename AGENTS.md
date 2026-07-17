@@ -4,7 +4,7 @@
 - **ALWAYS** run `git checkout master && git pull origin master` before starting any new task.
 - **ALWAYS** create a new feature or bugfix branch from `master` for all work.
 - **NEVER** commit, modify, or push code directly to the `master` branch.
-- **Branch Naming Convention:** Use `feature/short-description` or `bugfix/short-description`.
+- **Branch Naming Convention:** Use `feature/ISSUE-NUMBER-short-description` or `bugfix/ISSUE-NUMBER-short-description` (e.g., `feature/42-add-user-auth`). GitHub auto-links branches containing issue numbers.
 - **Pull Requests:** Push the completed branch to the remote repository. Do not attempt to merge into `master` via CLI.
 
 ## 2. Development & Coding Standards
@@ -17,6 +17,7 @@
 - **ALWAYS** use Conventional Commits formatting for all commit messages. 
 - **Format:** `<type>(<scope>): <short description in imperative mood>`
   - *Examples:* `feat(auth): add JWT validation middleware`, `fix(api): resolve null pointer in user payload`
+- **Reference GitHub issues** in commits by including the issue number (e.g., `feat(auth): add validation #23`). During interactive sessions, do NOT use `closes #N` or `fixes #N` to avoid prematurely closing issues. Let automated workflows handle `closes/fixes` when merging PRs.
 - **Allowed Types:** `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`.
 
 ## 4. Execution & Safety Guardrails

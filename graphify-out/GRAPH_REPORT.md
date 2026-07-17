@@ -1,16 +1,16 @@
 # Graph Report - IronTrack  (2026-07-17)
 
 ## Corpus Check
-- 65 files · ~66,346 words
+- 65 files · ~66,573 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 551 nodes · 1968 edges · 23 communities (21 shown, 2 thin omitted)
+- 556 nodes · 1972 edges · 25 communities (24 shown, 1 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 35 edges (avg confidence: 0.69)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `6c7b0209`
+- Built from commit: `bbc04fbc`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -63,31 +63,31 @@
 - 3-file cycle: `auth.js -> forms.js -> plans.js -> auth.js`
 - 4-file cycle: `auth.js -> forms.js -> plans.js -> workouts.js -> auth.js`
 
-## Communities (23 total, 2 thin omitted)
+## Communities (25 total, 1 thin omitted)
 
 ### Community 0 - "plans.js"
-Cohesion: 0.08
-Nodes (55): computeTotalLoad(), getSchemaKey(), logPB(), refreshPBForm(), requireAuth(), refreshLogSetForm(), updateLogSetButtonState(), applyFieldAttributes() (+47 more)
+Cohesion: 0.09
+Nodes (48): computeTotalLoad(), getSchemaKey(), logPB(), refreshPBForm(), requireAuth(), refreshLogSetForm(), updateLogSetButtonState(), applyFieldAttributes() (+40 more)
 
 ### Community 1 - "app.js"
 Cohesion: 0.03
 Nodes (66): actionHandlers, amrapAdditional, amrapRounds, authFormContainer, calcAddBtn, calcClearBtn, calcLiftSelect, calcPctInput (+58 more)
 
 ### Community 2 - "sharing.js"
-Cohesion: 0.08
-Nodes (75): attachListeners(), handleSignedIn(), handleSignedOut(), handleWorkoutError(), initActionDispatcher(), initCSPHandlers(), processUrlParams(), pullProfileMetrics() (+67 more)
+Cohesion: 0.07
+Nodes (80): attachListeners(), handleSignedIn(), handleSignedOut(), handleWorkoutError(), initActionDispatcher(), initCSPHandlers(), processUrlParams(), pullProfileMetrics() (+72 more)
 
 ### Community 3 - "workouts.js"
 Cohesion: 0.07
-Nodes (57): buildWorkoutDescription(), computeDotsScore(), computeSinclairScore(), describeAmrap(), describeEmom(), describeForTime(), describeInterval(), DOTS_COEFF_FEMALE (+49 more)
+Nodes (58): buildWorkoutDescription(), computeDotsScore(), computeSinclairScore(), describeAmrap(), describeEmom(), describeForTime(), describeInterval(), DOTS_COEFF_FEMALE (+50 more)
 
 ### Community 4 - "calc.js"
 Cohesion: 0.10
-Nodes (44): buildWorkoutLog(), processWorkoutSnapshot(), updateCaches(), changePage(), changeRecordsPage(), handleCalcAdd(), handleCalcClear(), handleCalcRemove() (+36 more)
+Nodes (45): buildWorkoutLog(), processWorkoutSnapshot(), updateCaches(), changePage(), changeRecordsPage(), handleCalcAdd(), handleCalcClear(), handleCalcRemove() (+37 more)
 
 ### Community 5 - "rendering.js"
-Cohesion: 0.22
-Nodes (24): buildWorkoutSummaryLine(), escapeHtml(), formatCardDate(), formatDotsScore(), formatMovementDisplay(), formatMovementLoad(), formatWeightSuffix(), formatWorkoutType() (+16 more)
+Cohesion: 0.21
+Nodes (26): buildWorkoutSummaryLine(), escapeHtml(), formatCardDate(), formatDotsScore(), formatMovementDisplay(), formatMovementLoad(), formatWeightSuffix(), formatWorkoutType() (+18 more)
 
 ### Community 6 - "calendar.js"
 Cohesion: 0.17
@@ -98,20 +98,20 @@ Cohesion: 0.33
 Nodes (14): workoutFilter, updateTodayBtnState(), computeDailyBuckets(), computeMonthlyBuckets(), computeVolumeHistory(), computeWeeklyBuckets(), computeYearlyBuckets(), formatRangeLabel() (+6 more)
 
 ### Community 8 - "state.js"
-Cohesion: 0.08
-Nodes (24): activeDates, authBtn, CONSISTENCY_CONFIG, emailInput, exerciseSelect, loginBtn, loginView, onboardingAddBtn (+16 more)
+Cohesion: 0.07
+Nodes (25): activeDates, authBtn, CONSISTENCY_CONFIG, emailInput, exerciseSelect, loginBtn, loginView, onboardingAddBtn (+17 more)
 
 ### Community 9 - "devDependencies"
 Cohesion: 0.09
 Nodes (22): eslint, @eslint/js, globals, jsdom, devDependencies, eslint, @eslint/js, globals (+14 more)
 
 ### Community 10 - "ui.js"
-Cohesion: 0.12
-Nodes (15): currentPageDisplay, navBar, nextPageBtn, paginationControls, prevPageBtn, profileModal, tabContents, totalPagesDisplay (+7 more)
+Cohesion: 0.11
+Nodes (16): currentPageDisplay, navBar, nextPageBtn, paginationControls, prevPageBtn, profileModal, tabContents, totalPagesDisplay (+8 more)
 
 ### Community 11 - "theme.js"
-Cohesion: 0.21
-Nodes (16): app, auth, db, firebaseConfig, applyThemeClass(), DARK_META, getDefaultMeta(), getMetaTag() (+8 more)
+Cohesion: 0.35
+Nodes (12): applyThemeClass(), DARK_META, getDefaultMeta(), getMetaTag(), initAutoListener(), initTheme(), LIGHT_META, persistTheme() (+4 more)
 
 ### Community 12 - "manifest.json"
 Cohesion: 0.18
@@ -129,29 +129,33 @@ Nodes (10): addOnboarding1RM(), showOnboarding(), renderOnboarding1RMList(), app
 Cohesion: 0.40
 Nodes (5): buildOnboardingLogEntry(), buildOnboardingProfileData(), collectOnboardingFormValues(), saveOnboarding(), hideOnboarding()
 
+### Community 16 - "graphify.js"
+Cohesion: 0.67
+Nodes (3): GraphifyPlugin(), IMPORTANT: keep all reminder strings free of backticks and $(...) constructs., REMINDED_TOOLS
+
 ### Community 22 - "OpenCode System Instructions & Guardrails"
-Cohesion: 0.22
-Nodes (8): 1. Critical Git Workflow, 2. Development & Coding Standards, 3. Commit Message Guidelines, 4. Execution & Safety Guardrails, 5. Dependency Management, 6. Graphify Knowledge Graph, 7. Verification Checklist (Definition of Done), OpenCode System Instructions & Guardrails
+Cohesion: 0.18
+Nodes (10): 1. Critical Git Workflow, 2. Development & Coding Standards, 3. Commit Message Guidelines, 4. Execution & Safety Guardrails, 5. Dependency Management, 6. Graphify Knowledge Graph, 7. Verification Checklist (Definition of Done), Mandatory graph-first rule (+2 more)
 
 ## Knowledge Gaps
-- **125 isolated node(s):** `1. Critical Git Workflow`, `2. Development & Coding Standards`, `3. Commit Message Guidelines`, `4. Execution & Safety Guardrails`, `5. Dependency Management` (+120 more)
+- **126 isolated node(s):** `DOTS_COEFF_MALE`, `DOTS_COEFF_FEMALE`, `DOTS_TIER_CUTOFFS_MALE`, `DOTS_TIER_CUTOFFS_FEMALE`, `PASSWORD_ERROR_MAP` (+121 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **2 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **1 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `showFeedback()` connect `sharing.js` to `plans.js`, `app.js`, `workouts.js`, `calc.js`, `volume.js`, `ui.js`, `theme.js`, `onboarding.js`, `saveOnboarding`?**
-  _High betweenness centrality (0.007) - this node is a cross-community bridge._
+  _High betweenness centrality (0.006) - this node is a cross-community bridge._
 - **Why does `initTheme()` connect `theme.js` to `app.js`, `sharing.js`, `calc.js`?**
   _High betweenness centrality (0.006) - this node is a cross-community bridge._
 - **Why does `haptic()` connect `sharing.js` to `plans.js`, `app.js`, `workouts.js`, `calc.js`?**
   _High betweenness centrality (0.004) - this node is a cross-community bridge._
 - **Are the 19 inferred relationships involving `initCSPHandlers()` (e.g. with `app.js` and `closeCalendarDayDetail()`) actually correct?**
   _`initCSPHandlers()` has 19 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `1. Critical Git Workflow`, `2. Development & Coding Standards`, `3. Commit Message Guidelines` to the rest of the system?**
-  _125 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **What connects `DOTS_COEFF_MALE`, `DOTS_COEFF_FEMALE`, `DOTS_TIER_CUTOFFS_MALE` to the rest of the system?**
+  _126 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `plans.js` be split into smaller, more focused modules?**
-  _Cohesion score 0.07706766917293233 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.09061224489795919 - nodes in this community are weakly interconnected._
 - **Should `app.js` be split into smaller, more focused modules?**
   _Cohesion score 0.027777777777777776 - nodes in this community are weakly interconnected._
