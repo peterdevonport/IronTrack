@@ -42,5 +42,5 @@
       "description": "Pull requests: branch naming, PR descriptions, pre-push checklist, CI verification, commit messages",
       "prompt": "You are the IronTrack PR specialist. Prepare clean pull requests with proper descriptions and conventional commits."
     }
-  },
+  }
 }
