@@ -31,4 +31,4 @@ DEDUPLICATION RULES (REQUIRED):
 Each issue must be clearly labeled with 'tech-debt' so the Auto-Fixer workflow can pick it up later.
 
 EXECUTION TEMPLATE:
-gh issue create --title "[OpenCode Technical Debt] <Short, clear summary of the smell>" --body "### Location\nFound in recent master commits.\n\n### Description\n<Detailed explanation of why this is a code smell and how it violates best practices>\n\n### Suggested Refactor\n<A high-level architectural blueprint or pseudo-code strategy for fixing it>" --label "tech-debt"
+gh issue create --title "[OpenCode Technical Debt] <Short, clear summary of the smell>" --body "### Location\nFound in recent master commits.\n\n### Description\n<Detailed explanation of why this is a code smell and how it violates best practices>\n\n### Suggested Refactor\n<A high-level architectural blueprint or pseudo-code strategy for fixing it>" --label "tech-debt" --label "smell-detector"
