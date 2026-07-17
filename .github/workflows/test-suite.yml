@@ -11,6 +11,9 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Shellcheck Scripts
+        run: shellcheck .github/scripts/*.sh
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
