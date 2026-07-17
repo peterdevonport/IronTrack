@@ -1,6 +1,6 @@
 ---
 name: frontend-dev
-description: "Use when building or modifying UI components, styling, responsive design, accessibility, or CSS architecture. Generic patterns — not project-specific."
+description: "Use for accessibility audits, responsive design patterns, CSS architecture methodology, and security guidance (escaping, input validation). Generic, cross-project frontend best practices. For project-specific UI conventions, use the project's frontend skill (e.g., irontrack-frontend)."
 ---
 
 # Frontend Development
@@ -36,3 +36,7 @@ description: "Use when building or modifying UI components, styling, responsive 
 - Use event delegation for repeated elements
 - Prefer data attributes over inline event handlers
 - Clean up event listeners when components are removed
+
+## Cross-Reference
+
+For project-specific UI conventions (IronTrack patterns like template literals, MSG constants, pagination), load **irontrack-frontend** instead of or in addition to this skill.

@@ -29,6 +29,13 @@ description: "Use when reviewing code changes for architecture compliance, maint
 - No new dependencies when existing tools suffice
 - No configuration when convention would work
 
+## State.js Integrity
+- No parallel state objects — `state` is the single source of truth
+- State mutations happen outside rendering functions, never inside a render path
+- Cache entries invalidated when source data changes, not on every render
+- State shape matches the documented tree in `state-model.md`
+- Direct mutation pattern is used (no reactive system wrappers added)
+
 ## Review Cadence
 - Read the diff first, then the full files if needed
 - Ask "is this the right change?" before "does this work?"
