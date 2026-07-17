@@ -52,6 +52,9 @@
   --color-tertiary: #c084fc;
   --color-error: #fb7185;
 
+  /* Shadow tokens */
+  --shadow-card: 0 4px 12px 0 rgba(0, 0, 0, 0.25);
+
   /* Slate aliases for inline style compatibility */
   --slate-200: var(--color-text);
   --slate-300: var(--color-text-secondary);
@@ -78,6 +81,9 @@
   --color-secondary: #fbbf24;
   --color-tertiary: #c084fc;
   --color-error: #dc2626;
+
+  /* Shadow tokens */
+  --shadow-card: 0 4px 12px 0 rgba(0, 0, 0, 0.08);
 
   /* MDUI color overrides — light mode */
   --mdui-color-primary-container: var(--mdui-color-primary-container-light);
@@ -120,6 +126,8 @@
     --color-secondary: #fbbf24;
     --color-tertiary: #c084fc;
     --color-error: #fb7185;
+
+    --shadow-card: 0 4px 12px 0 rgba(0, 0, 0, 0.25);
 
     --mdui-color-primary-container: var(--mdui-color-primary-container-dark);
     --mdui-color-on-primary-container: 0, 0, 0;
@@ -271,7 +279,7 @@ mdui-top-app-bar-title::part(label) {
   border: 1px solid var(--slate-500, #64748b);
   border-radius: 1rem;
   padding: 1rem;
-  box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-card);
 }
 .card-interactive:hover {
   border-color: var(--slate-300, #cbd5e1);
