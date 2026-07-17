@@ -56,9 +56,23 @@ jobs:
             if [ "$MERGEABLE" = "CONFLICTING" ]; then
               echo "🚨 PR #$PR_NUM is blocked by conflicts. Spawning dedicated Resolver..."
               
-              gh workflow run opencode-conflict-resolver.yml \
-                -f pr_number="$PR_NUM" \
-                -f branch_name="$BRANCH"
+              # Dispatch the resolver with retry logic for transient API errors
+              __dispatch_ok=false
+              for attempt in 1 2 3; do
+                if gh workflow run opencode-conflict-resolver.yml \
+                  -f pr_number="$PR_NUM" \
+                  -f branch_name="$BRANCH"; then
+                  __dispatch_ok=true
+                  break
+                fi
+                if [ "$attempt" -lt 3 ]; then
+                  sleep $(( attempt * 5 ))
+                fi
+              done
+              
+              if [ "$__dispatch_ok" = false ]; then
+                echo "❌ Failed to dispatch resolver for PR #$PR_NUM after 3 attempts"
+              fi
               
               continue
             fi
