@@ -132,8 +132,7 @@ jobs:
 
             if [ "$IS_WONTFIX" -gt 0 ]; then
               echo "Issue is marked wontfix — closing the PR and issue."
-              PR_NUM=$(echo "$PR_URL" | grep -oP '/pull/\K\d+')
-              gh pr close "$PR_NUM" --comment "Closing — the AI determined this is an intentional design (wontfix)."
+              gh pr close "$PR_URL" --comment "Closing — the AI determined this is an intentional design (wontfix)."
               gh issue close "$ISSUE_NUM" --comment "Closed — AI determined this is an intentional design (wontfix)."
             else
               echo "Enabling auto-merge for the PR and closing issue."
