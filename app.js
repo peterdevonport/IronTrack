@@ -111,8 +111,6 @@ window.addEventListener('popstate', (e) => {
   }
 });
 
-initTheme();
-
 const pendingFriendUid = new URLSearchParams(window.location.search).get('addFriend');
 const pendingClaimPlanId = new URLSearchParams(window.location.search).get('claimPlan');
 onAuthStateChanged(auth, async (user) => {
@@ -208,6 +206,7 @@ function handleSignedOut() {
   state.calendar.weekOffset = 0;
   listenersAttached = false;
   window.__irontrackAuthState = 'signed-out';
+  initTheme();
 }
 
 function attachListeners(uid) {
