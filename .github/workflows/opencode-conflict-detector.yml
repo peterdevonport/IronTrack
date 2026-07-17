@@ -21,6 +21,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.AUTO_MERGE_PAT }}
         run: |
+          set -euo pipefail
+
           # Fetch all open PRs with their conflict status and latest CI test conclusion
           PR_LIST=$(gh pr list --state open --json number,headRefName,mergeable,statusCheckRollup --jq '.[] | {number, branch: .headRefName, mergeable, conclusion: (.statusCheckRollup[-1].conclusion // null), status: (.statusCheckRollup[-1].status // null)} | @base64')
 
