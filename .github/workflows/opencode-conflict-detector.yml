@@ -84,12 +84,12 @@ jobs:
               echo "🚨 PR #$PR_NUM is blocked by conflicts. Spawning dedicated Resolver..."
               
               # Dispatch the resolver with retry logic for transient API errors
-              __dispatch_ok=false
+              DISPATCH_OK=false
               for attempt in $(seq 1 $RETRY_MAX); do
                 if gh workflow run opencode-conflict-resolver.yml \
                   -f pr_number="$PR_NUM" \
                   -f branch_name="$BRANCH"; then
-                  __dispatch_ok=true
+                  DISPATCH_OK=true
                   break
                 fi
                 if [ "$attempt" -lt $RETRY_MAX ]; then
@@ -97,7 +97,7 @@ jobs:
                 fi
               done
               
-              if [ "$__dispatch_ok" = false ]; then
+              if [ "$DISPATCH_OK" = false ]; then
                 echo "❌ Failed to dispatch resolver for PR #$PR_NUM after $RETRY_MAX attempts"
                 DISPATCH_FAILURES=$((DISPATCH_FAILURES + 1))
               fi
