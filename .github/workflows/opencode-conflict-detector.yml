@@ -31,6 +31,12 @@ jobs:
 
           # Evaluate the board sequentially (lowest PR number runs first)
           __decode() { echo "$1" | base64 --decode; }
+
+          # Rate-limit guard: dispatch at most 3 resolvers per detector run to avoid
+          # exhausting GitHub Actions concurrent run quota (default: 20) and API rate limits.
+          DISPATCH_COUNT=0
+          MAX_CONCURRENT=3
+
           for row in $PR_LIST; do
             PR_NUM=$(__decode "$row" | jq -r '.number')
             BRANCH=$(__decode "$row" | jq -r '.branch')
@@ -54,12 +60,19 @@ jobs:
 
             # RULE 3: If the PR is conflicting and ready to merge, deploy the worker to fix it.
             if [ "$MERGEABLE" = "CONFLICTING" ]; then
+              # Check rate limit before dispatching
+              if [ "$DISPATCH_COUNT" -ge "$MAX_CONCURRENT" ]; then
+                echo "⏳ Reached dispatch limit ($MAX_CONCURRENT). Remaining conflicting PRs will be resolved on the next run."
+                break
+              fi
+
               echo "🚨 PR #$PR_NUM is blocked by conflicts. Spawning dedicated Resolver..."
               
               gh workflow run opencode-conflict-resolver.yml \
                 -f pr_number="$PR_NUM" \
                 -f branch_name="$BRANCH"
               
+              DISPATCH_COUNT=$((DISPATCH_COUNT + 1))
               continue
             fi
           done
