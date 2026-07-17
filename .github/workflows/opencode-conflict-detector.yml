@@ -55,6 +55,10 @@ jobs:
             echo "⚠️ Warning: Fetched $PR_COUNT of $TOTAL_OPEN open PRs. Results may be truncated."
           fi
 
+          # Rate-limit guard: cap dispatch to avoid exhausting GitHub Action runner quota
+          MAX_DISPATCH=3
+          DISPATCH_COUNT=0
+
           # Evaluate the board sequentially (lowest PR number runs first)
           for row in $PR_LIST; do
             # 🎯 Decode the base64 row once, then extract all fields from the decoded JSON
@@ -81,7 +85,13 @@ jobs:
 
             # RULE 3: If the PR is conflicting and ready to merge, deploy the worker to fix it.
             if [ "$MERGEABLE" = "CONFLICTING" ]; then
-              echo "🚨 PR #$PR_NUM is blocked by conflicts. Spawning dedicated Resolver..."
+              # Rate-limit: stop dispatching after MAX_DISPATCH to avoid flooding the runner pool
+              if [ "$DISPATCH_COUNT" -ge "$MAX_DISPATCH" ]; then
+                echo "⏳ Dispatch limit ($MAX_DISPATCH) reached. Remaining conflicting PRs will be resolved on the next cycle."
+                break
+              fi
+
+              echo "🚨 PR #$PR_NUM is blocked by conflicts. Spawning dedicated Resolver (dispatch $((DISPATCH_COUNT + 1)) of $MAX_DISPATCH)..."
               
               # Dispatch the resolver with retry logic for transient API errors
               __dispatch_ok=false
@@ -90,6 +100,7 @@ jobs:
                   -f pr_number="$PR_NUM" \
                   -f branch_name="$BRANCH"; then
                   __dispatch_ok=true
+                  DISPATCH_COUNT=$((DISPATCH_COUNT + 1))
                   break
                 fi
                 if [ "$attempt" -lt $RETRY_MAX ]; then
