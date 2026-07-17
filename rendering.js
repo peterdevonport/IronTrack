@@ -236,7 +236,7 @@ function workoutToLogHtml(workout, chipPBActive, chip1RMActive) {
   const secondLine = `Est. 1RM: ${oneRM}kg  <span class="text-slate-600">|</span>  Vol: ${totalVolume.toLocaleString()}kg`;
   const repDisplay = workout.partialReps ? `${sets} × ${reps} + ${workout.partialReps} reps` : `${sets} × ${reps}`;
   return `
-<div class="card ${borderClass} p-4 rounded-2xl mb-3 flex justify-between items-center shadow-2xl shadow-slate-950/60 transition-all duration-200">
+<div class="card ${borderClass} p-4 rounded-2xl mb-3 flex justify-between items-center transition-all duration-200">
     <div>
         <div class="flex items-center gap-2">
             <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm">${escapeHtml(workout.exercise)}</h4>
@@ -265,7 +265,7 @@ function renderWorkoutCard(id, name, type, badgeClass, descLine, metadataHtml, m
   const starIcon = isFav ? '\u2605' : '\u2606';
   const favColorClass = isFav ? 'text-amber-400' : 'text-slate-500';
   const hasMovements = movementsHtml.trim().length > 0;
-  return `<div class="card card-interactive p-4 rounded-2xl mb-3 shadow-xl transition-all duration-200" data-workout-id="${id}">
+  return `<div class="card card-interactive p-4 rounded-2xl mb-3 transition-all duration-200" data-workout-id="${id}">
     <div class="flex justify-between items-stretch gap-3 ${hasMovements ? 'structured-header-clickable cursor-pointer' : ''}"${hasMovements ? ` data-action="toggle-workout-card"` : ''}>
       <div class="flex flex-col justify-start gap-1.5 min-w-0 flex-1">
         <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm truncate">${escapeHtml(name)}</h4>
