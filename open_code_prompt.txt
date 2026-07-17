@@ -1,45 +1,25 @@
 You are an autonomous Senior Software Engineer evaluating an on-demand code refactor request.
-Target Issue: #166 - [OpenCode Technical Debt] Duplicated weight calculation logic between renderPlanMovements and addPlanMinuteSlot
+Target Issue: #389 - [OpenCode Technical Debt] Blocking synchronous existsSync in async plugin hook
 
 ### REFACTOR BLUEPRINT REPORTED:
 
+### Source
+This issue was auto-detected from merged Pull Request #388.
+
 ### Location
-Found in modified section of `rendering.js` lines 244-254 and `plans.js` lines 200-213.
+Found in modified section of code: `.opencode/plugins/graphify.js` (line 31).
 
 ### Description
-The weight calculation logic for `pct` and `rpe` weight modes is duplicated almost identically in two separate functions:
-
-In `renderPlanMovements` (rendering.js):
-```js
-if (m.weightMode === 'pct' && m.pct) {
-  weight = oneRM > 0 ? Math.round(oneRM * m.pct / 100) : m.weight;
-  source = `${m.reps}x ${m.exerciseId} @ ${m.pct}% 1RM (${weight}kg)`;
-} else if (m.weightMode === 'rpe' && m.rpe) {
-  const rir = 10 - m.rpe;
-  weight = oneRM > 0 ? Math.round(estimateWeightForReps(oneRM, m.reps + rir)) : m.weight;
-  source = `${m.reps}x ${m.exerciseId} @ RPE ${m.rpe} (${weight}kg)`;
-}
-```
-
-In `addPlanMinuteSlot` (plans.js):
-```js
-if (data.weightMode === 'pct' && data.pct) {
-  weightDisplay = oneRM > 0 ? Math.round(oneRM * data.pct / 100) : data.weight;
-  source = `${data.exerciseId} × ${data.reps} @ ${weightDisplay} kg (${data.pct}%)`;
-} else if (data.weightMode === 'rpe' && data.rpe) {
-  const rir = 10 - data.rpe;
-  const totalRepsPossible = data.reps + rir;
-  weightDisplay = oneRM > 0 ? Math.round(estimateWeightForReps(oneRM, totalRepsPossible)) : data.weight;
-  source = `${data.exerciseId} × ${data.reps} @ ${weightDisplay} kg (RPE ${data.rpe})`;
-}
-```
-
-This is a DRY violation. If the weight calculation logic changes (e.g., rounding rules, fallback behavior), both locations must be updated in lockstep.
+The `tool.execute.before` hook is declared as `async` but uses `existsSync` (synchronous filesystem check) to verify whether `graphify-out/graph.json` exists. This blocks the Node.js event loop on every tool invocation (bash, read, grep, glob) that passes the first two guards. In an async plugin system, synchronous I/O defeats the purpose of async handlers and can cause performance degradation when the tool is invoked frequently.
 
 ### Suggested Refactor
-1. Extract a shared utility function like `computeDisplayWeight(movement, oneRM)` into `math.js` that handles all weight modes.
-2. Both rendering functions should call this utility instead of duplicating the logic.
-3. This also centralizes the RIR calculation (`10 - rpe`) which appears in both places.
+Replace `existsSync` with the async equivalent using `fs/promises`:
+```js
+import { access } from "fs/promises";
+// ...
+if (!access(join(directory, "graphify-out", "graph.json")).catch(() => false)) return;
+```
+Or use a cached boolean that is set once on first invocation and refreshed periodically.
 
 ### YOUR MISSION:
 Analyze the corresponding source files in the current repository. Determine if this reported code smell is a genuine defect/anti-pattern that needs correcting, OR if this structure is intentional (e.g., required for performance, compliance with third-party APIs, or an explicitly guarded architectural design).
@@ -48,11 +28,13 @@ Analyze the corresponding source files in the current repository. Determine if t
 
 PATH A: [VALID CODE SMELL - FIX IT]
 If the issue is correct and should be refactored:
-1. Checkout a new branch named 'opencode/fix-issue-166'.
+1. Checkout a new branch named 'opencode/fix-issue-389'.
 2. Apply precise modifications to the master branch files to resolve the tech debt.
-3. Open a high-quality Pull Request targeting 'master' that contains 'Closes #166' in its body description.
+3. Apply the edits to the local files only — do NOT commit or push. The workflow will handle the commit, push, and PR creation for you automatically.
 
 PATH B: [INTENTIONAL DESIGN - REJECT IT]
-If you evaluate that the code is intentional, optimal, or should remain unchanged, do NOT edit any repository code or open a PR. Instead, run these terminal commands immediately:
-1. gh issue edit 166 --add-label "wontfix"
-2. gh issue comment 166 --body "### 🛑 Architectural Review: Intentional Design\nI have deeply analyzed the codebase regarding this report. I recommend **against** changing this code for the following reasons:\n\n<Provide a highly detailed, professional engineering justification explaining why this code pattern is correct, necessary, or optimal given your context.>"
+If you evaluate that the code is intentional, optimal, or should remain unchanged, do NOT edit any repository code. Run these terminal commands immediately to mark the issue as wontfix (they work regardless of which branch is checked out):
+1. gh issue edit 389 --add-label "wontfix"
+2. gh issue comment 389 --body "### 🛑 Architectural Review: Intentional Design\nI have deeply analyzed the codebase regarding this report. I recommend **against** changing this code for the following reasons:\n\n<Provide a highly detailed, professional engineering justification explaining why this code pattern is correct, necessary, or optimal given your context.>"
+
+IMPORTANT: You MUST run these 'gh issue' commands when choosing Path B. Do NOT just report back via chat — execute the commands so the workflow can detect the wontfix resolution.
