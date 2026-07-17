@@ -102,7 +102,7 @@
 
   /* 1RM badge — light mode */
   .bg-emerald-950\/50 { background-color: rgba(16, 185, 129, 0.12) !important; }
-  .text-emerald-400 { color: #059669 !important; }
+  .badge-1rm { color: #059669 !important; }
   .border-emerald-800\/60 { border-color: rgba(16, 185, 129, 0.3) !important; }
 }
 
@@ -147,7 +147,8 @@ mdui-button[variant="text"] {
 
 /* ─── Brand Color Utilities ─────────────────── */
 .text-emerald-300,
-.text-emerald-400 { color: var(--color-brand) !important; }
+.text-emerald-400,
+.badge-1rm { color: var(--color-brand) !important; }
 .bg-emerald-300,
 .bg-emerald-400 { background-color: var(--color-brand) !important; }
 
