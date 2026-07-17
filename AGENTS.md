@@ -33,12 +33,37 @@
 This project uses Graphify (https://graphify.net/) to map the codebase as a queryable knowledge graph.
 
 - **Location:** `graphify-out/` in the project root
-- **Query first:** Before grepping or reading files for architecture questions, run `graphify query "<question>"` to get a scoped subgraph
-- **Path tracing:** Use `graphify path "<node1>" "<node2>"` to find how two things connect
-- **Explain nodes:** Use `graphify explain "<node>"` for everything Graphify knows about a symbol
-- **Refresh:** After structural changes, run `graphify . --code-only --update` (no API cost)
 - **The graph is committed:** `graphify-out/` is in git so everyone starts with a map
 - **Commit hook installed:** Auto-rebuilds on `git commit` (AST-only, no API cost)
+
+### Mandatory graph-first rule
+
+**You MUST query the graph before using read/grep/glob/bash for codebase exploration or relationship questions.** A graph query costs ~2k tokens. Reading or grepping raw files for the same information costs ~10k+ tokens. This rule exists to minimize token consumption.
+
+Do this first:
+- `graphify query "<question>"` — returns a scoped subgraph for any codebase question
+- `graphify path "<node1>" "<node2>"` — traces the shortest connection between two symbols
+- `graphify explain "<node>"` — returns everything Graphify knows about a symbol
+
+When direct file reads are still needed:
+- Reading a file to understand its full implementation details (after the graph identified which file matters)
+- Reading test files to understand expected behavior
+- Editing files — you need the current source to make changes
+- Running commands — build, test, lint
+
+When graph queries are preferred:
+- "What connects auth to the database?"
+- "Which modules depend on state.js?"
+- "Where does the calendar interact with volume tracking?"
+- "What are the god nodes in this system?"
+
+### Refresh
+
+After structural changes (new files, refactors, renames), run:
+```
+graphify . --code-only --update
+```
+This re-parses changed files and merges into the existing graph. No API cost.
 
 ## 7. Verification Checklist (Definition of Done)
 Before declaring a task finished, you must successfully execute:

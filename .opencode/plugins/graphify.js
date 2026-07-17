@@ -1,29 +1,39 @@
 // graphify OpenCode plugin
-// Injects a knowledge graph reminder before bash tool calls when the graph exists.
+// Injects knowledge graph reminders before exploration tool calls when the graph exists.
+// Reminds once per tool type per session so the agent sees the nudge at the start
+// of each exploration pathway (bash, read, grep, glob) — not on every call.
 //
-// IMPORTANT: keep the reminder string free of backticks and $(...) constructs.
-// The hook prepends `echo "<reminder>" && <cmd>` to the user's bash command;
-// backticks inside the double-quoted echo trigger bash command substitution,
-// which both corrupts tool output and silently executes the very graphify
-// command we are only suggesting. Plain words render fine in opencode's TUI.
+// IMPORTANT: keep all reminder strings free of backticks and $(...) constructs.
+// The bash hook prepends `echo "<reminder>" ; <cmd>` to the user's command;
+// backticks inside double-quoted echo trigger bash command substitution.
+// For read/grep/glob the reminder is added via output.reminder so OpenCode
+// renders it in the TUI before executing the tool.
 import { existsSync } from "fs";
 import { join } from "path";
 
+const REMINDED_TOOLS = new Set(["bash", "read", "grep", "glob"]);
+
+const MESSAGE =
+  "[graphify] knowledge graph ready at graphify-out/. " +
+  "Run `graphify query \"<question>\"` (scoped subgraph, ~2k tokens) " +
+  "instead of reading/grepping files (~10k+ tokens) for architecture " +
+  "or relationship questions. Use `graphify path A B` to trace connections, " +
+  "`graphify explain X` to inspect a symbol. Read GRAPH_REPORT.md for " +
+  "broad context. AGENTS.md has full Graphify rules.";
+
 export const GraphifyPlugin = async ({ directory }) => {
-  let reminded = false;
+  const reminded = new Set();
 
   return {
     "tool.execute.before": async (input, output) => {
-      if (reminded) return;
+      if (!REMINDED_TOOLS.has(input.tool)) return;
+      if (reminded.has(input.tool)) return;
       if (!existsSync(join(directory, "graphify-out", "graph.json"))) return;
 
+      reminded.add(input.tool);
+
       if (input.tool === "bash") {
-        // ';' not '&&' — Windows PowerShell 5.1 rejects '&&' as a statement
-        // separator, breaking the first bash command of the session (#1646).
-        output.args.command =
-          'echo "[graphify] knowledge graph at graphify-out/. For focused questions, run graphify query with your question (scoped subgraph, usually much smaller than GRAPH_REPORT.md) instead of grepping raw files. Read GRAPH_REPORT.md only for broad architecture context." ; ' +
-          output.args.command;
-        reminded = true;
+        output.args.command = `echo "${MESSAGE}" ; ${output.args.command}`;
       }
     },
   };
