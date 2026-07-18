@@ -177,19 +177,23 @@ mdui-button[variant="text"] {
   border: none;
 }
 
+/* ─── Badge Components — theme-adaptive via CSS custom properties ─── */
+.badge-pb {
+  background-color: var(--badge-pb-bg);
+  color: var(--badge-pb-color);
+  border: 1px solid var(--badge-pb-border);
+}
+.badge-1rm {
+  background-color: var(--badge-1rm-bg);
+  color: var(--badge-1rm-color);
+  border: 1px solid var(--badge-1rm-border);
+}
+
 /* ─── Brand Color Utilities ─────────────────── */
 .text-emerald-300,
-.text-emerald-400,
-.badge-1rm { color: var(--badge-1rm-color) !important; }
+.text-emerald-400 { color: var(--color-brand) !important; }
 .bg-emerald-300,
 .bg-emerald-400 { background-color: var(--color-brand) !important; }
-
-/* Badge utility classes — theme-adaptive via CSS custom properties */
-.bg-purple-950\/50 { background-color: var(--badge-pb-bg) !important; }
-.text-purple-400 { color: var(--badge-pb-color) !important; }
-.border-purple-800\/60 { border-color: var(--badge-pb-border) !important; }
-.bg-emerald-950\/50 { background-color: var(--badge-1rm-bg) !important; }
-.border-emerald-800\/60 { border-color: var(--badge-1rm-border) !important; }
 
 mdui-navigation-bar-item[active]::part(indicator) { background-color: var(--color-brand) !important; }
 
