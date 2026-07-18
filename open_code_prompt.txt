@@ -1,33 +1,74 @@
 You are an autonomous Senior Software Engineer evaluating an on-demand code refactor request.
-Target Issue: #381 - [OpenCode Technical Debt] Hardcoded box-shadow in .card breaks CSS variable theming pattern in PR #379
+Target Issue: #527 - [OpenCode Technical Debt] Popstate handler in app.js has deeply nested conditions with 4 return paths
 
 ### REFACTOR BLUEPRINT REPORTED:
 
-### Source
-This issue was auto-detected from merged Pull Request #379.
-
 ### Location
-Found in `style.css:292` (the `.card` class).
+Found in recent master commits. File: `app.js`, lines 83-113 (the `window.addEventListener('popstate', ...)` handler).
 
 ### Description
-The `.card` CSS class uses CSS custom properties for all other visual properties:
-- `background-color: var(--color-surface-elevated, #0f172a)`
-- `border: 1px solid var(--slate-500, #64748b)`
+The popstate handler contains 4 levels of nesting with 4 different return paths:
 
-However, the newly added `box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.25)` uses hardcoded RGBA values. This is an inconsistency in the theming architecture — shadow intensity cannot be adjusted via CSS variables for dark mode, accessibility needs, or design-system updates without modifying the stylesheet directly.
+```javascript
+window.addEventListener('popstate', (e) => {
+  if (appView.classList.contains('hidden')) {     // Path 1
+    if (history.length > 1) { history.back(); }
+    return;
+  }
+  const s = e.state;
+  if (profileModal && !profileModal.classList.contains('hidden')) {  // Path 2
+    closeProfileModal(true);
+    if (s?.tab) { activateTab(s.tab); }
+    return;
+  }
+  if (s?.modal === 'profile' && profileModal?.classList.contains('hidden')) {  // Path 3
+    openProfileModal();
+    return;
+  }
+  if (!s) return;   // Path 4
+  if (s.tab && s.tab !== state.ui.currentTab) {   // Path 5 (no return)
+    activateTab(s.tab);
+  }
+});
+```
+
+This control flow is difficult to reason about because:
+1. The conditions are not mutually exclusive in obvious ways (e.g., both modal checks reference `profileModal`).
+2. The `history.length > 1` guard uses a magic number without documentation.
+3. There's a subtle interaction: when the modal is closing via popstate, it calls `closeProfileModal(true)` which skips `history.back()`, but the modal state restoration depends on `e.state` which is the state of the page being navigated TO, not FROM. The correctness relies on understanding browser history semantics that aren't documented here.
+4. Missing edge case: if `e.state` is null (e.g., fresh navigation to the page), the function silently does nothing — no tab activation, no UI update.
 
 ### Suggested Refactor
-Extract the shadow value into a CSS custom property to maintain the existing theming pattern:
-```css
-:root {
-  --shadow-card: 0 4px 12px 0 rgba(0, 0, 0, 0.25);
+Extract each return path into a named function to flatten the nesting and make the intent explicit:
+
+```javascript
+function handlePopstateAppHidden() {
+  if (history.length > 1) history.back();
 }
-.card {
-  /* ... */
-  box-shadow: var(--shadow-card);
+
+function handlePopstateModalClose(state) {
+  closeProfileModal(true);
+  if (state?.tab) activateTab(state.tab);
 }
+
+function handlePopstateModalRestore() {
+  openProfileModal();
+}
+
+function handlePopstateTabSwitch(state) {
+  if (state?.tab && state.tab !== state.ui.currentTab) {
+    activateTab(state.tab);
+  }
+}
+
+window.addEventListener('popstate', (e) => {
+  if (appView.classList.contains('hidden')) return handlePopstateAppHidden();
+  const s = e.state;
+  if (isModalOpen()) return handlePopstateModalClose(s);
+  if (isModalRestore(s)) return handlePopstateModalRestore();
+  handlePopstateTabSwitch(s);
+});
 ```
-This allows shadow intensity to be overridden per-theme (e.g., lighter shadows in high-contrast mode, or no shadows for reduced-motion preferences).
 
 ### YOUR MISSION:
 Analyze the corresponding source files in the current repository. Determine if this reported code smell is a genuine defect/anti-pattern that needs correcting, OR if this structure is intentional (e.g., required for performance, compliance with third-party APIs, or an explicitly guarded architectural design).
@@ -36,13 +77,13 @@ Analyze the corresponding source files in the current repository. Determine if t
 
 PATH A: [VALID CODE SMELL - FIX IT]
 If the issue is correct and should be refactored:
-1. Checkout a new branch named 'opencode/fix-issue-381'.
+1. Checkout a new branch named 'opencode/fix-issue-527'.
 2. Apply precise modifications to the master branch files to resolve the tech debt.
 3. Commit the changes, push the branch, and create a PR with title matching the issue title. Do NOT enable auto-merge — the workflow handles that.
 
 PATH B: [INTENTIONAL DESIGN - REJECT IT]
 If you evaluate that the code is intentional, optimal, or should remain unchanged, do NOT edit any repository code. Run ONLY these two terminal commands to mark the issue as wontfix (they work regardless of which branch is checked out):
-1. gh issue edit 381 --add-label "wontfix"
-2. gh issue comment 381 --body "### 🛑 Architectural Review: Intentional Design\nI have deeply analyzed the codebase regarding this report. I recommend **against** changing this code for the following reasons:\n\n<Provide a highly detailed, professional engineering justification explaining why this code pattern is correct, necessary, or optimal given your context.>"
+1. gh issue edit 527 --add-label "wontfix"
+2. gh issue comment 527 --body "### 🛑 Architectural Review: Intentional Design\nI have deeply analyzed the codebase regarding this report. I recommend **against** changing this code for the following reasons:\n\n<Provide a highly detailed, professional engineering justification explaining why this code pattern is correct, necessary, or optimal given your context.>"
 
 CRITICAL: Do NOT create any branch, commit, push, or pull request. Do NOT edit any files. Run ONLY the two gh issue commands above. If you create a PR, the workflow will auto-merge it because it cannot distinguish wontfix PRs from real fixes.
