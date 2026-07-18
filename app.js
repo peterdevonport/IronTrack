@@ -128,6 +128,9 @@ onAuthStateChanged(auth, async (user) => {
   } else {
     handleSignedOut();
   }
+  // Ensure theme is initialized after auth state resolves,
+  // regardless of sign-in or sign-out path.
+  initTheme(state.user.theme);
 });
 
 async function handleSignedIn(user) {
@@ -208,7 +211,6 @@ function handleSignedOut() {
   state.calendar.weekOffset = 0;
   listenersAttached = false;
   window.__irontrackAuthState = 'signed-out';
-  initTheme();
 }
 
 function attachListeners(uid) {
