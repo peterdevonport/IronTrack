@@ -240,8 +240,8 @@ function workoutToLogHtml(workout, chipPBActive, chip1RMActive) {
     <div>
         <div class="flex items-center gap-2">
             <h4 class="text-emerald-300 font-bold uppercase tracking-wider text-sm">${escapeHtml(workout.exercise)}</h4>
-            ${isPB ? '<span class="bg-purple-950/50 text-purple-400 border border-purple-800/60 text-[9px] px-1.5 rounded font-black">PB</span>' : ''}
-            ${isMax1RM ? '<span class="bg-emerald-950/50 badge-1rm border border-emerald-800/60 text-[9px] px-1.5 rounded font-extrabold">1RM</span>' : ''}
+            ${isPB ? '<span class="badge-pb text-[9px] px-1.5 rounded font-black">PB</span>' : ''}
+            ${isMax1RM ? '<span class="badge-1rm text-[9px] px-1.5 rounded font-extrabold">1RM</span>' : ''}
         </div>
         <p class="text-slate-400 text-xs font-mono mt-0.5">
             ${new Date(workout.timestamp).toLocaleDateString()}
