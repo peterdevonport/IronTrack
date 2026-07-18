@@ -21,6 +21,14 @@
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
+# Configuration
+# ---------------------------------------------------------------------------
+
+# OpenCode CLI version to pin. Update when upgrading.
+# Releases: https://github.com/anomalyco/opencode/releases
+OPENCODE_VERSION="1.18.3"
+
+# ---------------------------------------------------------------------------
 # Argument parsing
 # ---------------------------------------------------------------------------
 
@@ -50,7 +58,26 @@ step_prepare_git() {
 
 step_install_opencode() {
   log "--- Step: Install OpenCode CLI ---"
-  curl -fsSL https://opencode.ai/install | bash
+
+  # Download install script to a temp file instead of piping curl to bash.
+  # This eliminates the classic pipe-to-shell anti-pattern — if the download
+  # is interrupted or the server returns unexpected content, bash never
+  # executes it.
+  #
+  # Security model:
+  #   - The script is downloaded from https://opencode.ai/install (TLS).
+  #   - The CLI version is pinned via --version for reproducibility.
+  #   - The install script fetches a signed GitHub release binary over TLS.
+  #   - Upstream does not currently publish SHA256 checksums; if they do in
+  #     the future, add a sha256sum verification step here.
+  #   - In CI, the ~/.opencode/bin directory is cached between runs (see
+  #     opencode-conflict-resolver.yml), reducing the need to re-download.
+  local install_script
+  install_script=$(mktemp)
+  curl -fsSL https://opencode.ai/install -o "$install_script"
+  bash "$install_script" --version "${OPENCODE_VERSION}"
+  rm -f "$install_script"
+
   echo "$HOME/.opencode/bin" >> "$GITHUB_PATH"
   export PATH="$HOME/.opencode/bin:$PATH"
 }
