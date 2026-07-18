@@ -1,33 +1,46 @@
 You are an autonomous Senior Software Engineer evaluating an on-demand code refactor request.
-Target Issue: #381 - [OpenCode Technical Debt] Hardcoded box-shadow in .card breaks CSS variable theming pattern in PR #379
+Target Issue: #526 - [OpenCode Technical Debt] Light-mode badge overrides use fragile CSS-escaped Tailwind class selectors in style.css
 
 ### REFACTOR BLUEPRINT REPORTED:
 
-### Source
-This issue was auto-detected from merged Pull Request #379.
-
 ### Location
-Found in `style.css:292` (the `.card` class).
+Found in recent master commits. File: `style.css`, lines 104-112 (inside `.mdui-theme-light, .mdui-theme-auto` block).
 
 ### Description
-The `.card` CSS class uses CSS custom properties for all other visual properties:
-- `background-color: var(--color-surface-elevated, #0f172a)`
-- `border: 1px solid var(--slate-500, #64748b)`
+The light-mode badge overrides use CSS-escaped selectors to intercept and override Tailwind utility classes:
 
-However, the newly added `box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.25)` uses hardcoded RGBA values. This is an inconsistency in the theming architecture — shadow intensity cannot be adjusted via CSS variables for dark mode, accessibility needs, or design-system updates without modifying the stylesheet directly.
+```css
+.bg-purple-950\/50 { background-color: rgba(168, 85, 247, 0.12) !important; }
+.text-purple-400 { color: #7c3aed !important; }
+.border-purple-800\/60 { border-color: rgba(168, 85, 247, 0.3) !important; }
+```
+
+This approach has several problems:
+1. **Fragile escape syntax** — The `\/ ` CSS escape is unusual and hard to read; editors and linters may not handle it correctly.
+2. **Selector specificity escalation** — Each override requires `!important` to beat Tailwind's own specificity. This creates a specificity arms race where future Tailwind additions may need even higher specificity overrides.
+3. **Breaks Tailwind's design contract** — Tailwind utility classes are meant to be composable and predictable. Intercepting them via CSS selectors creates hidden behavior that contradicts what the HTML says.
+4. **Maintenance burden** — If Tailwind changes its class naming or if new badge variants are added, these overrides must be manually updated.
 
 ### Suggested Refactor
-Extract the shadow value into a CSS custom property to maintain the existing theming pattern:
+Follow the same pattern already established by `--shadow-card` — define semantic CSS custom properties for badge colors and reference them in the HTML:
+
 ```css
 :root {
-  --shadow-card: 0 4px 12px 0 rgba(0, 0, 0, 0.25);
+  --badge-pb-bg: rgba(168, 85, 247, 0.12);
+  --badge-pb-text: #a855f7;
+  --badge-pb-border: rgba(168, 85, 247, 0.3);
+  --badge-1rm-bg: rgba(16, 185, 129, 0.12);
+  --badge-1rm-text: var(--color-brand);
+  --badge-1rm-border: rgba(16, 185, 129, 0.3);
 }
-.card {
+
+.mdui-theme-light, .mdui-theme-auto {
+  --badge-pb-text: #7c3aed;
   /* ... */
-  box-shadow: var(--shadow-card);
 }
 ```
-This allows shadow intensity to be overridden per-theme (e.g., lighter shadows in high-contrast mode, or no shadows for reduced-motion preferences).
+
+Then in the template HTML, replace Tailwind classes with inline styles or custom utility classes that reference these variables. This keeps the theme logic in CSS where it belongs and eliminates the Tailwind override pattern.
 
 ### YOUR MISSION:
 Analyze the corresponding source files in the current repository. Determine if this reported code smell is a genuine defect/anti-pattern that needs correcting, OR if this structure is intentional (e.g., required for performance, compliance with third-party APIs, or an explicitly guarded architectural design).
@@ -36,13 +49,13 @@ Analyze the corresponding source files in the current repository. Determine if t
 
 PATH A: [VALID CODE SMELL - FIX IT]
 If the issue is correct and should be refactored:
-1. Checkout a new branch named 'opencode/fix-issue-381'.
+1. Checkout a new branch named 'opencode/fix-issue-526'.
 2. Apply precise modifications to the master branch files to resolve the tech debt.
 3. Commit the changes, push the branch, and create a PR with title matching the issue title. Do NOT enable auto-merge — the workflow handles that.
 
 PATH B: [INTENTIONAL DESIGN - REJECT IT]
 If you evaluate that the code is intentional, optimal, or should remain unchanged, do NOT edit any repository code. Run ONLY these two terminal commands to mark the issue as wontfix (they work regardless of which branch is checked out):
-1. gh issue edit 381 --add-label "wontfix"
-2. gh issue comment 381 --body "### 🛑 Architectural Review: Intentional Design\nI have deeply analyzed the codebase regarding this report. I recommend **against** changing this code for the following reasons:\n\n<Provide a highly detailed, professional engineering justification explaining why this code pattern is correct, necessary, or optimal given your context.>"
+1. gh issue edit 526 --add-label "wontfix"
+2. gh issue comment 526 --body "### 🛑 Architectural Review: Intentional Design\nI have deeply analyzed the codebase regarding this report. I recommend **against** changing this code for the following reasons:\n\n<Provide a highly detailed, professional engineering justification explaining why this code pattern is correct, necessary, or optimal given your context.>"
 
 CRITICAL: Do NOT create any branch, commit, push, or pull request. Do NOT edit any files. Run ONLY the two gh issue commands above. If you create a PR, the workflow will auto-merge it because it cannot distinguish wontfix PRs from real fixes.
