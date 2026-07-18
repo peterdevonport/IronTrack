@@ -52,6 +52,17 @@
   --color-tertiary: #c084fc;
   --color-error: #fb7185;
 
+  /* Shadow tokens */
+  --shadow-card: 0 4px 12px 0 rgba(0, 0, 0, 0.25);
+
+  /* Badge colors — dark mode defaults */
+  --badge-pb-bg: rgba(168, 85, 247, 0.15);
+  --badge-pb-color: #c084fc;
+  --badge-pb-border: rgba(168, 85, 247, 0.3);
+  --badge-1rm-bg: rgba(16, 185, 129, 0.15);
+  --badge-1rm-color: var(--color-brand);
+  --badge-1rm-border: rgba(16, 185, 129, 0.3);
+
   /* Slate aliases for inline style compatibility */
   --slate-200: var(--color-text);
   --slate-300: var(--color-text-secondary);
@@ -64,8 +75,7 @@
   --slate-950: var(--color-surface);
 }
 
-.mdui-theme-light,
-.mdui-theme-auto {
+.mdui-theme-light {
   /* Semantic color tokens — light mode */
   --color-bg: #e2e8f0;
   --color-surface: #ffffff;
@@ -78,6 +88,9 @@
   --color-secondary: #fbbf24;
   --color-tertiary: #c084fc;
   --color-error: #dc2626;
+
+  /* Shadow tokens */
+  --shadow-card: 0 4px 12px 0 rgba(0, 0, 0, 0.08);
 
   /* MDUI color overrides — light mode */
   --mdui-color-primary-container: var(--mdui-color-primary-container-light);
@@ -95,36 +108,55 @@
   .text-slate-500 { color: var(--slate-500) !important; }
   .border-slate-800 { border-color: var(--slate-800) !important; }
 
-  /* PB badge — light mode */
-  .bg-purple-950\/50 { background-color: rgba(168, 85, 247, 0.12) !important; }
-  .text-purple-400 { color: #7c3aed !important; }
-  .border-purple-800\/60 { border-color: rgba(168, 85, 247, 0.3) !important; }
-
-  /* 1RM badge — light mode */
-  .bg-emerald-950\/50 { background-color: rgba(16, 185, 129, 0.12) !important; }
-  .badge-1rm { color: #059669 !important; }
-  .border-emerald-800\/60 { border-color: rgba(16, 185, 129, 0.3) !important; }
+  /* Badge colors — light mode overrides */
+  --badge-pb-bg: rgba(168, 85, 247, 0.12);
+  --badge-pb-color: #7c3aed;
+  --badge-pb-border: rgba(168, 85, 247, 0.3);
+  --badge-1rm-bg: rgba(16, 185, 129, 0.12);
+  --badge-1rm-color: #059669;
+  --badge-1rm-border: rgba(16, 185, 129, 0.3);
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   .mdui-theme-auto {
-    /* Dark mode — when OS is dark */
-    --color-bg: #1e293b;
-    --color-surface: #020617;
-    --color-surface-elevated: #0f172a;
-    --color-surface-hover: #1e293b;
-    --color-text: #e2e8f0;
-    --color-text-secondary: #cbd5e1;
-    --color-text-muted: #94a3b8;
-    --color-border: #334155;
+    /* Semantic color tokens — light mode */
+    --color-bg: #e2e8f0;
+    --color-surface: #ffffff;
+    --color-surface-elevated: #ffffff;
+    --color-surface-hover: #f1f5f9;
+    --color-text: #1e293b;
+    --color-text-secondary: #475569;
+    --color-text-muted: #64748b;
+    --color-border: #cbd5e1;
     --color-secondary: #fbbf24;
     --color-tertiary: #c084fc;
-    --color-error: #fb7185;
+    --color-error: #dc2626;
 
-    --mdui-color-primary-container: var(--mdui-color-primary-container-dark);
-    --mdui-color-on-primary-container: 0, 0, 0;
-    --mdui-color-on-surface: var(--mdui-color-on-surface-dark);
-    --mdui-color-error: 251, 113, 133;
+    --shadow-card: 0 4px 12px 0 rgba(0, 0, 0, 0.08);
+
+    /* MDUI color overrides — light mode */
+    --mdui-color-primary-container: var(--mdui-color-primary-container-light);
+    --mdui-color-on-primary-container: 33, 0, 94;
+    --mdui-color-on-surface: 28, 27, 31;
+    --mdui-color-error: 179, 38, 30;
+
+    /* Tailwind class overrides — light mode */
+    .bg-slate-950 { background-color: var(--slate-950) !important; }
+    .bg-slate-900 { background-color: var(--slate-900) !important; }
+    .bg-slate-800 { background-color: var(--slate-800) !important; }
+    .bg-slate-700 { background-color: var(--slate-700) !important; }
+    .text-slate-200 { color: var(--slate-200) !important; }
+    .text-slate-400 { color: var(--slate-400) !important; }
+    .text-slate-500 { color: var(--slate-500) !important; }
+    .border-slate-800 { border-color: var(--slate-800) !important; }
+
+    /* Badge colors — light mode overrides */
+    --badge-pb-bg: rgba(168, 85, 247, 0.12);
+    --badge-pb-color: #7c3aed;
+    --badge-pb-border: rgba(168, 85, 247, 0.3);
+    --badge-1rm-bg: rgba(16, 185, 129, 0.12);
+    --badge-1rm-color: #059669;
+    --badge-1rm-border: rgba(16, 185, 129, 0.3);
   }
 }
 
@@ -145,10 +177,21 @@ mdui-button[variant="text"] {
   border: none;
 }
 
+/* ─── Badge Components — theme-adaptive via CSS custom properties ─── */
+.badge-pb {
+  background-color: var(--badge-pb-bg);
+  color: var(--badge-pb-color);
+  border: 1px solid var(--badge-pb-border);
+}
+.badge-1rm {
+  background-color: var(--badge-1rm-bg);
+  color: var(--badge-1rm-color);
+  border: 1px solid var(--badge-1rm-border);
+}
+
 /* ─── Brand Color Utilities ─────────────────── */
 .text-emerald-300,
-.text-emerald-400,
-.badge-1rm { color: var(--color-brand) !important; }
+.text-emerald-400 { color: var(--color-brand) !important; }
 .bg-emerald-300,
 .bg-emerald-400 { background-color: var(--color-brand) !important; }
 
@@ -271,7 +314,7 @@ mdui-top-app-bar-title::part(label) {
   border: 1px solid var(--slate-500, #64748b);
   border-radius: 1rem;
   padding: 1rem;
-  box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-card);
 }
 .card-interactive:hover {
   border-color: var(--slate-300, #cbd5e1);

@@ -82,7 +82,9 @@ navBar?.addEventListener('click', (e) => {
 
 window.addEventListener('popstate', (e) => {
   if (appView.classList.contains('hidden')) {
-    history.back();
+    if (history.length > 1) {
+      history.back();
+    }
     return;
   }
 
@@ -111,8 +113,6 @@ window.addEventListener('popstate', (e) => {
   }
 });
 
-initTheme();
-
 const pendingFriendUid = new URLSearchParams(window.location.search).get('addFriend');
 const pendingClaimPlanId = new URLSearchParams(window.location.search).get('claimPlan');
 onAuthStateChanged(auth, async (user) => {
@@ -128,6 +128,9 @@ onAuthStateChanged(auth, async (user) => {
   } else {
     handleSignedOut();
   }
+  // Ensure theme is initialized after auth state resolves,
+  // regardless of sign-in or sign-out path.
+  initTheme(state.user.theme);
 });
 
 async function handleSignedIn(user) {
