@@ -1,33 +1,30 @@
 You are an autonomous Senior Software Engineer evaluating an on-demand code refactor request.
-Target Issue: #381 - [OpenCode Technical Debt] Hardcoded box-shadow in .card breaks CSS variable theming pattern in PR #379
+Target Issue: #538 - [OpenCode Technical Debt] Missing temp file cleanup trap in resolve-conflicts.sh
 
 ### REFACTOR BLUEPRINT REPORTED:
 
-### Source
-This issue was auto-detected from merged Pull Request #379.
-
 ### Location
-Found in `style.css:292` (the `.card` class).
+Found in recent master commits.
+- `.github/scripts/resolve-conflicts.sh` lines 76–79 in `step_install_opencode()`
 
 ### Description
-The `.card` CSS class uses CSS custom properties for all other visual properties:
-- `background-color: var(--color-surface-elevated, #0f172a)`
-- `border: 1px solid var(--slate-500, #64748b)`
+The function creates a temp file via `mktemp` at line 76, but there is no `trap` to ensure cleanup on failure. With `set -euo pipefail` active (line 21), if either `curl` (line 77) or `bash` (line 78) exits with a non-zero status, the script terminates immediately and the `rm -f "$install_script"` on line 79 never executes.
 
-However, the newly added `box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.25)` uses hardcoded RGBA values. This is an inconsistency in the theming architecture — shadow intensity cannot be adjusted via CSS variables for dark mode, accessibility needs, or design-system updates without modifying the stylesheet directly.
+While CI environments clean up workspace directories between runs, the temp file leaks on every failed install attempt. More importantly, this violates the defensive programming principle that resources acquired should be released in all code paths, not just the happy path.
 
 ### Suggested Refactor
-Extract the shadow value into a CSS custom property to maintain the existing theming pattern:
-```css
-:root {
-  --shadow-card: 0 4px 12px 0 rgba(0, 0, 0, 0.25);
-}
-.card {
-  /* ... */
-  box-shadow: var(--shadow-card);
-}
+Add a trap immediately after creating the temp file to ensure cleanup regardless of exit path:
+
 ```
-This allows shadow intensity to be overridden per-theme (e.g., lighter shadows in high-contrast mode, or no shadows for reduced-motion preferences).
+local install_script
+install_script=$(mktemp)
+trap 'rm -f "$install_script"' EXIT
+curl -fsSL https://opencode.ai/install -o "$install_script"
+bash "$install_script" --version "${OPENCODE_VERSION}"
+# No need for explicit rm -f — the EXIT trap handles it
+```
+
+Alternatively, use a subshell or a dedicated cleanup function to scope the trap to just this function rather than the entire script's EXIT handler.
 
 ### YOUR MISSION:
 Analyze the corresponding source files in the current repository. Determine if this reported code smell is a genuine defect/anti-pattern that needs correcting, OR if this structure is intentional (e.g., required for performance, compliance with third-party APIs, or an explicitly guarded architectural design).
@@ -36,13 +33,13 @@ Analyze the corresponding source files in the current repository. Determine if t
 
 PATH A: [VALID CODE SMELL - FIX IT]
 If the issue is correct and should be refactored:
-1. Checkout a new branch named 'opencode/fix-issue-381'.
+1. Checkout a new branch named 'opencode/fix-issue-538'.
 2. Apply precise modifications to the master branch files to resolve the tech debt.
 3. Commit the changes, push the branch, and create a PR with title matching the issue title. Do NOT enable auto-merge — the workflow handles that.
 
 PATH B: [INTENTIONAL DESIGN - REJECT IT]
 If you evaluate that the code is intentional, optimal, or should remain unchanged, do NOT edit any repository code. Run ONLY these two terminal commands to mark the issue as wontfix (they work regardless of which branch is checked out):
-1. gh issue edit 381 --add-label "wontfix"
-2. gh issue comment 381 --body "### 🛑 Architectural Review: Intentional Design\nI have deeply analyzed the codebase regarding this report. I recommend **against** changing this code for the following reasons:\n\n<Provide a highly detailed, professional engineering justification explaining why this code pattern is correct, necessary, or optimal given your context.>"
+1. gh issue edit 538 --add-label "wontfix"
+2. gh issue comment 538 --body "### 🛑 Architectural Review: Intentional Design\nI have deeply analyzed the codebase regarding this report. I recommend **against** changing this code for the following reasons:\n\n<Provide a highly detailed, professional engineering justification explaining why this code pattern is correct, necessary, or optimal given your context.>"
 
 CRITICAL: Do NOT create any branch, commit, push, or pull request. Do NOT edit any files. Run ONLY the two gh issue commands above. If you create a PR, the workflow will auto-merge it because it cannot distinguish wontfix PRs from real fixes.
