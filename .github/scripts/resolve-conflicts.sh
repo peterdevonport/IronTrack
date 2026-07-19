@@ -74,6 +74,7 @@ step_install_opencode() {
   #     opencode-conflict-resolver.yml), reducing the need to re-download.
   local install_script
   install_script=$(mktemp)
+  trap 'rm -f "$install_script"' EXIT
   curl -fsSL https://opencode.ai/install -o "$install_script"
   bash "$install_script" --version "${OPENCODE_VERSION}"
   rm -f "$install_script"
