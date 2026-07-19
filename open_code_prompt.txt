@@ -1,33 +1,40 @@
 You are an autonomous Senior Software Engineer evaluating an on-demand code refactor request.
-Target Issue: #381 - [OpenCode Technical Debt] Hardcoded box-shadow in .card breaks CSS variable theming pattern in PR #379
+Target Issue: #536 - [OpenCode Technical Debt] DRY violation: Light-mode CSS tokens copy-pasted in style.css
 
 ### REFACTOR BLUEPRINT REPORTED:
 
-### Source
-This issue was auto-detected from merged Pull Request #379.
-
 ### Location
-Found in `style.css:292` (the `.card` class).
+Found in recent master commits.
+- `style.css` lines 78–118 (`.mdui-theme-light`)
+- `style.css` lines 120–161 (`@media (prefers-color-scheme: light) .mdui-theme-auto`)
 
 ### Description
-The `.card` CSS class uses CSS custom properties for all other visual properties:
-- `background-color: var(--color-surface-elevated, #0f172a)`
-- `border: 1px solid var(--slate-500, #64748b)`
+The entire light-mode token block — semantic color tokens, shadow tokens, MDUI overrides, Tailwind class overrides, and badge color overrides — is copy-pasted verbatim between `.mdui-theme-light` and `@media (prefers-color-scheme: light) .mdui-theme-auto`. Approximately 40 lines of CSS custom property definitions are duplicated character-for-character.
 
-However, the newly added `box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.25)` uses hardcoded RGBA values. This is an inconsistency in the theming architecture — shadow intensity cannot be adjusted via CSS variables for dark mode, accessibility needs, or design-system updates without modifying the stylesheet directly.
+This violates the DRY (Don't Repeat Yourself) principle. If a designer updates a single light-mode token value in one block, they must remember to update the other — a classic source of theme drift bugs.
 
 ### Suggested Refactor
-Extract the shadow value into a CSS custom property to maintain the existing theming pattern:
+Extract the shared light-mode tokens into a common CSS pattern:
+
+**Option A — Combined selector (simplest):**
 ```css
-:root {
-  --shadow-card: 0 4px 12px 0 rgba(0, 0, 0, 0.25);
-}
-.card {
-  /* ... */
-  box-shadow: var(--shadow-card);
+.mdui-theme-light,
+@media (prefers-color-scheme: light) { .mdui-theme-auto { ... } }
+```
+Since CSS nesting is already used here, refactor to define the shared light-mode properties once and reference them from both selectors.
+
+**Option B — CSS custom property cascade:**
+Define light-mode defaults on `:root` or a shared class, then let dark-mode selectively override only what changes. This inverts the current pattern (dark is the default; light overrides).
+
+**Option C — Shared mixin via CSS @layer or a helper class:**
+Use a dedicated `.theme-light-tokens` class applied to both selectors, keeping token definitions in one place.
+```css
+.theme-light-tokens {
+  --color-bg: #e2e8f0;
+  --color-surface: #ffffff;
+  /* ... rest of tokens ... */
 }
 ```
-This allows shadow intensity to be overridden per-theme (e.g., lighter shadows in high-contrast mode, or no shadows for reduced-motion preferences).
 
 ### YOUR MISSION:
 Analyze the corresponding source files in the current repository. Determine if this reported code smell is a genuine defect/anti-pattern that needs correcting, OR if this structure is intentional (e.g., required for performance, compliance with third-party APIs, or an explicitly guarded architectural design).
@@ -36,13 +43,13 @@ Analyze the corresponding source files in the current repository. Determine if t
 
 PATH A: [VALID CODE SMELL - FIX IT]
 If the issue is correct and should be refactored:
-1. Checkout a new branch named 'opencode/fix-issue-381'.
+1. Checkout a new branch named 'opencode/fix-issue-536'.
 2. Apply precise modifications to the master branch files to resolve the tech debt.
 3. Commit the changes, push the branch, and create a PR with title matching the issue title. Do NOT enable auto-merge — the workflow handles that.
 
 PATH B: [INTENTIONAL DESIGN - REJECT IT]
 If you evaluate that the code is intentional, optimal, or should remain unchanged, do NOT edit any repository code. Run ONLY these two terminal commands to mark the issue as wontfix (they work regardless of which branch is checked out):
-1. gh issue edit 381 --add-label "wontfix"
-2. gh issue comment 381 --body "### 🛑 Architectural Review: Intentional Design\nI have deeply analyzed the codebase regarding this report. I recommend **against** changing this code for the following reasons:\n\n<Provide a highly detailed, professional engineering justification explaining why this code pattern is correct, necessary, or optimal given your context.>"
+1. gh issue edit 536 --add-label "wontfix"
+2. gh issue comment 536 --body "### 🛑 Architectural Review: Intentional Design\nI have deeply analyzed the codebase regarding this report. I recommend **against** changing this code for the following reasons:\n\n<Provide a highly detailed, professional engineering justification explaining why this code pattern is correct, necessary, or optimal given your context.>"
 
 CRITICAL: Do NOT create any branch, commit, push, or pull request. Do NOT edit any files. Run ONLY the two gh issue commands above. If you create a PR, the workflow will auto-merge it because it cannot distinguish wontfix PRs from real fixes.
