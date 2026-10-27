@@ -730,7 +730,9 @@ function buildWorkoutLog(values, user) {
         externalLoad,
         estimatedLoad,
         totalVolume,
-        timestamp: Timestamp.now()
+        timestamp: Timestamp.now(),
+        // Legacy manual rows omit source; consumers must treat a missing value as manual/legacy data.
+        source: 'manual'
     };
 }
 

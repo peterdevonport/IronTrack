@@ -95,7 +95,7 @@ row and is associated with its owner through `userId`.
 | `estimatedLoad` | number | Effective load after bodyweight/load-factor calculation |
 | `totalVolume` | number | Calculated volume |
 | `timestamp` | Timestamp | Workout event time; client `Timestamp.now()` |
-| `source` | string, optional | `pb-log`, `onboarding`, or `structured`; manual rows may omit it |
+| `source` | string, usually present | `manual`, `pb-log`, `onboarding`, or `structured`; legacy manual rows may omit it |
 | `isInitialMax` | boolean | Marks onboarding rows |
 | `workoutId` | string, optional | ID of the related `structured_workouts` document |
 | `weightMode` | string, optional | `absolute`, `pct`, or `rpe` |
@@ -105,6 +105,21 @@ row and is associated with its owner through `userId`.
 | `additionalReps` | number, optional | AMRAP leftover reps |
 | `minuteIndex` | number, optional | EMOM minute slot |
 | `partialReps` | number, optional | Partial round reps for For Time/Interval workouts |
+
+### `workouts` source variants
+
+The `source` field identifies how a row entered the collection:
+
+| Source | Creation path | Additional meaning |
+| --- | --- | --- |
+| `manual` | Manual “Log Set” form in `app.js` | Standalone set entry; no parent structured workout |
+| `pb-log` | Personal-record logging in `auth.js` | Personal-best entry |
+| `onboarding` | Initial 1RM onboarding in `app.js` | Initial maximum; also uses `isInitialMax: true` |
+| `structured` | Structured workout contribution in `workouts.js` | Links to `structured_workouts/{id}` through `workoutId` |
+
+New manual rows explicitly use `source: "manual"`. Legacy manual rows created
+before this field was introduced omit `source`; consumers must treat a missing
+value as manual/legacy data.
 
 The main listener filters by `userId`, orders by `timestamp DESC`, and limits
 the result to 250 rows (`data.js`). Structured contribution rows remain in this
@@ -119,6 +134,24 @@ a recursive wildcard even though the application has no subcollections here.
 This stores one completed AMRAP, EMOM, For Time, or Interval session. Its
 contribution rows are stored separately in `workouts` and point back with the
 plain string `workoutId`.
+
+### Explicit workout types
+
+IronTrack has four structured workout types. The type is stored on the parent
+`structured_workouts/{workoutId}.type` field and determines the shape of both
+the `structure` and `result` maps. Contribution rows in `workouts` link to the
+parent with `workoutId`; they do not repeat the workout type.
+
+| Type | Structure | Result | Contribution-specific fields |
+| --- | --- | --- | --- |
+| `AMRAP` | Duration plus movements | Completed rounds and additional reps | `totalWorkReps`, `additionalReps` |
+| `EMOM` | Mode, rounds/minutes, interval, minute movements | Completed rounds | `totalWorkReps`, `minuteIndex` |
+| `FOR_TIME` | Optional time cap, rounds, movements | Time, completion, optional remaining reps | `totalWorkReps`, optional `partialReps` |
+| `INTERVAL` | Rounds, work/rest seconds, movements | Completed rounds, partial reps, completion | `totalWorkReps`, `partialReps` |
+
+Manual set logging is not a fifth structured workout type. It creates an
+individual `workouts` row with `source: "manual"` and no parent structured
+workout document.
 
 | Field | Type | Meaning |
 | --- | --- | --- |
